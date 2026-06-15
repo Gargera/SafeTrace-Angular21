@@ -1,1 +1,39 @@
-<p>footer works!</p>
+<footer class="bg-primary text-primary-fixed-dim border-t border-outline-variant pt-xl pb-md px-margin-mobile md:px-margin-desktop transition-colors duration-300">
+  <div class="max-w-max-width mx-auto grid grid-cols-1 md:grid-cols-3 gap-gutter mb-xl">
+    
+    <div class="flex flex-col gap-sm">
+      <div class="flex items-center">
+        <span class="text-white font-headline-md tracking-tight">SafeTrace</span>
+      </div>
+      <p class="text-body-sm text-white/80 leading-relaxed">
+        منصة إنسانية متطورة تعتمد على تقنيات الذكاء الاصطناعي والتعرف على الوجوه للمساعدة في تتبع وحماية المفقودين وإعادتهم إلى عائلاتهم بأسرع وقت ممكن.
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-sm">
+      <h3 class="text-white font-headline-sm font-semibold">روابط سريعة</h3>
+      <ul class="flex flex-col gap-xs font-label-md">
+        <li><a routerLink="/home" class="text-white/90 hover:text-white transition-colors">الرئيسية</a></li>
+        <li><a routerLink="/cases/urgent" class="text-white/90 hover:text-white transition-colors">الحالات الطارئة</a></li>
+        <li><a routerLink="/cases/long-term" class="text-white/90 hover:text-white transition-colors">حالات طويلة المدى</a></li>
+        <li><a routerLink="/ai-search" class="text-white font-medium flex items-center gap-1 hover:text-white/80 transition-colors">البحث الذكي بصورة (AI)</a></li>
+      </ul>
+    </div>
+
+    <div class="flex flex-col gap-sm">
+      <h3 class="text-white font-headline-sm font-semibold">الدعم والقانونية</h3>
+      <ul class="flex flex-col gap-xs font-label-md">
+        <li><a routerLink="/about" class="text-white/90 hover:text-white transition-colors">دليل المنصة (عن الموقع)</a></li>
+        <li><a routerLink="/complaints" class="text-white/90 hover:text-white transition-colors">تقديم شكوى أو اقتراح</a></li>
+        <li><a routerLink="/privacy" class="text-white/90 hover:text-white transition-colors">سياسة الخصوصية والأمان</a></li>
+        <li><span class="text-body-sm text-white/70">رقم الطوارئ: 122</span></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="max-w-max-width mx-auto pt-md border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-sm text-body-sm text-white/60">
+    <p>© {{ currentYear }} SafeTrace. جميع الحقوق محفوظة.</p>
+    <p>صُنع بكل حب لدعم المجتمع المصري</p>
+  </div>
+</footer>
