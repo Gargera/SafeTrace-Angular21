@@ -15,22 +15,23 @@
         </button>
         
         <div class="absolute right-0 top-14 w-48 bg-surface-container border border-outline-variant rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-          <a routerLink="/cases/urgent" class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl">حالات طارئة</a>
-          <a routerLink="/cases/long-term" class="block px-md py-sm text-on-surface hover:bg-surface-container-high">حالات طويلة المدى</a>
-          <a routerLink="/cases/unknown" class="block px-md py-sm text-on-surface hover:bg-surface-container-high last:rounded-b-xl">حالات غير معروفة</a>
+          <a routerLink="/urgent" class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl">حالات طارئة</a>
+          <a routerLink="/long-term" class="block px-md py-sm text-on-surface hover:bg-surface-container-high">حالات طويلة المدى</a>
+          <a routerLink="/unknown" class="block px-md py-sm text-on-surface hover:bg-surface-container-high last:rounded-b-xl">حالات غير معروفة</a>
         </div>
       </div>
+
+      <a routerLink="/founded" routerLinkActive="text-secondary border-b-2 border-secondary font-medium" class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200">الحالات المعثور عليها</a>
 
       @if (isLoggedIn()) {
         <a routerLink="/report" routerLinkActive="text-secondary border-b-2 border-secondary font-medium" class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200">تقديم بلاغ</a>
       }
 
-      <a routerLink="/ai-search" routerLinkActive="text-secondary border-b-2 border-secondary font-medium" class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 gap-1 transition-colors duration-200">
+      <a routerLink="/aisearch" routerLinkActive="text-secondary border-b-2 border-secondary font-medium" class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 gap-1 transition-colors duration-200">
         <span>البحث الذكي بالصورة</span>
       </a>
 
       <a routerLink="/about" routerLinkActive="text-secondary border-b-2 border-secondary font-medium" class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200">دليل المنصة</a>
-      <a routerLink="/complaints" routerLinkActive="text-secondary border-b-2 border-secondary font-medium" class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200">الدعم والشكاوى</a>
     </div>
 
     <div class="flex items-center gap-md">
