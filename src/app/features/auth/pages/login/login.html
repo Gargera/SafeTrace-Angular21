@@ -1,1 +1,96 @@
-<p>login works!</p>
+<div class="min-h-screen bg-surface flex flex-col justify-center items-center px-margin-mobile py-12">
+  
+  <div class="text-center mb-8">
+    <a routerLink="/home" class="inline-flex items-center justify-center bg-primary text-on-primary w-12 h-12 rounded-xl mb-4 hover:scale-105 transition-transform shadow-md">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+    </a>
+    <h1 class="text-3xl font-headline-lg font-bold text-primary mb-2">SafeTrace</h1>
+    <p class="text-on-surface-variant text-body-md max-w-87.5">الدقة الإنسانية في البحث والإنقاذ. يرجى تسجيل الدخول للوصول إلى لوحة التحكم.</p>
+  </div>
+
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-sm w-full max-w-112.5 p-6 md:p-8">
+    
+    @if (apiErrorMessage()) {
+      <div class="bg-error-container text-on-error-container p-4 rounded-xl mb-6 flex justify-between items-start gap-3 border border-error/20">
+        <div class="flex gap-3">
+          <svg class="w-5 h-5 shrink-0 mt-0.5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          <span class="font-body-sm font-medium">{{ apiErrorMessage() }}</span>
+        </div>
+        <button type="button" (click)="apiErrorMessage.set('')" class="text-on-error-container hover:text-error transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+    }
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+      <button class="flex items-center justify-center gap-2 border border-outline text-on-surface bg-surface-container-lowest hover:bg-surface-container-low rounded-xl py-2.5 font-label-md font-medium transition-colors">
+        <img src="assets/google-icon.svg" alt="Google" class="w-5 h-5" onerror="this.style.display='none'">
+        جوجل
+      </button>
+      <button class="flex items-center justify-center gap-2 border border-outline text-on-surface bg-surface-container-lowest hover:bg-surface-container-low rounded-xl py-2.5 font-label-md font-medium transition-colors">
+        <svg class="w-5 h-5 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        فيسبوك
+      </button>
+    </div>
+
+    <div class="relative flex py-2 items-center mb-4">
+      <div class="grow border-t border-outline-variant"></div>
+      <span class="shrink-0 mx-4 text-on-surface-variant text-body-sm">أو باستخدام البريد</span>
+      <div class="grow border-t border-outline-variant"></div>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+      
+      <div class="flex flex-col gap-1">
+        <label class="text-label-md font-medium text-on-surface">البريد الإلكتروني</label>
+        <div class="relative">
+          <input type="email" formControlName="email" placeholder="name@example.com" 
+                 [class.border-error]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
+                 class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all dir-ltr text-left">
+        </div>
+        @if (loginForm.get('email')?.touched && loginForm.get('email')?.invalid) {
+          <span class="text-error text-xs font-medium">
+            @if (loginForm.get('email')?.errors?.['required']) { البريد الإلكتروني مطلوب. }
+            @else if (loginForm.get('email')?.errors?.['email']) { يرجى إدخال بريد إلكتروني صحيح. }
+            @else if (loginForm.get('email')?.errors?.['serverError']) { {{ loginForm.get('email')?.errors?.['serverError'] }} }
+          </span>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <div class="flex justify-between items-center">
+          <label class="text-label-md font-medium text-on-surface">كلمة المرور</label>
+          <a routerLink="/auth/forgot-password" class="text-secondary text-body-sm font-medium hover:underline">نسيت كلمة المرور؟</a>
+        </div>
+        <div class="relative">
+          <input type="password" formControlName="password" placeholder="••••••••" 
+                 [class.border-error]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
+                 class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all dir-ltr text-left">
+        </div>
+        @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
+          <span class="text-error text-xs font-medium">
+            @if (loginForm.get('password')?.errors?.['required']) { كلمة المرور مطلوبة. }
+            @else if (loginForm.get('password')?.errors?.['serverError']) { {{ loginForm.get('password')?.errors?.['serverError'] }} }
+          </span>
+        }
+      </div>
+
+      <button type="submit" [disabled]="isLoading()" 
+              class="w-full bg-secondary text-on-secondary hover:bg-secondary-container disabled:bg-surface-variant disabled:text-outline py-3 rounded-xl font-label-lg font-semibold transition-all mt-2 flex justify-center items-center gap-2">
+        @if (isLoading()) {
+          <svg class="animate-spin h-5 w-5 text-current" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        } @else {
+          تسجيل الدخول
+        }
+      </button>
+
+    </form>
+
+    <div class="text-center mt-6">
+      <p class="text-on-surface-variant text-body-sm">
+        ليس لديك حساب؟ <a routerLink="/auth/register" class="text-secondary font-semibold hover:underline">إنشاء حساب جديد</a>
+      </p>
+    </div>
+
+  </div>
+</div>
