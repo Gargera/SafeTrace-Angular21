@@ -1,14 +1,15 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthService } from '../../../../core/services/auth.service';
 import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-register',
+  standalone: true,
   imports: [ReactiveFormsModule, RouterModule],
   templateUrl: './register.html',
-  styleUrl: './register.css',
+  styleUrls: ['./register.css']
 })
 export class Register {
   private fb = inject(FormBuilder);
@@ -16,18 +17,14 @@ export class Register {
   private router = inject(Router);
 
   isLoading = signal<boolean>(false);
-  apiErrorMessage = signal<string>(''); // General Error State
+  apiErrorMessage = signal<string>('');
 
   registerForm: FormGroup = this.fb.group({
     fName: ['', [Validators.required, Validators.maxLength(100)]],
     lName: ['', [Validators.required, Validators.maxLength(100)]],
     email: ['', [Validators.required, Validators.email]],
     phoneNumber: ['', [Validators.required, Validators.pattern('^01[0-9]{9}$')]],
-    password: ['', [
-      Validators.required, 
-      Validators.minLength(8), 
-      Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).+$')
-    ]]
+    password: ['', [Validators.required, Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).+$')]]
   });
 
   onSubmit() {
@@ -44,7 +41,6 @@ export class Register {
           title: 'تم إنشاء الحساب!',
           text: res.message || 'يرجى مراجعة بريدك الإلكتروني لتفعيل الحساب.',
           icon: 'success',
-          confirmButtonText: 'تأكيد الحساب',
           confirmButtonColor: '#0058be',
           customClass: { popup: 'rounded-xl font-body-md' }
         }).then(() => {
@@ -53,7 +49,6 @@ export class Register {
       },
       error: (err) => {
         this.isLoading.set(false);
-        
         if (err.error?.errors) {
           const serverErrors = err.error.errors;
           for (const key in serverErrors) {
@@ -61,16 +56,12 @@ export class Register {
             const control = this.registerForm.get(controlName);
             if (control) {
               control.setErrors({ serverError: serverErrors[key][0] });
-            } 
-            else 
-            {
+            } else {
               this.apiErrorMessage.set(serverErrors[key][0]);
             }
           }
-        } 
-        else 
-        {
-          this.apiErrorMessage.set(err.error?.detail || err.error?.message || 'حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى.');
+        } else {
+          this.apiErrorMessage.set(err.error?.detail || err.error?.message || 'حدث خطأ أثناء التسجيل.');
         }
       }
     });

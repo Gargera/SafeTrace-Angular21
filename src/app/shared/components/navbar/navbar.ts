@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { Router, RouterModule } from '@angular/router';
 import Swal from 'sweetalert2';
@@ -19,6 +19,18 @@ export class Navbar implements OnInit {
 
   ngOnInit(): void {}
 
+  isAdmin(): boolean {
+    const token = this.authService.getToken();
+    if (!token) return false;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const roleClaim = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || payload.role;
+      return roleClaim === 'Admin' || (Array.isArray(roleClaim) && roleClaim.includes('Admin'));
+    } catch {
+      return false;
+    }
+  }
+
   logout(): void {
     Swal.fire({
       title: 'تسجيل الخروج',
@@ -37,8 +49,15 @@ export class Navbar implements OnInit {
       }
     }).then((result) => {
       if (result.isConfirmed) {
-        this.authService.clearSession();
-        this.router.navigate(['/login']);
+        this.authService.revokeToken().subscribe({
+          next: () => {
+            this.router.navigate(['/auth']);
+          },
+          error: () => {
+            this.authService.clearSession();
+            this.router.navigate(['/auth']);
+          }
+        });
       }
     });
   }
