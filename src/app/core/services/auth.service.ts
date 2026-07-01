@@ -10,7 +10,7 @@ import { ResetPasswordRequest } from '../../features/auth/models/ResetPasswordRe
 import { VerificationStatus } from '../../shared/enums/verification-status';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private http = inject(HttpClient);
@@ -43,14 +43,14 @@ export class AuthService {
   setSession(response: AuthResponse): void {
     localStorage.setItem(this.tokenKey, response.accessToken);
     localStorage.setItem(this.refreshTokenKey, response.refreshToken);
-    
+
     const userData = {
       email: response.email,
       fName: response.fullName.split(' ')[0],
       fullName: response.fullName,
-      isVerified: response.verificationStatus === VerificationStatus.Verified
+      isVerified: response.verificationStatus === VerificationStatus.Verified,
     };
-    
+
     localStorage.setItem(this.userDataKey, JSON.stringify(userData));
     this.isLoggedIn.set(true);
     this.currentUser.set(userData);
@@ -70,53 +70,83 @@ export class AuthService {
 
   login(data: LoginRequest): Observable<ApiResponse<AuthResponse>> {
     return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/login`, data).pipe(
-      tap(res => { if (res.success && res.data) this.setSession(res.data); })
+      tap((res) => {
+        if (res.success && res.data) this.setSession(res.data);
+      }),
     );
   }
 
   googleLogin(providerToken: string): Observable<ApiResponse<AuthResponse>> {
-    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/google-login`, { providerToken }).pipe(
-      tap(res => { if (res.success && res.data) this.setSession(res.data); })
-    );
+    return this.http
+      .post<ApiResponse<AuthResponse>>(`${this.baseUrl}/google-login`, { providerToken })
+      .pipe(
+        tap((res) => {
+          if (res.success && res.data) this.setSession(res.data);
+        }),
+      );
   }
 
   facebookLogin(providerToken: string): Observable<ApiResponse<AuthResponse>> {
-    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/facebook-login`, { providerToken }).pipe(
-      tap(res => { if (res.success && res.data) this.setSession(res.data); })
-    );
+    return this.http
+      .post<ApiResponse<AuthResponse>>(`${this.baseUrl}/facebook-login`, { providerToken })
+      .pipe(
+        tap((res) => {
+          if (res.success && res.data) this.setSession(res.data);
+        }),
+      );
   }
 
   confirmEmail(email: string, otpCode: string): Observable<ApiResponse<string>> {
-    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/confirm-email?email=${encodeURIComponent(email)}&otpCode=${encodeURIComponent(otpCode)}`, {});
+    return this.http.post<ApiResponse<string>>(
+      `${this.baseUrl}/confirm-email?email=${encodeURIComponent(email)}&otpCode=${encodeURIComponent(otpCode)}`,
+      {},
+    );
   }
 
   resendOtp(email: string, type: number): Observable<ApiResponse<string>> {
-    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/resend-otp?email=${encodeURIComponent(email)}&type=${type}`, {});
+    return this.http.post<ApiResponse<string>>(
+      `${this.baseUrl}/resend-otp?email=${encodeURIComponent(email)}&type=${type}`,
+      {},
+    );
   }
 
   forgetPassword(email: string): Observable<ApiResponse<string>> {
-    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/forget-password?email=${encodeURIComponent(email)}`, {});
+    return this.http.post<ApiResponse<string>>(
+      `${this.baseUrl}/forget-password?email=${encodeURIComponent(email)}`,
+      {},
+    );
   }
 
   resetPassword(data: ResetPasswordRequest): Observable<ApiResponse<string>> {
     return this.http.post<ApiResponse<string>>(`${this.baseUrl}/reset-password`, data);
   }
 
-  changePassword(data: { currentPassword: string, newPassword: string, currentRefreshToken?: string }): Observable<ApiResponse<string>> {
+  changePassword(data: {
+    currentPassword: string;
+    newPassword: string;
+    currentRefreshToken?: string;
+  }): Observable<ApiResponse<string>> {
     const payload = { ...data, currentRefreshToken: this.getRefreshToken() };
     return this.http.post<ApiResponse<string>>(`${this.baseUrl}/change-password`, payload);
   }
 
-  refreshToken(data: { expiredAccessToken: string, refreshToken: string }): Observable<ApiResponse<AuthResponse>> {
+  refreshToken(data: {
+    expiredAccessToken: string;
+    refreshToken: string;
+  }): Observable<ApiResponse<AuthResponse>> {
     return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/refresh-token`, data).pipe(
-      tap(res => { if (res.success && res.data) this.setSession(res.data); })
+      tap((res) => {
+        if (res.success && res.data) this.setSession(res.data);
+      }),
     );
   }
 
   revokeToken(): Observable<ApiResponse<string>> {
     const currentRefreshToken = this.getRefreshToken();
-    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/revoke-token?token=${encodeURIComponent(currentRefreshToken || '')}`, {}).pipe(
-      tap(() => this.clearSession())
-    );
+    return this.http
+      .post<
+        ApiResponse<string>
+      >(`${this.baseUrl}/revoke-token?token=${encodeURIComponent(currentRefreshToken || '')}`, {})
+      .pipe(tap(() => this.clearSession()));
   }
 }
