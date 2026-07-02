@@ -15,3 +15,11 @@ export interface SendNotificationDTO {
   type: NotificationType;
   notificationDirectLink: string | null;
 }
+
+export interface NotificationPage {
+  items: GetUserNotificationsDTO[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
