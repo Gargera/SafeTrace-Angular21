@@ -4,5 +4,5 @@ export const environment = {
   apiBaseUrl: 'https://localhost:7041/api',
   signalRHubUrl: 'https://localhost:7041/SafeTrace.Application/Hubs/notifications',
   chatHubUrl: 'https://localhost:7041/chatHub',
-  googleMapsApiKey: 'YOUR_GOOGLE_MAPS_API_KEY',
+  googleMapsApiKey: 'AIzaSyAYJTJ4HxDw0uXyrQLf2vESYQ_a2tzGnxg',
 };

@@ -22,4 +22,5 @@ export interface NotificationPage {
   pageSize: number;
   totalCount: number;
   totalPages: number;
+  hasMore: boolean;
 }
