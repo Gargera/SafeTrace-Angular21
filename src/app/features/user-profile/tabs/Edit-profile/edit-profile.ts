@@ -1,8 +1,26 @@
 import { DecimalPipe, isPlatformBrowser } from '@angular/common';
-import { AfterViewInit, Component, inject, input, OnChanges, OnDestroy, output, PLATFORM_ID, signal, SimpleChanges } from '@angular/core';
-import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import {
+  AfterViewInit,
+  Component,
+  inject,
+  input,
+  OnChanges,
+  OnDestroy,
+  output,
+  PLATFORM_ID,
+  signal,
+  SimpleChanges,
+} from '@angular/core';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { Subject } from 'rxjs';
+import { Observable, Subject, switchMap } from 'rxjs';
 import { GetUserInfoDTO, UpdateProfileInfoDTO } from '../../../../core/models/profile.model';
 import { GeocodingService } from '../../../../core/services/gecoding.service';
 import { ProfileService } from '../../../../core/services/profile.service';
@@ -103,6 +121,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
+    this.#initGeocodePipeline();
     if (isPlatformBrowser(this.#platformId)) {
       // Listen for postMessage from the Google Maps embed when user clicks
       window.addEventListener('message', this.#onMapMessage.bind(this));
@@ -146,19 +165,28 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
       this.#reverseGeocode(lat, lng);
     }
   }
+  // Subject that cancels the previous geocoding request via switchMap
+  // when the user picks a new location before the response arrives.
+  readonly #geocode$ = new Subject<{ lat: number; lng: number }>();
+
+  #initGeocodePipeline(): void {
+    this.#geocode$
+      .pipe(switchMap(({ lat, lng }) => this.#geocodingService.reverseGeocode(lat, lng)))
+      .subscribe({
+        next: (address) => {
+          this.resolvedAddress.set(address);
+          this.isResolvingAddress.set(false);
+        },
+        // catchError is already inside the service — this branch is belt-and-suspenders
+        error: () => {
+          this.isResolvingAddress.set(false);
+        },
+      });
+  }
 
   #reverseGeocode(lat: number, lng: number): void {
     this.isResolvingAddress.set(true);
-    this.#geocodingService.reverseGeocode(lat, lng).subscribe({
-      next: (address) => {
-        this.resolvedAddress.set(address);
-        this.isResolvingAddress.set(false);
-      },
-      error: () => {
-        this.resolvedAddress.set(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
-        this.isResolvingAddress.set(false);
-      },
-    });
+    this.#geocode$.next({ lat, lng });
   }
 
   resetToEgypt(): void {
@@ -284,5 +312,14 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.#destroy$.next();
     this.#destroy$.complete();
+    this.#geocode$.complete();
+    if (isPlatformBrowser(this.#platformId)) {
+      window.removeEventListener('message', this.#onMapMessage.bind(this));
+    }
   }
 }
+// function switchMap(
+//   arg0: ({ lat, lng }: { lat: any; lng: any }) => Observable<string>,
+// ): import('rxjs').OperatorFunction<{ lat: number; lng: number }, unknown> {
+//   throw new Error('Function not implemented.');
+//}

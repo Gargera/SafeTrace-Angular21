@@ -97,45 +97,41 @@
         </div>
       </div>
 
-      <!-- Current selection badge + resolved address -->
-      @if (selectedLat() !== null && selectedLng() !== null) {
-        <div class="space-y-xs">
-          <!-- Raw coords -->
-          <div class="flex items-center gap-sm bg-surface-container px-md py-sm rounded-lg w-fit">
-            <span
-              class="material-symbols-outlined text-secondary text-[18px]"
-              style="font-variation-settings: 'FILL' 1"
-              >location_on</span
-            >
-            <span class="text-label-sm text-on-surface font-mono">
-              {{ selectedLat() | number: '1.4-4' }}, {{ selectedLng() | number: '1.4-4' }}
-            </span>
-          </div>
-
-          <!-- Resolved human-readable address -->
+      <!-- Resolved address — read-only, populated automatically from reverse geocoding -->
+      <div class="space-y-xs">
+        <label class="text-label-sm text-on-surface-variant">العنوان</label>
+        <div class="relative">
+          <input
+            type="text"
+            readonly
+            [value]="resolvedAddress() ?? ''"
+            placeholder="سيتم تحديد العنوان تلقائياً بعد اختيار الموقع"
+            class="w-full bg-surface-container border border-outline-variant rounded-lg p-md text-body-sm text-on-surface cursor-default select-none pr-10 focus:outline-none"
+          />
+          <!-- Spinner while resolving -->
           @if (isResolvingAddress()) {
-            <div class="flex items-center gap-sm text-on-surface-variant">
-              <span class="material-symbols-outlined text-[16px] animate-spin text-secondary">
-                progress_activity
-              </span>
-              <span class="text-label-sm">جارٍ تحديد العنوان...</span>
-            </div>
+            <span
+              class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-secondary animate-spin"
+            >
+              progress_activity
+            </span>
           } @else if (resolvedAddress()) {
-            <div class="flex items-center gap-sm">
-              <span
-                class="material-symbols-outlined text-on-tertiary-container text-[16px]"
-                style="font-variation-settings: 'FILL' 1"
-                >place</span
-              >
-              <span class="text-body-sm text-on-surface font-medium">{{ resolvedAddress() }}</span>
-            </div>
+            <span
+              class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-on-tertiary-container"
+              style="font-variation-settings: 'FILL' 1"
+            >
+              check_circle
+            </span>
           }
         </div>
-      } @else {
-        <p class="text-label-sm text-on-surface-variant">
-          أدخل إحداثيات الموقع يدوياً لتحديد العنوان.
-        </p>
-      }
+
+        <!-- Raw coordinate badge (informational) -->
+        @if (selectedLat() !== null && selectedLng() !== null) {
+          <p class="text-label-sm text-on-surface-variant font-mono">
+            {{ selectedLat() | number: '1.4-4' }}, {{ selectedLng() | number: '1.4-4' }}
+          </p>
+        }
+      </div>
 
       <!-- Google Maps Iframe Preview -->
       <div
