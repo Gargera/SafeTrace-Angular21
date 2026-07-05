@@ -4,66 +4,81 @@ import { adminGuard } from './core/guards/admin-guard';
 import { About } from './shared/components/about/about';
 
 export const routes: Routes = [
-  { 
-    path: 'auth', 
-    loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES) 
+  {
+    path: 'auth',
+    loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
   },
-  { 
-    path: 'admin', 
-    canActivate: [authGuard, adminGuard], 
-    loadChildren: () => import('./features/admin-dashboard/admin.routes').then(m => m.ADMIN_ROUTES) 
+  {
+    path: 'admin',
+    canActivate: [authGuard, adminGuard],
+    loadChildren: () =>
+      import('./features/admin-dashboard/admin.routes').then((m) => m.ADMIN_ROUTES),
   },
 
   {
     path: '',
-    loadComponent: () => import('./shared/components/main-layout/main-layout').then(c => c.MainLayout),
+    loadComponent: () =>
+      import('./shared/components/main-layout/main-layout').then((c) => c.MainLayout),
     children: [
-      { 
-        path: 'home', 
-        title: "الرئيسية",
-        loadChildren: () => import('./features/home-support/home-support.routes').then(m => m.HOME_SUPPORT_ROUTES) 
+      {
+        path: 'home',
+        title: 'الرئيسية',
+        loadChildren: () =>
+          import('./features/home-support/home-support.routes').then((m) => m.HOME_SUPPORT_ROUTES),
       },
-      { 
-        path: 'about', 
+      {
+        path: 'about',
         component: About,
-        title: "دليل المنصة"
+        title: 'دليل المنصة',
       },
-      { 
-        path: 'founded', 
-        title: "الحالات المعثور عليها",
-        loadChildren: () => import('./features/founded-cases/founded.routes').then(m => m.FOUNDED_ROUTES) 
+      {
+        path: 'founded',
+        title: 'الحالات المعثور عليها',
+        loadChildren: () =>
+          import('./features/founded/founded.routes').then((m) => m.FOUNDED_ROUTES),
       },
-      { 
-        path: 'urgent', 
-        title: "الحالات الطارئة",
-        loadChildren: () => import('./features/urgent-cases/urgent.routes').then(m => m.URGENT_ROUTES) 
+      {
+        path: 'urgent',
+        title: 'الحالات الطارئة',
+        loadChildren: () =>
+          import('./features/urgent-cases/urgent.routes').then((m) => m.URGENT_ROUTES),
       },
-      { 
-        path: 'long-term', 
-        title: "الحالات طويلة المدى",
-        loadChildren: () => import('./features/long-term-cases/long-term.routes').then(m => m.LONG_TERM_ROUTES) 
+      {
+        path: 'long-term',
+        title: 'الحالات طويلة المدى',
+        loadChildren: () =>
+          import('./features/long-term-cases/long-term.routes').then((m) => m.LONG_TERM_ROUTES),
       },
-      { 
-        path: 'unknown', 
-        title: "الحالات الغير معروفة",
-        loadChildren: () => import('./features/unknown-cases/unknown.routes').then(m => m.UNKNOWN_ROUTES) 
+      {
+        path: 'unknown',
+        title: 'الحالات الغير معروفة',
+        loadChildren: () =>
+          import('./features/unknown-cases/unknown.routes').then((m) => m.UNKNOWN_ROUTES),
       },
 
-      { 
-        path: 'aisearch', 
-        title: "البحث الذكي",
-        loadChildren: () => import('./features/ai-search/ai.routes').then(m => m.AiSearch_ROUTES) 
+      {
+        path: 'aisearch',
+        title: 'البحث الذكي',
+        loadChildren: () => import('./features/ai-search/ai.routes').then((m) => m.AiSearch_ROUTES),
       },
-      { 
-        path: 'profile', 
-        title: "الملف الشخصي",
+      {
+        path: 'profile',
+        title: 'الملف الشخصي',
         canActivate: [authGuard],
-        loadChildren: () => import('./features/user-profile/profile.routes').then(m => m.PROFILE_ROUTES) 
-      }
-    ]
+        loadChildren: () =>
+          import('./features/user-profile/profile.routes').then((m) => m.PROFILE_ROUTES),
+      },
+    ],
   },
-  
-  { path: '', redirectTo: 'home', pathMatch: 'full', title: "الرئيسية"},
-  { path: '403', loadComponent: () => import('./shared/components/access-denied/access-denied').then(c => c.AccessDenied) },
-  { path: '**', loadComponent: () => import('./shared/components/not-found/not-found').then(c => c.NotFound) }
+
+  { path: '', redirectTo: 'home', pathMatch: 'full', title: 'الرئيسية' },
+  {
+    path: '403',
+    loadComponent: () =>
+      import('./shared/components/access-denied/access-denied').then((c) => c.AccessDenied),
+  },
+  {
+    path: '**',
+    loadComponent: () => import('./shared/components/not-found/not-found').then((c) => c.NotFound),
+  },
 ];
