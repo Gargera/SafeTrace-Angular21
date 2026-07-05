@@ -23,10 +23,6 @@
 
       <a routerLink="/founded" routerLinkActive="text-secondary border-b-2 border-secondary font-medium" class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200">الحالات المعثور عليها</a>
 
-      @if (isLoggedIn()) {
-        <a routerLink="/report" routerLinkActive="text-secondary border-b-2 border-secondary font-medium" class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200">تقديم بلاغ</a>
-      }
-
       <a routerLink="/aisearch" routerLinkActive="text-secondary border-b-2 border-secondary font-medium" class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 gap-1 transition-colors duration-200">
         <span>البحث الذكي بالصورة</span>
       </a>
@@ -60,15 +56,20 @@
           </div>
 
           <div class="absolute left-0 top-14 w-44 bg-surface-container border border-outline-variant rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-            <a routerLink="/profile" class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl">حسابي</a>
-            <a routerLink="/my-cases" class="block px-md py-sm text-on-surface hover:bg-surface-container-high">بلاغاتي</a>
+            @if (isAdmin()) {
+              <a routerLink="/admin" class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl">لوحة التحكم</a>
+              <a routerLink="/profile" class="block px-md py-sm text-on-surface hover:bg-surface-container-high">حسابي</a>
+            } @else {
+              <a routerLink="/profile" class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl">حسابي</a>
+              <a routerLink="/my-cases" class="block px-md py-sm text-on-surface hover:bg-surface-container-high">بلاغاتي</a>
+            }
             <button (click)="logout()" class="w-full text-right block px-md py-sm text-error hover:bg-error-container hover:text-on-error-container last:rounded-b-xl">تسجيل الخروج</button>
           </div>
         </div>
       } @else {
         <div class="flex items-center gap-xs">
-          <a routerLink="/login" class="text-secondary hover:bg-surface-container-low px-md py-sm rounded-full font-label-md transition-all duration-200">تسجيل الدخول</a>
-          <a routerLink="/register" class="bg-secondary text-on-secondary hover:bg-secondary-container px-md py-sm rounded-full font-label-md transition-all duration-200 shadow-sm">إنشاء حساب</a>
+          <a routerLink="/auth" class="text-secondary hover:bg-surface-container-low px-md py-sm rounded-full font-label-md transition-all duration-200">تسجيل الدخول</a>
+          <a routerLink="/auth/register" class="bg-secondary text-on-secondary hover:bg-secondary-container px-md py-sm rounded-full font-label-md transition-all duration-200 shadow-sm">إنشاء حساب</a>
         </div>
       }
     </div>
