@@ -10,15 +10,17 @@ export const routes: Routes = [
     path: 'auth', 
     loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES) 
   },
-  { 
-    path: 'admin', 
-    canActivate: [authGuard, adminGuard], 
-    loadChildren: () => import('./features/admin-dashboard/admin.routes').then(m => m.ADMIN_ROUTES) 
+  {
+    path: 'admin',
+    canActivate: [authGuard, adminGuard],
+    loadChildren: () =>
+      import('./features/admin-dashboard/admin.routes').then((m) => m.ADMIN_ROUTES),
   },
 
   {
     path: '',
-    loadComponent: () => import('./shared/components/main-layout/main-layout').then(c => c.MainLayout),
+    loadComponent: () =>
+      import('./shared/components/main-layout/main-layout').then((c) => c.MainLayout),
     children: [
       {
         path: '', 
@@ -38,7 +40,7 @@ export const routes: Routes = [
       { 
         path: 'founded', 
         title: "الحالات المعثور عليها | لقاء",
-        loadChildren: () => import('./features/founded-cases/founded.routes').then(m => m.FOUNDED_ROUTES) 
+        loadChildren: () => import('./features/founded/founded.routes').then(m => m.FOUNDED_ROUTES) 
       },
       { 
         path: 'urgent', 
@@ -65,9 +67,10 @@ export const routes: Routes = [
         path: 'profile', 
         title: "الملف الشخصي | لقاء",
         canActivate: [authGuard],
-        loadChildren: () => import('./features/user-profile/profile.routes').then(m => m.PROFILE_ROUTES) 
-      }
-    ]
+        loadChildren: () =>
+          import('./features/user-profile/profile.routes').then((m) => m.PROFILE_ROUTES),
+      },
+    ],
   },
   
   { path: '403', loadComponent: () => import('./shared/components/access-denied/access-denied').then(c => c.AccessDenied) },
