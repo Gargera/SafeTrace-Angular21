@@ -3,6 +3,7 @@ import { GeocodingService } from '../../../core/services/gecoding.service';
 
 import { GetUserInfoDTO } from '../../../core/models/profile.model';
 import { VerificationStatus } from '../../enums/verification-status';
+import { environment } from '../../../../environments/environment.development';
 
 @Component({
   selector: 'app-profile-sidebar',
@@ -25,11 +26,20 @@ export class ProfileSidebar {
   constructor() {
     // Re-run whenever userInfo changes — resolves address automatically
     effect(() => {
+      console.log('Effect fired');
+
       const info = this.userInfo();
+      console.log(info);
+
       if (info?.homeLatitude && info?.homeLongitude) {
+        console.log('Calling reverseGeocode');
+
         this.isResolvingAddress.set(true);
         this.#geocodingService.reverseGeocode(info.homeLatitude, info.homeLongitude).subscribe({
           next: (address) => {
+            console.log('Address:', address);
+            console.log(environment.googleMapsApiKey);
+
             this.resolvedAddress.set(address);
             this.isResolvingAddress.set(false);
           },
