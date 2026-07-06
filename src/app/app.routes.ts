@@ -40,7 +40,7 @@ export const routes: Routes = [
       { 
         path: 'founded', 
         title: "الحالات المعثور عليها | لقاء",
-        loadChildren: () => import('./features/founded-cases/founded.routes').then(m => m.FOUNDED_ROUTES) 
+        loadChildren: () => import('./features/founded/founded.routes').then(m => m.FOUNDED_ROUTES) 
       },
       { 
         path: 'urgent', 
