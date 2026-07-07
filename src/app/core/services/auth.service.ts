@@ -74,14 +74,14 @@ export class AuthService {
     );
   }
 
-  googleLogin(providerToken: string): Observable<ApiResponse<AuthResponse>> {
-    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/google-login`, { providerToken }).pipe(
+  googleLogin(data: { providerToken: string }): Observable<ApiResponse<AuthResponse>> {
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/google-login`, data).pipe(
       tap(res => { if (res.success && res.data) this.setSession(res.data); })
     );
   }
 
-  facebookLogin(providerToken: string): Observable<ApiResponse<AuthResponse>> {
-    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/facebook-login`, { providerToken }).pipe(
+  facebookLogin(data: { providerToken: string }): Observable<ApiResponse<AuthResponse>> {
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/facebook-login`, data).pipe(
       tap(res => { if (res.success && res.data) this.setSession(res.data); })
     );
   }
