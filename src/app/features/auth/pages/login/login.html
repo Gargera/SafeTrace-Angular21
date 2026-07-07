@@ -1,10 +1,17 @@
 <div class="min-h-screen bg-surface flex flex-col justify-center items-center px-margin-mobile py-12">
   
-  <div class="text-center mb-8">
-    <a routerLink="/home" class="inline-flex items-center justify-center bg-primary text-on-primary w-12 h-12 rounded-xl mb-4 hover:scale-105 transition-transform shadow-md">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+  <div class="absolute top-6 right-6 md:top-8 md:right-8">
+    <a routerLink="/home" class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-medium text-body-sm bg-surface-container-lowest px-4 py-2 rounded-full shadow-sm border border-outline-variant hover:shadow-md">
+      <svg class="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+      العودة للرئيسية
     </a>
-    <h1 class="text-3xl font-headline-lg font-bold text-primary mb-2">SafeTrace</h1>
+  </div>
+
+  <div class="text-center mb-8">
+    <a routerLink="/home" class="inline-flex items-center justify-center text-on-primary w-12 h-12 rounded-xl mb-4 hover:scale-105 transition-transform shadow-md">
+      <img src="images/logo.svg" alt="منصة لقاء" class="h-10 w-auto" />
+    </a>
+    <h1 class="text-3xl font-headline-lg font-bold text-primary mb-2">لقاء</h1>
     <p class="text-on-surface-variant text-body-md max-w-87.5 mx-auto">الدقة الإنسانية في البحث والإنقاذ. يرجى تسجيل الدخول للوصول إلى لوحة التحكم.</p>
   </div>
 
@@ -63,12 +70,12 @@
           <a routerLink="/auth/forgot-password" class="text-secondary text-body-sm font-medium hover:underline">نسيت كلمة المرور؟</a>
         </div>
         
-        <div class="relative">
+        <div class="relative w-full">
           <input [type]="showPassword() ? 'text' : 'password'" formControlName="password" placeholder="••••••••" dir="ltr"
                  [class.border-error]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
-                 class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl pl-11 pr-4 py-3 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all text-right focus:text-left">
+                 class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 pr-12 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all text-right focus:text-left">
           
-          <button type="button" (click)="togglePassword()" class="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none">
+          <button type="button" (click)="togglePassword()" class="absolute inset-y-0 right-0 px-4 flex items-center text-on-surface-variant hover:text-primary transition-colors focus:outline-none">
             @if (showPassword()) {
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
             } @else {

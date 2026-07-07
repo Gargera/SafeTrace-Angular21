@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -10,17 +10,19 @@ import Swal from 'sweetalert2';
   imports: [ReactiveFormsModule, RouterModule],
   templateUrl: './reset-password.html'
 })
-export class ResetPassword {
+export class ResetPassword implements OnDestroy {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
 
   step = signal<number>(1);
   isLoading = signal<boolean>(false);
+  isResending = signal<boolean>(false);
   apiErrorMessage = signal<string>('');
   savedEmail = signal<string>('');
+  countdown = signal<number>(0);
+  private intervalId: any;
 
-  // Signal للتحكم في إظهار وإخفاء الباسوورد
   showPassword = signal<boolean>(false);
 
   emailForm: FormGroup = this.fb.group({
@@ -32,7 +34,12 @@ export class ResetPassword {
     newPassword: ['', [Validators.required, Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).+$')]]
   });
 
-  // دالة تغيير حالة الباسوورد
+  ngOnDestroy() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+  }
+
   togglePassword() {
     this.showPassword.update(v => !v);
   }
@@ -48,10 +55,38 @@ export class ResetPassword {
         this.isLoading.set(false);
         this.savedEmail.set(email);
         this.step.set(2);
+        this.startCountdown();
       },
       error: (err) => {
         this.isLoading.set(false);
         this.apiErrorMessage.set(err.error?.detail || 'حدث خطأ، تأكد من بريدك الإلكتروني.');
+      }
+    });
+  }
+
+  onResendOtp() {
+    if (this.countdown() > 0) return;
+
+    this.apiErrorMessage.set('');
+    this.isResending.set(true);
+    this.startCountdown();
+
+    this.authService.forgetPassword(this.savedEmail()).subscribe({
+      next: (res) => {
+        this.isResending.set(false);
+        Swal.fire({
+          title: 'تم الإرسال!',
+          text: 'تم إرسال رمز جديد إلى بريدك الإلكتروني، الرمز صالح لمدة 10 دقائق.',
+          icon: 'success',
+          confirmButtonColor: '#0058be',
+          customClass: { popup: 'rounded-xl font-body-md' }
+        });
+      },
+      error: (err) => {
+        this.isResending.set(false);
+        this.countdown.set(0);
+        clearInterval(this.intervalId);
+        this.apiErrorMessage.set(err.error?.detail || 'حدث خطأ أثناء إعادة إرسال الرمز. يرجى المحاولة لاحقاً.');
       }
     });
   }
@@ -83,5 +118,19 @@ export class ResetPassword {
         this.apiErrorMessage.set(err.error?.detail || 'رمز التحقق غير صحيح أو منتهي الصلاحية.');
       }
     });
+  }
+
+  private startCountdown() {
+    this.countdown.set(60);
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+    this.intervalId = setInterval(() => {
+      if (this.countdown() > 0) {
+        this.countdown.update(c => c - 1);
+      } else {
+        clearInterval(this.intervalId);
+      }
+    }, 1000);
   }
 }
