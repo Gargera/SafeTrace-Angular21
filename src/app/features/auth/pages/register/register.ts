@@ -23,7 +23,7 @@ export class Register {
     fName: ['', [Validators.required, Validators.maxLength(100)]],
     lName: ['', [Validators.required, Validators.maxLength(100)]],
     email: ['', [Validators.required, Validators.email]],
-    phoneNumber: ['', [Validators.required, Validators.pattern('^01[0-9]{9}$')]],
+    phoneNumber: ['', [Validators.required, Validators.pattern('^01[0125][0-9]{8}$')]],
     password: ['', [Validators.required, Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).+$')]]
   });
 
