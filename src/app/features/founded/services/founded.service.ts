@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment.development';
 import {
   FoundedHeaderQueryDTO,
   FoundPersonListItemDto,
@@ -13,7 +14,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class FoundedService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'https://localhost:7292/api/Founded';
+  private readonly baseUrl = `${environment.baseUrl}/api/Founded`;
 
   getAll(query: FoundedHeaderQueryDTO): Observable<PaginationResponseDto<FoundPersonListItemDto>> {
     let params = new HttpParams()
