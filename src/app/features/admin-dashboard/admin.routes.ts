@@ -1,9 +1,23 @@
 import { Routes } from '@angular/router';
-import { Overview } from './pages/overview/overview';
 
 export const ADMIN_ROUTES: Routes = [
-  { 
-    path: '', 
-    component: Overview
+  {
+    path: '',
+    loadComponent: () => import('./pages/overview/overview').then((c) => c.Overview),
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'dashboard',
+      },
+      {
+        path: 'dashboard',
+        title: 'لوحة التحكم | لقاء',
+        loadComponent: () =>
+          import('./pages/dashboard-statistics/dashboard-statistics').then(
+            (m) => m.DashboardStatistics,
+          ),
+      },
+    ],
   },
 ];

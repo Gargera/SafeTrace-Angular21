@@ -1,1 +1,126 @@
-<p>overview works!</p>
+<!-- src/app/layout/admin-layout/admin-layout.html -->
+
+<div dir="rtl" class="bg-surface text-on-surface min-h-screen flex overflow-x-hidden">
+  <!-- Mobile overlay -->
+  @if (mobileSidebarOpen()) {
+    <div class="fixed inset-0 bg-black/40 z-40 md:hidden" (click)="toggleMobileSidebar()"></div>
+  }
+
+  <!-- Sidebar -->
+  <aside
+    class="w-72 bg-primary text-on-primary flex-col fixed inset-y-0 right-0 z-50 transition-transform duration-300 md:translate-x-0 md:flex"
+    [class.flex]="mobileSidebarOpen()"
+    [class.hidden]="!mobileSidebarOpen()"
+  >
+    <!-- Logo -->
+    <div class="h-16 flex items-center px-lg border-b border-on-primary-container/20">
+      <a
+        routerLink="/admin/dashboard"
+        routerLinkActive="sidebar-active"
+        class="flex items-center gap-md px-md py-sm rounded-xl text-on-primary-container hover:bg-on-primary-container/10 transition-all"
+      >
+        <img src="images/logo-white.svg" alt="منصة لقاء" class="h-12 w-auto" />
+        <!-- <span class="text-headline-md font-bold text-on-primary">لقاء</span> -->
+      </a>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 px-sm py-xl space-y-sm overflow-y-auto">
+      <!-- Dashboard -->
+
+      <!-- Cases -->
+      <div class="space-y-xs">
+        <button
+          type="button"
+          class="w-full flex items-center justify-between px-md py-sm rounded-xl text-on-primary-container hover:bg-on-primary-container/10 transition-all"
+          (click)="toggleCasesMenu()"
+        >
+          <div class="flex items-center gap-md">
+            <span class="text-label-md">الحالات</span>
+          </div>
+
+          <span
+            class="material-symbols-outlined text-sm transition-transform duration-200"
+            [style.transform]="casesMenuOpen() ? 'rotate(180deg)' : 'rotate(0deg)'"
+          >
+          </span>
+        </button>
+
+        @if (casesMenuOpen()) {
+          <div class="pr-xl space-y-xs">
+            <a
+              routerLink="/dashboard/cases/urgent"
+              routerLinkActive="text-on-primary opacity-100"
+              class="flex items-center gap-sm px-md py-xs rounded-lg text-label-md text-on-primary-container opacity-80 hover:opacity-100 hover:bg-on-primary-container/5"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+              حالات عاجلة
+            </a>
+
+            <a
+              routerLink="/dashboard/cases/long-term"
+              routerLinkActive="text-on-primary opacity-100"
+              class="flex items-center gap-sm px-md py-xs rounded-lg text-label-md text-on-primary-container opacity-80 hover:opacity-100 hover:bg-on-primary-container/5"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+              طويلة الأمد
+            </a>
+
+            <a
+              routerLink="/dashboard/cases/unknown"
+              routerLinkActive="text-on-primary opacity-100"
+              class="flex items-center gap-sm px-md py-xs rounded-lg text-label-md text-on-primary-container opacity-80 hover:opacity-100 hover:bg-on-primary-container/5"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+              مجهولة الهوية
+            </a>
+          </div>
+        }
+      </div>
+
+      <!-- Complaints -->
+      <a
+        routerLink="/dashboard/complaints"
+        routerLinkActive="sidebar-active"
+        class="flex items-center gap-md px-md py-sm rounded-xl text-on-primary-container hover:bg-on-primary-container/10 transition-all"
+      >
+        <span class="text-label-md">الشكاوى</span>
+      </a>
+
+      <!-- Footer Menu -->
+      <div class="pt-xl border-t border-on-primary-container/10 mt-xl">
+        <a
+          routerLink="/dashboard/settings"
+          routerLinkActive="sidebar-active"
+          class="flex items-center gap-md px-md py-sm rounded-xl text-on-primary-container hover:bg-on-primary-container/10 transition-all"
+        >
+          <span class="text-label-md">الإعدادات</span>
+        </a>
+
+        <button
+          type="button"
+          class="w-full flex items-center gap-md px-md py-sm rounded-xl text-on-primary-container hover:bg-on-primary-container/10 transition-all"
+        >
+          <span class="text-label-md">تسجيل الخروج</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- User -->
+    <div class="p-lg bg-primary-container/50 flex items-center gap-md">
+      <div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center">
+        <span class="material-symbols-outlined text-on-secondary">account_circle</span>
+      </div>
+
+      <div class="flex flex-col">
+        <span class="text-label-md font-bold text-on-primary">أحمد العلي</span>
+        <span class="text-label-sm text-on-primary-container opacity-70"> مسؤول النظام </span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 md:pr-72 w-full min-h-screen">
+    <router-outlet></router-outlet>
+  </main>
+</div>
