@@ -13,14 +13,12 @@ export const routes: Routes = [
   {
     path: 'admin',
     canActivate: [authGuard, adminGuard],
-    loadChildren: () =>
-      import('./features/admin-dashboard/admin.routes').then((m) => m.ADMIN_ROUTES),
+    loadChildren: () => import('./features/admin-dashboard/admin.routes').then((m) => m.ADMIN_ROUTES),
   },
 
   {
     path: '',
-    loadComponent: () =>
-      import('./shared/components/main-layout/main-layout').then((c) => c.MainLayout),
+    loadComponent: () => import('./shared/components/main-layout/main-layout').then((c) => c.MainLayout),
     children: [
       {
         path: '', 
@@ -67,8 +65,7 @@ export const routes: Routes = [
         path: 'profile', 
         title: "الملف الشخصي | لقاء",
         canActivate: [authGuard],
-        loadChildren: () =>
-          import('./features/user-profile/profile.routes').then((m) => m.PROFILE_ROUTES),
+        loadChildren: () => import('./features/user-profile/profile.routes').then((m) => m.PROFILE_ROUTES),
       },
     ],
   },

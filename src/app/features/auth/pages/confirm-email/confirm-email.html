@@ -4,7 +4,11 @@
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
     </a>
     <h1 class="text-3xl font-headline-lg font-bold text-primary mb-2">تأكيد البريد الإلكتروني</h1>
-    <p class="text-on-surface-variant text-body-md max-w-87.5">لقد أرسلنا رمز تحقق مكون من 6 أرقام إلى {{ email() }}</p>
+    <p class="text-on-surface-variant text-body-md max-w-87.5 mx-auto">
+      لقد أرسلنا رمز تحقق مكون من 6 أرقام إلى {{ email() }} <br>
+      <span class="font-bold text-error">(الرمز صالح لمدة 10 دقائق)</span> <br>
+      <span class="text-body-sm mt-1 block">يرجى تفقد مجلد البريد غير المرغوب فيه (Spam) إذا لم تجد الرسالة.</span>
+    </p>
   </div>
 
   <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-sm w-full max-w-112.5 p-6 md:p-8">
@@ -29,7 +33,14 @@
 
     <div class="text-center mt-6">
       <p class="text-on-surface-variant text-body-sm">
-        لم يصلك الرمز؟ <button (click)="resendOtp()" class="text-secondary font-semibold hover:underline bg-transparent border-none cursor-pointer">إعادة الإرسال</button>
+        لم يصلك الرمز؟ 
+        <button type="button" (click)="resendOtp()" [disabled]="countdown() > 0" class="text-secondary font-semibold hover:underline bg-transparent border-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline">
+          @if (countdown() > 0) {
+            إعادة الإرسال بعد {{ countdown() }} ثانية
+          } @else {
+            إعادة الإرسال
+          }
+        </button>
       </p>
     </div>
   </div>

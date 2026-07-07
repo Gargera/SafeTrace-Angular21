@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -10,7 +10,7 @@ import Swal from 'sweetalert2';
   imports: [ReactiveFormsModule, RouterModule],
   templateUrl: './confirm-email.html'
 })
-export class ConfirmEmail implements OnInit {
+export class ConfirmEmail implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -18,6 +18,8 @@ export class ConfirmEmail implements OnInit {
   email = signal<string>('');
   isLoading = signal<boolean>(false);
   apiErrorMessage = signal<string>('');
+  countdown = signal<number>(0);
+  private intervalId: any;
 
   confirmForm: FormGroup = this.fb.group({
     otpCode: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]]
@@ -27,8 +29,15 @@ export class ConfirmEmail implements OnInit {
     const state = history.state;
     if (state && state.email) {
       this.email.set(state.email);
+      this.startCountdown();
     } else {
-      this.router.navigate(['/auth/login']); // منع الدخول المباشر للصفحة بدون إيميل
+      this.router.navigate(['/auth/login']);
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
     }
   }
 
@@ -45,7 +54,6 @@ export class ConfirmEmail implements OnInit {
         this.isLoading.set(false);
         Swal.fire({
           title: 'تم التأكيد!',
-          // 🛑 التعديل هنا: استخدام رسالة الباك إند مباشرة
           text: res.message || 'تم تفعيل حسابك بنجاح. يمكنك الآن تسجيل الدخول.',
           icon: 'success',
           confirmButtonText: 'تسجيل الدخول',
@@ -61,14 +69,30 @@ export class ConfirmEmail implements OnInit {
   }
 
   resendOtp() {
+    if (this.countdown() > 0) return;
+    
+    this.startCountdown();
+
     this.authService.resendOtp(this.email(), 1).subscribe({
       next: (res) => {
-        // 🛑 التعديل هنا: استخدام رسالة الباك إند
         Swal.fire('تم الإرسال', res.message, 'success');
       },
       error: (err) => {
+        this.countdown.set(0);
+        clearInterval(this.intervalId);
         Swal.fire('خطأ', err.error?.detail || 'حدث خطأ أثناء محاولة إرسال الرمز.', 'error');
       }
     });
+  }
+
+  private startCountdown() {
+    this.countdown.set(60);
+    this.intervalId = setInterval(() => {
+      if (this.countdown() > 0) {
+        this.countdown.update(c => c - 1);
+      } else {
+        clearInterval(this.intervalId);
+      }
+    }, 1000);
   }
 }
