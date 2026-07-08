@@ -13,7 +13,8 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const token = authService.getToken();
 
   let clonedReq = req;
-  if (token) {
+  
+  if (token && !req.url.includes('/login') && !req.url.includes('/refresh-token')) {
     clonedReq = req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
   }
 
@@ -24,26 +25,23 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
           isRefreshing = true;
           refreshTokenSubject.next(null);
 
-          const refreshToken = authService.getRefreshToken();
-          if (refreshToken) {
-            return authService.refreshToken({ expiredAccessToken: token, refreshToken }).pipe(
-              switchMap((res) => {
-                isRefreshing = false;
-                if (res.success && res.data) {
-                  refreshTokenSubject.next(res.data.accessToken);
-                  const newReq = req.clone({ setHeaders: { Authorization: `Bearer ${res.data.accessToken}` } });
-                  return next(newReq);
-                }
-                return throwError(() => new Error('Refresh failed'));
-              }),
-              catchError((refreshErr) => {
-                isRefreshing = false;
-                authService.clearSession();
-                router.navigate(['/auth']);
-                return throwError(() => refreshErr);
-              })
-            );
-          }
+          return authService.refreshToken().pipe(
+            switchMap((res) => {
+              isRefreshing = false;
+              if (res.success && res.data) {
+                refreshTokenSubject.next(res.data.accessToken);
+                const newReq = req.clone({ setHeaders: { Authorization: `Bearer ${res.data.accessToken}` } });
+                return next(newReq);
+              }
+              return throwError(() => new Error('Refresh failed'));
+            }),
+            catchError((refreshErr) => {
+              isRefreshing = false;
+              authService.clearSession();
+              router.navigate(['/auth']);
+              return throwError(() => refreshErr);
+            })
+          );
         } else {
           return refreshTokenSubject.pipe(
             filter(newToken => newToken !== null),

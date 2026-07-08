@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { Router, RouterModule } from '@angular/router';
+import { environment } from '../../../../environments/environment.development'; // تأكدي من مسار الـ environment الصحيح
 import Swal from 'sweetalert2';
 
 @Component({
@@ -18,6 +19,17 @@ export class Navbar implements OnInit {
   currentUser = this.authService.currentUser;
 
   ngOnInit(): void {}
+
+  getProfileImageUrl(): string {
+    const imgPath = this.currentUser()?.profileImage;
+    if (!imgPath) return '';
+    
+    if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+      return imgPath;
+    }
+    
+    return `${environment.baseUrl}/${imgPath.replace(/^\//, '')}`;
+  }
 
   isAdmin(): boolean {
     const token = this.authService.getToken();

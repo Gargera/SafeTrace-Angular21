@@ -41,12 +41,11 @@
         <div class="relative group flex items-center gap-xs cursor-pointer h-full">
           <div class="w-9 h-9 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-between overflow-hidden border border-outline">
             @if (currentUser()?.profileImage) {
-              <img [src]="currentUser()?.profileImage" alt="User Profile" class="w-full h-full object-cover" />
+              <img [src]="getProfileImageUrl()" alt="User Profile" class="w-full h-full object-cover" />
             } @else {
               <span class="m-auto font-medium text-sm">{{ currentUser()?.fName?.[0] }}</span>
             }
           </div>
-          
           <div class="hidden sm:flex flex-col items-start leading-tight">
             <div class="flex items-center gap-1">
               <span class="font-body-md font-semibold text-on-surface">{{ currentUser()?.fName }}</span>
@@ -62,7 +61,6 @@
               <a routerLink="/profile" class="block px-md py-sm text-on-surface hover:bg-surface-container-high">حسابي</a>
             } @else {
               <a routerLink="/profile" class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl">حسابي</a>
-              <a routerLink="/my-cases" class="block px-md py-sm text-on-surface hover:bg-surface-container-high">بلاغاتي</a>
             }
             <button (click)="logout()" class="w-full text-right block px-md py-sm text-error hover:bg-error-container hover:text-on-error-container last:rounded-b-xl">تسجيل الخروج</button>
           </div>
