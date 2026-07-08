@@ -50,7 +50,7 @@
           </button>
 
           @if (isNotificationDropdownOpen()) {
-            <div class="absolute left-0 sm:left-auto sm:right-0 top-12 w-[calc(100vw-2rem)] max-w-sm md:w-96 bg-surface-container border border-outline-variant rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col max-h-[85vh] animate-fade-in">
+            <div class="absolute left-0 sm:left-auto sm:right-0 top-12 w-[calc(100vw-2rem)] max-w-40 md:w-96 bg-surface-container border border-outline-variant rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col max-h-[85vh] animate-fade-in">
               <div class="flex items-center justify-between px-md py-sm border-b border-outline-variant bg-surface-container-high">
                 <span class="font-bold text-body-md text-on-surface">الإشعارات</span>
                 @if (notificationService.unreadCount() > 0) {
