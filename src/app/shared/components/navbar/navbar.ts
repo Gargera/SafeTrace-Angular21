@@ -3,7 +3,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Router, RouterModule } from '@angular/router';
 import { NotificationService } from '../../../core/services/notification.service';
 import { GetUserNotificationsDTO } from '../../../core/models/notification.model';
-import { environment } from '../../../../environments/environment.development'; // تأكدي من مسار الـ environment الصحيح
+import { environment } from '../../../../environments/environment.development';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -20,7 +20,10 @@ export class Navbar implements OnInit {
 
   isLoggedIn = this.authService.isLoggedIn;
   currentUser = this.authService.currentUser;
+  
   isNotificationDropdownOpen = signal(false);
+  isProfileDropdownOpen = signal(false);
+  isMobileMenuOpen = signal(false);
 
   constructor() {
     effect(() => {
@@ -32,16 +35,44 @@ export class Navbar implements OnInit {
     });
   }
 
+  ngOnInit(): void {}
+
   toggleNotificationDropdown(event: Event): void {
     event.stopPropagation();
     this.isNotificationDropdownOpen.update((v) => !v);
+    this.isProfileDropdownOpen.set(false); 
+  }
+
+  toggleProfileDropdown(event: Event): void {
+    event.stopPropagation();
+    this.isProfileDropdownOpen.update((v) => !v);
+    this.isNotificationDropdownOpen.set(false);
+  }
+
+  toggleMobileMenu(event?: Event): void {
+    if (event) event.stopPropagation();
+    this.isMobileMenuOpen.update((v) => !v);
   }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
+    
     if (!target.closest('.notification-container')) {
       this.isNotificationDropdownOpen.set(false);
+    }
+    if (!target.closest('.profile-container')) {
+      this.isProfileDropdownOpen.set(false);
+    }
+    if (!target.closest('.mobile-menu-container') && !target.closest('.mobile-menu-button')) {
+      this.isMobileMenuOpen.set(false);
+    }
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    if (window.innerWidth >= 768) {
+      this.isMobileMenuOpen.set(false);
     }
   }
 
@@ -50,9 +81,7 @@ export class Navbar implements OnInit {
       this.notificationService.markAsRead(n.id);
     }
 
-    if (!n.notificationDirectLink) {
-      return;
-    }
+    if (!n.notificationDirectLink) return;
 
     this.isNotificationDropdownOpen.set(false);
 
@@ -61,14 +90,10 @@ export class Navbar implements OnInit {
       n.notificationDirectLink.startsWith('https://')
     ) {
       window.open(n.notificationDirectLink, '_blank');
-      // أو:
-      // window.location.href = n.notificationDirectLink;
     } else {
       this.router.navigateByUrl(n.notificationDirectLink);
     }
   }
-
-  ngOnInit(): void {}
 
   getProfileImageUrl(): string {
     const imgPath = this.currentUser()?.profileImage;
@@ -77,7 +102,6 @@ export class Navbar implements OnInit {
     if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
       return imgPath;
     }
-
     return `${environment.baseUrl}/${imgPath.replace(/^\//, '')}`;
   }
 
