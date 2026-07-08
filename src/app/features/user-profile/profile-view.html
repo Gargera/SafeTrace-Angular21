@@ -45,7 +45,7 @@
                   <!-- Notification badge on Notifications tab -->
                   @if (tab.id === 'notifications' && notificationUnreadCount() > 0) {
                     <span
-                      class="absolute top-2 left-1/2 -translate-x-1/2 translate-x-6 bg-error text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-[3px]"
+                      class="absolute top-2 left-1/2 translate-x-6 bg-error text-white text-[10px] font-bold rounded-full min-w-4.5 h-4.5 flex items-center justify-center px-0.75"
                     >
                       {{ notificationUnreadCount() > 99 ? '99+' : notificationUnreadCount() }}
                     </span>
@@ -62,9 +62,7 @@
                   (profileUpdated)="onProfileUpdated($event)"
                 />
               }
-              @case ('reports') {
-                <app-reports-tab />
-              }
+
               @case ('chat') {
                 <app-chat-tab />
               }

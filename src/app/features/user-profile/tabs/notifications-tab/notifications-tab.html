@@ -49,10 +49,7 @@
           [class.opacity-75]="n.isRead"
         >
           <!-- Type icon -->
-          <div
-            class="p-2 rounded-lg text-white flex-shrink-0"
-            [class]="getNotificationIconBg(n)"
-          >
+          <div class="p-2 rounded-lg text-white shrink-0" [class]="getNotificationIconBg(n)">
             <span
               class="material-symbols-outlined text-[20px]"
               style="font-variation-settings: 'FILL' 1"
@@ -67,7 +64,7 @@
               <p class="text-body-sm text-on-surface leading-relaxed" [class.font-bold]="!n.isRead">
                 {{ n.content }}
               </p>
-              <span class="text-label-sm text-on-surface-variant whitespace-nowrap flex-shrink-0">
+              <span class="text-label-sm text-on-surface-variant whitespace-nowrap shrink-0">
                 {{ formatDate(n.createdAt) }}
               </span>
             </div>
@@ -101,7 +98,7 @@
 
           <!-- Unread dot -->
           @if (!n.isRead) {
-            <span class="w-2 h-2 rounded-full bg-secondary flex-shrink-0 mt-1"></span>
+            <span class="w-2 h-2 rounded-full bg-secondary shrink-0 mt-1"></span>
           }
         </div>
       }
@@ -130,5 +127,3 @@
     <p class="text-center text-label-sm text-on-surface-variant pt-lg">تم عرض جميع الإشعارات</p>
   }
 </div>
-
-
