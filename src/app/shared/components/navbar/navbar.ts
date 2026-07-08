@@ -48,8 +48,21 @@ export class Navbar implements OnInit {
     if (!n.isRead) {
       this.notificationService.markAsRead(n.id);
     }
-    if (n.notificationDirectLink) {
-      this.isNotificationDropdownOpen.set(false);
+
+    if (!n.notificationDirectLink) {
+      return;
+    }
+
+    this.isNotificationDropdownOpen.set(false);
+
+    if (
+      n.notificationDirectLink.startsWith('http://') ||
+      n.notificationDirectLink.startsWith('https://')
+    ) {
+      window.open(n.notificationDirectLink, '_blank');
+      // أو:
+      // window.location.href = n.notificationDirectLink;
+    } else {
       this.router.navigateByUrl(n.notificationDirectLink);
     }
   }
@@ -61,7 +74,8 @@ export class Navbar implements OnInit {
     if (!token) return false;
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      const roleClaim = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || payload.role;
+      const roleClaim =
+        payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || payload.role;
       return roleClaim === 'Admin' || (Array.isArray(roleClaim) && roleClaim.includes('Admin'));
     } catch {
       return false;
@@ -82,8 +96,8 @@ export class Navbar implements OnInit {
       color: '#0b1c30',
       iconColor: '#ba1a1a',
       customClass: {
-        popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl'
-      }
+        popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl',
+      },
     }).then((result) => {
       if (result.isConfirmed) {
         this.authService.revokeToken().subscribe({
@@ -93,7 +107,7 @@ export class Navbar implements OnInit {
           error: () => {
             this.authService.clearSession();
             this.router.navigate(['/auth']);
-          }
+          },
         });
       }
     });

@@ -2,42 +2,72 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
-import { GetUserInfoDTO, UpdateProfileInfoDTO } from '../models/profile.model';
+import {
+  AddIdImageDTO,
+  ChangePasswordDTO,
+  GetUserInfoDTO,
+  UpdateHomeLocationDTO,
+  UpdateNameDTO,
+  UpdateProfileImageDTO,
+} from '../models/profile.model';
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
   data: T;
 }
+
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
   readonly #http = inject(HttpClient);
-  readonly #baseUrl = `${environment.apiBaseUrl}/UserProfile`;
+  readonly #profileUrl = `${environment.apiBaseUrl}/UserProfile`;
+  readonly #accountUrl = `${environment.apiBaseUrl}/Account`;
 
   getUserInfo(): Observable<ApiResponse<GetUserInfoDTO>> {
-    return this.#http.get<ApiResponse<GetUserInfoDTO>>(`${this.#baseUrl}/GetInfo`);
-    // return this.#http.get<GetUserInfoDTO>(`${this.#baseUrl}/GetInfo`);
+    return this.#http.get<ApiResponse<GetUserInfoDTO>>(`${this.#profileUrl}/GetInfo`);
   }
 
-  updateUserInfo(dto: UpdateProfileInfoDTO): Observable<GetUserInfoDTO> {
+  /** PUT /UserProfile/UpdateName */
+  updateName(dto: UpdateNameDTO): Observable<ApiResponse<boolean>> {
     const formData = new FormData();
     formData.append('firstName', dto.firstName);
     formData.append('lastName', dto.lastName);
-    formData.append('currentPassword', dto.currentPassword);
-    formData.append('newPassword', dto.newPassword);
+    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateName`, formData);
+  }
 
-    if (dto.homeLatitude !== null && dto.homeLatitude !== undefined) {
-      formData.append('homeLatitude', dto.homeLatitude.toString());
-    }
-    if (dto.homeLongitude !== null && dto.homeLongitude !== undefined) {
-      formData.append('homeLongitude', dto.homeLongitude.toString());
-    }
-    if (dto.profileImage) {
-      formData.append('profileImage', dto.profileImage);
-    }
-    if (dto.identificationImage) {
-      formData.append('identificationImage', dto.identificationImage);
-    }
+  /** PUT /UserProfile/UpdateProfileImage */
+  updateProfileImage(dto: UpdateProfileImageDTO): Observable<ApiResponse<boolean>> {
+    const formData = new FormData();
+    formData.append('profileImage', dto.profileImage);
+    return this.#http.put<ApiResponse<boolean>>(
+      `${this.#profileUrl}/UpdateProfileImage`,
+      formData,
+    );
+  }
 
-    return this.#http.put<GetUserInfoDTO>(`${this.#baseUrl}/UpdateInfo`, formData);
+  /** PUT /UserProfile/AddIdImage */
+  addIdImage(dto: AddIdImageDTO): Observable<ApiResponse<boolean>> {
+    const formData = new FormData();
+    formData.append('identificationImage', dto.identificationImage);
+    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/AddIdImage`, formData);
+  }
+
+  /** PUT /UserProfile/UpdateHomeLocation */
+  updateHomeLocation(dto: UpdateHomeLocationDTO): Observable<ApiResponse<boolean>> {
+    const formData = new FormData();
+    formData.append('homeLatitude', dto.homeLatitude.toString());
+    formData.append('homeLongitude', dto.homeLongitude.toString());
+    return this.#http.put<ApiResponse<boolean>>(
+      `${this.#profileUrl}/UpdateHomeLocation`,
+      formData,
+    );
+  }
+
+  /**
+   * POST /Account/change-password
+   * NOTE: this one is JSON, not form-data — different controller, different binding ([FromBody]).
+   */
+  changePassword(dto: ChangePasswordDTO): Observable<ApiResponse<boolean>> {
+    return this.#http.post<ApiResponse<boolean>>(`${this.#accountUrl}/change-password`, dto);
   }
 }

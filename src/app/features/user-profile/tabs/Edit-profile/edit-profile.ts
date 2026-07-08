@@ -22,10 +22,15 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { Subject, switchMap } from 'rxjs';
-import { GetUserInfoDTO, UpdateProfileInfoDTO } from '../../../../core/models/profile.model';
+import { forkJoin, Observable, Subject, switchMap } from 'rxjs';
+import {
+  ChangePasswordDTO,
+  GetUserInfoDTO,
+  UpdateHomeLocationDTO,
+  UpdateNameDTO,
+} from '../../../../core/models/profile.model';
 import { GeocodingService } from '../../../../core/services/gecoding.service';
-import { ProfileService } from '../../../../core/services/profile.service';
+import { ApiResponse, ProfileService } from '../../../../core/services/profile.service';
 
 // ── Egypt center coordinates (default) ────────────────────────────────────
 const EGYPT_LAT = 26.8206;
@@ -125,7 +130,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
       ],
       confirmPassword: ['', [Validators.required]],
     },
-    { validators: [passwordMatchValidator, passwordConfirmValidator] }
+    { validators: [passwordMatchValidator, passwordConfirmValidator] },
   );
 
   constructor() {
@@ -144,7 +149,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     if (changes['userInfo'] && this.userInfo()) {
       const info = this.userInfo()!;
       const nameParts = info.fullName.trim().split(' ');
-      
+
       // Patch Personal Form
       this.personalForm.patchValue({
         firstName: nameParts[0] ?? '',
@@ -292,7 +297,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
             this.selectedLng.set(EGYPT_LNG);
             this.#updateMapAndMarker(EGYPT_LAT, EGYPT_LNG, EGYPT_ZOOM);
           }
-        }
+        },
       );
     }
   }
@@ -383,11 +388,16 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   }
 
   get samePasswordError(): boolean {
-    return !!(this.passwordForm.hasError('samePassword') && this.passwordForm.get('newPassword')?.touched);
+    return !!(
+      this.passwordForm.hasError('samePassword') && this.passwordForm.get('newPassword')?.touched
+    );
   }
 
   get passwordMismatchError(): boolean {
-    return !!(this.passwordForm.hasError('passwordMismatch') && this.passwordForm.get('confirmPassword')?.touched);
+    return !!(
+      this.passwordForm.hasError('passwordMismatch') &&
+      this.passwordForm.get('confirmPassword')?.touched
+    );
   }
 
   // ── Edit/Cancel toggles ───────────────────────────────────────────────────
@@ -457,7 +467,9 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     this.passwordForm.reset();
   }
 
-  // ── Independent Save methods ──────────────────────────────────────────────
+  // ── Independent Save methods ────────────────────────────────────────────
+  // Each one calls its own dedicated endpoint. None of them read from another
+  // section's form/state, so editing one never sends or touches another.
 
   savePersonal(): void {
     if (this.personalForm.invalid || this.isSavingPersonal()) {
@@ -469,23 +481,17 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     this.saveError.set(null);
     this.saveSuccess.set(false);
 
-    const dto: UpdateProfileInfoDTO = {
+    const dto: UpdateNameDTO = {
       firstName: this.personalForm.value.firstName,
       lastName: this.personalForm.value.lastName,
-      homeLatitude: this.selectedLat(),
-      homeLongitude: this.selectedLng(),
-      profileImage: null,
-      identificationImage: null,
-      currentPassword: '',
-      newPassword: '',
     };
 
-    this.#profileService.updateUserInfo(dto).subscribe({
-      next: (updated) => {
+    this.#profileService.updateName(dto).subscribe({
+      next: () => {
         this.isSavingPersonal.set(false);
         this.togglePersonalEdit(false);
         this.saveSuccess.set(true);
-        this.profileUpdated.emit(updated);
+        this.#refreshAndEmit();
         setTimeout(() => this.saveSuccess.set(false), 3000);
       },
       error: (err) => {
@@ -497,7 +503,9 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   }
 
   saveLocation(): void {
-    if (this.selectedLat() === null || this.selectedLng() === null || this.isSavingLocation()) {
+    const lat = this.selectedLat();
+    const lng = this.selectedLng();
+    if (lat === null || lng === null || this.isSavingLocation()) {
       return;
     }
 
@@ -505,26 +513,14 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     this.saveError.set(null);
     this.saveSuccess.set(false);
 
-    const info = this.userInfo();
-    const nameParts = (info?.fullName || '').trim().split(' ');
+    const dto: UpdateHomeLocationDTO = { homeLatitude: lat, homeLongitude: lng };
 
-    const dto: UpdateProfileInfoDTO = {
-      firstName: nameParts[0] ?? '',
-      lastName: nameParts.slice(1).join(' ') ?? '',
-      homeLatitude: this.selectedLat(),
-      homeLongitude: this.selectedLng(),
-      profileImage: null,
-      identificationImage: null,
-      currentPassword: '',
-      newPassword: '',
-    };
-
-    this.#profileService.updateUserInfo(dto).subscribe({
-      next: (updated) => {
+    this.#profileService.updateHomeLocation(dto).subscribe({
+      next: () => {
         this.isSavingLocation.set(false);
         this.isEditingLocation.set(false);
         this.saveSuccess.set(true);
-        this.profileUpdated.emit(updated);
+        this.#refreshAndEmit();
         setTimeout(() => this.saveSuccess.set(false), 3000);
       },
       error: (err) => {
@@ -535,35 +531,42 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     });
   }
 
+  /**
+   * Profile image and ID image are two separate endpoints. If the user
+   * changed both before hitting "حفظ", fire both requests in parallel;
+   * if only one changed, only that one is called.
+   */
   saveImage(): void {
     if (this.isSavingImage()) return;
+
+    const profileFile = this.#selectedProfileImage;
+    const idFile = this.#selectedIdImage;
+
+    if (!profileFile && !idFile) {
+      this.isEditingImage.set(false);
+      return;
+    }
 
     this.isSavingImage.set(true);
     this.saveError.set(null);
     this.saveSuccess.set(false);
 
-    const info = this.userInfo();
-    const nameParts = (info?.fullName || '').trim().split(' ');
+    const requests: Observable<ApiResponse<boolean>>[] = [];
+    if (profileFile) {
+      requests.push(this.#profileService.updateProfileImage({ profileImage: profileFile }));
+    }
+    if (idFile) {
+      requests.push(this.#profileService.addIdImage({ identificationImage: idFile }));
+    }
 
-    const dto: UpdateProfileInfoDTO = {
-      firstName: nameParts[0] ?? '',
-      lastName: nameParts.slice(1).join(' ') ?? '',
-      homeLatitude: this.selectedLat(),
-      homeLongitude: this.selectedLng(),
-      profileImage: this.#selectedProfileImage,
-      identificationImage: this.#selectedIdImage,
-      currentPassword: '',
-      newPassword: '',
-    };
-
-    this.#profileService.updateUserInfo(dto).subscribe({
-      next: (updated) => {
+    forkJoin(requests).subscribe({
+      next: () => {
         this.isSavingImage.set(false);
         this.isEditingImage.set(false);
         this.saveSuccess.set(true);
-        this.profileUpdated.emit(updated);
         this.#selectedProfileImage = null;
         this.#selectedIdImage = null;
+        this.#refreshAndEmit();
         setTimeout(() => this.saveSuccess.set(false), 3000);
       },
       error: (err) => {
@@ -584,22 +587,15 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     this.saveError.set(null);
     this.saveSuccess.set(false);
 
-    const info = this.userInfo();
-    const nameParts = (info?.fullName || '').trim().split(' ');
-
-    const dto: UpdateProfileInfoDTO = {
-      firstName: nameParts[0] ?? '',
-      lastName: nameParts.slice(1).join(' ') ?? '',
-      homeLatitude: this.selectedLat(),
-      homeLongitude: this.selectedLng(),
-      profileImage: null,
-      identificationImage: null,
+    const dto: ChangePasswordDTO = {
       currentPassword: this.passwordForm.value.currentPassword,
       newPassword: this.passwordForm.value.newPassword,
+      // TODO: wire this up if your auth flow needs it to rotate the refresh token.
+      // currentRefreshToken: this.#tokenService.getRefreshToken(),
     };
 
-    this.#profileService.updateUserInfo(dto).subscribe({
-      next: (updated) => {
+    this.#profileService.changePassword(dto).subscribe({
+      next: () => {
         this.isSavingPassword.set(false);
         this.togglePasswordEdit(false);
         this.saveSuccess.set(true);
@@ -608,8 +604,27 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
       },
       error: (err) => {
         this.isSavingPassword.set(false);
-        const msg = err?.error?.message ?? 'كلمة المرور الحالية غير صحيحة أو حدث خطأ أثناء تغيير كلمة المرور.';
+        const msg =
+          err?.error?.message ??
+          'كلمة المرور الحالية غير صحيحة أو حدث خطأ أثناء تغيير كلمة المرور.';
         this.saveError.set(msg);
+      },
+    });
+  }
+
+  /**
+   * None of the 4 UserProfile endpoints return the updated profile — they
+   * only return { success, message, data: true }. So after any successful
+   * save we silently re-fetch GetInfo and push the fresh data up to
+   * ProfileView, which is what actually keeps the sidebar/tabs in sync
+   * and makes the change survive a refresh.
+   */
+  #refreshAndEmit(): void {
+    this.#profileService.getUserInfo().subscribe({
+      next: (res) => this.profileUpdated.emit(res.data),
+      error: () => {
+        // Non-fatal — the save itself already succeeded; a failed refresh
+        // just means the UI won't reflect it until the next page load.
       },
     });
   }
