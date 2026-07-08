@@ -41,17 +41,18 @@
         <div class="relative group flex items-center gap-xs cursor-pointer h-full">
           <div class="w-9 h-9 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-between overflow-hidden border border-outline">
             @if (currentUser()?.profileImage) {
-              <img [src]="currentUser()?.profileImage" alt="User Profile" class="w-full h-full object-cover" />
+              <img [src]="getProfileImageUrl()" alt="User Profile" class="w-full h-full object-cover" />
             } @else {
               <span class="m-auto font-medium text-sm">{{ currentUser()?.fName?.[0] }}</span>
             }
           </div>
-          
           <div class="hidden sm:flex flex-col items-start leading-tight">
             <div class="flex items-center gap-1">
               <span class="font-body-md font-semibold text-on-surface">{{ currentUser()?.fName }}</span>
               @if (currentUser()?.isVerified) {
-                <svg class="w-4 h-4 text-secondary" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6.267 3.455a.75.75 0 00-.708.522L4.047 8.5H1.75a.75.75 0 000 1.5h2.297l1.512 4.523a.75.75 0 00.708.522h5.466a.75.75 0 00.708-.522L13.953 10H18.25a.75.75 0 000-1.5h-4.547l-1.512-4.523a.75.75 0 00-.708-.522H6.267z" clip-rule="evenodd" /></svg>
+                <svg class="w-4 h-4 text-secondary shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-label="حساب موثّق">
+                  <path fill-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+                </svg>
               }
             </div>
           </div>
@@ -62,7 +63,6 @@
               <a routerLink="/profile" class="block px-md py-sm text-on-surface hover:bg-surface-container-high">حسابي</a>
             } @else {
               <a routerLink="/profile" class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl">حسابي</a>
-              <a routerLink="/my-cases" class="block px-md py-sm text-on-surface hover:bg-surface-container-high">بلاغاتي</a>
             }
             <button (click)="logout()" class="w-full text-right block px-md py-sm text-error hover:bg-error-container hover:text-on-error-container last:rounded-b-xl">تسجيل الخروج</button>
           </div>
