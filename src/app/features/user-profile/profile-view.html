@@ -1,0 +1,78 @@
+<div class="bg-background text-on-background min-h-screen flex flex-col">
+  <main class="flex-1 max-w-max-width mx-auto w-full px-margin-mobile md:px-margin-desktop py-lg">
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="flex justify-center items-center py-xl">
+        <span class="material-symbols-outlined text-secondary text-[48px] animate-spin"> </span>
+      </div>
+    }
+
+    <!-- Error State -->
+    @else if (loadError()) {
+      <div class="p-md bg-error-container text-on-error-container rounded-xl text-center">
+        <p class="text-body-sm font-bold">{{ loadError() }}</p>
+        <button
+          (click)="ngOnInit()"
+          class="mt-md px-lg py-sm bg-error text-white rounded-lg text-label-sm hover:opacity-90"
+        >
+          إعادة المحاولة
+        </button>
+      </div>
+    }
+
+    <!-- Main Content -->
+    @else {
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+        <!-- Sidebar -->
+        <app-profile-sidebar class="md:col-span-3" [userInfo]="userInfo()" />
+
+        <!-- Main Content Area -->
+        <div class="md:col-span-9">
+          <!-- Tabs Navigation -->
+          <div class="bg-surface-container-lowest rounded-xl shadow-sm mb-gutter overflow-hidden">
+            <div class="flex border-b border-outline-variant">
+              @for (tab of tabs; track tab.id) {
+                <button
+                  (click)="switchTab(tab.id)"
+                  class="flex-1 py-md px-lg text-label-md font-label-md border-b-2 transition-all hover:bg-surface-container-lowest relative"
+                  [class.border-secondary]="activeTab() === tab.id"
+                  [class.text-secondary]="activeTab() === tab.id"
+                  [class.bg-surface-container-low]="activeTab() === tab.id"
+                  [class.border-transparent]="activeTab() !== tab.id"
+                  [class.text-on-surface-variant]="activeTab() !== tab.id"
+                >
+                  {{ tab.label }}
+                  <!-- Notification badge on Notifications tab -->
+                  @if (tab.id === 'notifications' && notificationUnreadCount() > 0) {
+                    <span
+                      class="absolute top-2 left-1/2 translate-x-6 bg-error text-white text-[10px] font-bold rounded-full min-w-4.5 h-4.5 flex items-center justify-center px-0.75"
+                    >
+                      {{ notificationUnreadCount() > 99 ? '99+' : notificationUnreadCount() }}
+                    </span>
+                  }
+                </button>
+              }
+            </div>
+
+            <!-- Tab Content -->
+            @switch (activeTab()) {
+              @case ('edit') {
+                <app-edit-profile
+                  [userInfo]="userInfo()"
+                  (profileUpdated)="onProfileUpdated($event)"
+                />
+              }
+
+              @case ('chat') {
+                <app-chat-tab />
+              }
+              @case ('notifications') {
+                <app-notifications-tab />
+              }
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </main>
+</div>

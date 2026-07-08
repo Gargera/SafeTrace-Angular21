@@ -10,7 +10,7 @@ import { ResetPasswordRequest } from '../../features/auth/models/ResetPasswordRe
 import { VerificationStatus } from '../../shared/enums/verification-status';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private http = inject(HttpClient);
@@ -64,7 +64,7 @@ export class AuthService {
       profileImage: response.profileImage || null,
       isVerified: response.verificationStatus === VerificationStatus.Verified
     };
-    
+
     localStorage.setItem(this.userDataKey, JSON.stringify(userData));
     this.isLoggedIn.set(true);
     this.currentUser.set(userData);
@@ -100,15 +100,24 @@ export class AuthService {
   }
 
   confirmEmail(email: string, otpCode: string): Observable<ApiResponse<string>> {
-    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/confirm-email?email=${encodeURIComponent(email)}&otpCode=${encodeURIComponent(otpCode)}`, {});
+    return this.http.post<ApiResponse<string>>(
+      `${this.baseUrl}/confirm-email?email=${encodeURIComponent(email)}&otpCode=${encodeURIComponent(otpCode)}`,
+      {},
+    );
   }
 
   resendOtp(email: string, type: number): Observable<ApiResponse<string>> {
-    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/resend-otp?email=${encodeURIComponent(email)}&type=${type}`, {});
+    return this.http.post<ApiResponse<string>>(
+      `${this.baseUrl}/resend-otp?email=${encodeURIComponent(email)}&type=${type}`,
+      {},
+    );
   }
 
   forgetPassword(email: string): Observable<ApiResponse<string>> {
-    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/forget-password?email=${encodeURIComponent(email)}`, {});
+    return this.http.post<ApiResponse<string>>(
+      `${this.baseUrl}/forget-password?email=${encodeURIComponent(email)}`,
+      {},
+    );
   }
 
   resetPassword(data: ResetPasswordRequest): Observable<ApiResponse<string>> {

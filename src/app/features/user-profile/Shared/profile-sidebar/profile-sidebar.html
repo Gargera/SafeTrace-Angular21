@@ -1,0 +1,104 @@
+<aside class="md:col-span-3 space-y-gutter">
+  <!-- Profile Card -->
+  <div class="glass-card rounded-xl p-lg flex flex-col items-center text-center">
+    <!-- Avatar -->
+    <div class="relative mb-md">
+      <div
+        class="w-24 h-24 rounded-full overflow-hidden border-4 border-surface-container shadow-sm"
+      >
+        <img
+          [src]="avatarUrl"
+          [alt]="userInfo()?.fullName ?? 'User'"
+          class="w-full h-full object-cover"
+        />
+      </div>
+      @if (isVerified) {
+        <div
+          class="absolute -bottom-1 -left-1 bg-on-tertiary-container text-white p-1 rounded-full border-2 border-white flex items-center justify-center"
+        >
+          <span
+            class="material-symbols-outlined text-[16px]"
+            style="font-variation-settings: 'FILL' 1"
+            >verified</span
+          >
+        </div>
+      }
+    </div>
+
+    <!-- Name & Status -->
+    <h2 class="text-headline-sm font-bold text-primary mb-xs">
+      {{ userInfo()?.fullName ?? '—' }}
+    </h2>
+
+    <p class="text-body-sm text-on-surface-variant mb-md">
+      @if (isVerified) {
+        متطوع معتمد
+      } @else if (userInfo()?.verificationStatus === VerificationStatus.Pending) {
+        قيد التوثيق
+      } @else {
+        متطوع
+      }
+    </p>
+
+    <div class="bg-surface-container px-md py-xs rounded-full inline-flex items-center gap-xs">
+      <span
+        class="material-symbols-outlined text-on-tertiary-container text-[18px]"
+        style="font-variation-settings: 'FILL' 1"
+      >
+        {{ isVerified ? 'check_circle' : 'pending' }}
+      </span>
+      <span class="text-label-sm text-on-tertiary-container">{{ verificationLabel }}</span>
+    </div>
+
+    <!-- Contact Info -->
+    <div class="w-full border-t border-outline-variant mt-lg pt-lg space-y-md text-right">
+      <!-- Email -->
+      @if (userInfo()?.email) {
+        <div class="flex items-center gap-sm text-on-surface-variant">
+          <span class="material-symbols-outlined text-secondary shrink-0">mail</span>
+          <span class="text-body-sm break-all">{{ userInfo()!.email }}</span>
+        </div>
+      }
+
+      <!-- Address (resolved from lat/lng via Geocoding API) -->
+      @if (userInfo()?.homeLatitude && userInfo()?.homeLongitude) {
+        <div class="flex items-start gap-sm text-on-surface-variant">
+          <span class="material-symbols-outlined text-secondary flex-shrink-0 mt-[2px]"
+            >location_on</span
+          >
+
+          @if (isResolvingAddress()) {
+            <!-- Skeleton loader while geocoding -->
+            <div class="space-y-xs flex-1">
+              <div class="h-3 bg-outline-variant rounded animate-pulse w-3/4"></div>
+              <div class="h-3 bg-outline-variant rounded animate-pulse w-1/2"></div>
+            </div>
+          } @else {
+            <span class="text-body-sm text-right leading-relaxed">
+              {{ resolvedAddress() }}
+            </span>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Activity Stats (Hidden temporarily due to missing backend data) -->
+  @if (false) {
+    <div class="glass-card rounded-xl p-md">
+      <h3 class="text-label-md text-on-surface-variant uppercase tracking-wider mb-md">
+        إحصائيات النشاط
+      </h3>
+      <div class="grid grid-cols-2 gap-sm">
+        <div class="bg-surface-container-low p-md rounded-lg text-center">
+          <span class="block text-headline-sm font-bold text-primary">12</span>
+          <span class="text-label-sm text-on-surface-variant">بلاغ مقدم</span>
+        </div>
+        <div class="bg-surface-container-low p-md rounded-lg text-center">
+          <span class="block text-headline-sm font-bold text-on-tertiary-container">4</span>
+          <span class="text-label-sm text-on-surface-variant">حالات تم حلها</span>
+        </div>
+      </div>
+    </div>
+  }
+</aside>
