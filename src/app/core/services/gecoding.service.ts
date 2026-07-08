@@ -1,8 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
-import { environment } from '../../../environments/environment.development';
 
 interface GeocodeAddressComponent {
   long_name: string;
@@ -23,8 +20,6 @@ interface GeocodeResponse {
 
 @Injectable({ providedIn: 'root' })
 export class GeocodingService {
-  readonly #http = inject(HttpClient);
-
   /**
    * Reverse geocode: converts lat/lng coordinates into a short, human-readable
    * Arabic address of the form "الحي، المحافظة، الدولة"
@@ -34,25 +29,26 @@ export class GeocodingService {
    * Requires: Geocoding API enabled on the API key used here.
    */
   reverseGeocode(lat: number, lng: number): Observable<string> {
-    const url =
-      `https://maps.googleapis.com/maps/api/geocode/json` +
-      `?latlng=${lat},${lng}` +
-      `&language=ar` +
-      // sublocality/neighborhood gives us the district (e.g. "مدينة نصر"),
-      // administrative_area_level_1 gives the governorate/city (e.g. "القاهرة")
-      `&result_type=sublocality|neighborhood|locality|administrative_area_level_1|country` +
-      `&key=${environment.googleMapsApiKey}`;
+    return new Observable((observer) => {
+      const geocoder = new google.maps.Geocoder();
 
-    return this.#http.get<GeocodeResponse>(url).pipe(
-      map((response) => {
-        if (response.status === 'OK' && response.results.length > 0) {
-          const short = this.#buildShortAddress(response.results[0].address_components);
-          return short ?? response.results[0].formatted_address;
-        }
-        return this.#coordsFallback(lat, lng);
-      }),
-      catchError(() => of(this.#coordsFallback(lat, lng))),
-    );
+      geocoder.geocode(
+        {
+          location: { lat, lng },
+        },
+        (results, status) => {
+          if (status === 'OK' && results && results.length > 0) {
+            const short = this.#buildShortAddress(results[0].address_components as any);
+
+            observer.next(short ?? results[0].formatted_address);
+          } else {
+            observer.next(this.#coordsFallback(lat, lng));
+          }
+
+          observer.complete();
+        },
+      );
+    });
   }
 
   /**
@@ -86,21 +82,29 @@ export class GeocodingService {
    * Requires: Geocoding API enabled on the API key used here.
    */
   forwardGeocode(address: string): Observable<{ lat: number; lng: number } | null> {
-    const url =
-      `https://maps.googleapis.com/maps/api/geocode/json` +
-      `?address=${encodeURIComponent(address)}` +
-      `&language=ar` +
-      `&key=${environment.googleMapsApiKey}`;
+    return new Observable((observer) => {
+      const geocoder = new google.maps.Geocoder();
 
-    return this.#http.get<GeocodeResponse>(url).pipe(
-      map((response) => {
-        if (response.status === 'OK' && response.results.length > 0) {
-          const { location } = response.results[0].geometry;
-          return { lat: location.lat, lng: location.lng };
-        }
-        return null;
-      }),
-      catchError(() => of(null)),
-    );
+      geocoder.geocode(
+        {
+          address: address,
+          region: 'EG',
+        },
+        (results, status) => {
+          if (status === google.maps.GeocoderStatus.OK && results && results.length > 0) {
+            const location = results[0].geometry.location;
+
+            observer.next({
+              lat: location.lat(),
+              lng: location.lng(),
+            });
+          } else {
+            observer.next(null);
+          }
+
+          observer.complete();
+        },
+      );
+    });
   }
 }

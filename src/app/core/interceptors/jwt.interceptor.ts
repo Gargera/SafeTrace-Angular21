@@ -14,14 +14,35 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const token = authService.getToken();
 
-  const isApiUrl = req.url.includes(environment.apiBaseUrl) || req.url.startsWith('/api') || !req.url.startsWith('http');
-
+  const isApiUrl =
+    req.url.includes(environment.apiBaseUrl) ||
+    req.url.startsWith('/api') ||
+    !req.url.startsWith('http');
+  ///////////Edit by youseef
+  const isGoogleMapsRequest = req.url.startsWith('https://maps.googleapis.com');
+  ////////////////////////end
   let clonedReq = req;
-  
-  if (token && !req.url.includes('/login') && !req.url.includes('/refresh-token')) {
-    clonedReq = req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
+
+  ///////////Edit by youseef
+
+  if (
+    token &&
+    isApiUrl &&
+    !isGoogleMapsRequest &&
+    !req.url.includes('/login') &&
+    !req.url.includes('/refresh-token')
+  ) {
+    clonedReq = req.clone({
+      setHeaders: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
   }
 
+  // if (token && !req.url.includes('/login') && !req.url.includes('/refresh-token')) {
+  //   clonedReq = req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
+  // }
+  /////////////////////////////////
   return next(clonedReq).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401 && token) {
@@ -31,10 +52,22 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
 
           return authService.refreshToken().pipe(
             switchMap((res) => {
+              ////////////////////Edit by youseef
+              const newReq =
+                isApiUrl && !isGoogleMapsRequest
+                  ? req.clone({
+                      setHeaders: {
+                        Authorization: `Bearer ${res.data?.accessToken}`,
+                      },
+                    })
+                  : req;
+              ///////////////////////////
               isRefreshing = false;
               if (res.success && res.data) {
                 refreshTokenSubject.next(res.data.accessToken);
-                const newReq = req.clone({ setHeaders: { Authorization: `Bearer ${res.data.accessToken}` } });
+                const newReq = req.clone({
+                  setHeaders: { Authorization: `Bearer ${res.data.accessToken}` },
+                });
                 return next(newReq);
               }
               return throwError(() => new Error('Refresh failed'));
@@ -44,20 +77,31 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
               authService.clearSession();
               router.navigate(['/auth']);
               return throwError(() => refreshErr);
-            })
+            }),
           );
         } else {
           return refreshTokenSubject.pipe(
-            filter(newToken => newToken !== null),
+            filter((newToken) => newToken !== null),
             take(1),
-            switchMap(newToken => {
-              const newReq = req.clone({ setHeaders: { Authorization: `Bearer ${newToken}` } });
+            switchMap((newToken) => {
+              ////////////////edit by youseef
+              const newReq =
+                isApiUrl && !isGoogleMapsRequest
+                  ? req.clone({
+                      setHeaders: {
+                        Authorization: `Bearer ${newToken}`,
+                      },
+                    })
+                  : req;
+              ///////////////////////////
+
+              //const newReq = req.clone({ setHeaders: { Authorization: `Bearer ${newToken}` } });
               return next(newReq);
-            })
+            }),
           );
         }
       }
       return throwError(() => error);
-    })
+    }),
   );
 };

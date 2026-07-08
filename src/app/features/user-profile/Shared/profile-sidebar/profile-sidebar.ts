@@ -1,8 +1,8 @@
 import { Component, effect, inject, input, signal } from '@angular/core';
-import { GeocodingService } from '../../../core/services/gecoding.service';
+import { GeocodingService } from '../../../../core/services/gecoding.service';
 
-import { GetUserInfoDTO } from '../../../core/models/profile.model';
-import { VerificationStatus } from '../../enums/verification-status';
+import { GetUserInfoDTO } from '../../../../core/models/profile.model';
+import { VerificationStatus } from '../../../../shared/enums/verification-status';
 
 @Component({
   selector: 'app-profile-sidebar',

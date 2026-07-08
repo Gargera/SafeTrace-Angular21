@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../../environments/environment.development';
 import {
   AddIdImageDTO,
   ChangePasswordDTO,
@@ -9,7 +9,7 @@ import {
   UpdateHomeLocationDTO,
   UpdateNameDTO,
   UpdateProfileImageDTO,
-} from '../models/profile.model';
+} from '../../../core/models/profile.model';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -39,10 +39,7 @@ export class ProfileService {
   updateProfileImage(dto: UpdateProfileImageDTO): Observable<ApiResponse<boolean>> {
     const formData = new FormData();
     formData.append('profileImage', dto.profileImage);
-    return this.#http.put<ApiResponse<boolean>>(
-      `${this.#profileUrl}/UpdateProfileImage`,
-      formData,
-    );
+    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateProfileImage`, formData);
   }
 
   /** PUT /UserProfile/AddIdImage */
@@ -57,10 +54,7 @@ export class ProfileService {
     const formData = new FormData();
     formData.append('homeLatitude', dto.homeLatitude.toString());
     formData.append('homeLongitude', dto.homeLongitude.toString());
-    return this.#http.put<ApiResponse<boolean>>(
-      `${this.#profileUrl}/UpdateHomeLocation`,
-      formData,
-    );
+    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateHomeLocation`, formData);
   }
 
   /**

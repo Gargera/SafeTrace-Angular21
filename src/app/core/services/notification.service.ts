@@ -5,7 +5,7 @@ import { GetUserNotificationsDTO, NotificationPage } from '../models/notificatio
 import { NotificationType } from '../../shared/enums/Notification-Type';
 import { environment } from '../../../environments/environment.development';
 import { AuthService } from './auth.service';
-import { ApiResponse } from './profile.service';
+import { ApiResponse } from '../../features/user-profile/Service/profile.service';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -258,17 +258,33 @@ export class NotificationService implements OnDestroy {
     this.stopConnection();
   }
 
-  getNotificationDetails(n: GetUserNotificationsDTO): { icon: string; bgClass: string; title: string } {
+  getNotificationDetails(n: GetUserNotificationsDTO): {
+    icon: string;
+    bgClass: string;
+    title: string;
+  } {
     const text = (n.content || '').toLowerCase();
     const type = n.type;
 
     // 1. Verification
-    if (text.includes('توثيق') || text.includes('وثائق') || text.includes('الهوية') || text.includes('verification') || text.includes('identity')) {
+    if (
+      text.includes('توثيق') ||
+      text.includes('وثائق') ||
+      text.includes('الهوية') ||
+      text.includes('verification') ||
+      text.includes('identity')
+    ) {
       return { icon: 'verified', bgClass: 'bg-cyan-500', title: 'توثيق الحساب' };
     }
 
     // 2. Security
-    if (text.includes('أمان') || text.includes('كلمة المرور') || text.includes('رمز الدخول') || text.includes('security') || text.includes('password')) {
+    if (
+      text.includes('أمان') ||
+      text.includes('كلمة المرور') ||
+      text.includes('رمز الدخول') ||
+      text.includes('security') ||
+      text.includes('password')
+    ) {
       return { icon: 'security', bgClass: 'bg-rose-500', title: 'الأمان والحماية' };
     }
 
@@ -283,12 +299,26 @@ export class NotificationService implements OnDestroy {
     }
 
     // 5. Success
-    if (text.includes('نجاح') || text.includes('تم بنجاح') || text.includes('تم قبول') || text.includes('تم تفعيل') || text.includes('success') || text.includes('accepted')) {
+    if (
+      text.includes('نجاح') ||
+      text.includes('تم بنجاح') ||
+      text.includes('تم قبول') ||
+      text.includes('تم تفعيل') ||
+      text.includes('success') ||
+      text.includes('accepted')
+    ) {
       return { icon: 'check_circle', bgClass: 'bg-emerald-500', title: 'عملية ناجحة' };
     }
 
     // 6. Error / Complaint
-    if (type === NotificationType.Complaint || text.includes('خطأ') || text.includes('فشل') || text.includes('شكوى') || text.includes('error') || text.includes('failed')) {
+    if (
+      type === NotificationType.Complaint ||
+      text.includes('خطأ') ||
+      text.includes('فشل') ||
+      text.includes('شكوى') ||
+      text.includes('error') ||
+      text.includes('failed')
+    ) {
       return { icon: 'error', bgClass: 'bg-red-500', title: 'تنبيه خطأ / شكوى' };
     }
 
@@ -298,12 +328,23 @@ export class NotificationService implements OnDestroy {
     }
 
     // 8. Message
-    if (type === NotificationType.Message || text.includes('رسالة') || text.includes('محادثة') || text.includes('chat') || text.includes('message')) {
+    if (
+      type === NotificationType.Message ||
+      text.includes('رسالة') ||
+      text.includes('محادثة') ||
+      text.includes('chat') ||
+      text.includes('message')
+    ) {
       return { icon: 'chat', bgClass: 'bg-teal-500', title: 'رسالة جديدة' };
     }
 
     // 9. System
-    if (type === NotificationType.System || text.includes('نظام') || text.includes('system') || text.includes('تحديث')) {
+    if (
+      type === NotificationType.System ||
+      text.includes('نظام') ||
+      text.includes('system') ||
+      text.includes('تحديث')
+    ) {
       return { icon: 'settings', bgClass: 'bg-slate-500', title: 'تحديث النظام' };
     }
 

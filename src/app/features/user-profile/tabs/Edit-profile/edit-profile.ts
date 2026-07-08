@@ -30,7 +30,7 @@ import {
   UpdateNameDTO,
 } from '../../../../core/models/profile.model';
 import { GeocodingService } from '../../../../core/services/gecoding.service';
-import { ApiResponse, ProfileService } from '../../../../core/services/profile.service';
+import { ApiResponse, ProfileService } from '../../Service/profile.service';
 
 // ── Egypt center coordinates (default) ────────────────────────────────────
 const EGYPT_LAT = 26.8206;

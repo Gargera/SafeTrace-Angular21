@@ -73,11 +73,11 @@ export class Navbar implements OnInit {
   getProfileImageUrl(): string {
     const imgPath = this.currentUser()?.profileImage;
     if (!imgPath) return '';
-    
+
     if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
       return imgPath;
     }
-    
+
     return `${environment.baseUrl}/${imgPath.replace(/^\//, '')}`;
   }
 
