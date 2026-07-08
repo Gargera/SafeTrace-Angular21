@@ -1,7 +1,5 @@
 import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Footer } from '../../shared/components/footer/footer';
-import { Navbar } from '../../shared/components/navbar/navbar';
 import { ProfileSidebar } from '../../shared/components/profile-sidebar/profile-sidebar';
 import { ChatTab } from './tabs/chat-tab/chat-tab';
 import { EditProfile } from './tabs/Edit-profile/edit-profile';
@@ -17,8 +15,6 @@ export type ProfileTab = 'edit' | 'reports' | 'chat' | 'notifications';
   selector: 'app-profile-view',
   imports: [
     RouterModule,
-    Navbar,
-    Footer,
     ProfileSidebar,
     EditProfile,
     NotificationsTab,

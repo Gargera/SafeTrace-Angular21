@@ -7,13 +7,17 @@ import { Router } from '@angular/router';
 let isRefreshing = false;
 let refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
 
+import { environment } from '../../../environments/environment.development';
+
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
   const token = authService.getToken();
 
+  const isApiUrl = req.url.includes(environment.apiBaseUrl) || req.url.startsWith('/api') || !req.url.startsWith('http');
+
   let clonedReq = req;
-  if (token) {
+  if (token && isApiUrl) {
     clonedReq = req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
   }
 

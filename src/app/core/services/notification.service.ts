@@ -2,6 +2,7 @@ import { Injectable, inject, signal, computed, OnDestroy } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import * as signalR from '@microsoft/signalr';
 import { GetUserNotificationsDTO, NotificationPage } from '../models/notification.model';
+import { NotificationType } from '../../shared/enums/Notification-Type';
 import { environment } from '../../../environments/environment.development';
 import { AuthService } from './auth.service';
 import { ApiResponse } from './profile.service';
@@ -255,5 +256,110 @@ export class NotificationService implements OnDestroy {
 
   ngOnDestroy(): void {
     this.stopConnection();
+  }
+
+  getNotificationDetails(n: GetUserNotificationsDTO): { icon: string; bgClass: string; title: string } {
+    const text = (n.content || '').toLowerCase();
+    const type = n.type;
+
+    // 1. Verification
+    if (text.includes('توثيق') || text.includes('وثائق') || text.includes('الهوية') || text.includes('verification') || text.includes('identity')) {
+      return { icon: 'verified', bgClass: 'bg-cyan-500', title: 'توثيق الحساب' };
+    }
+
+    // 2. Security
+    if (text.includes('أمان') || text.includes('كلمة المرور') || text.includes('رمز الدخول') || text.includes('security') || text.includes('password')) {
+      return { icon: 'security', bgClass: 'bg-rose-500', title: 'الأمان والحماية' };
+    }
+
+    // 3. Order
+    if (text.includes('طلب') || text.includes('ترتيب') || text.includes('order')) {
+      return { icon: 'assignment', bgClass: 'bg-orange-500', title: 'تفاصيل الطلب' };
+    }
+
+    // 4. Profile
+    if (text.includes('الملف الشخصي') || text.includes('بياناتك') || text.includes('profile')) {
+      return { icon: 'person', bgClass: 'bg-indigo-500', title: 'الملف الشخصي' };
+    }
+
+    // 5. Success
+    if (text.includes('نجاح') || text.includes('تم بنجاح') || text.includes('تم قبول') || text.includes('تم تفعيل') || text.includes('success') || text.includes('accepted')) {
+      return { icon: 'check_circle', bgClass: 'bg-emerald-500', title: 'عملية ناجحة' };
+    }
+
+    // 6. Error / Complaint
+    if (type === NotificationType.Complaint || text.includes('خطأ') || text.includes('فشل') || text.includes('شكوى') || text.includes('error') || text.includes('failed')) {
+      return { icon: 'error', bgClass: 'bg-red-500', title: 'تنبيه خطأ / شكوى' };
+    }
+
+    // 7. Warning
+    if (text.includes('تحذير') || text.includes('تنبيه') || text.includes('warning')) {
+      return { icon: 'warning', bgClass: 'bg-amber-500', title: 'تحذير هام' };
+    }
+
+    // 8. Message
+    if (type === NotificationType.Message || text.includes('رسالة') || text.includes('محادثة') || text.includes('chat') || text.includes('message')) {
+      return { icon: 'chat', bgClass: 'bg-teal-500', title: 'رسالة جديدة' };
+    }
+
+    // 9. System
+    if (type === NotificationType.System || text.includes('نظام') || text.includes('system') || text.includes('تحديث')) {
+      return { icon: 'settings', bgClass: 'bg-slate-500', title: 'تحديث النظام' };
+    }
+
+    // 10. Default Information or MatchFound
+    if (type === NotificationType.MatchFound) {
+      return { icon: 'person_search', bgClass: 'bg-indigo-500', title: 'تم العثور على تطابق' };
+    }
+
+    return { icon: 'info', bgClass: 'bg-blue-500', title: 'إشعار جديد' };
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
+
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    if (diffMs < 0) return 'الآن';
+
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) {
+      return 'الآن';
+    }
+
+    if (diffMins < 60) {
+      if (diffMins === 1) return 'منذ دقيقة';
+      if (diffMins === 2) return 'منذ دقيقتين';
+      if (diffMins >= 3 && diffMins <= 10) return `منذ ${diffMins} دقائق`;
+      return `منذ ${diffMins} دقيقة`;
+    }
+
+    if (diffHrs < 24) {
+      if (diffHrs === 1) return 'منذ ساعة';
+      if (diffHrs === 2) return 'منذ ساعتين';
+      if (diffHrs >= 3 && diffHrs <= 10) return `منذ ${diffHrs} ساعات`;
+      return `منذ ${diffHrs} ساعة`;
+    }
+
+    if (diffDays === 1) {
+      return 'أمس';
+    }
+
+    if (diffDays < 7) {
+      if (diffDays === 2) return 'منذ يومين';
+      if (diffDays >= 3 && diffDays <= 10) return `قبل ${diffDays} أيام`;
+      return `قبل ${diffDays} يومًا`;
+    }
+
+    return date.toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
   }
 }

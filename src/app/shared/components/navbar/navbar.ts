@@ -1,6 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, HostListener, effect } from '@angular/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { Router, RouterModule } from '@angular/router';
+import { NotificationService } from '../../../core/services/notification.service';
+import { GetUserNotificationsDTO } from '../../../core/models/notification.model';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -13,9 +15,44 @@ import Swal from 'sweetalert2';
 export class Navbar implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
+  readonly notificationService = inject(NotificationService);
 
   isLoggedIn = this.authService.isLoggedIn;
   currentUser = this.authService.currentUser;
+  isNotificationDropdownOpen = signal(false);
+
+  constructor() {
+    effect(() => {
+      if (this.isLoggedIn()) {
+        this.notificationService.startConnection();
+      } else {
+        this.notificationService.stopConnection();
+      }
+    });
+  }
+
+  toggleNotificationDropdown(event: Event): void {
+    event.stopPropagation();
+    this.isNotificationDropdownOpen.update((v) => !v);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.notification-container')) {
+      this.isNotificationDropdownOpen.set(false);
+    }
+  }
+
+  onNotificationClick(n: GetUserNotificationsDTO): void {
+    if (!n.isRead) {
+      this.notificationService.markAsRead(n.id);
+    }
+    if (n.notificationDirectLink) {
+      this.isNotificationDropdownOpen.set(false);
+      this.router.navigateByUrl(n.notificationDirectLink);
+    }
+  }
 
   ngOnInit(): void {}
 

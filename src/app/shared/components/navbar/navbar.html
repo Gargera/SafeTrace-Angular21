@@ -33,10 +33,97 @@
 
     <div class="flex items-center gap-md">
       @if (isLoggedIn()) {
-        <button class="relative p-xs text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded-full transition-all duration-200">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-          <span class="absolute top-1 right-1 bg-error w-2 h-2 rounded-full"></span>
-        </button>
+        <!-- Notification Dropdown Container -->
+        <div class="relative notification-container flex items-center h-full">
+          <button 
+            (click)="toggleNotificationDropdown($event)"
+            class="relative p-xs text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded-full transition-all duration-200 cursor-pointer">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+            </svg>
+            @if (notificationService.unreadCount() > 0) {
+              <span class="absolute top-0 right-0 bg-error min-w-[16px] h-4 px-1 rounded-full text-[10px] text-white flex items-center justify-center font-bold border border-surface shadow-sm">
+                {{ notificationService.unreadCount() }}
+              </span>
+            }
+          </button>
+
+          <!-- Dropdown Popover -->
+          @if (isNotificationDropdownOpen()) {
+            <div class="absolute left-0 top-12 w-80 md:w-96 bg-surface-container border border-outline-variant rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col max-h-[480px] animate-fade-in">
+              <!-- Header -->
+              <div class="flex items-center justify-between px-md py-sm border-b border-outline-variant bg-surface-container-high">
+                <span class="font-bold text-body-md text-on-surface">الإشعارات</span>
+                @if (notificationService.unreadCount() > 0) {
+                  <button 
+                    (click)="notificationService.markAllAsRead()"
+                    class="text-label-sm text-secondary hover:underline cursor-pointer">
+                    تحديد الكل كمقروء
+                  </button>
+                }
+              </div>
+
+              <!-- List Container -->
+              <div class="overflow-y-auto flex-1 divide-y divide-outline-variant max-h-[360px]">
+                @if (notificationService.isLoading()) {
+                  <div class="flex justify-center items-center py-lg">
+                    <span class="material-symbols-outlined text-secondary animate-spin text-[24px]">progress_activity</span>
+                  </div>
+                }
+                @else if (notificationService.notifications().length === 0) {
+                  <div class="flex flex-col items-center justify-center py-lg gap-sm text-center">
+                    <span class="material-symbols-outlined text-[36px] text-on-surface-variant opacity-40">notifications_off</span>
+                    <p class="text-body-sm text-on-surface-variant">لا توجد إشعارات حالياً</p>
+                  </div>
+                }
+                @else {
+                  @for (n of notificationService.notifications().slice(0, 5); track n.id) {
+                    <div 
+                      (click)="onNotificationClick(n)"
+                      class="flex items-start gap-sm p-sm hover:bg-surface-container-high transition-colors cursor-pointer text-right"
+                      [class.bg-surface-container-low]="!n.isRead">
+                      
+                      <!-- Icon -->
+                      @let details = notificationService.getNotificationDetails(n);
+                      <div class="p-2 rounded-lg text-white flex-shrink-0 mt-[2px]" [class]="details.bgClass">
+                        <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1">
+                          {{ details.icon }}
+                        </span>
+                      </div>
+
+                      <!-- Text details -->
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-start justify-between gap-xs">
+                          <span class="font-bold text-label-md text-on-surface">{{ details.title }}</span>
+                          @if (!n.isRead) {
+                            <span class="w-2.5 h-2.5 rounded-full bg-secondary flex-shrink-0 mt-1"></span>
+                          }
+                        </div>
+                        <p class="text-body-sm text-on-surface-variant leading-relaxed break-words line-clamp-2 mt-[2px]" [class.font-semibold]="!n.isRead">
+                          {{ n.content }}
+                        </p>
+                        <span class="text-label-sm text-on-surface-variant mt-xs block font-mono">
+                          {{ notificationService.formatDate(n.createdAt) }}
+                        </span>
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+
+              <!-- Footer -->
+              <div class="border-t border-outline-variant bg-surface-container-high text-center">
+                <a 
+                  routerLink="/profile" 
+                  [queryParams]="{ tab: 'notifications' }" 
+                  (click)="isNotificationDropdownOpen.set(false)"
+                  class="block py-sm text-label-md text-secondary hover:underline font-bold">
+                  عرض كل الإشعارات
+                </a>
+              </div>
+            </div>
+          }
+        </div>
 
         <div class="relative group flex items-center gap-xs cursor-pointer h-full">
           <div class="w-9 h-9 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-between overflow-hidden border border-outline">

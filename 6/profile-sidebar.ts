@@ -3,7 +3,6 @@ import { GeocodingService } from '../../../core/services/gecoding.service';
 
 import { GetUserInfoDTO } from '../../../core/models/profile.model';
 import { VerificationStatus } from '../../enums/verification-status';
-import { environment } from '../../../../environments/environment.development';
 
 @Component({
   selector: 'app-profile-sidebar',
@@ -24,22 +23,14 @@ export class ProfileSidebar {
   readonly isResolvingAddress = signal(false);
 
   constructor() {
-    // Re-run whenever userInfo changes — resolves address automatically
+    // Re-runs whenever userInfo changes — resolves the address automatically.
     effect(() => {
-      console.log('Effect fired');
-
       const info = this.userInfo();
-      console.log(info);
 
       if (info?.homeLatitude && info?.homeLongitude) {
-        console.log('Calling reverseGeocode');
-
         this.isResolvingAddress.set(true);
         this.#geocodingService.reverseGeocode(info.homeLatitude, info.homeLongitude).subscribe({
           next: (address) => {
-            console.log('Address:', address);
-            console.log(environment.googleMapsApiKey);
-
             this.resolvedAddress.set(address);
             this.isResolvingAddress.set(false);
           },
@@ -63,15 +54,12 @@ export class ProfileSidebar {
 
   get isVerified(): boolean {
     return this.userInfo()?.verificationStatus == VerificationStatus.Verified;
-
-    //verificationStatus === VerificationStatus.Verified;
   }
 
   get verificationLabel(): string {
     switch (this.userInfo()?.verificationStatus) {
       case VerificationStatus.Verified:
         return 'حساب موثق';
-
       case VerificationStatus.Pending:
         return 'قيد المراجعة';
       default:

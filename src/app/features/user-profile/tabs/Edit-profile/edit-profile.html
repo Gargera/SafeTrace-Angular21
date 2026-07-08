@@ -1,183 +1,64 @@
-<div class="p-lg" dir="rtl">
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-xl">
-    <!-- ── Section: Personal Info ─────────────────────────────────────── -->
-    <section class="space-y-md">
-      <h3 class="text-label-md font-bold text-on-surface border-b border-outline-variant pb-sm">
-        المعلومات الشخصية
+<div class="p-lg space-y-xl animate-fade-in" dir="rtl">
+  
+  <!-- ── Card 1: Profile & ID Images ────────────────────────────────── -->
+  <div class="bg-surface border border-outline-variant rounded-2xl p-lg space-y-md shadow-sm transition-all duration-300 hover:shadow-md">
+    <div class="flex justify-between items-center border-b border-outline-variant pb-sm">
+      <h3 class="text-headline-sm font-bold text-primary flex items-center gap-sm">
+        <span class="material-symbols-outlined text-[24px]">account_circle</span>
+        الصور الشخصية والهوية
       </h3>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
-        <!-- First Name -->
-        <div class="space-y-xs">
-          <label class="text-label-md text-on-surface"
-            >الاسم الأول <span class="text-error">*</span></label
-          >
-          <input
-            formControlName="firstName"
-            type="text"
-            class="w-full bg-surface-container-low border rounded-lg p-md transition-all focus:ring-2 focus:ring-secondary focus:border-secondary outline-none"
-            [class.border-error]="isFieldInvalid('firstName')"
-            [class.border-outline-variant]="!isFieldInvalid('firstName')"
-          />
-          @if (isFieldInvalid('firstName')) {
-            <p class="text-label-sm text-error">
-              @if (form.get('firstName')?.hasError('required')) {
-                الاسم الأول مطلوب
-              } @else if (form.get('firstName')?.hasError('maxlength')) {
-                لا يتجاوز 100 حرف
-              }
-            </p>
-          }
-        </div>
-
-        <!-- Last Name -->
-        <div class="space-y-xs">
-          <label class="text-label-md text-on-surface"
-            >اسم العائلة <span class="text-error">*</span></label
-          >
-          <input
-            formControlName="lastName"
-            type="text"
-            class="w-full bg-surface-container-low border rounded-lg p-md transition-all focus:ring-2 focus:ring-secondary focus:border-secondary outline-none"
-            [class.border-error]="isFieldInvalid('lastName')"
-            [class.border-outline-variant]="!isFieldInvalid('lastName')"
-          />
-          @if (isFieldInvalid('lastName')) {
-            <p class="text-label-sm text-error">
-              @if (form.get('lastName')?.hasError('required')) {
-                اسم العائلة مطلوب
-              } @else if (form.get('lastName')?.hasError('maxlength')) {
-                لا يتجاوز 100 حرف
-              }
-            </p>
-          }
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Section: Location (Google Maps) ───────────────────────────── -->
-    <section class="space-y-md">
-      <div class="flex items-center justify-between border-b border-outline-variant pb-sm">
-        <h3 class="text-label-md font-bold text-on-surface">الموقع الجغرافي</h3>
-        @if (selectedLat() !== null) {
+      <div>
+        @if (!isEditingImage()) {
           <button
             type="button"
-            (click)="resetToEgypt()"
-            class="text-label-sm text-error hover:underline flex items-center gap-xs"
+            (click)="isEditingImage.set(true)"
+            class="px-md py-xs bg-secondary-container text-on-secondary-container hover:bg-secondary-container-high rounded-lg text-label-sm font-bold flex items-center gap-xs transition-colors cursor-pointer"
           >
-            <span class="material-symbols-outlined text-[16px]">clear</span>
-            إعادة تعيين
+            <span class="material-symbols-outlined text-[16px]">edit</span>
+            تعديل الصور
           </button>
+        } @else {
+          <div class="flex items-center gap-sm">
+            <button
+              type="button"
+              [disabled]="isSavingImage()"
+              (click)="cancelImage()"
+              class="px-md py-xs text-secondary border border-secondary rounded-lg text-label-sm font-bold hover:bg-secondary-fixed transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              إلغاء
+            </button>
+            <button
+              type="button"
+              [disabled]="isSavingImage()"
+              (click)="saveImage()"
+              class="px-md py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 transition-all flex items-center gap-xs disabled:opacity-50 cursor-pointer"
+            >
+              @if (isSavingImage()) {
+                <span class="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+              }
+              حفظ الصور
+            </button>
+          </div>
         }
       </div>
+    </div>
 
-      <!-- Coordinate inputs -->
-      <div class="grid grid-cols-2 gap-md">
-        <div class="space-y-xs">
-          <label class="text-label-sm text-on-surface-variant">خط العرض (Latitude)</label>
-          <input
-            type="number"
-            step="0.0001"
-            [value]="selectedLat() ?? ''"
-            (change)="onLatChange($event)"
-            placeholder="مثال: 30.0444"
-            class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-sm text-body-sm focus:ring-2 focus:ring-secondary outline-none transition-all"
-          />
-        </div>
-        <div class="space-y-xs">
-          <label class="text-label-sm text-on-surface-variant">خط الطول (Longitude)</label>
-          <input
-            type="number"
-            step="0.0001"
-            [value]="selectedLng() ?? ''"
-            (change)="onLngChange($event)"
-            placeholder="مثال: 31.2357"
-            class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-sm text-body-sm focus:ring-2 focus:ring-secondary outline-none transition-all"
-          />
-        </div>
-      </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-lg pt-sm">
+      <!-- Profile Image -->
+      <div class="space-y-sm">
+        <label class="text-label-md text-on-surface font-semibold">صورة الملف الشخصي</label>
 
-      <!-- Resolved address — read-only, populated automatically from reverse geocoding -->
-      <div class="space-y-xs">
-        <label class="text-label-sm text-on-surface-variant">العنوان</label>
-        <div class="relative">
-          <input
-            type="text"
-            readonly
-            [value]="resolvedAddress() ?? ''"
-            placeholder="سيتم تحديد العنوان تلقائياً بعد اختيار الموقع"
-            class="w-full bg-surface-container border border-outline-variant rounded-lg p-md text-body-sm text-on-surface cursor-default select-none pr-10 focus:outline-none"
-          />
-          <!-- Spinner while resolving -->
-          @if (isResolvingAddress()) {
-            <span
-              class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-secondary animate-spin"
-            >
-              progress_activity
-            </span>
-          } @else if (resolvedAddress()) {
-            <span
-              class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-on-tertiary-container"
-              style="font-variation-settings: 'FILL' 1"
-            >
-              check_circle
-            </span>
-          }
-        </div>
-
-        <!-- Raw coordinate badge (informational) -->
-        @if (selectedLat() !== null && selectedLng() !== null) {
-          <p class="text-label-sm text-on-surface-variant font-mono">
-            {{ selectedLat() | number: '1.4-4' }}, {{ selectedLng() | number: '1.4-4' }}
-          </p>
+        @if (profileImagePreview()) {
+          <div class="relative w-24 h-24 rounded-full overflow-hidden border-2 border-secondary shadow-sm">
+            <img
+              [src]="profileImagePreview()!"
+              alt="معاينة الصورة"
+              class="w-full h-full object-cover"
+            />
+          </div>
         }
-      </div>
 
-      <!-- Google Maps Iframe Preview -->
-      <div
-        class="relative rounded-xl overflow-hidden border border-outline-variant shadow-sm"
-        style="height: 320px"
-      >
-        <iframe
-          [src]="mapIframeSrc()"
-          class="w-full h-full border-0"
-          loading="lazy"
-          allowfullscreen
-          referrerpolicy="no-referrer-when-downgrade"
-          title="خريطة الموقع"
-        >
-        </iframe>
-
-        <!-- Overlay hint -->
-        <div
-          class="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-label-sm py-sm px-md text-center pointer-events-none"
-        >
-          أدخل الإحداثيات في الحقول أعلاه لتحديث الموقع على الخريطة
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Section: Images ────────────────────────────────────────────── -->
-    <section class="space-y-md">
-      <h3 class="text-label-md font-bold text-on-surface border-b border-outline-variant pb-sm">
-        الصور
-      </h3>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
-        <!-- Profile Image -->
-        <div class="space-y-sm">
-          <label class="text-label-md text-on-surface">صورة الملف الشخصي</label>
-
-          @if (profileImagePreview()) {
-            <div class="relative w-20 h-20 rounded-full overflow-hidden border-2 border-secondary">
-              <img
-                [src]="profileImagePreview()!"
-                alt="معاينة الصورة"
-                class="w-full h-full object-cover"
-              />
-            </div>
-          }
-
+        @if (isEditingImage()) {
           <label
             class="flex items-center gap-sm cursor-pointer p-md bg-surface-container-low border border-dashed border-outline-variant rounded-lg hover:border-secondary hover:bg-surface-container transition-all group"
           >
@@ -194,24 +75,26 @@
               (change)="onProfileImageSelected($event)"
             />
           </label>
-        </div>
+        }
+      </div>
 
-        <!-- ID Image -->
-        <div class="space-y-sm">
-          <label class="text-label-md text-on-surface">
-            صورة الهوية <span class="text-error">*</span>
-          </label>
+      <!-- ID Image -->
+      <div class="space-y-sm">
+        <label class="text-label-md text-on-surface font-semibold">
+          صورة الهوية <span class="text-error">*</span>
+        </label>
 
-          @if (idImagePreview()) {
-            <div class="relative w-full h-24 rounded-lg overflow-hidden border border-secondary">
-              <img
-                [src]="idImagePreview()!"
-                alt="معاينة الهوية"
-                class="w-full h-full object-cover"
-              />
-            </div>
-          }
+        @if (idImagePreview()) {
+          <div class="relative w-full h-24 rounded-lg overflow-hidden border border-secondary shadow-sm">
+            <img
+              [src]="idImagePreview()!"
+              alt="معاينة الهوية"
+              class="w-full h-full object-cover"
+            />
+          </div>
+        }
 
+        @if (isEditingImage()) {
           <label
             class="flex items-center gap-sm cursor-pointer p-md bg-surface-container-low border border-dashed border-outline-variant rounded-lg hover:border-secondary hover:bg-surface-container transition-all group"
           >
@@ -228,122 +111,371 @@
               (change)="onIdImageSelected($event)"
             />
           </label>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Section: Password ──────────────────────────────────────────── -->
-    <section class="space-y-md">
-      <h3 class="text-label-md font-bold text-on-surface border-b border-outline-variant pb-sm">
-        تغيير كلمة المرور
-      </h3>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
-        <!-- Current Password -->
-        <div class="space-y-xs">
-          <label class="text-label-md text-on-surface"
-            >كلمة المرور الحالية <span class="text-error">*</span></label
-          >
-          <div class="relative">
-            <input
-              formControlName="currentPassword"
-              [type]="showPassword() ? 'text' : 'password'"
-              class="w-full bg-surface-container-low border rounded-lg p-md pl-10 transition-all focus:ring-2 focus:ring-secondary focus:border-secondary outline-none"
-              [class.border-error]="isFieldInvalid('currentPassword')"
-              [class.border-outline-variant]="!isFieldInvalid('currentPassword')"
-            />
-            <button
-              type="button"
-              (click)="showPassword.set(!showPassword())"
-              class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-secondary"
-            >
-              <span class="material-symbols-outlined text-[20px]">
-                {{ showPassword() ? 'visibility_off' : 'visibility' }}
-              </span>
-            </button>
-          </div>
-          @if (isFieldInvalid('currentPassword')) {
-            <p class="text-label-sm text-error">كلمة المرور الحالية مطلوبة</p>
-          }
-        </div>
-
-        <!-- New Password -->
-        <div class="space-y-xs">
-          <label class="text-label-md text-on-surface"
-            >كلمة المرور الجديدة <span class="text-error">*</span></label
-          >
-          <div class="relative">
-            <input
-              formControlName="newPassword"
-              [type]="showNewPassword() ? 'text' : 'password'"
-              class="w-full bg-surface-container-low border rounded-lg p-md pl-10 transition-all focus:ring-2 focus:ring-secondary focus:border-secondary outline-none"
-              [class.border-error]="isFieldInvalid('newPassword') || samePasswordError"
-              [class.border-outline-variant]="!isFieldInvalid('newPassword') && !samePasswordError"
-            />
-            <button
-              type="button"
-              (click)="showNewPassword.set(!showNewPassword())"
-              class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-secondary"
-            >
-              <span class="material-symbols-outlined text-[20px]">
-                {{ showNewPassword() ? 'visibility_off' : 'visibility' }}
-              </span>
-            </button>
-          </div>
-          @if (getPasswordError()) {
-            <p class="text-label-sm text-error">{{ getPasswordError() }}</p>
-          }
-          @if (samePasswordError) {
-            <p class="text-label-sm text-error">كلمة المرور الجديدة يجب أن تختلف عن الحالية</p>
-          }
-          <!-- Strength hint -->
-          <p class="text-label-sm text-on-surface-variant">
-            8 أحرف على الأقل · حرف كبير · حرف صغير · رقم · رمز خاص
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Feedback ────────────────────────────────────────────────────── -->
-    @if (saveError()) {
-      <div
-        class="p-md bg-error-container text-on-error-container rounded-lg text-body-sm flex items-center gap-sm"
-      >
-        <span class="material-symbols-outlined">error</span>
-        {{ saveError() }}
-      </div>
-    }
-    @if (saveSuccess()) {
-      <div
-        class="p-md bg-surface-container text-on-tertiary-container rounded-lg text-body-sm flex items-center gap-sm font-bold"
-      >
-        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1"
-          >check_circle</span
-        >
-        تم حفظ التغييرات بنجاح
-      </div>
-    }
-
-    <!-- ── Actions ────────────────────────────────────────────────────── -->
-    <div class="flex justify-end gap-md pt-sm">
-      <button
-        type="button"
-        (click)="onCancel()"
-        [disabled]="isSaving()"
-        class="px-lg py-md text-label-md text-secondary border border-secondary rounded-lg hover:bg-secondary-fixed transition-colors disabled:opacity-50"
-      >
-        إلغاء
-      </button>
-      <button
-        type="submit"
-        [disabled]="form.invalid || isSaving()"
-        class="px-lg py-md text-label-md text-on-primary bg-secondary rounded-lg hover:opacity-90 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-sm"
-      >
-        @if (isSaving()) {
-          <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
         }
-        حفظ التغييرات
-      </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Card 2: Personal Info ─────────────────────────────────────── -->
+  <form [formGroup]="personalForm" (ngSubmit)="savePersonal()" class="bg-surface border border-outline-variant rounded-2xl p-lg space-y-md shadow-sm transition-all duration-300 hover:shadow-md block">
+    <div class="flex justify-between items-center border-b border-outline-variant pb-sm">
+      <h3 class="text-headline-sm font-bold text-primary flex items-center gap-sm">
+        <span class="material-symbols-outlined text-[24px]">person</span>
+        المعلومات الشخصية
+      </h3>
+      <div>
+        @if (!isEditingPersonal()) {
+          <button
+            type="button"
+            (click)="togglePersonalEdit(true)"
+            class="px-md py-xs bg-secondary-container text-on-secondary-container hover:bg-secondary-container-high rounded-lg text-label-sm font-bold flex items-center gap-xs transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-[16px]">edit</span>
+            تعديل البيانات
+          </button>
+        } @else {
+          <div class="flex items-center gap-sm">
+            <button
+              type="button"
+              [disabled]="isSavingPersonal()"
+              (click)="togglePersonalEdit(false); cancelPersonal()"
+              class="px-md py-xs text-secondary border border-secondary rounded-lg text-label-sm font-bold hover:bg-secondary-fixed transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              إلغاء
+            </button>
+            <button
+              type="submit"
+              [disabled]="personalForm.invalid || isSavingPersonal()"
+              class="px-md py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 transition-all flex items-center gap-xs disabled:opacity-50 cursor-pointer"
+            >
+              @if (isSavingPersonal()) {
+                <span class="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+              }
+              حفظ التغييرات
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-lg pt-sm">
+      <!-- First Name -->
+      <div class="space-y-xs">
+        <label class="text-label-md text-on-surface font-semibold"
+          >الاسم الأول <span class="text-error">*</span></label
+        >
+        <input
+          formControlName="firstName"
+          type="text"
+          class="w-full bg-surface-container-low border rounded-lg p-md transition-all focus:ring-2 focus:ring-secondary focus:border-secondary outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+          [class.border-error]="isFieldInvalid('firstName')"
+          [class.border-outline-variant]="!isFieldInvalid('firstName')"
+        />
+        @if (isFieldInvalid('firstName')) {
+          <p class="text-label-sm text-error font-medium mt-xs">
+            @if (personalForm.get('firstName')?.hasError('required')) {
+              الاسم الأول مطلوب
+            } @else if (personalForm.get('firstName')?.hasError('maxlength')) {
+              لا يتجاوز 100 حرف
+            }
+          </p>
+        }
+      </div>
+
+      <!-- Last Name -->
+      <div class="space-y-xs">
+        <label class="text-label-md text-on-surface font-semibold"
+          >اسم العائلة <span class="text-error">*</span></label
+        >
+        <input
+          formControlName="lastName"
+          type="text"
+          class="w-full bg-surface-container-low border rounded-lg p-md transition-all focus:ring-2 focus:ring-secondary focus:border-secondary outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+          [class.border-error]="isFieldInvalid('lastName')"
+          [class.border-outline-variant]="!isFieldInvalid('lastName')"
+        />
+        @if (isFieldInvalid('lastName')) {
+          <p class="text-label-sm text-error font-medium mt-xs">
+            @if (personalForm.get('lastName')?.hasError('required')) {
+              اسم العائلة مطلوب
+            } @else if (personalForm.get('lastName')?.hasError('maxlength')) {
+              لا يتجاوز 100 حرف
+            }
+          </p>
+        }
+      </div>
     </div>
   </form>
+
+  <!-- ── Card 3: Location (Google Maps) ───────────────────────────── -->
+  <div class="bg-surface border border-outline-variant rounded-2xl p-lg space-y-md shadow-sm transition-all duration-300 hover:shadow-md">
+    <div class="flex items-center justify-between border-b border-outline-variant pb-sm">
+      <h3 class="text-headline-sm font-bold text-primary flex items-center gap-sm">
+        <span class="material-symbols-outlined text-[24px]">location_on</span>
+        الموقع الجغرافي
+      </h3>
+      <div>
+        @if (!isEditingLocation()) {
+          <button
+            type="button"
+            (click)="isEditingLocation.set(true)"
+            class="px-md py-xs bg-secondary-container text-on-secondary-container hover:bg-secondary-container-high rounded-lg text-label-sm font-bold flex items-center gap-xs transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-[16px]">edit</span>
+            تعديل الموقع
+          </button>
+        } @else {
+          <div class="flex items-center gap-sm">
+            <button
+              type="button"
+              [disabled]="isSavingLocation()"
+              (click)="cancelLocation()"
+              class="px-md py-xs text-secondary border border-secondary rounded-lg text-label-sm font-bold hover:bg-secondary-fixed transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              إلغاء
+            </button>
+            <button
+              type="button"
+              [disabled]="isSavingLocation()"
+              (click)="saveLocation()"
+              class="px-md py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 transition-all flex items-center gap-xs disabled:opacity-50 cursor-pointer"
+            >
+              @if (isSavingLocation()) {
+                <span class="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+              }
+              حفظ الموقع
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Use My Current Location action -->
+    @if (isEditingLocation()) {
+      <div class="flex justify-start gap-md animate-fade-in">
+        <button
+          type="button"
+          (click)="useCurrentLocation()"
+          class="text-label-sm text-secondary hover:underline flex items-center gap-xs font-bold cursor-pointer"
+        >
+          <span class="material-symbols-outlined text-[16px]">my_location</span>
+          استخدام موقعي الحالي
+        </button>
+        @if (selectedLat() !== null) {
+          <button
+            type="button"
+            (click)="resetMap()"
+            class="text-label-sm text-error hover:underline flex items-center gap-xs font-bold cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-[16px]">clear</span>
+            إعادة تعيين
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Resolved address — read-only, populated automatically from reverse geocoding -->
+    <div class="space-y-xs pt-xs">
+      <label class="text-label-sm text-on-surface-variant font-semibold">العنوان</label>
+      <div class="relative">
+        <input
+          type="text"
+          readonly
+          [value]="resolvedAddress() ?? ''"
+          placeholder="سيتم تحديد العنوان تلقائياً بعد اختيار الموقع"
+          class="w-full bg-surface-container border border-outline-variant rounded-lg p-md text-body-sm text-on-surface cursor-default select-none pr-10 focus:outline-none"
+        />
+        <!-- Spinner while resolving -->
+        @if (isResolvingAddress()) {
+          <span
+            class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-secondary animate-spin"
+          >
+            progress_activity
+          </span>
+        } @else if (resolvedAddress()) {
+          <span
+            class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-on-tertiary-container"
+            style="font-variation-settings: 'FILL' 1"
+          >
+            check_circle
+          </span>
+        }
+      </div>
+    </div>
+
+    <!-- Google Maps Native Container -->
+    <div
+      class="relative rounded-xl overflow-hidden border border-outline-variant shadow-sm"
+      style="height: 320px"
+    >
+      <!-- Overlay disable covering when not editing -->
+      @if (!isEditingLocation()) {
+        <div class="absolute inset-0 bg-black/5 z-10 cursor-not-allowed"></div>
+      }
+      
+      <div #mapContainer class="w-full h-full"></div>
+
+      <!-- Overlay hint -->
+      @if (isEditingLocation()) {
+        <div
+          class="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-label-sm py-sm px-md text-center pointer-events-none z-20 animate-fade-in"
+        >
+          اسحب المؤشر أو اضغط على أي مكان في الخريطة لتحديد موقعك بدقة
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ── Card 4: Change Password ──────────────────────────────────── -->
+  <form [formGroup]="passwordForm" (ngSubmit)="savePassword()" class="bg-surface border border-outline-variant rounded-2xl p-lg space-y-md shadow-sm transition-all duration-300 hover:shadow-md block">
+    <div class="flex justify-between items-center border-b border-outline-variant pb-sm">
+      <h3 class="text-headline-sm font-bold text-primary flex items-center gap-sm">
+        <span class="material-symbols-outlined text-[24px]">lock</span>
+        تغيير كلمة المرور
+      </h3>
+      <div>
+        @if (!isEditingPassword()) {
+          <button
+            type="button"
+            (click)="togglePasswordEdit(true)"
+            class="px-md py-xs bg-secondary-container text-on-secondary-container hover:bg-secondary-container-high rounded-lg text-label-sm font-bold flex items-center gap-xs transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-[16px]">edit</span>
+            تغيير كلمة المرور
+          </button>
+        } @else {
+          <div class="flex items-center gap-sm">
+            <button
+              type="button"
+              [disabled]="isSavingPassword()"
+              (click)="togglePasswordEdit(false); cancelPassword()"
+              class="px-md py-xs text-secondary border border-secondary rounded-lg text-label-sm font-bold hover:bg-secondary-fixed transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              إلغاء
+            </button>
+            <button
+              type="submit"
+              [disabled]="passwordForm.invalid || isSavingPassword()"
+              class="px-md py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 transition-all flex items-center gap-xs disabled:opacity-50 cursor-pointer"
+            >
+              @if (isSavingPassword()) {
+                <span class="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+              }
+              تغيير كلمة المرور
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-lg pt-sm">
+      <!-- Current Password -->
+      <div class="space-y-xs">
+        <label class="text-label-md text-on-surface font-semibold"
+          >كلمة المرور الحالية <span class="text-error">*</span></label
+        >
+        <div class="relative">
+          <input
+            formControlName="currentPassword"
+            [type]="showPassword() ? 'text' : 'password'"
+            class="w-full bg-surface-container-low border rounded-lg p-md pl-10 transition-all focus:ring-2 focus:ring-secondary focus:border-secondary outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+            [class.border-error]="isPasswordInvalid('currentPassword')"
+            [class.border-outline-variant]="!isPasswordInvalid('currentPassword')"
+          />
+          <button
+            type="button"
+            [disabled]="!isEditingPassword()"
+            (click)="showPassword.set(!showPassword())"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-secondary disabled:opacity-50 cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-[20px]">
+              {{ showPassword() ? 'visibility_off' : 'visibility' }}
+            </span>
+          </button>
+        </div>
+        @if (isPasswordInvalid('currentPassword')) {
+          <p class="text-label-sm text-error font-medium mt-xs">كلمة المرور الحالية مطلوبة</p>
+        }
+      </div>
+
+      <!-- New Password -->
+      <div class="space-y-xs">
+        <label class="text-label-md text-on-surface font-semibold"
+          >كلمة المرور الجديدة <span class="text-error">*</span></label
+        >
+        <div class="relative">
+          <input
+            formControlName="newPassword"
+            [type]="showNewPassword() ? 'text' : 'password'"
+            class="w-full bg-surface-container-low border rounded-lg p-md pl-10 transition-all focus:ring-2 focus:ring-secondary focus:border-secondary outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+            [class.border-error]="isPasswordInvalid('newPassword') || samePasswordError || passwordMismatchError"
+            [class.border-outline-variant]="!isPasswordInvalid('newPassword') && !samePasswordError && !passwordMismatchError"
+          />
+          <button
+            type="button"
+            [disabled]="!isEditingPassword()"
+            (click)="showNewPassword.set(!showNewPassword())"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-secondary disabled:opacity-50 cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-[20px]">
+              {{ showNewPassword() ? 'visibility_off' : 'visibility' }}
+            </span>
+          </button>
+        </div>
+        @if (getPasswordError()) {
+          <p class="text-label-sm text-error font-medium mt-xs">{{ getPasswordError() }}</p>
+        }
+        @if (samePasswordError) {
+          <p class="text-label-sm text-error font-medium mt-xs">كلمة المرور الجديدة يجب أن تختلف عن الحالية</p>
+        }
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="space-y-xs">
+        <label class="text-label-md text-on-surface font-semibold"
+          >تأكيد كلمة المرور الجديدة <span class="text-error">*</span></label
+        >
+        <div class="relative">
+          <input
+            formControlName="confirmPassword"
+            [type]="showNewPassword() ? 'text' : 'password'"
+            class="w-full bg-surface-container-low border rounded-lg p-md pl-10 transition-all focus:ring-2 focus:ring-secondary focus:border-secondary outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+            [class.border-error]="isPasswordInvalid('confirmPassword') || passwordMismatchError"
+            [class.border-outline-variant]="!isPasswordInvalid('confirmPassword') && !passwordMismatchError"
+          />
+        </div>
+        @if (isPasswordInvalid('confirmPassword') && passwordForm.get('confirmPassword')?.hasError('required')) {
+          <p class="text-label-sm text-error font-medium mt-xs">تأكيد كلمة المرور مطلوب</p>
+        }
+        @if (passwordMismatchError) {
+          <p class="text-label-sm text-error font-medium mt-xs font-semibold">كلمتا المرور غير متطابقتين</p>
+        }
+      </div>
+    </div>
+    <!-- Strength hint -->
+    <p class="text-label-sm text-on-surface-variant mt-sm">
+      8 أحرف على الأقل · حرف كبير · حرف صغير · رقم · رمز خاص
+    </p>
+  </form>
+
+  <!-- ── Feedback Alerts ──────────────────────────────────────────────── -->
+  @if (saveError()) {
+    <div
+      class="p-md bg-error-container text-on-error-container rounded-lg text-body-sm flex items-center gap-sm animate-fade-in"
+    >
+      <span class="material-symbols-outlined">error</span>
+      {{ saveError() }}
+    </div>
+  }
+  @if (saveSuccess()) {
+    <div
+      class="p-md bg-surface-container text-on-tertiary-container rounded-lg text-body-sm flex items-center gap-sm font-bold animate-fade-in"
+    >
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1"
+        >check_circle</span
+      >
+      تم حفظ التغييرات بنجاح
+    </div>
+  }
+
 </div>
