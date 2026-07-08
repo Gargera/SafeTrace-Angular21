@@ -1,10 +1,17 @@
-<div class="min-h-screen bg-surface flex flex-col justify-center items-center px-margin-mobile py-12">
+<div class="min-h-screen bg-surface flex flex-col justify-center items-center px-margin-mobile py-12 relative">
   
-  <div class="text-center mb-8">
-    <a routerLink="/home" class="inline-flex items-center justify-center bg-primary text-on-primary w-12 h-12 rounded-xl mb-4 hover:scale-105 transition-transform shadow-md">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+  <div class="absolute top-6 right-6 md:top-8 md:right-8">
+    <a routerLink="/home" class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-medium text-body-sm bg-surface-container-lowest px-4 py-2 rounded-full shadow-sm border border-outline-variant hover:shadow-md">
+      <svg class="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+      العودة للرئيسية
     </a>
-    <h1 class="text-3xl font-headline-lg font-bold text-primary mb-2">SafeTrace</h1>
+  </div>
+
+  <div class="text-center mb-8">
+    <a routerLink="/home" class="inline-flex items-center justify-center text-on-primary w-12 h-12 rounded-xl mb-4 hover:scale-105 transition-transform shadow-md">
+      <img src="images/logo.svg" alt="منصة لقاء" class="h-10 w-auto" />
+    </a>
+    <h1 class="text-3xl font-headline-lg font-bold text-primary mb-2">لقاء</h1>
     <p class="text-on-surface-variant text-body-md max-w-87.5 mx-auto">الدقة الإنسانية في البحث والإنقاذ. يرجى تسجيل الدخول للوصول إلى لوحة التحكم.</p>
   </div>
 
@@ -20,18 +27,14 @@
     }
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-      <button type="button" class="flex items-center justify-center gap-2 border border-outline text-on-surface bg-surface-container-lowest hover:bg-surface-container-low rounded-xl py-2.5 font-label-md font-medium transition-colors">
-        <svg class="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-        </svg>
-        جوجل
-      </button>
-      <button type="button" class="flex items-center justify-center gap-2 border border-outline text-on-surface bg-surface-container-lowest hover:bg-surface-container-low rounded-xl py-2.5 font-label-md font-medium transition-colors">
+      
+      <div class="flex items-center justify-center border border-outline bg-surface-container-lowest rounded-xl overflow-hidden hover:bg-surface-container-low transition-colors h-11.5">
+        <asl-google-signin-button type="standard" size="large"></asl-google-signin-button>
+      </div>
+
+      <button type="button" (click)="signInWithFB()" class="flex items-center justify-center gap-2 border border-outline text-on-surface bg-surface-container-lowest hover:bg-surface-container-low rounded-xl py-2.5 font-label-md font-medium transition-colors h-11.5">
         <svg class="w-5 h-5 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-        فيسبوك
+        تسجيل عبر فيسبوك
       </button>
     </div>
 
@@ -42,7 +45,6 @@
     </div>
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
-      
       <div class="flex flex-col gap-1">
         <label class="text-label-md font-medium text-on-surface">البريد الإلكتروني</label>
         <input type="email" formControlName="email" placeholder="name@example.com" dir="ltr"
@@ -63,12 +65,12 @@
           <a routerLink="/auth/forgot-password" class="text-secondary text-body-sm font-medium hover:underline">نسيت كلمة المرور؟</a>
         </div>
         
-        <div class="relative">
+        <div class="relative w-full">
           <input [type]="showPassword() ? 'text' : 'password'" formControlName="password" placeholder="••••••••" dir="ltr"
                  [class.border-error]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
-                 class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl pl-11 pr-4 py-3 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all text-right focus:text-left">
+                 class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 pr-12 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all text-right focus:text-left">
           
-          <button type="button" (click)="togglePassword()" class="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none">
+          <button type="button" (click)="togglePassword()" class="absolute inset-y-0 right-0 px-4 flex items-center text-on-surface-variant hover:text-primary transition-colors focus:outline-none">
             @if (showPassword()) {
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
             } @else {

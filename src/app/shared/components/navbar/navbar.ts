@@ -3,6 +3,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Router, RouterModule } from '@angular/router';
 import { NotificationService } from '../../../core/services/notification.service';
 import { GetUserNotificationsDTO } from '../../../core/models/notification.model';
+import { environment } from '../../../../environments/environment.development'; // تأكدي من مسار الـ environment الصحيح
 import Swal from 'sweetalert2';
 
 @Component({
@@ -68,6 +69,17 @@ export class Navbar implements OnInit {
   }
 
   ngOnInit(): void {}
+
+  getProfileImageUrl(): string {
+    const imgPath = this.currentUser()?.profileImage;
+    if (!imgPath) return '';
+    
+    if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+      return imgPath;
+    }
+    
+    return `${environment.baseUrl}/${imgPath.replace(/^\//, '')}`;
+  }
 
   isAdmin(): boolean {
     const token = this.authService.getToken();

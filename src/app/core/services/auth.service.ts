@@ -1,7 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment.development';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, firstValueFrom } from 'rxjs';
 import { ApiResponse } from '../../shared/models/responses/api-response.model';
 import { AuthResponse } from '../../features/auth/models/AuthResponse';
 import { LoginRequest } from '../../features/auth/models/LoginRequest';
@@ -16,15 +16,33 @@ export class AuthService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${environment.baseUrl}/api/Account`;
 
-  private readonly tokenKey = 'token';
-  private readonly refreshTokenKey = 'refresh_token';
+  private accessToken: string | null = null;
   private readonly userDataKey = 'user_data';
 
-  isLoggedIn = signal<boolean>(this.hasToken());
-  currentUser = signal<any>(this.getUserData());
+  isLoggedIn = signal<boolean>(false);
+  currentUser = signal<any>(null);
 
-  private hasToken(): boolean {
-    return !!localStorage.getItem(this.tokenKey);
+  constructor() {
+    const userData = this.getUserData();
+    if (userData) {
+      this.currentUser.set(userData);
+      this.isLoggedIn.set(true);
+      
+      this.refreshToken().subscribe({
+        error: () => this.clearSession()
+      });
+    }
+  }
+
+  async checkSession(): Promise<void> {
+    try {
+      const res = await firstValueFrom(this.refreshToken());
+      if (res.success && res.data) {
+        this.isLoggedIn.set(true);
+      }
+    } catch (error) {
+      this.clearSession();
+    }
   }
 
   private getUserData(): any {
@@ -33,22 +51,18 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
-  }
-
-  getRefreshToken(): string | null {
-    return localStorage.getItem(this.refreshTokenKey);
+    return this.accessToken;
   }
 
   setSession(response: AuthResponse): void {
-    localStorage.setItem(this.tokenKey, response.accessToken);
-    localStorage.setItem(this.refreshTokenKey, response.refreshToken);
-
+    this.accessToken = response.accessToken;
+    
     const userData = {
       email: response.email,
       fName: response.fullName.split(' ')[0],
       fullName: response.fullName,
-      isVerified: response.verificationStatus === VerificationStatus.Verified,
+      profileImage: response.profileImage || null,
+      isVerified: response.verificationStatus === VerificationStatus.Verified
     };
 
     localStorage.setItem(this.userDataKey, JSON.stringify(userData));
@@ -57,8 +71,7 @@ export class AuthService {
   }
 
   clearSession(): void {
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.refreshTokenKey);
+    this.accessToken = null;
     localStorage.removeItem(this.userDataKey);
     this.isLoggedIn.set(false);
     this.currentUser.set(null);
@@ -69,31 +82,21 @@ export class AuthService {
   }
 
   login(data: LoginRequest): Observable<ApiResponse<AuthResponse>> {
-    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/login`, data).pipe(
-      tap((res) => {
-        if (res.success && res.data) this.setSession(res.data);
-      }),
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/login`, data, { withCredentials: true }).pipe(
+      tap(res => { if (res.success && res.data) this.setSession(res.data); })
     );
   }
 
-  googleLogin(providerToken: string): Observable<ApiResponse<AuthResponse>> {
-    return this.http
-      .post<ApiResponse<AuthResponse>>(`${this.baseUrl}/google-login`, { providerToken })
-      .pipe(
-        tap((res) => {
-          if (res.success && res.data) this.setSession(res.data);
-        }),
-      );
+  googleLogin(data: { providerToken: string }): Observable<ApiResponse<AuthResponse>> {
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/google-login`, data, { withCredentials: true }).pipe(
+      tap(res => { if (res.success && res.data) this.setSession(res.data); })
+    );
   }
 
-  facebookLogin(providerToken: string): Observable<ApiResponse<AuthResponse>> {
-    return this.http
-      .post<ApiResponse<AuthResponse>>(`${this.baseUrl}/facebook-login`, { providerToken })
-      .pipe(
-        tap((res) => {
-          if (res.success && res.data) this.setSession(res.data);
-        }),
-      );
+  facebookLogin(data: { providerToken: string }): Observable<ApiResponse<AuthResponse>> {
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/facebook-login`, data, { withCredentials: true }).pipe(
+      tap(res => { if (res.success && res.data) this.setSession(res.data); })
+    );
   }
 
   confirmEmail(email: string, otpCode: string): Observable<ApiResponse<string>> {
@@ -121,32 +124,19 @@ export class AuthService {
     return this.http.post<ApiResponse<string>>(`${this.baseUrl}/reset-password`, data);
   }
 
-  changePassword(data: {
-    currentPassword: string;
-    newPassword: string;
-    currentRefreshToken?: string;
-  }): Observable<ApiResponse<string>> {
-    const payload = { ...data, currentRefreshToken: this.getRefreshToken() };
-    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/change-password`, payload);
+  changePassword(data: { currentPassword: string, newPassword: string }): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/change-password`, data, { withCredentials: true });
   }
 
-  refreshToken(data: {
-    expiredAccessToken: string;
-    refreshToken: string;
-  }): Observable<ApiResponse<AuthResponse>> {
-    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/refresh-token`, data).pipe(
-      tap((res) => {
-        if (res.success && res.data) this.setSession(res.data);
-      }),
+  refreshToken(): Observable<ApiResponse<AuthResponse>> {
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/refresh-token`, {}, { withCredentials: true }).pipe(
+      tap(res => { if (res.success && res.data) this.setSession(res.data); })
     );
   }
 
   revokeToken(): Observable<ApiResponse<string>> {
-    const currentRefreshToken = this.getRefreshToken();
-    return this.http
-      .post<
-        ApiResponse<string>
-      >(`${this.baseUrl}/revoke-token?token=${encodeURIComponent(currentRefreshToken || '')}`, {})
-      .pipe(tap(() => this.clearSession()));
+    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/revoke-token`, {}, { withCredentials: true }).pipe(
+      tap(() => this.clearSession())
+    );
   }
 }
