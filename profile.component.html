@@ -16,12 +16,9 @@
     aria-labelledby="profile-images-heading"
   >
     <div class="flex justify-between items-center border-b border-outline-variant pb-sm">
-      <h3
-        id="profile-images-heading"
-        class="text-headline-sm font-bold text-primary flex items-center gap-sm"
-      >
+      <h3 id="profile-images-heading" class="text-headline-sm font-bold text-primary flex items-center gap-sm">
         <span class="material-symbols-outlined text-[24px]" aria-hidden="true">account_circle</span>
-        الصورة الشخصية
+        الصور الشخصية والهوية
       </h3>
 
       @if (!isEditingImage()) {
@@ -51,9 +48,7 @@
             class="px-md py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 focus-visible:ring-2 focus-visible:ring-secondary transition-all flex items-center gap-xs disabled:opacity-50 cursor-pointer"
           >
             @if (isSavingImage()) {
-              <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
-                >progress_activity</span
-              >
+              <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true">progress_activity</span>
             }
             حفظ الصور
           </button>
@@ -64,20 +59,12 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-lg pt-sm">
       <!-- Profile Image -->
       <div class="space-y-sm">
-        <label id="profile-photo-label" class="text-label-md text-on-surface font-semibold"
-          >صورة الملف الشخصي</label
-        >
+        <label id="profile-photo-label" class="text-label-md text-on-surface font-semibold">صورة الملف الشخصي</label>
 
         <div class="flex items-center gap-md">
           @if (profileImagePreview()) {
-            <div
-              class="relative w-24 h-24 rounded-full overflow-hidden border-2 border-secondary shadow-sm shrink-0"
-            >
-              <img
-                [src]="profileImagePreview()!"
-                alt="معاينة صورة الملف الشخصي"
-                class="w-full h-full object-cover"
-              />
+            <div class="relative w-24 h-24 rounded-full overflow-hidden border-2 border-secondary shadow-sm shrink-0">
+              <img [src]="profileImagePreview()!" alt="معاينة صورة الملف الشخصي" class="w-full h-full object-cover" />
             </div>
           } @else {
             <div
@@ -93,21 +80,11 @@
               aria-labelledby="profile-photo-label"
               class="flex-1 flex items-center gap-sm cursor-pointer p-md bg-surface-container-low border border-dashed border-outline-variant rounded-lg hover:border-secondary hover:bg-surface-container focus-within:ring-2 focus-within:ring-secondary transition-all group"
             >
-              <span
-                class="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform"
-                aria-hidden="true"
-              >
+              <span class="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform" aria-hidden="true">
                 add_photo_alternate
               </span>
-              <span class="text-label-sm text-on-surface-variant"
-                >اختر صورة · JPG أو PNG، حتى 5MB</span
-              >
-              <input
-                type="file"
-                accept="image/*"
-                class="hidden"
-                (change)="onProfileImageSelected($event)"
-              />
+              <span class="text-label-sm text-on-surface-variant">اختر صورة · JPG أو PNG، حتى 5MB</span>
+              <input type="file" accept="image/*" class="hidden" (change)="onProfileImageSelected($event)" />
             </label>
           }
         </div>
@@ -121,14 +98,8 @@
           </label>
 
           @if (idImagePreview()) {
-            <div
-              class="relative w-full h-24 rounded-lg overflow-hidden border border-secondary shadow-sm"
-            >
-              <img
-                [src]="idImagePreview()!"
-                alt="معاينة صورة الهوية"
-                class="w-full h-full object-cover"
-              />
+            <div class="relative w-full h-24 rounded-lg overflow-hidden border border-secondary shadow-sm">
+              <img [src]="idImagePreview()!" alt="معاينة صورة الهوية" class="w-full h-full object-cover" />
             </div>
           }
 
@@ -146,11 +117,12 @@
                 class="material-symbols-outlined"
                 [class.text-secondary]="!isVerified"
                 [class.text-on-tertiary-container]="isVerified"
-                [style.font-variation-settings]="isVerified ? filledIconStyle : ''"
                 aria-hidden="true"
+                [style]="isVerified ? \"font-variation-settings: 'FILL' 1\" : ''"
               >
                 {{ isVerified ? 'verified' : 'badge' }}
               </span>
+
               <span class="text-label-sm text-on-surface-variant">
                 {{ isVerified ? 'تم التحقق من الهوية' : 'اختر صورة الهوية' }}
               </span>
@@ -180,10 +152,7 @@
     aria-labelledby="password-heading"
   >
     <div class="flex justify-between items-center border-b border-outline-variant pb-sm">
-      <h3
-        id="password-heading"
-        class="text-headline-sm font-bold text-primary flex items-center gap-sm"
-      >
+      <h3 id="password-heading" class="text-headline-sm font-bold text-primary flex items-center gap-sm">
         <span class="material-symbols-outlined text-[24px]" aria-hidden="true">lock</span>
         @if (adminOnlyLabel) {
           <span class="text-label-sm font-semibold text-on-surface-variant">(مدير فقط)</span>
@@ -217,9 +186,7 @@
             class="px-md py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 focus-visible:ring-2 focus-visible:ring-secondary transition-all flex items-center gap-xs disabled:opacity-50 cursor-pointer"
           >
             @if (isSavingPassword()) {
-              <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
-                >progress_activity</span
-              >
+              <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true">progress_activity</span>
             }
             تغيير كلمة المرور
           </button>
@@ -240,9 +207,7 @@
             [type]="showPassword() ? 'text' : 'password'"
             autocomplete="current-password"
             [attr.aria-invalid]="isPasswordInvalid('currentPassword')"
-            [attr.aria-describedby]="
-              isPasswordInvalid('currentPassword') ? 'currentPassword-error' : null
-            "
+            [attr.aria-describedby]="isPasswordInvalid('currentPassword') ? 'currentPassword-error' : null"
             class="w-full bg-surface-container-low border rounded-lg p-md pl-10 transition-all focus:ring-2 focus:ring-secondary focus:border-secondary outline-none disabled:opacity-60 disabled:cursor-not-allowed"
             [class.border-error]="isPasswordInvalid('currentPassword')"
             [class.border-outline-variant]="!isPasswordInvalid('currentPassword')"
@@ -260,11 +225,7 @@
           </button>
         </div>
         @if (isPasswordInvalid('currentPassword')) {
-          <p
-            id="currentPassword-error"
-            class="text-label-sm text-error font-medium mt-xs"
-            role="alert"
-          >
+          <p id="currentPassword-error" class="text-label-sm text-error font-medium mt-xs" role="alert">
             كلمة المرور الحالية مطلوبة
           </p>
         }
@@ -281,19 +242,11 @@
             formControlName="newPassword"
             [type]="showNewPassword() ? 'text' : 'password'"
             autocomplete="new-password"
-            [attr.aria-invalid]="
-              isPasswordInvalid('newPassword') || samePasswordError || passwordMismatchError
-            "
-            [attr.aria-describedby]="
-              getPasswordError() || samePasswordError ? 'newPassword-error' : null
-            "
+            [attr.aria-invalid]="isPasswordInvalid('newPassword') || samePasswordError || passwordMismatchError"
+            [attr.aria-describedby]="getPasswordError() || samePasswordError ? 'newPassword-error' : null"
             class="w-full bg-surface-container-low border rounded-lg p-md pl-10 transition-all focus:ring-2 focus:ring-secondary focus:border-secondary outline-none disabled:opacity-60 disabled:cursor-not-allowed"
-            [class.border-error]="
-              isPasswordInvalid('newPassword') || samePasswordError || passwordMismatchError
-            "
-            [class.border-outline-variant]="
-              !isPasswordInvalid('newPassword') && !samePasswordError && !passwordMismatchError
-            "
+            [class.border-error]="isPasswordInvalid('newPassword') || samePasswordError || passwordMismatchError"
+            [class.border-outline-variant]="!isPasswordInvalid('newPassword') && !samePasswordError && !passwordMismatchError"
           />
           <button
             type="button"
@@ -309,9 +262,7 @@
         </div>
         <div id="newPassword-error">
           @if (getPasswordError()) {
-            <p class="text-label-sm text-error font-medium mt-xs" role="alert">
-              {{ getPasswordError() }}
-            </p>
+            <p class="text-label-sm text-error font-medium mt-xs" role="alert">{{ getPasswordError() }}</p>
           }
           @if (samePasswordError) {
             <p class="text-label-sm text-error font-medium mt-xs" role="alert">
@@ -333,40 +284,25 @@
             [type]="showNewPassword() ? 'text' : 'password'"
             autocomplete="new-password"
             [attr.aria-invalid]="isPasswordInvalid('confirmPassword') || passwordMismatchError"
-            [attr.aria-describedby]="
-              isPasswordInvalid('confirmPassword') || passwordMismatchError
-                ? 'confirmPassword-error'
-                : null
-            "
+            [attr.aria-describedby]="isPasswordInvalid('confirmPassword') || passwordMismatchError ? 'confirmPassword-error' : null"
             class="w-full bg-surface-container-low border rounded-lg p-md pl-10 transition-all focus:ring-2 focus:ring-secondary focus:border-secondary outline-none disabled:opacity-60 disabled:cursor-not-allowed"
             [class.border-error]="isPasswordInvalid('confirmPassword') || passwordMismatchError"
-            [class.border-outline-variant]="
-              !isPasswordInvalid('confirmPassword') && !passwordMismatchError
-            "
+            [class.border-outline-variant]="!isPasswordInvalid('confirmPassword') && !passwordMismatchError"
           />
         </div>
         <div id="confirmPassword-error">
-          @if (
-            isPasswordInvalid('confirmPassword') &&
-            passwordForm.get('confirmPassword')?.hasError('required')
-          ) {
-            <p class="text-label-sm text-error font-medium mt-xs" role="alert">
-              تأكيد كلمة المرور مطلوب
-            </p>
+          @if (isPasswordInvalid('confirmPassword') && passwordForm.get('confirmPassword')?.hasError('required')) {
+            <p class="text-label-sm text-error font-medium mt-xs" role="alert">تأكيد كلمة المرور مطلوب</p>
           }
           @if (passwordMismatchError) {
-            <p class="text-label-sm text-error mt-xs font-semibold" role="alert">
-              كلمتا المرور غير متطابقتين
-            </p>
+            <p class="text-label-sm text-error mt-xs font-semibold" role="alert">كلمتا المرور غير متطابقتين</p>
           }
         </div>
       </div>
     </div>
 
     <!-- Strength hint -->
-    <p
-      class="text-label-sm text-on-surface-variant mt-sm flex flex-wrap items-center gap-x-xs gap-y-1"
-    >
+    <p class="text-label-sm text-on-surface-variant mt-sm flex flex-wrap items-center gap-x-xs gap-y-1">
       <span class="material-symbols-outlined text-[16px]" aria-hidden="true">info</span>
       يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل، وحرف كبير، وحرف صغير، ورقم، ورمز خاص.
     </p>
@@ -389,17 +325,17 @@
       class="p-md bg-surface-container text-on-tertiary-container rounded-lg text-body-sm flex items-center gap-sm font-bold animate-fade-in"
       role="status"
     >
-      <span
-        class="material-symbols-outlined"
-        style="font-variation-settings: 'FILL' 1"
-        aria-hidden="true"
-        >check_circle</span
-      >
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1" aria-hidden="true">check_circle</span>
       تم حفظ التغييرات بنجاح
     </div>
   }
 </ng-template>
 
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Page body — single RTL wrapper for both branches (previously only the
+     non-admin branch had `dir="rtl"`, so the admin view silently inherited
+     whatever direction its parent happened to set).
+     ═══════════════════════════════════════════════════════════════════════ -->
 <div class="p-lg space-y-xl animate-fade-in" dir="rtl">
   @if (isAdmin) {
     <!-- Admin banner -->
@@ -408,14 +344,8 @@
       role="status"
     >
       <div class="flex items-start gap-4">
-        <div
-          class="w-14 h-14 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm shrink-0"
-        >
-          <span
-            class="material-symbols-outlined text-[32px]"
-            style="font-variation-settings: 'FILL' 1"
-            aria-hidden="true"
-          >
+        <div class="w-14 h-14 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm shrink-0">
+          <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 1" aria-hidden="true">
             admin_panel_settings
           </span>
         </div>
@@ -423,21 +353,14 @@
         <div class="flex-1">
           <div class="flex items-center gap-2 flex-wrap">
             <h3 class="text-xl font-bold">حساب مسؤول النظام</h3>
-            <span class="px-3 py-1 rounded-full bg-white/15 text-xs font-semibold tracking-wide"
-              >ADMIN</span
-            >
+            <span class="px-3 py-1 rounded-full bg-white/15 text-xs font-semibold tracking-wide">ADMIN</span>
           </div>
 
           <p class="mt-2 text-sm text-blue-100 leading-6">هذا الحساب يمتلك صلاحيات الإدارة.</p>
 
           <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div class="bg-white/10 rounded-xl p-3 flex items-center gap-3 backdrop-blur-sm">
-              <span
-                class="material-symbols-outlined"
-                style="font-variation-settings: 'FILL' 1"
-                aria-hidden="true"
-                >verified</span
-              >
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1" aria-hidden="true">verified</span>
               <div>
                 <p class="text-xs text-blue-100">الحالة</p>
                 <p class="font-semibold">موثق</p>
@@ -445,12 +368,7 @@
             </div>
 
             <div class="bg-white/10 rounded-xl p-3 flex items-center gap-3 backdrop-blur-sm">
-              <span
-                class="material-symbols-outlined"
-                style="font-variation-settings: 'FILL' 1"
-                aria-hidden="true"
-                >security</span
-              >
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1" aria-hidden="true">security</span>
               <div>
                 <p class="text-xs text-blue-100">الصلاحيات</p>
                 <p class="font-semibold">Administrator</p>
@@ -458,12 +376,7 @@
             </div>
 
             <div class="bg-white/10 rounded-xl p-3 flex items-center gap-3 backdrop-blur-sm">
-              <span
-                class="material-symbols-outlined"
-                style="font-variation-settings: 'FILL' 1"
-                aria-hidden="true"
-                >shield</span
-              >
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1" aria-hidden="true">shield</span>
               <div>
                 <p class="text-xs text-blue-100">الأمان</p>
                 <p class="font-semibold">حساب محمي</p>
@@ -474,21 +387,14 @@
       </div>
     </div>
 
-    <ng-container
-      [ngTemplateOutlet]="profileImagesCard"
-      [ngTemplateOutletContext]="{ showId: false }"
-    ></ng-container>
-    <ng-container
-      [ngTemplateOutlet]="passwordCard"
-      [ngTemplateOutletContext]="{ adminOnlyLabel: true }"
-    />
+    <ng-container [ngTemplateOutlet]="profileImagesCard" [ngTemplateOutletContext]="{ showId: false }" />
+    <ng-container [ngTemplateOutlet]="passwordCard" [ngTemplateOutletContext]="{ adminOnlyLabel: true }" />
     <ng-container [ngTemplateOutlet]="feedbackAlerts" />
   } @else {
-    <ng-container
-      [ngTemplateOutlet]="profileImagesCard"
-      [ngTemplateOutletContext]="{ showId: true }"
-    />
+    <!-- Card 1: Profile & ID Images -->
+    <ng-container [ngTemplateOutlet]="profileImagesCard" [ngTemplateOutletContext]="{ showId: true }" />
 
+    <!-- Card 2: Personal Info -->
     <form
       [formGroup]="personalForm"
       (ngSubmit)="savePersonal()"
@@ -496,10 +402,7 @@
       aria-labelledby="personal-heading"
     >
       <div class="flex justify-between items-center border-b border-outline-variant pb-sm">
-        <h3
-          id="personal-heading"
-          class="text-headline-sm font-bold text-primary flex items-center gap-sm"
-        >
+        <h3 id="personal-heading" class="text-headline-sm font-bold text-primary flex items-center gap-sm">
           <span class="material-symbols-outlined text-[24px]" aria-hidden="true">person</span>
           المعلومات الشخصية
         </h3>
@@ -529,9 +432,7 @@
               class="px-md py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 focus-visible:ring-2 focus-visible:ring-secondary transition-all flex items-center gap-xs disabled:opacity-50 cursor-pointer"
             >
               @if (isSavingPersonal()) {
-                <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
-                  >progress_activity</span
-                >
+                <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true">progress_activity</span>
               }
               حفظ التغييرات
             </button>
@@ -596,15 +497,13 @@
       </div>
     </form>
 
+    <!-- Card 3: Location (Google Maps) -->
     <section
       class="bg-surface border border-outline-variant rounded-2xl p-lg space-y-md shadow-sm transition-all duration-300 hover:shadow-md"
       aria-labelledby="location-heading"
     >
       <div class="flex items-center justify-between border-b border-outline-variant pb-sm">
-        <h3
-          id="location-heading"
-          class="text-headline-sm font-bold text-primary flex items-center gap-sm"
-        >
+        <h3 id="location-heading" class="text-headline-sm font-bold text-primary flex items-center gap-sm">
           <span class="material-symbols-outlined text-[24px]" aria-hidden="true">location_on</span>
           الموقع الجغرافي
         </h3>
@@ -635,9 +534,7 @@
               class="px-md py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 focus-visible:ring-2 focus-visible:ring-secondary transition-all flex items-center gap-xs disabled:opacity-50 cursor-pointer"
             >
               @if (isSavingLocation()) {
-                <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
-                  >progress_activity</span
-                >
+                <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true">progress_activity</span>
               }
               حفظ الموقع
             </button>
@@ -652,9 +549,7 @@
             (click)="useCurrentLocation()"
             class="text-label-sm text-secondary hover:underline flex items-center gap-xs font-bold cursor-pointer"
           >
-            <span class="material-symbols-outlined text-[16px]" aria-hidden="true"
-              >my_location</span
-            >
+            <span class="material-symbols-outlined text-[16px]" aria-hidden="true">my_location</span>
             استخدام موقعي الحالي
           </button>
           @if (selectedLat() !== null) {
@@ -672,9 +567,7 @@
 
       <!-- Resolved address — read-only, populated automatically from reverse geocoding -->
       <div class="space-y-xs pt-xs">
-        <label for="resolvedAddress" class="text-label-sm text-on-surface-variant font-semibold"
-          >العنوان</label
-        >
+        <label for="resolvedAddress" class="text-label-sm text-on-surface-variant font-semibold">العنوان</label>
         <div class="relative">
           <input
             id="resolvedAddress"
@@ -705,20 +598,12 @@
       </div>
 
       <!-- Google Maps Native Container -->
-      <div
-        class="relative rounded-xl overflow-hidden border border-outline-variant shadow-sm"
-        style="height: 320px"
-      >
+      <div class="relative rounded-xl overflow-hidden border border-outline-variant shadow-sm" style="height: 320px">
         @if (!isEditingLocation()) {
           <div class="absolute inset-0 bg-black/5 z-10 cursor-not-allowed"></div>
         }
 
-        <div
-          #mapContainer
-          class="w-full h-full"
-          role="application"
-          aria-label="خريطة اختيار الموقع"
-        ></div>
+        <div #mapContainer class="w-full h-full" role="application" aria-label="خريطة اختيار الموقع"></div>
 
         @if (isEditingLocation()) {
           <div
@@ -730,10 +615,8 @@
       </div>
     </section>
 
-    <ng-container
-      [ngTemplateOutlet]="passwordCard"
-      [ngTemplateOutletContext]="{ adminOnlyLabel: false }"
-    />
+    <!-- Card 4: Change Password -->
+    <ng-container [ngTemplateOutlet]="passwordCard" [ngTemplateOutletContext]="{ adminOnlyLabel: false }" />
 
     <ng-container [ngTemplateOutlet]="feedbackAlerts" />
   }

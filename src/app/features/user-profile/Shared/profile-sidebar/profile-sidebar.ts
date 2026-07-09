@@ -48,9 +48,6 @@ export class ProfileSidebar {
       }
     });
   }
-  get isAdmin(): boolean {
-    return this.userInfo()?.role === UserRole.Admin;
-  }
 
   get avatarUrl(): string {
     const img = this.userInfo()?.profileImage;
@@ -58,7 +55,9 @@ export class ProfileSidebar {
     const name = this.userInfo()?.fullName ?? 'User';
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0058be&color=fff`;
   }
-
+  get isAdmin(): boolean {
+    return this.userInfo()?.role === UserRole.Admin;
+  }
   get isVerified(): boolean {
     return this.userInfo()?.verificationStatus === VerificationStatus.Verified;
   }

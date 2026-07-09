@@ -1,4 +1,4 @@
-import { isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser, NgTemplateOutlet } from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -31,6 +31,8 @@ import {
 } from '../../../../core/models/profile.model';
 import { GeocodingService } from '../../../../core/services/gecoding.service';
 import { ApiResponse, ProfileService } from '../../Service/profile.service';
+import { UserRole } from '../../../../shared/enums/user-role';
+import { VerificationStatus } from '../../../../shared/enums/verification-status';
 
 // ── Egypt center coordinates (default) ────────────────────────────────────
 const EGYPT_LAT = 26.8206;
@@ -60,7 +62,7 @@ function passwordConfirmValidator(group: AbstractControl): ValidationErrors | nu
 @Component({
   selector: 'app-edit-profile',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, NgTemplateOutlet],
   templateUrl: './edit-profile.html',
   styleUrl: './edit-profile.css',
 })
@@ -109,7 +111,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   #selectedIdImage: File | null = null;
   readonly profileImagePreview = signal<string | null>(null);
   readonly idImagePreview = signal<string | null>(null);
-
+  readonly filledIconStyle = "'FILL' 1";
   // ── Forms ──────────────────────────────────────────────────────────────────
   readonly personalForm: FormGroup = this.#fb.group({
     firstName: ['', [Validators.required, Validators.maxLength(100)]],
@@ -243,7 +245,12 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
       });
     }
   }
-
+  get isAdmin(): boolean {
+    return this.userInfo()?.role === UserRole.Admin;
+  }
+  get isVerified(): boolean {
+    return this.userInfo()?.verificationStatus === VerificationStatus.Verified;
+  }
   #updateMapAndMarker(lat: number, lng: number, zoom?: number): void {
     if (!this.map) return;
     this.map.setCenter({ lat, lng });
