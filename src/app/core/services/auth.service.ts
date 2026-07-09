@@ -54,6 +54,10 @@ export class AuthService {
     return this.accessToken;
   }
 
+  getRefreshTokenExpiration(): string | null {
+    return localStorage.getItem('refreshTokenExpiration');
+  }
+
   setSession(response: AuthResponse): void {
     this.accessToken = response.accessToken;
     
@@ -66,6 +70,9 @@ export class AuthService {
     };
 
     localStorage.setItem(this.userDataKey, JSON.stringify(userData));
+    if (response.refreshTokenExpiration) {
+      localStorage.setItem('refreshTokenExpiration', response.refreshTokenExpiration.toString());
+    }
     this.isLoggedIn.set(true);
     this.currentUser.set(userData);
   }
@@ -73,6 +80,7 @@ export class AuthService {
   clearSession(): void {
     this.accessToken = null;
     localStorage.removeItem(this.userDataKey);
+    localStorage.removeItem('refreshTokenExpiration');
     this.isLoggedIn.set(false);
     this.currentUser.set(null);
   }
