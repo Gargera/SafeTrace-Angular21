@@ -1,0 +1,80 @@
+@if (loading()) {
+  <p class="text-center text-on-surface-variant py-2xl">جاري التحميل...</p>
+} @else if (chat(); as c) {
+  <div class="max-w-112.5 mx-auto py-lg px-md flex flex-col gap-lg">
+    <!-- Case summary card -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-full shadow-sm p-md flex items-center justify-between gap-md">
+      <div class="flex-1 min-w-0">
+        @if (c.caseType === 'Urgent') {
+          <span class="inline-flex items-center gap-1 bg-error-container text-on-error-container text-xs font-semibold rounded-full px-sm py-2xs mb-xs">
+            حالة نشطة
+            <span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+          </span>
+        }
+        <h1 class="font-extrabold text-on-surface text-lg leading-snug">{{ c.caseTitle }}</h1>
+        <p class="text-sm text-on-surface-variant mt-2xs">بواسطة: {{ c.participantName }}</p>
+      </div>
+      <img
+        [src]="chatService.getImageUrl(c.caseImageUrl)"
+        [alt]="c.participantName"
+        class="w-16 h-16 rounded-full object-cover shrink-0"
+      />
+    </div>
+
+    <!-- Start / continue conversation card -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-full shadow-sm p-lg flex flex-col items-center text-center gap-md">
+      <div class="relative w-14 h-14 rounded-full bg-primary text-on-primary flex items-center justify-center">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4.4 0-8 2.24-8 5v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1c0-2.76-3.6-5-8-5z" />
+        </svg>
+        <span class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center border-2 border-surface-container-lowest">
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+          </svg>
+        </span>
+      </div>
+
+      <div>
+        <p class="font-extrabold text-on-surface">{{ c.participantName }} - مقدم البلاغ</p>
+        <p class="text-sm text-on-surface-variant mt-xs leading-relaxed max-w-70 mx-auto">
+          هذه المحادثة تتعلق بحالة المفقود "{{ c.caseTitle }}". سيتمكن الطرف الآخر من رؤية تفاصيل الحالة المرتبطة.
+        </p>
+      </div>
+
+      <!-- الزرار الديناميكي بناءً على حالة الشات -->
+      @if (c.chatExists) {
+        <button
+          type="button"
+          class="w-full border border-secondary text-secondary bg-transparent rounded-full py-sm font-bold inline-flex items-center justify-center gap-2 hover:bg-surface-container transition"
+          (click)="goToChatWindow()"
+        >
+          متابعة المحادثة
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+          </svg>
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="w-full bg-secondary text-on-secondary rounded-full py-sm font-bold inline-flex items-center justify-center gap-2 hover:opacity-90 transition"
+          (click)="goToChatWindow()"
+        >
+          بدء المحادثة
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" />
+          </svg>
+        </button>
+      }
+
+      <span class="inline-flex items-center gap-1 text-xs font-semibold text-on-tertiary-fixed bg-tertiary-fixed rounded-full px-sm py-2xs">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3z" />
+          <path d="m9 12 2 2 4-4" />
+        </svg>
+        محادثة آمنة ومشفرة تماماً لضمان الخصوصية
+      </span>
+    </div>
+  </div>
+} @else {
+  <p class="text-center text-on-surface-variant py-2xl">لم يتم العثور على المحادثة.</p>
+}
