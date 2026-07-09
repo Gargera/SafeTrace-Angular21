@@ -25,7 +25,7 @@ import {CaseType} from '../../../shared/enums/case-type';
 export interface StartChatContextDto{
   caseId: number;
   caseTitle: string;
-  caseImageUrl?: string;
+  caseImage?: string;
   caseType: CaseType;
   participantName: string;
   participantImage?: string;

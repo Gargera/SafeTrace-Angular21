@@ -58,8 +58,10 @@ getAllChatsForAdmin(
   }
 
   getImageUrl(path: string | null | undefined): string {
+      console.log('Image Path:', path);
+
     if (!path) {
-      return 'assets/images/default-user.png';
+      return 'images/defaultUser.jpg';
     }
 
     // لو الباك بيرجع URL كامل
@@ -67,7 +69,7 @@ getAllChatsForAdmin(
       return path;
     }
 
-    return `${this.baseUrl}${path}`;
+    return `${environment.baseUrl}${path}`;
   }
   
 }
