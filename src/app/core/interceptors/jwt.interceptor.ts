@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { catchError, switchMap, throwError, BehaviorSubject, filter, take } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
 
 let isRefreshing = false;
 let refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
@@ -46,6 +47,33 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   return next(clonedReq).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401 && token) {
+        const expirationString = authService.getRefreshTokenExpiration();
+        if (expirationString) {
+          const expirationDate = new Date(expirationString);
+          const now = new Date();
+
+          if (now >= expirationDate) {
+            
+            authService.clearSession();
+            
+            Swal.fire({
+              title: 'انتهت الجلسة',
+              text: 'انتهت صلاحية الجلسة بالكامل، يرجى تسجيل الدخول من جديد.',
+              icon: 'warning',
+              confirmButtonText: 'تسجيل الدخول',
+              confirmButtonColor: '#091426',
+              allowOutsideClick: false,
+              customClass: {
+                popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl'
+              }
+            }).then(() => {
+              router.navigate(['/auth']);
+            });
+
+            return throwError(() => new Error('انتهت صلاحية الجلسة بالكامل، يرجى تسجيل الدخول.'));
+          }
+        }
+
         if (!isRefreshing) {
           isRefreshing = true;
           refreshTokenSubject.next(null);
