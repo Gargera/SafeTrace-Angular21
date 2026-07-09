@@ -1,3 +1,4 @@
+import { UserRole } from '../../shared/enums/user-role';
 import { VerificationStatus } from '../../shared/enums/verification-status';
 
 export interface GetUserInfoDTO {
@@ -9,6 +10,7 @@ export interface GetUserInfoDTO {
   profileImage: string | null;
   verificationStatus: VerificationStatus;
   identificationImage: string | null;
+  role: UserRole;
 }
 
 // ── One DTO per endpoint — matches the backend exactly, keeps sections independent ──

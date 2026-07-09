@@ -3,6 +3,7 @@ import { GeocodingService } from '../../../../core/services/gecoding.service';
 
 import { GetUserInfoDTO } from '../../../../core/models/profile.model';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';
+import { UserRole } from '../../../../shared/enums/user-role';
 
 @Component({
   selector: 'app-profile-sidebar',
@@ -26,6 +27,9 @@ export class ProfileSidebar {
     // Re-runs whenever userInfo changes — resolves the address automatically.
     effect(() => {
       const info = this.userInfo();
+      console.log('userInfo changed:', info);
+      console.log('Role:', this.userInfo()?.role);
+      console.log('isAdmin:', this.isAdmin);
 
       if (info?.homeLatitude && info?.homeLongitude) {
         this.isResolvingAddress.set(true);
@@ -44,6 +48,9 @@ export class ProfileSidebar {
       }
     });
   }
+  get isAdmin(): boolean {
+    return this.userInfo()?.role === UserRole.Admin;
+  }
 
   get avatarUrl(): string {
     const img = this.userInfo()?.profileImage;
@@ -53,17 +60,21 @@ export class ProfileSidebar {
   }
 
   get isVerified(): boolean {
-    return this.userInfo()?.verificationStatus == VerificationStatus.Verified;
+    return this.userInfo()?.verificationStatus === VerificationStatus.Verified;
   }
 
   get verificationLabel(): string {
-    switch (this.userInfo()?.verificationStatus) {
-      case VerificationStatus.Verified:
-        return 'حساب موثق';
-      case VerificationStatus.Pending:
-        return 'قيد المراجعة';
-      default:
-        return 'غير موثق';
+    if (this.userInfo()?.verificationStatus === VerificationStatus.Verified) {
+      return 'حساب موثق';
+    } else if (this.userInfo()?.role === UserRole.Admin) {
+      return 'مدير  ';
+    } else if (this.userInfo()?.verificationStatus === VerificationStatus.Pending) {
+      return 'قيد المراجعة';
+    } else {
+      return 'غير موثق';
     }
   }
 }
+//esraataha3092001@gmail.com
+// et93512@gmail.com
+// Meaw_Meaw309
