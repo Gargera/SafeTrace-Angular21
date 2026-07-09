@@ -1,30 +1,49 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment.development';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, firstValueFrom } from 'rxjs';
 import { ApiResponse } from '../../shared/models/responses/api-response.model';
 import { AuthResponse } from '../../features/auth/models/AuthResponse';
 import { LoginRequest } from '../../features/auth/models/LoginRequest';
 import { RegisterRequest } from '../../features/auth/models/RegisterRequest';
 import { ResetPasswordRequest } from '../../features/auth/models/ResetPasswordRequest';
 import { VerificationStatus } from '../../shared/enums/verification-status';
+import { UserRole } from '../../shared/enums/user-role';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${environment.baseUrl}/api/Account`;
 
-  private readonly tokenKey = 'token';
-  private readonly refreshTokenKey = 'refresh_token';
+  private accessToken: string | null = null;
   private readonly userDataKey = 'user_data';
 
-  isLoggedIn = signal<boolean>(this.hasToken());
-  currentUser = signal<any>(this.getUserData());
+  isLoggedIn = signal<boolean>(false);
+  currentUser = signal<any>(null);
 
-  private hasToken(): boolean {
-    return !!localStorage.getItem(this.tokenKey);
+  constructor() {
+    const userData = this.getUserData();
+    if (userData) {
+      this.currentUser.set(userData);
+      this.isLoggedIn.set(true);
+      
+      this.refreshToken().subscribe({
+        error: () => this.clearSession()
+      });
+    }
+  }
+
+  async checkSession(): Promise<void> {
+    try {
+      const res = await firstValueFrom(this.refreshToken());
+      if (res.success && res.data) {
+        this.isLoggedIn.set(true);
+      }
+    } catch (error) {
+      this.clearSession();
+    }
   }
 
   private getUserData(): any {
@@ -32,34 +51,88 @@ export class AuthService {
     return data ? JSON.parse(data) : null;
   }
 
-  getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+  private getDecodedToken(): any | null {
+    const token = this.getToken();
+    if (!token) return null;
+    
+    try {
+      const payload = token.split('.')[1];
+      const decodedPayload = atob(payload);
+      return JSON.parse(decodedPayload);
+    } catch {
+      return null;
+    }
   }
 
-  getRefreshToken(): string | null {
-    return localStorage.getItem(this.refreshTokenKey);
+  getCurrentUserId(): string | null {
+    const decodedToken = this.getDecodedToken();
+    if (!decodedToken) return null;
+    
+    return decodedToken['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || decodedToken.sub || null;
+  }
+
+  getUserRoles(): string[] {
+    const decodedToken = this.getDecodedToken();
+    if (!decodedToken) return [];
+
+    const roleClaim = decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || decodedToken.role;
+    
+    if (Array.isArray(roleClaim)) {
+      return roleClaim;
+    } else if (roleClaim) {
+      return [roleClaim];
+    }
+    return [];
+  }
+
+  hasRole(role: string): boolean {
+    const roles = this.getUserRoles();
+    return roles.includes(role);
+  }
+
+  isAdmin(): boolean {
+    return this.hasRole(UserRole.Admin);
+  }
+
+  isModerator(): boolean {
+    return this.hasRole(UserRole.Moderator);
+  }
+
+  isVerifiedUser(): boolean {
+    return this.hasRole(UserRole.VerifiedUser);
+  }
+
+  getToken(): string | null {
+    return this.accessToken;
+  }
+
+  getRefreshTokenExpiration(): string | null {
+    return localStorage.getItem('refreshTokenExpiration');
   }
 
   setSession(response: AuthResponse): void {
-    localStorage.setItem(this.tokenKey, response.accessToken);
-    localStorage.setItem(this.refreshTokenKey, response.refreshToken);
+    this.accessToken = response.accessToken;
     
     const userData = {
       email: response.email,
       fName: response.fullName.split(' ')[0],
       fullName: response.fullName,
+      profileImage: response.profileImage || null,
       isVerified: response.verificationStatus === VerificationStatus.Verified
     };
-    
+
     localStorage.setItem(this.userDataKey, JSON.stringify(userData));
+    if (response.refreshTokenExpiration) {
+      localStorage.setItem('refreshTokenExpiration', response.refreshTokenExpiration.toString());
+    }
     this.isLoggedIn.set(true);
     this.currentUser.set(userData);
   }
 
   clearSession(): void {
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.refreshTokenKey);
+    this.accessToken = null;
     localStorage.removeItem(this.userDataKey);
+    localStorage.removeItem('refreshTokenExpiration');
     this.isLoggedIn.set(false);
     this.currentUser.set(null);
   }
@@ -69,53 +142,60 @@ export class AuthService {
   }
 
   login(data: LoginRequest): Observable<ApiResponse<AuthResponse>> {
-    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/login`, data).pipe(
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/login`, data, { withCredentials: true }).pipe(
       tap(res => { if (res.success && res.data) this.setSession(res.data); })
     );
   }
 
-  googleLogin(providerToken: string): Observable<ApiResponse<AuthResponse>> {
-    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/google-login`, { providerToken }).pipe(
+  googleLogin(data: { providerToken: string }): Observable<ApiResponse<AuthResponse>> {
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/google-login`, data, { withCredentials: true }).pipe(
       tap(res => { if (res.success && res.data) this.setSession(res.data); })
     );
   }
 
-  facebookLogin(providerToken: string): Observable<ApiResponse<AuthResponse>> {
-    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/facebook-login`, { providerToken }).pipe(
+  facebookLogin(data: { providerToken: string }): Observable<ApiResponse<AuthResponse>> {
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/facebook-login`, data, { withCredentials: true }).pipe(
       tap(res => { if (res.success && res.data) this.setSession(res.data); })
     );
   }
 
   confirmEmail(email: string, otpCode: string): Observable<ApiResponse<string>> {
-    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/confirm-email?email=${encodeURIComponent(email)}&otpCode=${encodeURIComponent(otpCode)}`, {});
+    return this.http.post<ApiResponse<string>>(
+      `${this.baseUrl}/confirm-email?email=${encodeURIComponent(email)}&otpCode=${encodeURIComponent(otpCode)}`,
+      {},
+    );
   }
 
   resendOtp(email: string, type: number): Observable<ApiResponse<string>> {
-    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/resend-otp?email=${encodeURIComponent(email)}&type=${type}`, {});
+    return this.http.post<ApiResponse<string>>(
+      `${this.baseUrl}/resend-otp?email=${encodeURIComponent(email)}&type=${type}`,
+      {},
+    );
   }
 
   forgetPassword(email: string): Observable<ApiResponse<string>> {
-    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/forget-password?email=${encodeURIComponent(email)}`, {});
+    return this.http.post<ApiResponse<string>>(
+      `${this.baseUrl}/forget-password?email=${encodeURIComponent(email)}`,
+      {},
+    );
   }
 
   resetPassword(data: ResetPasswordRequest): Observable<ApiResponse<string>> {
     return this.http.post<ApiResponse<string>>(`${this.baseUrl}/reset-password`, data);
   }
 
-  changePassword(data: { currentPassword: string, newPassword: string, currentRefreshToken?: string }): Observable<ApiResponse<string>> {
-    const payload = { ...data, currentRefreshToken: this.getRefreshToken() };
-    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/change-password`, payload);
+  changePassword(data: { currentPassword: string, newPassword: string }): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/change-password`, data, { withCredentials: true });
   }
 
-  refreshToken(data: { expiredAccessToken: string, refreshToken: string }): Observable<ApiResponse<AuthResponse>> {
-    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/refresh-token`, data).pipe(
+  refreshToken(): Observable<ApiResponse<AuthResponse>> {
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/refresh-token`, {}, { withCredentials: true }).pipe(
       tap(res => { if (res.success && res.data) this.setSession(res.data); })
     );
   }
 
   revokeToken(): Observable<ApiResponse<string>> {
-    const currentRefreshToken = this.getRefreshToken();
-    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/revoke-token?token=${encodeURIComponent(currentRefreshToken || '')}`, {}).pipe(
+    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/revoke-token`, {}, { withCredentials: true }).pipe(
       tap(() => this.clearSession())
     );
   }
