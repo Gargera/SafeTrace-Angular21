@@ -8,7 +8,7 @@ export const AUTH_ROUTES: Routes = [
   { 
     path: '', 
     component: Login,
-    title: 'تسجيل الدخول | SafeTrace'
+    title: 'تسجيل الدخول | لقاء'
   },
   { 
     path: 'login', 
@@ -18,16 +18,16 @@ export const AUTH_ROUTES: Routes = [
   { 
     path: 'register', 
     component: Register,
-    title: 'إنشاء حساب جديد | SafeTrace'
+    title: 'إنشاء حساب جديد | لقاء'
   },
   { 
     path: 'confirm-email', 
     component: ConfirmEmail,
-    title: 'تأكيد البريد الإلكتروني | SafeTrace'
+    title: 'تأكيد البريد الإلكتروني | لقاء'
   },
   { 
     path: 'forgot-password', 
     component: ResetPassword,
-    title: 'استعادة كلمة المرور | SafeTrace'
+    title: 'استعادة كلمة المرور | لقاء'
   }
 ];

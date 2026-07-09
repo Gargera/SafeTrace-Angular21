@@ -1,6 +1,5 @@
-export enum VerificationStatus
-{
-    Unverified = 'Unverified',
-    Pending = 'Pending',
-    Verified = 'Verified'
+export enum VerificationStatus {
+  Unverified = 0,
+  Pending = 1,
+  Verified = 2,
 }
