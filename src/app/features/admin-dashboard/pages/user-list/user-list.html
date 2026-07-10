@@ -1,0 +1,149 @@
+<header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-xl">
+  <div>
+    <h1 class="text-headline-lg font-bold text-primary">إدارة المستخدمين</h1>
+    <p class="text-body-md text-on-surface-variant mt-1">متابعة حسابات المستخدمين، التحقق من التوثيق، وإدارة الصلاحيات.</p>
+  </div>
+  <button class="flex items-center gap-sm bg-secondary text-on-secondary px-lg py-sm rounded-xl font-semibold shadow-md hover:scale-105 transition-transform">
+    <span class="material-symbols-outlined">person_add</span>
+    إضافة مستخدم
+  </button>
+</header>
+
+<section class="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg">
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-md items-end">
+    
+    <div class="flex flex-col gap-xs md:col-span-2">
+      <label class="text-label-md font-bold text-primary">البحث الذكي</label>
+      <div class="relative">
+        <input 
+          type="text" 
+          [value]="filter().searchTerm"
+          (input)="onSearchChange($event)"
+          class="w-full border-outline-variant rounded-lg bg-surface text-body-sm focus:ring-secondary focus:border-secondary pr-10" 
+          placeholder="ابحث بالاسم، الإيميل، أو رقم الهاتف..." />
+        <span class="material-symbols-outlined absolute right-3 top-2.5 text-outline text-md">search</span>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-xs">
+      <label class="text-label-md font-bold text-primary">حالة التوثيق</label>
+      <select [ngModel]="filter().verificationStatus" (ngModelChange)="updateFilter({ verificationStatus: $event })" class="w-full border-outline-variant rounded-lg bg-surface text-body-sm focus:ring-secondary cursor-pointer">
+        <option [ngValue]="undefined">الكل</option>
+        <option [ngValue]="VerificationStatusEnum.Verified">موثق</option>
+        <option [ngValue]="VerificationStatusEnum.Pending">قيد المراجعة</option>
+        <option [ngValue]="VerificationStatusEnum.Unverified">غير موثق</option>
+      </select>
+    </div>
+
+    <div class="flex flex-col gap-xs">
+      <label class="text-label-md font-bold text-primary">الدور (Role)</label>
+      <select [ngModel]="filter().roleId" (ngModelChange)="updateFilter({ roleId: $event })" class="w-full border-outline-variant rounded-lg bg-surface text-body-sm focus:ring-secondary cursor-pointer">
+        <option [ngValue]="undefined">الكل</option>
+        @for (role of roles(); track role.id) {
+          <option [value]="role.id">{{ role.name }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="flex justify-end mt-md">
+    <button (click)="resetFilters()" class="text-secondary font-bold text-label-md flex items-center gap-xs hover:underline transition-all">
+      <span class="material-symbols-outlined text-sm">filter_list_off</span>
+      إعادة ضبط الفلاتر
+    </button>
+  </div>
+</section>
+
+<section class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75">
+  
+  @if (isLoading()) {
+    <div class="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
+      <span class="material-symbols-outlined text-secondary animate-spin text-[32px]">progress_activity</span>
+    </div>
+  }
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-right border-collapse whitespace-nowrap">
+      <thead>
+        <tr class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant">
+          <th class="px-lg py-md">المستخدم</th>
+          <th class="px-lg py-md">البريد الإلكتروني</th>
+          <th class="px-lg py-md">رقم الهاتف</th>
+          <th class="px-lg py-md">حالة التوثيق</th>
+          <th class="px-lg py-md">الدور</th>
+          <th class="px-lg py-md">محظور؟</th>
+          <th class="px-lg py-md text-center">الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
+        
+        @for (user of users(); track user.id) {
+          <tr class="hover:bg-surface-container-low transition-colors group">
+            <td class="px-lg py-md">
+              <div class="flex items-center gap-md">
+                <div class="w-9 h-9 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold font-sans">
+                  {{ user.fName[0] }}
+                </div>
+                <span class="font-semibold text-primary">{{ user.fName }} {{ user.lName }}</span>
+              </div>
+            </td>
+            <td class="px-lg py-md font-sans opacity-70">{{ user.email }}</td>
+            <td class="px-lg py-md font-sans opacity-70" dir="ltr">{{ user.phoneNumber }}</td>
+            <td class="px-lg py-md">
+              <span [appVerificationBadgeDirective]="user.verificationStatus"></span>
+            </td>
+            <td class="px-lg py-md">
+              <span [appRoleBadgeDirective]="user.role"></span>
+            </td>
+            <td class="px-lg py-md">
+              <span [appBlockBadgeDirective]="user.isBlocked"></span>
+            </td>
+            <td class="px-lg py-md text-center">
+              <button class="bg-surface-container border border-outline-variant text-primary px-md py-1.5 rounded-lg text-label-sm font-bold hover:bg-primary hover:text-white transition-all shadow-sm">
+                التفاصيل
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          @if (!isLoading()) {
+            <tr>
+              <td colspan="7" class="text-center py-xl text-outline font-medium">لا يوجد مستخدمين يطابقون شروط البحث.</td>
+            </tr>
+          }
+        }
+
+      </tbody>
+    </table>
+  </div>
+
+  @if (totalPages() > 1) {
+    <div class="p-md md:p-lg bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-4">
+      <span class="text-label-sm text-on-surface-variant font-medium">
+        إجمالي عدد المستخدمين: <span class="font-bold">{{ totalCount() }}</span>
+      </span>
+      
+      <div class="flex gap-xs" dir="ltr">
+        <button [disabled]="filter().pageNumber === 1" (click)="changePage(filter().pageNumber - 1)" 
+                class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+          <span class="material-symbols-outlined text-md">chevron_left</span>
+        </button>
+
+        @for (page of pagesArray(); track page) {
+          <button (click)="changePage(page)" 
+                  [class.bg-secondary]="page === filter().pageNumber"
+                  [class.text-white]="page === filter().pageNumber"
+                  [class.bg-white]="page !== filter().pageNumber"
+                  [class.text-primary]="page !== filter().pageNumber"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant font-bold text-label-sm hover:bg-secondary-fixed-dim transition-all">
+            {{ page }}
+          </button>
+        }
+
+        <button [disabled]="filter().pageNumber === totalPages()" (click)="changePage(filter().pageNumber + 1)"
+                class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+          <span class="material-symbols-outlined text-md">chevron_right</span>
+        </button>
+      </div>
+    </div>
+  }
+</section>
