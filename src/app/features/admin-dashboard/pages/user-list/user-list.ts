@@ -11,8 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
-import { RoleService } from '../../services/role.service';
-import { UserService } from '../../services/user.service';
+import { ROLE_TRANSLATIONS_AR } from '../../../../core/constants/roles.dictionary';
 
 @Component({
   selector: 'app-user-list',
@@ -115,5 +114,9 @@ export class UserList {
       this.filter.update((f) => ({ ...f, pageNumber: page }));
       this.loadUsers();
     }
+  }
+
+  getRoleName(roleName: string): string {
+    return ROLE_TRANSLATIONS_AR[roleName] || roleName;
   }
 }

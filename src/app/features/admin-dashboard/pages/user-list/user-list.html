@@ -43,7 +43,7 @@
       <select [ngModel]="filter().roleId" (ngModelChange)="updateFilter({ roleId: $event })" class="w-full border-outline-variant rounded-lg bg-surface text-body-sm focus:ring-secondary cursor-pointer">
         <option [ngValue]="undefined">الكل</option>
         @for (role of roles(); track role.id) {
-          <option [value]="role.id">{{ role.name }}</option>
+          <option [value]="role.id">{{ getRoleName(role.name) }}</option>
         }
       </select>
     </div>
@@ -100,7 +100,7 @@
               <span [appBlockBadgeDirective]="user.isBlocked"></span>
             </td>
             <td class="px-lg py-md text-center">
-              <button class="bg-surface-container border border-outline-variant text-primary px-md py-1.5 rounded-lg text-label-sm font-bold hover:bg-primary hover:text-white transition-all shadow-sm">
+              <button routerLink="/admin/users/{{ user.id }}" class="bg-surface-container border border-outline-variant text-primary px-md py-1.5 rounded-lg text-label-sm font-bold hover:bg-primary hover:text-white transition-all shadow-sm">
                 التفاصيل
               </button>
             </td>

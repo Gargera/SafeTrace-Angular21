@@ -54,6 +54,16 @@ export const ADMIN_ROUTES: Routes = [
             (m) => m.RoleManagement,
           ),
       },
+      {
+        path: 'users/:id',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin, UserRole.Moderator] },
+        title: 'تفاصيل المستخدم | لقاء',
+        loadComponent: () =>
+          import('./pages/user-details/user-details').then(
+            (m) => m.UserDetails,
+          ), 
+      },
     ],
   },
 ];
