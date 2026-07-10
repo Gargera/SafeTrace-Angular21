@@ -5,15 +5,21 @@ import { roleGuard } from '../../core/guards/role-guard';
 export const ADMIN_ROUTES: Routes = [
   {
     path: '',
+    canActivate: [roleGuard],
+    data: { roles: [UserRole.Admin, UserRole.Moderator] },
     loadComponent: () => import('./pages/overview/overview').then((c) => c.Overview),
     children: [
       {
         path: '',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin, UserRole.Moderator] },
         pathMatch: 'full',
         redirectTo: 'dashboard',
       },
       {
         path: 'dashboard',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin, UserRole.Moderator] },
         title: 'لوحة التحكم | لقاء',
         loadComponent: () =>
           import('./pages/dashboard-statistics/dashboard-statistics').then(
@@ -22,6 +28,8 @@ export const ADMIN_ROUTES: Routes = [
       },
       {
         path: 'users',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin, UserRole.Moderator] },
         title: 'المستخدمون | لقاء',
         loadComponent: () =>
           import('./pages/user-list/user-list').then(
