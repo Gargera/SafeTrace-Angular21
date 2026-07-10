@@ -245,6 +245,9 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
       });
     }
   }
+  get isModerator(): boolean {
+    return this.userInfo()?.role === UserRole.Moderator;
+  }
   get isAdmin(): boolean {
     return this.userInfo()?.role === UserRole.Admin;
   }

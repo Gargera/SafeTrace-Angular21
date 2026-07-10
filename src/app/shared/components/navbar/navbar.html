@@ -243,7 +243,7 @@
                     clip-rule="evenodd"
                   />
                 </svg>
-              } @else if (isAdmin()) {
+              } @else if (canAccessDashboard()) {
                 <svg
                   class="w-4 h-4 text-[red] shrink-0"
                   viewBox="0 0 24 24"
@@ -261,10 +261,20 @@
           </div>
 
           @if (isProfileDropdownOpen()) {
-            <div class="absolute left-0 top-14 w-44 bg-surface-container border border-outline-variant rounded-xl shadow-lg z-50 animate-fade-in">
-              @if (isAdmin()) {
-                <a routerLink="/admin" class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl">لوحة التحكم</a>
-                <a routerLink="/profile" class="block px-md py-sm text-on-surface hover:bg-surface-container-high">حسابي</a>
+            <div
+              class="absolute left-0 top-14 w-44 bg-surface-container border border-outline-variant rounded-xl shadow-lg z-50 animate-fade-in"
+            >
+              @if (canAccessDashboard()) {
+                <a
+                  routerLink="/admin"
+                  class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl"
+                  >لوحة التحكم</a
+                >
+                <a
+                  routerLink="/profile"
+                  class="block px-md py-sm text-on-surface hover:bg-surface-container-high"
+                  >حسابي</a
+                >
               } @else {
                 <a
                   routerLink="/profile"

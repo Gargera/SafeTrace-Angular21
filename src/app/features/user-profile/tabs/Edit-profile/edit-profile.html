@@ -508,7 +508,7 @@
   </form>
 </ng-template>
 <div class="p-lg space-y-xl animate-fade-in" dir="rtl">
-  @if (isAdmin) {
+  @if ( isAdmin) {
     <!-- Admin banner -->
     <div
       class="bg-linear-to-r from-blue-600 via-indigo-600 to-violet-600 rounded-2xl p-6 text-white shadow-lg border border-blue-500"
@@ -590,6 +590,223 @@
       [ngTemplateOutlet]="passwordCard"
       [ngTemplateOutletContext]="{ adminOnlyLabel: true }"
     />
+    <ng-container [ngTemplateOutlet]="feedbackAlerts" />
+  } @else if (isModerator) {
+    <!-- Moderator banner -->
+    <div
+      class="bg-linear-to-r from-emerald-600 via-teal-600 to-cyan-600 rounded-2xl p-6 text-white shadow-lg border border-emerald-500"
+      role="status"
+    >
+      <div class="flex items-start gap-4">
+        <div
+          class="w-14 h-14 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm shrink-0"
+        >
+          <span
+            class="material-symbols-outlined text-[32px]"
+            style="font-variation-settings: 'FILL' 1"
+            aria-hidden="true"
+          >
+            gavel
+          </span>
+        </div>
+
+        <div class="flex-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h3 class="text-xl font-bold">حساب مشرف</h3>
+
+            <span class="px-3 py-1 rounded-full bg-white/15 text-xs font-semibold tracking-wide">
+              MODERATOR
+            </span>
+          </div>
+
+          <p class="mt-2 text-sm text-emerald-100 leading-6">
+            هذا الحساب يمتلك صلاحيات الإشراف ومتابعة المحتوى وإدارة المستخدمين وفقًا للصلاحيات
+            الممنوحة.
+          </p>
+
+          <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="bg-white/10 rounded-xl p-3 flex items-center gap-3 backdrop-blur-sm">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">
+                verified_user
+              </span>
+
+              <div>
+                <p class="text-xs text-emerald-100">الحالة</p>
+                <p class="font-semibold">مشرف معتمد</p>
+              </div>
+            </div>
+
+            <div class="bg-white/10 rounded-xl p-3 flex items-center gap-3 backdrop-blur-sm">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">
+                groups
+              </span>
+
+              <div>
+                <p class="text-xs text-emerald-100">الصلاحيات</p>
+                <p class="font-semibold">Moderator</p>
+              </div>
+            </div>
+
+            <div class="bg-white/10 rounded-xl p-3 flex items-center gap-3 backdrop-blur-sm">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">
+                fact_check
+              </span>
+
+              <div>
+                <p class="text-xs text-emerald-100">المهام</p>
+                <p class="font-semibold">إدارة ومراجعة</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-container
+      [ngTemplateOutlet]="profileImagesCard"
+      [ngTemplateOutletContext]="{ showId: true }"
+    >
+    </ng-container>
+    <ng-container [ngTemplateOutlet]="personalInfoCard"> </ng-container>
+
+    <section
+      class="bg-surface border border-outline-variant rounded-2xl p-lg space-y-md shadow-sm transition-all duration-300 hover:shadow-md"
+      aria-labelledby="location-heading"
+    >
+      <div class="flex items-center justify-between border-b border-outline-variant pb-sm">
+        <h3
+          id="location-heading"
+          class="text-headline-sm font-bold text-primary flex items-center gap-sm"
+        >
+          <span class="material-symbols-outlined text-[24px]" aria-hidden="true">location_on</span>
+          الموقع الجغرافي
+        </h3>
+        @if (!isEditingLocation()) {
+          <button
+            type="button"
+            (click)="isEditingLocation.set(true)"
+            class="px-md py-xs bg-secondary-container text-on-secondary-container hover:bg-secondary-container-high focus-visible:ring-2 focus-visible:ring-secondary rounded-lg text-label-sm font-bold flex items-center gap-xs transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-[16px]" aria-hidden="true">edit</span>
+            تعديل الموقع
+          </button>
+        } @else {
+          <div class="flex items-center gap-sm">
+            <button
+              type="button"
+              [disabled]="isSavingLocation()"
+              (click)="cancelLocation()"
+              class="px-md py-xs text-secondary border border-secondary rounded-lg text-label-sm font-bold hover:bg-secondary-fixed focus-visible:ring-2 focus-visible:ring-secondary transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              إلغاء
+            </button>
+            <button
+              type="button"
+              [disabled]="isSavingLocation() || !resolvedAddress()"
+              (click)="saveLocation()"
+              [attr.aria-busy]="isSavingLocation()"
+              class="px-md py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 focus-visible:ring-2 focus-visible:ring-secondary transition-all flex items-center gap-xs disabled:opacity-50 cursor-pointer"
+            >
+              @if (isSavingLocation()) {
+                <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
+                  >progress_activity</span
+                >
+              }
+              حفظ الموقع
+            </button>
+          </div>
+        }
+      </div>
+
+      @if (isEditingLocation()) {
+        <div class="flex flex-wrap justify-start gap-md animate-fade-in">
+          <button
+            type="button"
+            (click)="useCurrentLocation()"
+            class="text-label-sm text-secondary hover:underline flex items-center gap-xs font-bold cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-[16px]" aria-hidden="true"
+              >my_location</span
+            >
+            استخدام موقعي الحالي
+          </button>
+          @if (selectedLat() !== null) {
+            <button
+              type="button"
+              (click)="resetMap()"
+              class="text-label-sm text-error hover:underline flex items-center gap-xs font-bold cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-[16px]" aria-hidden="true">clear</span>
+              إعادة تعيين
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Resolved address — read-only, populated automatically from reverse geocoding -->
+      <div class="space-y-xs pt-xs">
+        <label for="resolvedAddress" class="text-label-sm text-on-surface-variant font-semibold"
+          >العنوان</label
+        >
+        <div class="relative">
+          <input
+            id="resolvedAddress"
+            type="text"
+            readonly
+            [value]="resolvedAddress() ?? ''"
+            placeholder="سيتم تحديد العنوان تلقائياً بعد اختيار الموقع"
+            aria-live="polite"
+            class="w-full bg-surface-container border border-outline-variant rounded-lg p-md text-body-sm text-on-surface cursor-default select-none pr-10 focus:outline-none"
+          />
+          @if (isResolvingAddress()) {
+            <span
+              class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-secondary animate-spin"
+              aria-hidden="true"
+            >
+              progress_activity
+            </span>
+          } @else if (resolvedAddress()) {
+            <span
+              class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-on-tertiary-container"
+              style="font-variation-settings: 'FILL' 1"
+              aria-hidden="true"
+            >
+              check_circle
+            </span>
+          }
+        </div>
+      </div>
+
+      <!-- Google Maps Native Container -->
+      <div
+        class="relative rounded-xl overflow-hidden border border-outline-variant shadow-sm"
+        style="height: 320px"
+      >
+        @if (!isEditingLocation()) {
+          <div class="absolute inset-0 bg-black/5 z-10 cursor-not-allowed"></div>
+        }
+
+        <div
+          #mapContainer
+          class="w-full h-full"
+          role="application"
+          aria-label="خريطة اختيار الموقع"
+        ></div>
+
+        @if (isEditingLocation()) {
+          <div
+            class="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-label-sm py-sm px-md text-center pointer-events-none z-20 animate-fade-in"
+          >
+            اسحب المؤشر أو اضغط على أي مكان في الخريطة لتحديد موقعك بدقة
+          </div>
+        }
+      </div>
+    </section>
+
+    <ng-container
+      [ngTemplateOutlet]="passwordCard"
+      [ngTemplateOutletContext]="{ adminOnlyLabel: true }"
+    />
 
     <ng-container [ngTemplateOutlet]="feedbackAlerts" />
   } @else {
@@ -598,9 +815,7 @@
       [ngTemplateOutletContext]="{ showId: true }"
     >
     </ng-container>
-        <ng-container [ngTemplateOutlet]="personalInfoCard"> </ng-container>
-
-   
+    <ng-container [ngTemplateOutlet]="personalInfoCard"> </ng-container>
 
     <section
       class="bg-surface border border-outline-variant rounded-2xl p-lg space-y-md shadow-sm transition-all duration-300 hover:shadow-md"
