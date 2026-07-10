@@ -2,7 +2,7 @@ import { Directive, ElementRef, Input, OnChanges, Renderer2 } from '@angular/cor
 import { VerificationStatus } from '../enums/verification-status';
 
 @Directive({
-  selector: '[appVerificationBadgeDirective]', standalone: true })
+  selector: '[appVerificationBadgeDirective]'})
 export class VerificationBadgeDirective implements OnChanges {
   @Input('appVerificationBadgeDirective') status!: VerificationStatus;
 

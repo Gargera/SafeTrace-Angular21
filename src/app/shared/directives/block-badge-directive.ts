@@ -1,7 +1,7 @@
 import { Directive, ElementRef, Input, OnChanges, Renderer2 } from '@angular/core';
 
 @Directive({
-  selector: '[appBlockBadgeDirective]', standalone: true })
+  selector: '[appBlockBadgeDirective]'})
 export class BlockBadgeDirective implements OnChanges {
   @Input('appBlockBadgeDirective') isBlocked!: boolean;
 

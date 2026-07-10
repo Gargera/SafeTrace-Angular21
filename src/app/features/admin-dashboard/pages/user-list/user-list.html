@@ -3,17 +3,20 @@
     <h1 class="text-headline-lg font-bold text-primary">إدارة المستخدمين</h1>
     <p class="text-body-md text-on-surface-variant mt-1">متابعة حسابات المستخدمين، التحقق من التوثيق، وإدارة الصلاحيات.</p>
   </div>
-  <button class="flex items-center gap-sm bg-secondary text-on-secondary px-lg py-sm rounded-xl font-semibold shadow-md hover:scale-105 transition-transform">
-    <span class="material-symbols-outlined">person_add</span>
-    إضافة مستخدم
-  </button>
+  @if(authService.isAdmin() == true)
+  { 
+    <button routerLink="/admin/users/registerByAdmin" class="flex items-center gap-sm bg-surface-container-lowest border border-outline-variant text-primary px-lg py-sm rounded-xl font-semibold shadow-sm hover:bg-surface-container-low transition-all">
+      <span class="material-symbols-outlined">person_add</span>
+      إنشاء حساب جديد
+    </button>
+  }
 </header>
 
 <section class="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg">
   <div class="grid grid-cols-1 md:grid-cols-4 gap-md items-end">
     
     <div class="flex flex-col gap-xs md:col-span-2">
-      <label class="text-label-md font-bold text-primary">البحث الذكي</label>
+      <label class="text-label-md font-bold text-primary">البحث:</label>
       <div class="relative">
         <input 
           type="text" 
@@ -81,9 +84,7 @@
           <tr class="hover:bg-surface-container-low transition-colors group">
             <td class="px-lg py-md">
               <div class="flex items-center gap-md">
-                <div class="w-9 h-9 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold font-sans">
-                  {{ user.fName[0] }}
-                </div>
+                
                 <span class="font-semibold text-primary">{{ user.fName }} {{ user.lName }}</span>
               </div>
             </td>

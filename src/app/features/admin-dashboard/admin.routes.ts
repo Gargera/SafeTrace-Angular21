@@ -18,6 +18,22 @@ export const ADMIN_ROUTES: Routes = [
             (m) => m.DashboardStatistics,
           ),
       },
+      {
+        path: 'users',
+        title: 'المستخدمون | لقاء',
+        loadComponent: () =>
+          import('./pages/user-list/user-list').then(
+            (m) => m.UserList,
+          ),
+      },
+      {
+        path: 'users/registerByAdmin',
+        title: 'تسجيل مستخدم جديد | لقاء',
+        loadComponent: () =>
+          import('./pages/register-by-admin/register-by-admin').then(
+            (m) => m.RegisterByAdmin,
+          ),
+      },
     ],
   },
 ];

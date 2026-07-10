@@ -1,7 +1,7 @@
 import { Directive, ElementRef, Input, OnChanges, Renderer2 } from '@angular/core';
 
 @Directive({
-  selector: '[appRoleBadgeDirective]', standalone: true })
+  selector: '[appRoleBadgeDirective]'})
 export class RoleBadgeDirective implements OnChanges {
   @Input('appRoleBadgeDirective') role!: string;
 

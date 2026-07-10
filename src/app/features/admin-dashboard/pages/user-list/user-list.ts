@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { UserService } from '../../services/user.service';
 import { RoleService } from '../../services/role.service';
@@ -11,14 +11,17 @@ import { RoleBadgeDirective } from "../../../../shared/directives/role-badge-dir
 import { BlockBadgeDirective } from "../../../../shared/directives/block-badge-directive";
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-user-list',
-  imports: [VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, FormsModule, CommonModule],
+  imports: [VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, FormsModule, CommonModule, RouterModule],
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',
 })
 export class UserList {
+  public authService = inject(AuthService);
   private userService = inject(UserService);
   private roleService = inject(RoleService);
 
@@ -38,7 +41,6 @@ export class UserList {
 
   pagesArray = computed(() => Array.from({ length: this.totalPages() }, (_, i) => i + 1));
 
-  // --- RxJS for Debouncing Input ---
   private searchSubject = new Subject<string>();
   VerificationStatusEnum = VerificationStatus;
 
