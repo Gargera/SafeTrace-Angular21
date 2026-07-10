@@ -64,6 +64,9 @@ export class ProfileSidebar {
   get isVerified(): boolean {
     return this.userInfo()?.verificationStatus === VerificationStatus.Verified;
   }
+  get hasCases(): boolean {
+    return (this.userInfo()?.Cases?.length ?? 0) > 0;
+  }
 
   get verificationLabel(): string {
     if (this.userInfo()?.verificationStatus === VerificationStatus.Verified) {

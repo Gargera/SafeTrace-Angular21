@@ -106,19 +106,17 @@
   </div>
 
   <!-- Activity Stats (Hidden temporarily due to missing backend data) -->
-  @if (false) {
+  @if (hasCases) {
     <div class="glass-card rounded-xl p-md">
       <h3 class="text-label-md text-on-surface-variant uppercase tracking-wider mb-md">
         إحصائيات النشاط
       </h3>
       <div class="grid grid-cols-2 gap-sm">
         <div class="bg-surface-container-low p-md rounded-lg text-center">
-          <span class="block text-headline-sm font-bold text-primary">12</span>
+          <span class="block text-headline-sm font-bold text-primary">{{
+            userInfo()!.Cases.length + 1
+          }}</span>
           <span class="text-label-sm text-on-surface-variant">بلاغ مقدم</span>
-        </div>
-        <div class="bg-surface-container-low p-md rounded-lg text-center">
-          <span class="block text-headline-sm font-bold text-on-tertiary-container">4</span>
-          <span class="text-label-sm text-on-surface-variant">حالات تم حلها</span>
         </div>
       </div>
     </div>
