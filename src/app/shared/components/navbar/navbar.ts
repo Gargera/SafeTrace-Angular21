@@ -3,7 +3,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Router, RouterModule } from '@angular/router';
 import { NotificationService } from '../../../core/services/notification.service';
 import { GetUserNotificationsDTO } from '../../../core/models/notification.model';
-import { environment } from '../../../../environments/environment.development';
+import { environment } from '../../../../environments/environment';
 import Swal from 'sweetalert2';
 import { GetUserInfoDTO } from '../../../core/models/profile.model';
 import { UserRole } from '../../enums/user-role';
@@ -109,17 +109,8 @@ export class Navbar implements OnInit {
     return `${environment.baseUrl}/${imgPath.replace(/^\//, '')}`;
   }
 
-  isAdmin(): boolean {
-    const token = this.authService.getToken();
-    if (!token) return false;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const roleClaim =
-        payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || payload.role;
-      return roleClaim === 'Admin' || (Array.isArray(roleClaim) && roleClaim.includes('Admin'));
-    } catch {
-      return false;
-    }
+  canAccessDashboard(): boolean {
+    return this.authService.isAdmin() || this.authService.isModerator();
   }
 
   logout(): void {

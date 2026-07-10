@@ -20,12 +20,23 @@
             class="material-symbols-outlined text-[16px]"
             style="font-variation-settings: 'FILL' 1"
           >
-            admin_panel_settings
+            workspace_premium
+          </span>
+        </div>
+      } @else if (isModerator) {
+        <div
+          class="absolute -bottom-1 -left-1 bg-red-600 text-white p-1 rounded-full border-2 border-white flex items-center justify-center shadow-md"
+        >
+          <span
+            class="material-symbols-outlined text-[16px]"
+            style="font-variation-settings: 'FILL' 1"
+          >
+            security
           </span>
         </div>
       } @else if (isVerified) {
         <div
-          class="absolute -bottom-1 -left-1 bg-on-tertiary-container text-white p-1 rounded-full border-2 border-white flex items-center justify-center"
+          class="absolute -bottom-1 -left-1 bg-blue-600 text-white p-1 rounded-full border-2 border-white flex items-center justify-center"
         >
           <span
             class="material-symbols-outlined text-[16px]"

@@ -1,0 +1,146 @@
+<!-- src/app/features/dashboard/pages/overview/overview.html -->
+
+<div class="p-margin-mobile md:p-margin-desktop space-y-xl">
+  @if (isLoading()) {
+    <div class="flex items-center justify-center py-2xl">
+      <div class="flex flex-col items-center gap-md">
+        <div
+          class="w-10 h-10 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin"
+        ></div>
+        <p class="text-body-sm text-on-surface-variant">جاري تحميل الإحصائيات...</p>
+      </div>
+    </div>
+  }
+
+  @if (error() && !isLoading()) {
+    <div
+      class="glass-card p-xl rounded-2xl border border-error/30 flex flex-col items-center gap-md text-center"
+    >
+      <span class="material-symbols-outlined text-error text-4xl">error</span>
+      <p class="text-body-md text-on-surface">{{ errorDetail() }}</p>
+      <button
+        class="px-lg py-sm rounded-full bg-secondary text-on-secondary text-label-md"
+        (click)="reload()"
+      >
+        إعادة المحاولة
+      </button>
+    </div>
+  }
+
+  @if (dashboard(); as data) {
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-md">
+      <div class="glass-card p-md rounded-xl flex flex-col justify-between shadow-sm">
+        <div class="bg-primary/5 p-xs rounded-lg w-fit">
+          <span class="material-symbols-outlined text-primary">group</span>
+        </div>
+        <div class="mt-sm">
+          <p class="text-label-sm text-on-surface-variant">إجمالي المستخدمين</p>
+          <h2 class="text-headline-sm font-bold text-primary">{{ data.totalUsers }}</h2>
+        </div>
+      </div>
+
+      <div class="glass-card p-md rounded-xl flex flex-col justify-between shadow-sm">
+        <div class="bg-primary/5 p-xs rounded-lg w-fit">
+          <span class="material-symbols-outlined text-primary">folder_shared</span>
+        </div>
+        <div class="mt-sm">
+          <p class="text-label-sm text-on-surface-variant">إجمالي الحالات</p>
+          <h2 class="text-headline-sm font-bold text-primary">{{ data.totalCases }}</h2>
+        </div>
+      </div>
+
+      <div class="glass-card p-md rounded-xl flex flex-col justify-between shadow-sm">
+        <div class="bg-tertiary-fixed/20 p-xs rounded-lg w-fit">
+          <span class="material-symbols-outlined text-on-tertiary-container">verified</span>
+        </div>
+        <div class="mt-sm">
+          <p class="text-label-sm text-on-surface-variant">الحالات التي تم العثور عليها</p>
+          <h2 class="text-headline-sm font-bold text-primary">{{ data.totalFoundedCases }}</h2>
+        </div>
+      </div>
+
+      <div
+        class="glass-card p-md rounded-xl flex flex-col justify-between shadow-sm border-r-4 border-error"
+      >
+        <div class="bg-error-container p-xs rounded-lg w-fit">
+          <span class="material-symbols-outlined text-error">emergency</span>
+        </div>
+        <div class="mt-sm">
+          <p class="text-label-sm text-on-surface-variant">الحالات النشطة</p>
+          <h2 class="text-headline-sm font-bold text-error">{{ data.totalActiveCases }}</h2>
+        </div>
+      </div>
+
+      <div class="glass-card p-md rounded-xl flex flex-col justify-between shadow-sm">
+        <div class="bg-surface-variant p-xs rounded-lg w-fit">
+          <span class="material-symbols-outlined text-primary">task_alt</span>
+        </div>
+        <div class="mt-sm">
+          <p class="text-label-sm text-on-surface-variant">الحالات المغلقة</p>
+          <h2 class="text-headline-sm font-bold text-primary">{{ data.totalClosedCases }}</h2>
+        </div>
+      </div>
+
+      <div class="glass-card p-md rounded-xl flex flex-col justify-between shadow-sm">
+        <div class="bg-outline/10 p-xs rounded-lg w-fit">
+          <span class="material-symbols-outlined text-outline">delete</span>
+        </div>
+        <div class="mt-sm">
+          <p class="text-label-sm text-on-surface-variant">الحالات المحذوفة</p>
+          <h2 class="text-headline-sm font-bold text-primary">{{ data.totalDeletedCases }}</h2>
+        </div>
+      </div>
+
+      <div class="glass-card p-md rounded-xl flex flex-col justify-between shadow-sm">
+        <div class="bg-secondary-fixed/30 p-xs rounded-lg w-fit">
+          <span class="material-symbols-outlined text-secondary">pending_actions</span>
+        </div>
+        <div class="mt-sm">
+          <p class="text-label-sm text-on-surface-variant">الحالات قيد الانتظار</p>
+          <h2 class="text-headline-sm font-bold text-primary">{{ data.totalPendingCases }}</h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- Case Type Distribution -->
+    <div class="grid grid-cols-1 gap-lg">
+      <div class="glass-card p-xl rounded-2xl shadow-sm flex flex-col">
+        <div class="flex items-center justify-between mb-lg">
+          <h3 class="text-headline-sm font-bold text-primary">توزيع أنواع الحالات</h3>
+        </div>
+
+        @if (data.caseTypes.length === 0) {
+          <p class="text-body-sm text-on-surface-variant py-lg text-center">
+            لا توجد بيانات لعرضها.
+          </p>
+        } @else {
+          <div class="overflow-x-auto">
+            <table class="w-full text-right text-body-sm">
+              <thead class="text-label-sm text-on-surface-variant border-b border-outline-variant">
+                <tr>
+                  <th class="py-sm">نوع الحالة</th>
+                  <th class="py-sm">الإجمالي</th>
+                  <th class="py-sm">النشطة</th>
+                  <th class="py-sm">المغلقة</th>
+                  <th class="py-sm">المحذوفة</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-outline-variant/10">
+                @for (row of data.caseTypes; track row.caseType) {
+                  <tr class="hover:bg-surface-container-low transition-colors">
+                    <td class="py-md font-bold">{{ row.caseType }}</td>
+                    <td class="py-md">{{ row.total }}</td>
+                    <td class="py-md text-error">{{ row.active }}</td>
+                    <td class="py-md">{{ row.closed }}</td>
+                    <td class="py-md text-on-surface-variant">{{ row.deleted }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

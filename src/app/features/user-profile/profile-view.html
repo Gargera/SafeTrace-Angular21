@@ -22,12 +22,15 @@
 
     <!-- Main Content -->
     @else {
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+      <div class="grid grid-cols-1 md:grid-cols-14 gap-gutter">
         <!-- Sidebar -->
-        <app-profile-sidebar class="md:col-span-3" [userInfo]="userInfo()" />
+        <app-profile-sidebar
+          class="md:col-span-4 self-start md:sticky md:top-6 h-fit"
+          [userInfo]="userInfo()"
+        />
 
         <!-- Main Content Area -->
-        <div class="md:col-span-9">
+        <div class="md:col-span-10">
           <!-- Tabs Navigation -->
           <div class="bg-surface-container-lowest rounded-xl shadow-sm mb-gutter overflow-hidden">
             <div class="flex border-b border-outline-variant">
