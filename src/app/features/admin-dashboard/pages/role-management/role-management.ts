@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { PERMISSION_GROUPS_AR, PERMISSION_ACTIONS_AR, ALL_SYSTEM_PERMISSIONS} from '../../../../core/constants/permission.dictionary';
 import Swal from 'sweetalert2';
 import { RolePermissionDto } from '../../models/Role/RolePermissionDto';
-import { RoleService } from '../../services/role.service';
+import { RoleService } from '../../Services/role.service';
 import { RoleDto } from '../../models/Role/RoleDto';
 import { ROLE_TRANSLATIONS_AR } from '../../../../core/constants/roles.dictionary';
 

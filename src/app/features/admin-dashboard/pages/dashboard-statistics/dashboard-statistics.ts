@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardDto } from '../../models/DashboardDto';
-import { DashboardService } from '../../services/dashboard.service';
+import { DashboardService } from '../../Services/dashboard.service';
 
 interface ProblemDetails {
   status?: number;

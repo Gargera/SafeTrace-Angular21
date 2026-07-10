@@ -1,22 +1,29 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
-import { UserService } from '../../services/user.service';
-import { RoleService } from '../../services/role.service';
 import { GetUserDto } from '../../models/User/GetUserDto';
 import { RoleDto } from '../../models/Role/RoleDto';
 import { UserFilterDto } from '../../models/User/UserFilterDto';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';
-import { VerificationBadgeDirective } from "../../../../shared/directives/verification-badge-directive";
-import { RoleBadgeDirective } from "../../../../shared/directives/role-badge-directive";
-import { BlockBadgeDirective } from "../../../../shared/directives/block-badge-directive";
+import { VerificationBadgeDirective } from '../../../../shared/directives/verification-badge-directive';
+import { RoleBadgeDirective } from '../../../../shared/directives/role-badge-directive';
+import { BlockBadgeDirective } from '../../../../shared/directives/block-badge-directive';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { RoleService } from '../../Services/role.service';
+import { UserService } from '../../Services/user.service';
 
 @Component({
   selector: 'app-user-list',
-  imports: [VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, FormsModule, CommonModule, RouterModule],
+  imports: [
+    VerificationBadgeDirective,
+    RoleBadgeDirective,
+    BlockBadgeDirective,
+    FormsModule,
+    CommonModule,
+    RouterModule,
+  ],
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',
 })
@@ -36,7 +43,7 @@ export class UserList {
     pageSize: 10,
     searchTerm: '',
     verificationStatus: undefined,
-    roleId: undefined
+    roleId: undefined,
   });
 
   pagesArray = computed(() => Array.from({ length: this.totalPages() }, (_, i) => i + 1));
@@ -48,10 +55,7 @@ export class UserList {
     this.loadRoles();
     this.loadUsers();
 
-    this.searchSubject.pipe(
-      debounceTime(500),
-      distinctUntilChanged()
-    ).subscribe(term => {
+    this.searchSubject.pipe(debounceTime(500), distinctUntilChanged()).subscribe((term) => {
       this.updateFilter({ searchTerm: term, pageNumber: 1 });
     });
   }
@@ -62,7 +66,7 @@ export class UserList {
         if (res.success && res.data) {
           this.roles.set(res.data);
         }
-      }
+      },
     });
   }
 
@@ -77,7 +81,7 @@ export class UserList {
         }
         this.isLoading.set(false);
       },
-      error: () => this.isLoading.set(false)
+      error: () => this.isLoading.set(false),
     });
   }
 
@@ -87,18 +91,28 @@ export class UserList {
   }
 
   updateFilter(partialFilter: Partial<UserFilterDto>) {
-    this.filter.update(f => ({ ...f, ...partialFilter, pageNumber: partialFilter.pageNumber ?? 1 }));
+    this.filter.update((f) => ({
+      ...f,
+      ...partialFilter,
+      pageNumber: partialFilter.pageNumber ?? 1,
+    }));
     this.loadUsers();
   }
 
   resetFilters() {
-    this.filter.set({ pageNumber: 1, pageSize: 10, searchTerm: '', verificationStatus: undefined, roleId: undefined });
+    this.filter.set({
+      pageNumber: 1,
+      pageSize: 10,
+      searchTerm: '',
+      verificationStatus: undefined,
+      roleId: undefined,
+    });
     this.loadUsers();
   }
 
   changePage(page: number) {
     if (page >= 1 && page <= this.totalPages()) {
-      this.filter.update(f => ({ ...f, pageNumber: page }));
+      this.filter.update((f) => ({ ...f, pageNumber: page }));
       this.loadUsers();
     }
   }
