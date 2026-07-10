@@ -8,6 +8,7 @@ import { LoginRequest } from '../../features/auth/models/LoginRequest';
 import { RegisterRequest } from '../../features/auth/models/RegisterRequest';
 import { ResetPasswordRequest } from '../../features/auth/models/ResetPasswordRequest';
 import { VerificationStatus } from '../../shared/enums/verification-status';
+import { UserRole } from '../../shared/enums/user-role';
 
 @Injectable({
   providedIn: 'root',
@@ -50,8 +51,63 @@ export class AuthService {
     return data ? JSON.parse(data) : null;
   }
 
+  private getDecodedToken(): any | null {
+    const token = this.getToken();
+    if (!token) return null;
+    
+    try {
+      const payload = token.split('.')[1];
+      const decodedPayload = atob(payload);
+      return JSON.parse(decodedPayload);
+    } catch {
+      return null;
+    }
+  }
+
+  getCurrentUserId(): string | null {
+    const decodedToken = this.getDecodedToken();
+    if (!decodedToken) return null;
+    
+    return decodedToken['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || decodedToken.sub || null;
+  }
+
+  getUserRoles(): string[] {
+    const decodedToken = this.getDecodedToken();
+    if (!decodedToken) return [];
+
+    const roleClaim = decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || decodedToken.role;
+    
+    if (Array.isArray(roleClaim)) {
+      return roleClaim;
+    } else if (roleClaim) {
+      return [roleClaim];
+    }
+    return [];
+  }
+
+  hasRole(role: string): boolean {
+    const roles = this.getUserRoles();
+    return roles.includes(role);
+  }
+
+  isAdmin(): boolean {
+    return this.hasRole(UserRole.Admin);
+  }
+
+  isModerator(): boolean {
+    return this.hasRole(UserRole.Moderator);
+  }
+
+  isVerifiedUser(): boolean {
+    return this.hasRole(UserRole.VerifiedUser);
+  }
+
   getToken(): string | null {
     return this.accessToken;
+  }
+
+  getRefreshTokenExpiration(): string | null {
+    return localStorage.getItem('refreshTokenExpiration');
   }
 
   setSession(response: AuthResponse): void {
@@ -66,6 +122,9 @@ export class AuthService {
     };
 
     localStorage.setItem(this.userDataKey, JSON.stringify(userData));
+    if (response.refreshTokenExpiration) {
+      localStorage.setItem('refreshTokenExpiration', response.refreshTokenExpiration.toString());
+    }
     this.isLoggedIn.set(true);
     this.currentUser.set(userData);
   }
@@ -73,6 +132,7 @@ export class AuthService {
   clearSession(): void {
     this.accessToken = null;
     localStorage.removeItem(this.userDataKey);
+    localStorage.removeItem('refreshTokenExpiration');
     this.isLoggedIn.set(false);
     this.currentUser.set(null);
   }

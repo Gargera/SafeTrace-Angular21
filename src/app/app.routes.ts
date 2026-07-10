@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth-guard';
-import { adminGuard } from './core/guards/admin-guard';
 import { About } from './shared/components/about/about';
+import { roleGuard } from './core/guards/role-guard';
+import { UserRole } from './shared/enums/user-role';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full', title: 'الرئيسية | لقاء' },
@@ -12,7 +13,8 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
-    canActivate: [authGuard, adminGuard],
+    canActivate: [roleGuard],
+    data: { roles: [UserRole.Admin, UserRole.Moderator] },
     loadChildren: () => import('./features/admin-dashboard/admin.routes').then((m) => m.ADMIN_ROUTES),
   },
 
