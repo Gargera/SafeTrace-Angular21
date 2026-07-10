@@ -11,8 +11,8 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
-import { RoleService } from '../../Services/role.service';
-import { UserService } from '../../Services/user.service';
+import { RoleService } from '../../services/role.service';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-user-list',

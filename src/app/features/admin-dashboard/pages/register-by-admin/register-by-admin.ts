@@ -3,8 +3,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import Swal from 'sweetalert2';
-import { UserService } from '../../Services/user.service';
-import { RoleService } from '../../Services/role.service';
+import { UserService } from '../../services/user.service';
+import { RoleService } from '../../services/role.service';
 import { RoleDto } from '../../models/Role/RoleDto';
 
 @Component({
