@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment.development';
+import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../user-profile/Service/profile.service';
 import { RoleDto } from '../models/Role/RoleDto';
 import { CreateRoleDto } from '../models/Role/CreateRoleDto';
