@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import * as signalR from '@microsoft/signalr';
 import { GetUserNotificationsDTO, NotificationPage } from '../models/notification.model';
 import { NotificationType } from '../../shared/enums/Notification-Type';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 import { ApiResponse } from '../../features/user-profile/Service/profile.service';
 

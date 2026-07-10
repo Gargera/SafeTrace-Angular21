@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 import { Observable, tap, firstValueFrom } from 'rxjs';
 import { ApiResponse } from '../../shared/models/responses/api-response.model';
 import { AuthResponse } from '../../features/auth/models/AuthResponse';
