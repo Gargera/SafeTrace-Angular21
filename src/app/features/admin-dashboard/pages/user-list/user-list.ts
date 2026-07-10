@@ -12,6 +12,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ROLE_TRANSLATIONS_AR } from '../../../../core/constants/roles.dictionary';
+import { RoleService } from '../../services/role.service';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-user-list',
