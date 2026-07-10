@@ -16,7 +16,7 @@ export const PERMISSION_GROUPS_AR: Record<string, { title: string, icon: string 
 export const PERMISSION_ACTIONS_AR: Record<string, string> = {
   'GetAll': 'عرض الكل',
   'GetById': 'عرض التفاصيل',
-  'GetMyCases': 'عرض حالاتي',
+  'GetMyCases': 'عرض بلاغاتي',
   'Create': 'إنشاء / إضافة',
   'Update': 'تعديل',
   'SoftDelete': 'إرسال للأرشيف (حذف مؤقت)',
