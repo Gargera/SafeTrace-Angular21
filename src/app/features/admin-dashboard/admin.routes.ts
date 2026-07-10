@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { UserRole } from '../../shared/enums/user-role';
+import { roleGuard } from '../../core/guards/role-guard';
 
 export const ADMIN_ROUTES: Routes = [
   {
@@ -28,6 +30,8 @@ export const ADMIN_ROUTES: Routes = [
       },
       {
         path: 'users/registerByAdmin',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin] },
         title: 'تسجيل مستخدم جديد | لقاء',
         loadComponent: () =>
           import('./pages/register-by-admin/register-by-admin').then(
