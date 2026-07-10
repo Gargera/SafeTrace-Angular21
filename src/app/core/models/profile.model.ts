@@ -44,3 +44,6 @@ export interface ChangePasswordDTO {
   /** Only include if your auth flow needs the current refresh token to rotate it. */
   currentRefreshToken?: string | null;
 }
+export interface UpdateProfileImageDTO {
+  profileImage: File;
+}

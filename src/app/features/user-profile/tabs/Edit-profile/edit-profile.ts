@@ -22,7 +22,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { forkJoin, Observable, Subject, switchMap } from 'rxjs';
+import { Subject, switchMap } from 'rxjs';
 import {
   ChangePasswordDTO,
   GetUserInfoDTO,
@@ -30,14 +30,22 @@ import {
   UpdateNameDTO,
 } from '../../../../core/models/profile.model';
 import { GeocodingService } from '../../../../core/services/gecoding.service';
-import { ApiResponse, ProfileService } from '../../Service/profile.service';
+import { ProfileService } from '../../Service/profile.service';
 import { UserRole } from '../../../../shared/enums/user-role';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';
+import { SnackbarService } from '../../../../core/services/toast.service';
+import { ConfirmDialog } from '../../Shared/confirm-dialog/confirm-dialog';
+import { ImageCropDialog } from '../../Shared/image-crop-dialog/image-crop-dialog';
+import { Toast } from '../../../../shared/components/toast/toast';
 
 // ── Egypt center coordinates (default) ────────────────────────────────────
 const EGYPT_LAT = 26.8206;
 const EGYPT_LNG = 30.8025;
 const EGYPT_ZOOM = 6;
+
+// ── Profile photo upload constraints ───────────────────────────────────────
+const ALLOWED_PROFILE_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_PROFILE_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
 // ── Custom validator: passwords match ─────────────────────────────────────
 function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
@@ -62,7 +70,7 @@ function passwordConfirmValidator(group: AbstractControl): ValidationErrors | nu
 @Component({
   selector: 'app-edit-profile',
   standalone: true,
-  imports: [ReactiveFormsModule, NgTemplateOutlet],
+  imports: [ReactiveFormsModule, NgTemplateOutlet, Toast, ConfirmDialog, ImageCropDialog],
   templateUrl: './edit-profile.html',
   styleUrl: './edit-profile.css',
 })
@@ -73,22 +81,36 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   readonly #fb = inject(FormBuilder);
   readonly #profileService = inject(ProfileService);
   readonly #geocodingService = inject(GeocodingService);
+  readonly #snackbar = inject(SnackbarService);
   readonly #destroy$ = new Subject<void>();
   readonly #platformId = inject(PLATFORM_ID);
 
   @ViewChild('mapContainer', { static: false }) mapElement!: ElementRef<HTMLDivElement>;
 
   // ── Section Editing Flags ─────────────────────────────────────────────────
-  readonly isEditingImage = signal(false);
+  // Note: the profile photo itself is no longer gated behind an edit toggle —
+  // "Change Photo" / "Remove Photo" are always available and act instantly.
+  // Only the ID image keeps the old edit/save/cancel batch flow.
+  readonly isEditingIdImage = signal(false);
   readonly isEditingPersonal = signal(false);
   readonly isEditingLocation = signal(false);
   readonly isEditingPassword = signal(false);
+  readonly imageFile = input<File | null>(null);
 
   // ── Section Loading States ────────────────────────────────────────────────
-  readonly isSavingImage = signal(false);
+  readonly isSavingIdImage = signal(false);
   readonly isSavingPersonal = signal(false);
   readonly isSavingLocation = signal(false);
   readonly isSavingPassword = signal(false);
+
+  // ── Profile photo state (independent of the ID-image batch flow) ─────────
+  readonly isUploadingProfileImage = signal(false);
+  readonly isRemovingProfileImage = signal(false);
+  readonly showRemoveConfirm = signal(false);
+
+  // ── Crop dialog state ──────────────────────────────────────────────────────
+  readonly showCropDialog = signal(false);
+  readonly cropSourceFile = signal<File | null>(null);
 
   // ── Shared Feedback States ────────────────────────────────────────────────
   readonly saveError = signal<string | null>(null);
@@ -107,8 +129,9 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   marker: google.maps.Marker | null = null;
 
   // ── File state ────────────────────────────────────────────────────────────
-  #selectedProfileImage: File | null = null;
   #selectedIdImage: File | null = null;
+  // Kept so a failed "remove" can restore exactly what was on screen before.
+  #previousProfileImageUrl: string | null = null;
   readonly profileImagePreview = signal<string | null>(null);
   readonly idImagePreview = signal<string | null>(null);
   readonly filledIconStyle = "'FILL' 1";
@@ -166,9 +189,15 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
         this.passwordForm.disable();
       }
 
-      // Update image previews from userInfo if not editing
-      if (!this.isEditingImage()) {
+      // Sync the profile photo preview from server data, unless we're
+      // mid-upload/mid-removal — those flows manage the preview themselves
+      // (optimistic clear/preview) and would otherwise get clobbered by a
+      // stale value here.
+      if (!this.isUploadingProfileImage() && !this.isRemovingProfileImage()) {
         this.profileImagePreview.set(info.profileImage);
+      }
+
+      if (!this.isEditingIdImage()) {
         this.idImagePreview.set(info.identificationImage);
       }
 
@@ -356,16 +385,124 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     this.#geocode$.next({ lat, lng });
   }
 
-  // ── File handling ─────────────────────────────────────────────────────────
+  // ── Profile photo: select → validate → crop → upload ─────────────────────
 
-  onProfileImageSelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
+  /**
+   * Triggered by the (hidden) file input under the profile photo.
+   * Validates type/size *before* opening the crop dialog — per spec, a
+   * failing file never reaches the cropper and the current photo is left
+   * untouched.
+   */
+  onProfilePhotoFileSelected(event: Event): void {
+    const inputEl = event.target as HTMLInputElement;
+    const file = inputEl.files?.[0] ?? null;
+    // Reset the input immediately so selecting the *same* file again still
+    // fires a change event next time.
+    inputEl.value = '';
+
     if (!file) return;
-    this.#selectedProfileImage = file;
-    const reader = new FileReader();
-    reader.onload = (e) => this.profileImagePreview.set(e.target?.result as string);
-    reader.readAsDataURL(file);
+
+    if (!ALLOWED_PROFILE_IMAGE_TYPES.includes(file.type)) {
+      this.#snackbar.error('صيغة الصورة غير مدعومة. يُسمح فقط بـ JPG أو PNG أو WEBP.');
+      return;
+    }
+
+    if (file.size > MAX_PROFILE_IMAGE_SIZE_BYTES) {
+      this.#snackbar.error('حجم الصورة يتجاوز الحد الأقصى المسموح به (5 ميجابايت).');
+      return;
+    }
+
+    this.cropSourceFile.set(file);
+    this.showCropDialog.set(true);
   }
+
+  onCropCancelled(): void {
+    this.showCropDialog.set(false);
+    this.cropSourceFile.set(null);
+  }
+
+  /**
+   * The crop dialog only ever hands back a Blob when the user clicks
+   * "حفظ" — the original image on screen is untouched until this fires.
+   * From here the flow is: wrap in a File → optimistic preview → upload →
+   * refresh → toast.
+   */
+  onCropSaved(blob: Blob): void {
+    this.showCropDialog.set(false);
+    this.cropSourceFile.set(null);
+
+    const croppedFile = new File([blob], `profile-${Date.now()}.png`, { type: 'image/png' });
+
+    // Optimistic preview while the upload is in flight.
+    const objectUrl = URL.createObjectURL(blob);
+    this.profileImagePreview.set(objectUrl);
+
+    this.#uploadProfilePhoto(croppedFile);
+  }
+
+  #uploadProfilePhoto(file: File): void {
+    if (this.isUploadingProfileImage()) return;
+
+    this.isUploadingProfileImage.set(true);
+    this.saveError.set(null);
+
+    this.#profileService.updateProfileImage({ profileImage: file }).subscribe({
+      next: () => {
+        this.isUploadingProfileImage.set(false);
+        this.#snackbar.success('تم تحديث الصورة الشخصية بنجاح');
+        this.#refreshAndEmit();
+      },
+      error: (err) => {
+        this.isUploadingProfileImage.set(false);
+        const msg =
+          err?.error?.message ?? 'حدث خطأ أثناء رفع الصورة الشخصية. يرجى المحاولة مجدداً.';
+        this.#snackbar.error(msg);
+        // Fall back to whatever the server last had, since the optimistic
+        // preview never actually made it to the backend.
+        this.profileImagePreview.set(this.userInfo()?.profileImage ?? null);
+      },
+    });
+  }
+
+  // ── Profile photo: remove ─────────────────────────────────────────────────
+
+  requestRemoveProfilePhoto(): void {
+    console.log(this.profileImagePreview());
+    console.log(this.isRemovingProfileImage());
+    if (!this.profileImagePreview() || this.isRemovingProfileImage()) return;
+    this.showRemoveConfirm.set(true);
+    console.log(this.showRemoveConfirm());
+  }
+
+  cancelRemoveProfilePhoto(): void {
+    this.showRemoveConfirm.set(false);
+  }
+
+  confirmRemoveProfilePhoto(): void {
+    if (this.isRemovingProfileImage()) return;
+
+    this.isRemovingProfileImage.set(true);
+
+    this.#profileService.removeProfileImage().subscribe({
+      next: () => {
+        this.isRemovingProfileImage.set(false);
+
+        this.showRemoveConfirm.set(false);
+        this.profileImagePreview.set(null);
+
+        this.#snackbar.success('تم حذف الصورة الشخصية بنجاح');
+
+        this.#refreshAndEmit();
+      },
+      error: (err) => {
+        this.isRemovingProfileImage.set(false);
+
+        this.#snackbar.error(err?.error?.message ?? 'حدث خطأ أثناء حذف الصورة الشخصية');
+      },
+    });
+  }
+
+  // ── ID image handling (unchanged batch edit/save flow) ────────────────────
 
   onIdImageSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
@@ -430,6 +567,10 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     }
   }
 
+  toggleIdImageEdit(edit: boolean): void {
+    this.isEditingIdImage.set(edit);
+  }
+
   cancelPersonal(): void {
     this.togglePersonalEdit(false);
     this.saveError.set(null);
@@ -456,18 +597,11 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     }
   }
 
-  cancelImage(): void {
-    this.isEditingImage.set(false);
+  cancelIdImage(): void {
+    this.toggleIdImageEdit(false);
     this.saveError.set(null);
     const info = this.userInfo();
-    if (info) {
-      this.profileImagePreview.set(info.profileImage);
-      this.idImagePreview.set(info.identificationImage);
-    } else {
-      this.profileImagePreview.set(null);
-      this.idImagePreview.set(null);
-    }
-    this.#selectedProfileImage = null;
+    this.idImagePreview.set(info?.identificationImage ?? null);
     this.#selectedIdImage = null;
   }
 
@@ -542,46 +676,34 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Profile image and ID image are two separate endpoints. If the user
-   * changed both before hitting "حفظ", fire both requests in parallel;
-   * if only one changed, only that one is called.
+   * ID image only now — the profile photo has its own instant upload path
+   * (see #uploadProfilePhoto) and no longer goes through this batch save.
    */
-  saveImage(): void {
-    if (this.isSavingImage()) return;
+  saveIdImage(): void {
+    if (this.isSavingIdImage()) return;
 
-    const profileFile = this.#selectedProfileImage;
     const idFile = this.#selectedIdImage;
-
-    if (!profileFile && !idFile) {
-      this.isEditingImage.set(false);
+    if (!idFile) {
+      this.toggleIdImageEdit(false);
       return;
     }
 
-    this.isSavingImage.set(true);
+    this.isSavingIdImage.set(true);
     this.saveError.set(null);
     this.saveSuccess.set(false);
 
-    const requests: Observable<ApiResponse<boolean>>[] = [];
-    if (profileFile) {
-      requests.push(this.#profileService.updateProfileImage({ profileImage: profileFile }));
-    }
-    if (idFile) {
-      requests.push(this.#profileService.addIdImage({ identificationImage: idFile }));
-    }
-
-    forkJoin(requests).subscribe({
+    this.#profileService.addIdImage({ identificationImage: idFile }).subscribe({
       next: () => {
-        this.isSavingImage.set(false);
-        this.isEditingImage.set(false);
+        this.isSavingIdImage.set(false);
+        this.toggleIdImageEdit(false);
         this.saveSuccess.set(true);
-        this.#selectedProfileImage = null;
         this.#selectedIdImage = null;
         this.#refreshAndEmit();
         setTimeout(() => this.saveSuccess.set(false), 3000);
       },
       error: (err) => {
-        this.isSavingImage.set(false);
-        const msg = err?.error?.message ?? 'حدث خطأ أثناء رفع الصور. يرجى المحاولة مجدداً.';
+        this.isSavingIdImage.set(false);
+        const msg = err?.error?.message ?? 'حدث خطأ أثناء رفع صورة الهوية. يرجى المحاولة مجدداً.';
         this.saveError.set(msg);
       },
     });
@@ -623,7 +745,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   }
 
   /**
-   * None of the 4 UserProfile endpoints return the updated profile — they
+   * None of the UserProfile endpoints return the updated profile — they
    * only return { success, message, data: true }. So after any successful
    * save we silently re-fetch GetInfo and push the fresh data up to
    * ProfileView, which is what actually keeps the sidebar/tabs in sync
