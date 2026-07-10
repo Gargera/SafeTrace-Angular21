@@ -246,7 +246,7 @@
                 class="w-full h-full object-cover"
               />
             } @else {
-              <span class="m-auto font-medium text-sm">{{ currentUser()?.fName?.[0] }}</span>
+              <span class="m-auto font-medium text-sm">{{ currentUser()?.fName?.charAt(0) }}</span>
             }
           </div>
 
