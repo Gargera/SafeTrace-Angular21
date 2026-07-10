@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { GetUserDto } from '../models/User/GetUserDto';
-import { environment } from '../../../../environments/environment.development';
+import { environment } from '../../../../environments/environment';
 import { UserFilterDto } from '../models/User/UserFilterDto';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
 import { ApiResponse } from '../../user-profile/Service/profile.service';
