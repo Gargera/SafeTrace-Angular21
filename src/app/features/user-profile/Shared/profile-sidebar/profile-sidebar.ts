@@ -55,6 +55,9 @@ export class ProfileSidebar {
     const name = this.userInfo()?.fullName ?? 'User';
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0058be&color=fff`;
   }
+  get isModerator(): boolean {
+    return this.userInfo()?.role === UserRole.Moderator;
+  }
   get isAdmin(): boolean {
     return this.userInfo()?.role === UserRole.Admin;
   }
@@ -65,8 +68,10 @@ export class ProfileSidebar {
   get verificationLabel(): string {
     if (this.userInfo()?.verificationStatus === VerificationStatus.Verified) {
       return 'حساب موثق';
-    } else if (this.userInfo()?.role === UserRole.Admin) {
+    } else if (this.userInfo()?.role === UserRole.Moderator) {
       return 'مدير  ';
+    } else if (this.userInfo()?.role === UserRole.Admin) {
+      return 'مسئول الننظام';
     } else if (this.userInfo()?.verificationStatus === VerificationStatus.Pending) {
       return 'قيد المراجعة';
     } else {

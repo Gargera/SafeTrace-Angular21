@@ -12,7 +12,7 @@
           class="w-full h-full object-cover"
         />
       </div>
-      @if (isAdmin) {
+      @if (isModerator) {
         <div
           class="absolute -bottom-1 -left-1 bg-red-600 text-white p-1 rounded-full border-2 border-white flex items-center justify-center shadow-md"
         >
@@ -21,6 +21,17 @@
             style="font-variation-settings: 'FILL' 1"
           >
             admin_panel_settings
+          </span>
+        </div>
+      } @else if (isAdmin) {
+        <div
+          class="absolute -bottom-1 -left-1 bg-blue-600 text-white p-1 rounded-full border-2 border-white flex items-center justify-center shadow-md"
+        >
+          <span
+            class="material-symbols-outlined text-[32px]"
+            style="font-variation-settings: 'FILL' 1"
+          >
+            'gavel'
           </span>
         </div>
       } @else if (isVerified) {
