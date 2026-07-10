@@ -34,10 +34,10 @@
         <button class="w-full flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group outline-none"
                 [ngClass]="isSidebarExpanded() ? 'px-4 justify-between' : 'justify-center px-0'"
                 (click)="handleDropdownClick()"
-                [title]="!isSidebarExpanded() ? 'الحالات (اضغط للتوسيع)' : ''">
+                [title]="!isSidebarExpanded() ? 'إدارة البلاغات (اضغط للتوسيع)' : ''">
           <div class="flex items-center" [ngClass]="isSidebarExpanded() ? 'gap-3' : 'justify-center'">
             <span class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform">manage_search</span>
-            <span class="text-body-md font-semibold whitespace-nowrap" [class.hidden]="!isSidebarExpanded()">الحالات</span>
+            <span class="text-body-md font-semibold whitespace-nowrap" [class.hidden]="!isSidebarExpanded()">إدارة البلاغات</span>
           </div>
           <span class="material-symbols-outlined text-sm shrink-0" [class.hidden]="!isSidebarExpanded()">
             {{ isCasesDropdownOpen() ? 'expand_less' : 'expand_more' }}
@@ -46,28 +46,36 @@
         
         @if (isCasesDropdownOpen() && isSidebarExpanded()) {
           <div class="pr-12 space-y-1 animate-fade-in">
-            <a routerLink="/admin/urgent-cases" routerLinkActive="text-secondary-fixed-dim" class="block py-2 text-body-sm opacity-60 hover:opacity-100 transition-colors">البلاغات العاجلة</a>
-            <a routerLink="/admin/unknown-cases" routerLinkActive="text-secondary-fixed-dim" class="block py-2 text-body-sm opacity-60 hover:opacity-100 transition-colors">حالات غير معروفة</a>
+            <a routerLink="/admin/urgent-cases" routerLinkActive="text-secondary-fixed-dim" class="block py-2 text-body-sm opacity-60 hover:opacity-100 transition-colors">بلاغات عاجلة</a>
+            <a routerLink="/admin/long-term-cases" routerLinkActive="text-secondary-fixed-dim" class="block py-2 text-body-sm opacity-60 hover:opacity-100 transition-colors">بلاغات طويلة المدى</a>
+            <a routerLink="/admin/unknown-cases" routerLinkActive="text-secondary-fixed-dim" class="block py-2 text-body-sm opacity-60 hover:opacity-100 transition-colors">بلاغات غير معروفة</a>
           </div>
         }
       </div>
 
       <a routerLink="/admin/complaints" routerLinkActive="bg-white/10 opacity-100" class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
          [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"
-         [title]="!isSidebarExpanded() ? 'الشكاوى' : ''">
+         [title]="!isSidebarExpanded() ? 'إدارة الشكاوى' : ''">
         <span class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform">report_problem</span>
-        <span class="text-body-md font-semibold whitespace-nowrap" [class.hidden]="!isSidebarExpanded()">الشكاوى</span>
+        <span class="text-body-md font-semibold whitespace-nowrap" [class.hidden]="!isSidebarExpanded()">إدارة الشكاوى</span>
+      </a>
+
+      <a routerLink="/admin/chats" routerLinkActive="bg-white/10 opacity-100" class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
+         [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"
+         [title]="!isSidebarExpanded() ? 'إدارة المحادثات' : ''">
+        <span class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform">forum</span>
+        <span class="text-body-md font-semibold whitespace-nowrap" [class.hidden]="!isSidebarExpanded()">إدارة المحادثات</span>
       </a>
 
       <a routerLink="/admin/users" routerLinkActive="bg-white/10 opacity-100" class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
          [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"
-         [title]="!isSidebarExpanded() ? 'المستخدمين' : ''">
+         [title]="!isSidebarExpanded() ? 'إدارة المستخدمين' : ''">
         <span class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform">group</span>
-        <span class="text-body-md font-semibold whitespace-nowrap" [class.hidden]="!isSidebarExpanded()">المستخدمين</span>
+        <span class="text-body-md font-semibold whitespace-nowrap" [class.hidden]="!isSidebarExpanded()">إدارة المستخدمين</span>
       </a>
 
       @if (authService.isAdmin()) {
-        <a routerLink="/admin/roles" routerLinkActive="bg-white/10 opacity-100" class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
+        <a routerLink="/admin/rolesManagement" routerLinkActive="bg-white/10 opacity-100" class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
            [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"
            [title]="!isSidebarExpanded() ? 'إدارة الأدوار والصلاحيات' : ''">
           <span class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform">admin_panel_settings</span>

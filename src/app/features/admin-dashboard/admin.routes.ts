@@ -11,8 +11,6 @@ export const ADMIN_ROUTES: Routes = [
     children: [
       {
         path: '',
-        canActivate: [roleGuard],
-        data: { roles: [UserRole.Admin, UserRole.Moderator] },
         pathMatch: 'full',
         redirectTo: 'dashboard',
       },
@@ -44,6 +42,16 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./pages/register-by-admin/register-by-admin').then(
             (m) => m.RegisterByAdmin,
+          ),
+      },
+      {
+        path: 'rolesManagement',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin] },
+        title: 'إدارة الأدوار | لقاء',
+        loadComponent: () =>
+          import('./pages/role-management/role-management').then(
+            (m) => m.RoleManagement,
           ),
       },
     ],
