@@ -20,11 +20,11 @@ export class BlockBadgeDirective implements OnChanges {
     if (this.isBlocked) {
       this.renderer.addClass(el, 'bg-error');
       this.renderer.addClass(el, 'text-white');
-      el.innerText = 'نعم (محظور)';
+      el.innerText = 'محظور';
     } else {
       this.renderer.addClass(el, 'bg-surface-container-highest');
       this.renderer.addClass(el, 'text-on-surface-variant');
-      el.innerText = 'لا (نشط)';
+      el.innerText = 'نشط';
     }
   }
 }

@@ -1,10 +1,10 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { PERMISSION_GROUPS_AR, PERMISSION_ACTIONS_AR, ALL_SYSTEM_PERMISSIONS } from '../../../../core/constants/permission.dictionary';
+import { PERMISSION_GROUPS_AR, PERMISSION_ACTIONS_AR, ALL_SYSTEM_PERMISSIONS} from '../../../../core/constants/permission.dictionary';
 import Swal from 'sweetalert2';
-import { RoleService } from '../../services/role.service';
 import { RolePermissionDto } from '../../models/Role/RolePermissionDto';
+import { RoleService } from '../../services/role.service';
 import { RoleDto } from '../../models/Role/RoleDto';
 import { ROLE_TRANSLATIONS_AR } from '../../../../core/constants/roles.dictionary';
 
@@ -19,8 +19,7 @@ interface PermissionGroup {
   selector: 'app-role-management',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './role-management.html',
-  styleUrl: './role-management.css'
+  templateUrl: './role-management.html'
 })
 export class RoleManagement implements OnInit {
   private roleService = inject(RoleService);
@@ -28,7 +27,10 @@ export class RoleManagement implements OnInit {
 
   roles = signal<RoleDto[]>([]);
   selectedRoleId = signal<string>('');
+  
+  originalPermissionsList = signal<RolePermissionDto[]>(this.generateEmptyPermissions());
   permissionsList = signal<RolePermissionDto[]>(this.generateEmptyPermissions());
+  
   expandedGroups = signal<Record<string, boolean>>({});
   isRootExpanded = signal<boolean>(true);
   
@@ -80,6 +82,22 @@ export class RoleManagement implements OnInit {
 
   isAllChecked = computed(() => this.totalPermissions() > 0 && this.totalSelected() === this.totalPermissions());
   isAllIndeterminate = computed(() => this.totalSelected() > 0 && this.totalSelected() < this.totalPermissions());
+
+  dirtyGroups = computed(() => {
+    const current = this.permissionsList();
+    const original = this.originalPermissionsList();
+    const dirtyMap: Record<string, boolean> = {};
+    
+    for (let i = 0; i < current.length; i++) {
+      if (current[i].isSelected !== original[i].isSelected) {
+        const groupName = current[i].permissionValue.split('.')[0];
+        dirtyMap[groupName] = true;
+      }
+    }
+    return dirtyMap;
+  });
+
+  hasChanges = computed(() => Object.keys(this.dirtyGroups()).length > 0);
 
   ngOnInit() {
     this.loadRoles();
@@ -157,7 +175,9 @@ export class RoleManagement implements OnInit {
           next: (res) => {
             this.isDeleting.set(false);
             this.selectedRoleId.set('');
-            this.permissionsList.set(this.generateEmptyPermissions());
+            const emptyPerms = this.generateEmptyPermissions();
+            this.permissionsList.set(emptyPerms);
+            this.originalPermissionsList.set(emptyPerms.map(p => ({...p})));
             this.expandedGroups.set({});
             this.isRootExpanded.set(true);
             this.loadRoles();
@@ -181,7 +201,9 @@ export class RoleManagement implements OnInit {
     this.selectedRoleId.set(roleId);
     
     if (!roleId) {
-      this.permissionsList.set(this.generateEmptyPermissions());
+      const emptyPerms = this.generateEmptyPermissions();
+      this.permissionsList.set(emptyPerms);
+      this.originalPermissionsList.set(emptyPerms.map(p => ({...p})));
       this.expandedGroups.set({});
       this.isRootExpanded.set(true);
       return;
@@ -192,6 +214,7 @@ export class RoleManagement implements OnInit {
       next: (res) => {
         if (res.success && res.data) {
           this.permissionsList.set(res.data.permissions);
+          this.originalPermissionsList.set(res.data.permissions.map((p: any) => ({...p})));
           this.expandedGroups.set({});
           this.isRootExpanded.set(true);
         }
@@ -202,7 +225,7 @@ export class RoleManagement implements OnInit {
   }
 
   savePermissions() {
-    if (!this.selectedRoleId() || this.isReadOnly()) return;
+    if (!this.selectedRoleId() || this.isReadOnly() || !this.hasChanges()) return;
 
     Swal.fire({
       title: 'حفظ الصلاحيات',
@@ -222,6 +245,7 @@ export class RoleManagement implements OnInit {
         this.roleService.updateRolePermissions({ roleId: this.selectedRoleId(), selectedPermissions: selectedValues }).subscribe({
           next: (res) => {
             this.isSaving.set(false);
+            this.originalPermissionsList.set(this.permissionsList().map(p => ({...p})));
             Swal.fire({
               toast: true, position: 'bottom-start', icon: 'success',
               title: 'تم حفظ الصلاحيات', showConfirmButton: false, timer: 3000,
@@ -235,6 +259,20 @@ export class RoleManagement implements OnInit {
         });
       }
     });
+  }
+
+  resetAll() {
+    this.permissionsList.set(this.originalPermissionsList().map(p => ({...p})));
+  }
+
+  resetGroup(groupName: string) {
+    this.permissionsList.update(list => list.map(p => {
+      if (p.permissionValue.startsWith(groupName + '.')) {
+        const originalItem = this.originalPermissionsList().find(o => o.permissionValue === p.permissionValue);
+        return { ...p, isSelected: originalItem ? originalItem.isSelected : p.isSelected };
+      }
+      return p;
+    }));
   }
 
   toggleRootExpanded() {

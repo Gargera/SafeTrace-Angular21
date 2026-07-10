@@ -120,6 +120,13 @@
               }
               <span class="material-symbols-outlined text-secondary text-[22px]">hub</span>
               <span class="text-body-lg font-bold text-primary">نظام منصة لقاء</span>
+              
+              @if (selectedRoleId() && !isReadOnly() && hasChanges()) {
+                <button (click)="resetAll()" class="mr-4 text-error bg-error-container/30 hover:bg-error hover:text-white px-3 py-1 rounded-lg transition-colors flex items-center gap-1 text-label-sm font-bold border border-error/20" title="تراجع عن كل التعديلات">
+                  <span class="material-symbols-outlined text-[16px]">undo</span>
+                  إلغاء كل التعديلات
+                </button>
+              }
             </div>
           </div>
         </div>
@@ -145,6 +152,12 @@
                       }
                       <span class="material-symbols-outlined text-secondary text-[22px]">{{ group.icon }}</span>
                       <span class="text-body-md font-bold text-primary">{{ group.groupTitle }}</span>
+
+                      @if (selectedRoleId() && !isReadOnly() && dirtyGroups()[group.groupName]) {
+                        <button (click)="resetGroup(group.groupName)" class="mr-2 text-error bg-error-container/30 hover:bg-error hover:text-white p-1 rounded-full transition-colors flex items-center justify-center border border-error/20" title="تراجع عن تعديلات هذه المجموعة">
+                          <span class="material-symbols-outlined text-[16px]">undo</span>
+                        </button>
+                      }
                     </div>
                   </div>
                   <span class="text-label-sm text-on-surface-variant opacity-70 bg-white px-2 py-1 rounded-md border border-outline-variant">
@@ -189,7 +202,7 @@
 
   <div class="flex justify-end mt-lg">
     <button (click)="savePermissions()" 
-            [disabled]="!selectedRoleId() || isSaving() || isReadOnly()"
+            [disabled]="!selectedRoleId() || isSaving() || isReadOnly() || !hasChanges()"
             class="flex items-center justify-center gap-sm bg-secondary text-white px-10 h-14 rounded-full font-bold shadow-md hover:bg-secondary-container hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed">
       @if (isSaving()) {
         <span class="material-symbols-outlined animate-spin">sync</span>
