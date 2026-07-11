@@ -54,7 +54,8 @@
 
       <div class="flex flex-col gap-1">
         <label class="text-label-md font-medium text-on-surface">البريد الإلكتروني</label>
-        <input type="email" formControlName="email" placeholder="example@email.com" dir="ltr" [class.border-error]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid"
+        <input type="email" id="email" name="email" formControlName="email" placeholder="example@email.com" dir="ltr" autocomplete="username"
+               [class.border-error]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid"
                class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all text-right focus:text-left">
         @if (registerForm.get('email')?.touched && registerForm.get('email')?.invalid) {
           <span class="text-error text-xs font-medium">
@@ -78,9 +79,10 @@
         <label class="text-label-md font-medium text-on-surface">كلمة المرور</label>
         
         <div class="relative w-full">
-          <input [type]="isPasswordVisible() ? 'text' : 'password'" formControlName="password" placeholder="••••••••" dir="ltr" [class.border-error]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid"
+          <input [type]="isPasswordVisible() ? 'text' : 'password'" id="password" name="password" formControlName="password" placeholder="••••••••" dir="ltr" autocomplete="new-password"
+                 [class.border-error]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid"
                  class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 pr-12 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all text-right focus:text-left">
-          
+
           <button type="button" (click)="togglePasswordVisibility()" class="absolute inset-y-0 right-0 px-4 flex items-center text-on-surface-variant hover:text-secondary transition-colors focus:outline-none">
             @if (isPasswordVisible()) {
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
