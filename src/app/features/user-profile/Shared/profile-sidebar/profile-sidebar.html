@@ -54,7 +54,9 @@
 
     <p class="text-body-sm text-on-surface-variant mb-md">
       @if (isAdmin) {
-      } @else if (isVerified) {
+      } @else if (isModerator) {  
+      }
+      @else if (isVerified) {
         مستخدم موثق
       } @else if (userInfo()?.verificationStatus === VerificationStatus.Pending) {
         قيد التوثيق
