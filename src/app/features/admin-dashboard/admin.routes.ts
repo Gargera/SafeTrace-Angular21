@@ -64,6 +64,16 @@ export const ADMIN_ROUTES: Routes = [
             (m) => m.UserDetails,
           ), 
       },
+      {
+        path: 'complaints',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin, UserRole.Moderator] },
+        title: 'شكاوى المستخدمين | لقاء',
+        loadComponent: () =>
+          import('../complaints/pages/complaints-list/complaints-list').then(
+            (m) => m.ComplaintsList,
+          ), 
+      },
     ],
   },
 ];
