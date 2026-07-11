@@ -3,6 +3,7 @@ import { authGuard } from './core/guards/auth-guard';
 import { About } from './shared/components/about/about';
 import { roleGuard } from './core/guards/role-guard';
 import { UserRole } from './shared/enums/user-role';
+import { Home } from './shared/components/home/home';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full', title: 'الرئيسية | لقاء' },
@@ -25,12 +26,12 @@ export const routes: Routes = [
       {
         path: '', 
         title: "الرئيسية | لقاء",
-        loadChildren: () => import('./features/home-support/home-support.routes').then(m => m.HOME_SUPPORT_ROUTES) 
+        component: Home
       },
       { 
         path: 'home', 
         title: "الرئيسية | لقاء",
-        loadChildren: () => import('./features/home-support/home-support.routes').then(m => m.HOME_SUPPORT_ROUTES) 
+        component: Home
       },
       { 
         path: 'about', 
