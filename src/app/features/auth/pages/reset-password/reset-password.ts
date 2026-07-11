@@ -23,7 +23,7 @@ export class ResetPassword implements OnDestroy {
   apiErrorMessage = signal<string>('');
   savedEmail = signal<string>('');
   countdown = signal<number>(0);
-  private intervalId: any;
+  private intervalId: ReturnType<typeof setInterval> | null = null;
 
   showPassword = signal<boolean>(false);
 
@@ -39,6 +39,7 @@ export class ResetPassword implements OnDestroy {
   ngOnDestroy() {
     if (this.intervalId) {
       clearInterval(this.intervalId);
+      this.intervalId = null;
     }
   }
 
@@ -81,7 +82,10 @@ export class ResetPassword implements OnDestroy {
       error: (err) => {
         this.isResending.set(false);
         this.countdown.set(0);
-        clearInterval(this.intervalId);
+        if (this.intervalId) {
+          clearInterval(this.intervalId);
+          this.intervalId = null;
+        }
         this.apiErrorMessage.set(err.error?.detail || 'حدث خطأ أثناء إعادة إرسال الرمز. يرجى المحاولة لاحقاً.');
       }
     });
@@ -117,15 +121,19 @@ export class ResetPassword implements OnDestroy {
   }
 
   private startCountdown() {
-    this.countdown.set(60);
     if (this.intervalId) {
       clearInterval(this.intervalId);
     }
+
+    this.countdown.set(60);
     this.intervalId = setInterval(() => {
       if (this.countdown() > 0) {
         this.countdown.update(c => c - 1);
       } else {
-        clearInterval(this.intervalId);
+        if (this.intervalId) {
+          clearInterval(this.intervalId);
+          this.intervalId = null;
+        }
       }
     }, 1000);
   }

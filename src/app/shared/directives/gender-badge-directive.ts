@@ -1,6 +1,6 @@
 import { Directive, ElementRef, Input, OnChanges, Renderer2 } from '@angular/core';
 import { Gender } from '../enums/gender';
-import { GENDER_TRANSLATIONS_AR } from '../../core/constants/gender.dictionary';
+import { getGenderTranslationAr } from '../../core/constants/gender.dictionary';
 
 @Directive({
   selector: '[appGenderBadgeDirective]',
@@ -28,6 +28,6 @@ export class GenderBadgeDirective implements OnChanges {
       this.renderer.addClass(el, 'bg-pink-100');
       this.renderer.addClass(el, 'text-pink-800');
     }
-    el.innerText = GENDER_TRANSLATIONS_AR[this.gender] || this.gender;
+    el.innerText = getGenderTranslationAr(this.gender);
   }
 }

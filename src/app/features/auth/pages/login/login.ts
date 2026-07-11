@@ -87,17 +87,12 @@ export class Login implements OnInit, OnDestroy {
 
     if (this.loginForm.invalid) return;
 
-    setTimeout(() => {
-      this.isLoading.set(true);
-    }, 10);
-    
+    this.isLoading.set(true);
+
     this.authService.login(this.loginForm.value).subscribe({
-      next: (res) => {
+      next: () => {
         this.isLoading.set(false);
-        setTimeout(() => {
-          this.isLoading.set(false);
-          this.router.navigate(['/home']);
-        }, 400);
+        this.router.navigate(['/home'], { replaceUrl: true });
       },
       error: (err) => {
         this.isLoading.set(false);

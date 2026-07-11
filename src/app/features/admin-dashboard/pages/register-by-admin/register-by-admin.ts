@@ -6,7 +6,7 @@ import { SnackbarService } from '../../../../core/services/toast.service';
 import { UserService } from '../../services/user.service';
 import { RoleService } from '../../services/role.service';
 import { RoleDto } from '../../models/Role/RoleDto';
-import { ROLE_TRANSLATIONS_AR } from '../../../../core/constants/roles.dictionary';
+import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 
 @Component({
   selector: 'app-register-by-admin',
@@ -92,6 +92,6 @@ export class RegisterByAdmin implements OnInit {
   }
 
   getRoleName(roleName: string): string {
-    return ROLE_TRANSLATIONS_AR[roleName] || roleName;
+    return getRoleTranslationAr(roleName);
   }
 }

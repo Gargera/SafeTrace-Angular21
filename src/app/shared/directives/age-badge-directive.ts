@@ -1,6 +1,6 @@
 import { Directive, ElementRef, Input, OnChanges, Renderer2 } from '@angular/core';
 import { AgeCategories } from '../enums/age-categories';
-import { AGE_CATEGORIES_TRANSLATIONS_AR } from '../../core/constants/age.categories.dictionary';
+import { getAgeCategoryTranslationAr } from '../../core/constants/age.categories.dictionary';
 
 @Directive({
   selector: '[appAgeBadgeDirective]',
@@ -19,6 +19,6 @@ export class AgeBadgeDirective implements OnChanges {
   }
 
   ngOnChanges() {
-    this.el.nativeElement.innerText = AGE_CATEGORIES_TRANSLATIONS_AR[this.ageCategory] || this.ageCategory;
+    this.el.nativeElement.innerText = getAgeCategoryTranslationAr(this.ageCategory);
   }
 }

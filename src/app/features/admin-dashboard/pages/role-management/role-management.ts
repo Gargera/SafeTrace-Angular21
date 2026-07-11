@@ -11,7 +11,7 @@ import { SnackbarService } from '../../../../core/services/toast.service';
 import { RolePermissionDto } from '../../models/Role/RolePermissionDto';
 import { RoleService } from '../../services/role.service';
 import { RoleDto } from '../../models/Role/RoleDto';
-import { ROLE_TRANSLATIONS_AR } from '../../../../core/constants/roles.dictionary';
+import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 
 interface PermissionGroup {
   groupName: string;
@@ -339,7 +339,7 @@ export class RoleManagement implements OnInit {
   }
 
   getRoleName(roleName: string): string {
-    return ROLE_TRANSLATIONS_AR[roleName] || roleName;
+    return getRoleTranslationAr(roleName);
   }
 
   private generateEmptyPermissions(): RolePermissionDto[] {

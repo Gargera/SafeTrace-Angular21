@@ -1,6 +1,6 @@
 import { Directive, ElementRef, Input, OnChanges, Renderer2 } from '@angular/core';
 import { CaseStatus } from '../enums/case-status';
-import { CASE_STATUS_TRANSLATIONS_AR } from '../../core/constants/case.status.dictionary';
+import { getCaseStatusTranslationAr } from '../../core/constants/case.status.dictionary';
 
 @Directive({
   selector: '[appCaseStatusBadgeDirective]',
@@ -47,6 +47,6 @@ export class CaseStatusBadgeDirective implements OnChanges {
         this.renderer.addClass(el, 'text-on-surface-variant');
         break;
     }
-    el.innerText = CASE_STATUS_TRANSLATIONS_AR[this.status] || this.status;
+    el.innerText = getCaseStatusTranslationAr(this.status);
   }
 }

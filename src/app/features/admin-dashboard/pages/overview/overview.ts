@@ -29,8 +29,12 @@ export class Overview implements OnInit {
 
   @HostListener('window:resize')
   onResize() {
-    if (typeof window !== 'undefined' && window.innerWidth < 768 && this.isSidebarExpanded()) {
+    if (typeof window === 'undefined') return;
+
+    if (window.innerWidth < 768) {
       this.isSidebarExpanded.set(false);
+    } else {
+      this.isSidebarExpanded.set(true);
     }
   }
   

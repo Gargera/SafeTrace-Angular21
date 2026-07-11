@@ -8,7 +8,7 @@ import { UserService } from '../../services/user.service';
 import { RoleService } from '../../services/role.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { UserPermissionDto } from '../../models/User/UserPermissionDto';
-import { ROLE_TRANSLATIONS_AR } from '../../../../core/constants/roles.dictionary';
+import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 import { GetUserByIdDto } from '../../models/User/GetUserByIdDto';
 import { RoleDto } from '../../models/Role/RoleDto';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';
@@ -337,8 +337,7 @@ export class UserDetails implements OnInit {
   }
 
   getRoleName(roleName: string | undefined): string {
-    if (!roleName) return '';
-    return ROLE_TRANSLATIONS_AR[roleName] || roleName;
+    return getRoleTranslationAr(roleName);
   }
   
   getImageUrl(path: string | undefined): string {
