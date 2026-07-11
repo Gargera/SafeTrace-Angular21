@@ -31,7 +31,7 @@ export class ResetPassword implements OnDestroy {
 
   resetForm: FormGroup = this.fb.group({
     otpCode: ['', [Validators.required, Validators.minLength(6)]],
-    newPassword: ['', [Validators.required, Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).+$')]]
+    newPassword: ['', [Validators.required, Validators.minLength(8), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$')]]
   });
 
   ngOnDestroy() {
