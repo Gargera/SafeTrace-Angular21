@@ -116,7 +116,7 @@ export class Navbar implements OnInit {
   logout(): void {
     Swal.fire({
       title: 'تسجيل الخروج',
-      text: 'هل أنت متأكد من رغبتك في تسجيل الخروج من SafeTrace؟',
+      text: 'هل أنت متأكد من رغبتك في تسجيل الخروج من منصة لقاء؟',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'نعم، سجل الخروج',
