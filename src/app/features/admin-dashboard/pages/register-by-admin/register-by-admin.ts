@@ -22,7 +22,7 @@ export class RegisterByAdmin implements OnInit {
   isLoading = signal<boolean>(false);
   apiErrorMessage = signal<string>('');
   isPasswordVisible = signal<boolean>(false);
-  
+
   roles = signal<RoleDto[]>([]);
 
   registerForm: FormGroup = this.fb.group({
@@ -30,8 +30,11 @@ export class RegisterByAdmin implements OnInit {
     lName: ['', [Validators.required, Validators.maxLength(100)]],
     email: ['', [Validators.required, Validators.email]],
     phoneNumber: ['', [Validators.required, Validators.pattern('^01[0125][0-9]{8}$')]],
-    password: ['', [Validators.required, Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).+$')]],
-    role: ['', Validators.required]
+    password: [
+      '',
+      [Validators.required, Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).+$')],
+    ],
+    role: ['', Validators.required],
   });
 
   ngOnInit() {
@@ -44,12 +47,12 @@ export class RegisterByAdmin implements OnInit {
         if (res.success && res.data) {
           this.roles.set(res.data);
         }
-      }
+      },
     });
   }
 
   togglePasswordVisibility() {
-    this.isPasswordVisible.update(v => !v);
+    this.isPasswordVisible.update((v) => !v);
   }
 
   onSubmit() {
@@ -67,7 +70,7 @@ export class RegisterByAdmin implements OnInit {
           text: 'تمت إضافة المستخدم وتعيين الصلاحيات الخاصة به في النظام.',
           icon: 'success',
           confirmButtonColor: '#0058be',
-          customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' }
+          customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' },
         }).then(() => {
           this.router.navigate(['/admin/users']);
         });
@@ -86,9 +89,11 @@ export class RegisterByAdmin implements OnInit {
             }
           }
         } else {
-          this.apiErrorMessage.set(err.error?.detail || err.error?.message || 'حدث خطأ أثناء إنشاء الحساب.');
+          this.apiErrorMessage.set(
+            err.error?.detail || err.error?.message || 'حدث خطأ أثناء إنشاء الحساب.',
+          );
         }
-      }
+      },
     });
   }
 

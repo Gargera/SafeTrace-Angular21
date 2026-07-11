@@ -3,13 +3,10 @@
     <h1 class="text-headline-lg font-bold text-primary">إدارة المستخدمين</h1>
     <p class="text-body-md text-on-surface-variant mt-1">متابعة حسابات المستخدمين، التحقق من التوثيق، وإدارة الصلاحيات.</p>
   </div>
-  @if(authService.isAdmin() == true)
-  { 
-    <button routerLink="/admin/users/registerByAdmin" class="flex items-center gap-sm bg-surface-container-lowest border border-outline-variant text-primary px-lg py-sm rounded-xl font-semibold shadow-sm hover:bg-surface-container-low transition-all">
-      <span class="material-symbols-outlined">person_add</span>
-      إنشاء حساب جديد
-    </button>
-  }
+  <button routerLink="/admin/users/registerByAdmin" class="flex items-center gap-sm bg-surface-container-lowest border border-outline-variant text-primary px-lg py-sm rounded-xl font-semibold shadow-sm hover:bg-surface-container-low transition-all">
+    <span class="material-symbols-outlined">person_add</span>
+    إنشاء حساب جديد
+  </button>
 </header>
 
 <section class="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg">

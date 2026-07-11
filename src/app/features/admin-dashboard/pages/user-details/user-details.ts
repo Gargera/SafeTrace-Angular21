@@ -5,9 +5,12 @@ import { ALL_SYSTEM_PERMISSIONS, PERMISSION_ACTIONS_AR, PERMISSION_GROUPS_AR } f
 import { environment } from '../../../../../environments/environment';
 import Swal from 'sweetalert2';
 import { UserService } from '../../services/user.service';
+import { RoleService } from '../../services/role.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { UserPermissionDto } from '../../models/User/UserPermissionDto';
 import { ROLE_TRANSLATIONS_AR } from '../../../../core/constants/roles.dictionary';
 import { GetUserByIdDto } from '../../models/User/GetUserByIdDto';
+import { RoleDto } from '../../models/Role/RoleDto';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';
 import { VerificationBadgeDirective } from "../../../../shared/directives/verification-badge-directive";
 import { RoleBadgeDirective } from "../../../../shared/directives/role-badge-directive";
@@ -28,11 +31,14 @@ interface PermissionGroup {
 })
 export class UserDetails implements OnInit {
   private userService = inject(UserService);
+  private roleService = inject(RoleService);
+  public authService = inject(AuthService);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
 
   userId = signal<string>('');
   user = signal<GetUserByIdDto | null>(null);
+  roles = signal<RoleDto[]>([]);
   
   originalPermissionsList = signal<UserPermissionDto[]>(this.generateEmptyPermissions());
   permissionsList = signal<UserPermissionDto[]>(this.generateEmptyPermissions());
@@ -46,6 +52,15 @@ export class UserDetails implements OnInit {
   apiErrorMessage = signal<string>('');
 
   verificationStatusEnum = VerificationStatus;
+
+  isCurrentUser = computed(() => {
+    return this.authService.getCurrentUserId() === this.userId();
+  });
+
+  canManageUser = computed(() => {
+    if (!this.user() || this.isCurrentUser()) return false;
+    return true;
+  });
 
   groupedPermissions = computed<PermissionGroup[]>(() => {
     const list = this.permissionsList();
@@ -88,6 +103,7 @@ export class UserDetails implements OnInit {
   hasChanges = computed(() => Object.keys(this.dirtyGroups()).length > 0);
 
   ngOnInit() {
+    this.loadRoles();
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
@@ -99,6 +115,16 @@ export class UserDetails implements OnInit {
 
   goBack() {
     this.location.back();
+  }
+
+  loadRoles() {
+    this.roleService.getAllRoles().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.roles.set(res.data);
+        }
+      }
+    });
   }
 
   loadUserData() {
@@ -129,6 +155,25 @@ export class UserDetails implements OnInit {
         this.isLoading.set(false);
       },
       error: () => this.isLoading.set(false)
+    });
+  }
+
+  onChangeRole(newRole: string) {
+    if (!newRole || newRole === this.user()?.role) return;
+
+    Swal.fire({
+      title: 'تغيير دور المستخدم',
+      text: `هل أنت متأكد من تغيير دور هذا المستخدم إلى "${this.getRoleName(newRole)}"؟ قد يؤثر ذلك على حالة توثيق الحساب.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'نعم، تغيير',
+      cancelButtonText: 'إلغاء',
+      confirmButtonColor: '#0058be',
+      customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.executeAction(this.userService.changeUserRole({ userId: this.userId(), newRole: newRole }), 'تم تغيير دور المستخدم بنجاح.');
+      }
     });
   }
 
@@ -206,7 +251,7 @@ export class UserDetails implements OnInit {
   }
 
   savePermissions() {
-    if (!this.hasChanges()) return;
+    if (!this.hasChanges() || !this.canManageUser()) return;
 
     Swal.fire({
       title: 'حفظ الصلاحيات الاستثنائية',
@@ -258,6 +303,7 @@ export class UserDetails implements OnInit {
   }
 
   toggleAllPermissions(event: Event) {
+    if (!this.canManageUser()) return;
     const isChecked = (event.target as HTMLInputElement).checked;
     this.permissionsList.update(list => list.map(p => ({ ...p, isSelected: isChecked })));
   }
@@ -267,11 +313,13 @@ export class UserDetails implements OnInit {
   }
 
   toggleGroupCheckbox(groupName: string, event: Event) {
+    if (!this.canManageUser()) return;
     const isChecked = (event.target as HTMLInputElement).checked;
     this.permissionsList.update(list => list.map(p => p.permissionValue.startsWith(groupName + '.') ? { ...p, isSelected: isChecked } : p));
   }
 
   togglePermission(permValue: string) {
+    if (!this.canManageUser()) return;
     this.permissionsList.update(list => list.map(p => p.permissionValue === permValue ? { ...p, isSelected: !p.isSelected } : p));
   }
 

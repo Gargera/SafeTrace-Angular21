@@ -1,7 +1,11 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { PERMISSION_GROUPS_AR, PERMISSION_ACTIONS_AR, ALL_SYSTEM_PERMISSIONS} from '../../../../core/constants/permission.dictionary';
+import {
+  PERMISSION_GROUPS_AR,
+  PERMISSION_ACTIONS_AR,
+  ALL_SYSTEM_PERMISSIONS,
+} from '../../../../core/constants/permission.dictionary';
 import Swal from 'sweetalert2';
 import { RolePermissionDto } from '../../models/Role/RolePermissionDto';
 import { RoleService } from '../../services/role.service';
@@ -19,7 +23,7 @@ interface PermissionGroup {
   selector: 'app-role-management',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './role-management.html'
+  templateUrl: './role-management.html',
 })
 export class RoleManagement implements OnInit {
   private roleService = inject(RoleService);
@@ -27,13 +31,13 @@ export class RoleManagement implements OnInit {
 
   roles = signal<RoleDto[]>([]);
   selectedRoleId = signal<string>('');
-  
+
   originalPermissionsList = signal<RolePermissionDto[]>(this.generateEmptyPermissions());
   permissionsList = signal<RolePermissionDto[]>(this.generateEmptyPermissions());
-  
+
   expandedGroups = signal<Record<string, boolean>>({});
   isRootExpanded = signal<boolean>(true);
-  
+
   isLoadingRoles = signal<boolean>(false);
   isLoadingTree = signal<boolean>(false);
   isSaving = signal<boolean>(false);
@@ -41,16 +45,19 @@ export class RoleManagement implements OnInit {
   apiErrorMessage = signal<string>('');
 
   createRoleForm: FormGroup = this.fb.group({
-    roleName: ['', [Validators.required, Validators.maxLength(100), Validators.pattern(/^[a-zA-Z0-9_ ]+$/)]]
+    roleName: [
+      '',
+      [Validators.required, Validators.maxLength(100), Validators.pattern(/^[a-zA-Z0-9_ ]+$/)],
+    ],
   });
 
   isReadOnly = computed(() => {
-    const selectedRole = this.roles().find(r => r.id === this.selectedRoleId());
+    const selectedRole = this.roles().find((r) => r.id === this.selectedRoleId());
     return selectedRole?.name === 'Admin';
   });
 
   isDeletableRole = computed(() => {
-    const selectedRole = this.roles().find(r => r.id === this.selectedRoleId());
+    const selectedRole = this.roles().find((r) => r.id === this.selectedRoleId());
     if (!selectedRole) return false;
     const coreRoles = ['Admin', 'User', 'VerifiedUser', 'Moderator'];
     return !coreRoles.includes(selectedRole.name);
@@ -60,7 +67,7 @@ export class RoleManagement implements OnInit {
     const list = this.permissionsList();
     const groupsMap = new Map<string, RolePermissionDto[]>();
 
-    list.forEach(perm => {
+    list.forEach((perm) => {
       const parts = perm.permissionValue.split('.');
       const groupName = parts[0];
       if (!groupsMap.has(groupName)) {
@@ -73,21 +80,25 @@ export class RoleManagement implements OnInit {
       groupName,
       groupTitle: PERMISSION_GROUPS_AR[groupName]?.title || groupName,
       icon: PERMISSION_GROUPS_AR[groupName]?.icon || 'verified_user',
-      permissions: perms
+      permissions: perms,
     }));
   });
 
-  totalSelected = computed(() => this.permissionsList().filter(p => p.isSelected).length);
+  totalSelected = computed(() => this.permissionsList().filter((p) => p.isSelected).length);
   totalPermissions = computed(() => this.permissionsList().length);
 
-  isAllChecked = computed(() => this.totalPermissions() > 0 && this.totalSelected() === this.totalPermissions());
-  isAllIndeterminate = computed(() => this.totalSelected() > 0 && this.totalSelected() < this.totalPermissions());
+  isAllChecked = computed(
+    () => this.totalPermissions() > 0 && this.totalSelected() === this.totalPermissions(),
+  );
+  isAllIndeterminate = computed(
+    () => this.totalSelected() > 0 && this.totalSelected() < this.totalPermissions(),
+  );
 
   dirtyGroups = computed(() => {
     const current = this.permissionsList();
     const original = this.originalPermissionsList();
     const dirtyMap: Record<string, boolean> = {};
-    
+
     for (let i = 0; i < current.length; i++) {
       if (current[i].isSelected !== original[i].isSelected) {
         const groupName = current[i].permissionValue.split('.')[0];
@@ -112,7 +123,7 @@ export class RoleManagement implements OnInit {
         }
         this.isLoadingRoles.set(false);
       },
-      error: () => this.isLoadingRoles.set(false)
+      error: () => this.isLoadingRoles.set(false),
     });
   }
 
@@ -134,7 +145,7 @@ export class RoleManagement implements OnInit {
       cancelButtonText: 'إلغاء',
       confirmButtonColor: '#0058be',
       cancelButtonColor: '#0b1c30',
-      customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' }
+      customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' },
     }).then((result) => {
       if (result.isConfirmed) {
         this.roleService.createRole(dto).subscribe({
@@ -142,14 +153,20 @@ export class RoleManagement implements OnInit {
             this.createRoleForm.reset();
             this.loadRoles();
             Swal.fire({
-              toast: true, position: 'bottom-start', icon: 'success',
-              title: 'تم إنشاء الدور بنجاح', showConfirmButton: false, timer: 3000,
-              customClass: { popup: 'bg-inverse-surface text-inverse-on-surface' }
+              toast: true,
+              position: 'bottom-start',
+              icon: 'success',
+              title: 'تم إنشاء الدور بنجاح',
+              showConfirmButton: false,
+              timer: 3000,
+              customClass: { popup: 'bg-inverse-surface text-inverse-on-surface' },
             });
           },
           error: (err) => {
-            this.apiErrorMessage.set(err.error?.detail || err.error?.message || 'حدث خطأ أثناء الإنشاء.');
-          }
+            this.apiErrorMessage.set(
+              err.error?.detail || err.error?.message || 'حدث خطأ أثناء الإنشاء.',
+            );
+          },
         });
       }
     });
@@ -167,7 +184,7 @@ export class RoleManagement implements OnInit {
       cancelButtonText: 'إلغاء',
       confirmButtonColor: '#ba1a1a',
       cancelButtonColor: '#0b1c30',
-      customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' }
+      customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' },
     }).then((result) => {
       if (result.isConfirmed) {
         this.isDeleting.set(true);
@@ -177,20 +194,24 @@ export class RoleManagement implements OnInit {
             this.selectedRoleId.set('');
             const emptyPerms = this.generateEmptyPermissions();
             this.permissionsList.set(emptyPerms);
-            this.originalPermissionsList.set(emptyPerms.map(p => ({...p})));
+            this.originalPermissionsList.set(emptyPerms.map((p) => ({ ...p })));
             this.expandedGroups.set({});
             this.isRootExpanded.set(true);
             this.loadRoles();
             Swal.fire({
-              toast: true, position: 'bottom-start', icon: 'success',
-              title: 'تم حذف الدور بنجاح', showConfirmButton: false, timer: 3000,
-              customClass: { popup: 'bg-inverse-surface text-inverse-on-surface' }
+              toast: true,
+              position: 'bottom-start',
+              icon: 'success',
+              title: 'تم حذف الدور بنجاح',
+              showConfirmButton: false,
+              timer: 3000,
+              customClass: { popup: 'bg-inverse-surface text-inverse-on-surface' },
             });
           },
           error: (err) => {
             this.isDeleting.set(false);
             Swal.fire('خطأ', err.error?.detail || err.error?.message || 'فشل حذف الدور', 'error');
-          }
+          },
         });
       }
     });
@@ -199,11 +220,11 @@ export class RoleManagement implements OnInit {
   onRoleSelected(event: Event) {
     const roleId = (event.target as HTMLSelectElement).value;
     this.selectedRoleId.set(roleId);
-    
+
     if (!roleId) {
       const emptyPerms = this.generateEmptyPermissions();
       this.permissionsList.set(emptyPerms);
-      this.originalPermissionsList.set(emptyPerms.map(p => ({...p})));
+      this.originalPermissionsList.set(emptyPerms.map((p) => ({ ...p })));
       this.expandedGroups.set({});
       this.isRootExpanded.set(true);
       return;
@@ -214,13 +235,13 @@ export class RoleManagement implements OnInit {
       next: (res) => {
         if (res.success && res.data) {
           this.permissionsList.set(res.data.permissions);
-          this.originalPermissionsList.set(res.data.permissions.map((p: any) => ({...p})));
+          this.originalPermissionsList.set(res.data.permissions.map((p: any) => ({ ...p })));
           this.expandedGroups.set({});
           this.isRootExpanded.set(true);
         }
         this.isLoadingTree.set(false);
       },
-      error: () => this.isLoadingTree.set(false)
+      error: () => this.isLoadingTree.set(false),
     });
   }
 
@@ -236,82 +257,103 @@ export class RoleManagement implements OnInit {
       cancelButtonText: 'إلغاء',
       confirmButtonColor: '#0058be',
       cancelButtonColor: '#0b1c30',
-      customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' }
+      customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' },
     }).then((result) => {
       if (result.isConfirmed) {
         this.isSaving.set(true);
-        const selectedValues = this.permissionsList().filter(p => p.isSelected).map(p => p.permissionValue);
-        
-        this.roleService.updateRolePermissions({ roleId: this.selectedRoleId(), selectedPermissions: selectedValues }).subscribe({
-          next: (res) => {
-            this.isSaving.set(false);
-            this.originalPermissionsList.set(this.permissionsList().map(p => ({...p})));
-            Swal.fire({
-              toast: true, position: 'bottom-start', icon: 'success',
-              title: 'تم حفظ الصلاحيات', showConfirmButton: false, timer: 3000,
-              customClass: { popup: 'bg-inverse-surface text-inverse-on-surface' }
-            });
-          },
-          error: (err) => {
-            this.isSaving.set(false);
-            Swal.fire('خطأ', err.error?.detail || 'فشل حفظ الصلاحيات', 'error');
-          }
-        });
+        const selectedValues = this.permissionsList()
+          .filter((p) => p.isSelected)
+          .map((p) => p.permissionValue);
+
+        this.roleService
+          .updateRolePermissions({
+            roleId: this.selectedRoleId(),
+            selectedPermissions: selectedValues,
+          })
+          .subscribe({
+            next: (res) => {
+              this.isSaving.set(false);
+              this.originalPermissionsList.set(this.permissionsList().map((p) => ({ ...p })));
+              Swal.fire({
+                toast: true,
+                position: 'bottom-start',
+                icon: 'success',
+                title: 'تم حفظ الصلاحيات',
+                showConfirmButton: false,
+                timer: 3000,
+                customClass: { popup: 'bg-inverse-surface text-inverse-on-surface' },
+              });
+            },
+            error: (err) => {
+              this.isSaving.set(false);
+              Swal.fire('خطأ', err.error?.detail || 'فشل حفظ الصلاحيات', 'error');
+            },
+          });
       }
     });
   }
 
   resetAll() {
-    this.permissionsList.set(this.originalPermissionsList().map(p => ({...p})));
+    this.permissionsList.set(this.originalPermissionsList().map((p) => ({ ...p })));
   }
 
   resetGroup(groupName: string) {
-    this.permissionsList.update(list => list.map(p => {
-      if (p.permissionValue.startsWith(groupName + '.')) {
-        const originalItem = this.originalPermissionsList().find(o => o.permissionValue === p.permissionValue);
-        return { ...p, isSelected: originalItem ? originalItem.isSelected : p.isSelected };
-      }
-      return p;
-    }));
+    this.permissionsList.update((list) =>
+      list.map((p) => {
+        if (p.permissionValue.startsWith(groupName + '.')) {
+          const originalItem = this.originalPermissionsList().find(
+            (o) => o.permissionValue === p.permissionValue,
+          );
+          return { ...p, isSelected: originalItem ? originalItem.isSelected : p.isSelected };
+        }
+        return p;
+      }),
+    );
   }
 
   toggleRootExpanded() {
-    this.isRootExpanded.update(v => !v);
+    this.isRootExpanded.update((v) => !v);
   }
 
   toggleAllPermissions(event: Event) {
     if (this.isReadOnly()) return;
     const isChecked = (event.target as HTMLInputElement).checked;
-    this.permissionsList.update(list => list.map(p => ({ ...p, isSelected: isChecked })));
+    this.permissionsList.update((list) => list.map((p) => ({ ...p, isSelected: isChecked })));
   }
 
   toggleGroupExpanded(groupName: string) {
-    this.expandedGroups.update(state => ({ ...state, [groupName]: !state[groupName] }));
+    this.expandedGroups.update((state) => ({ ...state, [groupName]: !state[groupName] }));
   }
 
   toggleGroupCheckbox(groupName: string, event: Event) {
     if (this.isReadOnly()) return;
     const isChecked = (event.target as HTMLInputElement).checked;
-    this.permissionsList.update(list => list.map(p => 
-      p.permissionValue.startsWith(groupName + '.') ? { ...p, isSelected: isChecked } : p
-    ));
+    this.permissionsList.update((list) =>
+      list.map((p) =>
+        p.permissionValue.startsWith(groupName + '.') ? { ...p, isSelected: isChecked } : p,
+      ),
+    );
   }
 
   togglePermission(permValue: string) {
     if (this.isReadOnly()) return;
-    this.permissionsList.update(list => list.map(p => 
-      p.permissionValue === permValue ? { ...p, isSelected: !p.isSelected } : p
-    ));
+    this.permissionsList.update((list) =>
+      list.map((p) => (p.permissionValue === permValue ? { ...p, isSelected: !p.isSelected } : p)),
+    );
   }
 
   isGroupChecked(groupName: string): boolean {
-    const groupPerms = this.permissionsList().filter(p => p.permissionValue.startsWith(groupName + '.'));
-    return groupPerms.length > 0 && groupPerms.every(p => p.isSelected);
+    const groupPerms = this.permissionsList().filter((p) =>
+      p.permissionValue.startsWith(groupName + '.'),
+    );
+    return groupPerms.length > 0 && groupPerms.every((p) => p.isSelected);
   }
 
   isGroupIndeterminate(groupName: string): boolean {
-    const groupPerms = this.permissionsList().filter(p => p.permissionValue.startsWith(groupName + '.'));
-    const checkedCount = groupPerms.filter(p => p.isSelected).length;
+    const groupPerms = this.permissionsList().filter((p) =>
+      p.permissionValue.startsWith(groupName + '.'),
+    );
+    const checkedCount = groupPerms.filter((p) => p.isSelected).length;
     return checkedCount > 0 && checkedCount < groupPerms.length;
   }
 
@@ -325,6 +367,6 @@ export class RoleManagement implements OnInit {
   }
 
   private generateEmptyPermissions(): RolePermissionDto[] {
-    return ALL_SYSTEM_PERMISSIONS.map(p => ({ permissionValue: p, isSelected: false }));
+    return ALL_SYSTEM_PERMISSIONS.map((p) => ({ permissionValue: p, isSelected: false }));
   }
 }
