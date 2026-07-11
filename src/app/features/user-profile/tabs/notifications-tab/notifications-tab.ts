@@ -34,10 +34,6 @@ export class NotificationsTab implements OnInit {
     return this.notificationService.getNotificationDetails(n).bgClass;
   }
 
-  formatDate(dateStr: string): string {
-    return this.notificationService.formatDate(dateStr);
-  }
-
   /** Build an array of page numbers for the pagination bar */
   get pageNumbers(): number[] {
     const total = this.notificationService.totalPages();
