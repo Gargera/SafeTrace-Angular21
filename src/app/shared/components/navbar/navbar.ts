@@ -72,7 +72,6 @@ export class Navbar implements OnInit {
     }
   }
 
-
   @HostListener('window:resize')
   onResize(): void {
     if (window.innerWidth >= 768) {
@@ -100,6 +99,9 @@ export class Navbar implements OnInit {
   }
 
   getProfileImageUrl(): string {
+    console.log("loggedin ", this.authService.isLoggedIn());
+    console.log(this.authService.currentUser());
+    console.log(this.authService.getUserRoles());
     const imgPath = this.currentUser()?.profileImage;
     if (!imgPath) return '';
 

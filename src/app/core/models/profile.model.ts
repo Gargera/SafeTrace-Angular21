@@ -11,6 +11,7 @@ export interface GetUserInfoDTO {
   verificationStatus: VerificationStatus;
   identificationImage: string | null;
   role: UserRole;
+  Cases: any[];
 }
 
 // ── One DTO per endpoint — matches the backend exactly, keeps sections independent ──

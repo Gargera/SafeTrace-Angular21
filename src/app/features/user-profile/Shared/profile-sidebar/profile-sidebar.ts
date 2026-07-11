@@ -64,14 +64,17 @@ export class ProfileSidebar {
   get isVerified(): boolean {
     return this.userInfo()?.verificationStatus === VerificationStatus.Verified;
   }
+  get hasCases(): boolean {
+    return (this.userInfo()?.Cases?.length ?? 0) > 0;
+  }
 
   get verificationLabel(): string {
-    if (this.userInfo()?.verificationStatus === VerificationStatus.Verified) {
-      return 'حساب موثق';
-    } else if (this.userInfo()?.role === UserRole.Moderator) {
-      return 'مدير  ';
+    if (this.userInfo()?.role === UserRole.Moderator) {
+      return 'مشرف';
     } else if (this.userInfo()?.role === UserRole.Admin) {
       return 'مسئول الننظام';
+    } else if (this.userInfo()?.verificationStatus === VerificationStatus.Verified) {
+      return 'حساب موثق';
     } else if (this.userInfo()?.verificationStatus === VerificationStatus.Pending) {
       return 'قيد المراجعة';
     } else {
@@ -82,3 +85,5 @@ export class ProfileSidebar {
 //esraataha3092001@gmail.com
 // et93512@gmail.com
 // Meaw_Meaw309
+//liqaaplatform@gmail.com
+//Liqaa_Platform_ITI_2026
