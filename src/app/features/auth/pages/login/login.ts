@@ -30,6 +30,11 @@ export class Login implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
+    if (this.authService.isLoggedIn()) {
+      this.router.navigate(['/home'], { replaceUrl: true });
+      return;
+    }
+
     this.authSubscription = this.socialAuthService.authState.subscribe((user) => {
       if (user) {
         this.isLoading.set(true);

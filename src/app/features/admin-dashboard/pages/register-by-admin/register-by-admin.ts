@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import Swal from 'sweetalert2';
+import { SnackbarService } from '../../../../core/services/toast.service';
 import { UserService } from '../../services/user.service';
 import { RoleService } from '../../services/role.service';
 import { RoleDto } from '../../models/Role/RoleDto';
@@ -18,6 +18,7 @@ export class RegisterByAdmin implements OnInit {
   private userService = inject(UserService);
   private roleService = inject(RoleService);
   private router = inject(Router);
+  private snackbar = inject(SnackbarService);
 
   isLoading = signal<boolean>(false);
   apiErrorMessage = signal<string>('');
@@ -65,15 +66,8 @@ export class RegisterByAdmin implements OnInit {
     this.userService.registerByAdmin(this.registerForm.value).subscribe({
       next: (res) => {
         this.isLoading.set(false);
-        Swal.fire({
-          title: 'تم إنشاء الحساب بنجاح!',
-          text: 'تمت إضافة المستخدم وتعيين الصلاحيات الخاصة به في النظام.',
-          icon: 'success',
-          confirmButtonColor: '#0058be',
-          customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' },
-        }).then(() => {
-          this.router.navigate(['/admin/users']);
-        });
+        this.snackbar.success('تمت إضافة المستخدم وتعيين الصلاحيات الخاصة به في النظام.');
+        this.router.navigate(['/admin/users']);
       },
       error: (err) => {
         this.isLoading.set(false);

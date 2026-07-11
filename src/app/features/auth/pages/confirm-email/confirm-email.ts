@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { SnackbarService } from '../../../../core/services/toast.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -14,6 +15,7 @@ export class ConfirmEmail implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private snackbar = inject(SnackbarService);
 
   email = signal<string>('');
   isLoading = signal<boolean>(false);
@@ -75,12 +77,12 @@ export class ConfirmEmail implements OnInit, OnDestroy {
 
     this.authService.resendOtp(this.email(), 1).subscribe({
       next: (res) => {
-        Swal.fire('تم الإرسال', res.message, 'success');
+        this.snackbar.success(res.message || 'تم إرسال الرمز بنجاح.');
       },
       error: (err) => {
         this.countdown.set(0);
         clearInterval(this.intervalId);
-        Swal.fire('خطأ', err.error?.detail || 'حدث خطأ أثناء محاولة إرسال الرمز.', 'error');
+        this.snackbar.error(err.error?.detail || 'حدث خطأ أثناء محاولة إرسال الرمز.');
       }
     });
   }

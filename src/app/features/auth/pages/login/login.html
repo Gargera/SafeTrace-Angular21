@@ -44,10 +44,10 @@
       <div class="grow border-t border-outline-variant"></div>
     </div>
 
-    <form [formGroup]="loginForm" action="#" method="post" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+    <form [formGroup]="loginForm" action="#" method="post" autocomplete="on" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
       <div class="flex flex-col gap-1">
         <label class="text-label-md font-medium text-on-surface">البريد الإلكتروني</label>
-        <input type="email" id="email" name="email" formControlName="email" placeholder="name@example.com" dir="ltr" autocomplete="username"
+        <input type="email" id="email" name="username" formControlName="email" placeholder="name@example.com" dir="ltr" autocomplete="username" autocapitalize="off"
                [class.border-error]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
                class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all text-right focus:text-left">
         @if (loginForm.get('email')?.touched && loginForm.get('email')?.invalid) {
@@ -66,7 +66,7 @@
         </div>
         
         <div class="relative w-full">
-          <input [type]="showPassword() ? 'text' : 'password'" id="password" name="password" formControlName="password" placeholder="••••••••" dir="ltr" autocomplete="current-password"
+          <input [type]="showPassword() ? 'text' : 'password'" id="password" name="password" formControlName="password" placeholder="••••••••" dir="ltr" autocomplete="current-password" autocapitalize="off"
                  [class.border-error]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
                  class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 pr-12 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all text-right focus:text-left">
           

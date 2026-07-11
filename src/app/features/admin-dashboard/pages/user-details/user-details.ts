@@ -3,7 +3,7 @@ import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { ALL_SYSTEM_PERMISSIONS, PERMISSION_ACTIONS_AR, PERMISSION_GROUPS_AR } from '../../../../core/constants/permission.dictionary';
 import { environment } from '../../../../../environments/environment';
-import Swal from 'sweetalert2';
+import { SnackbarService } from '../../../../core/services/toast.service';
 import { UserService } from '../../services/user.service';
 import { RoleService } from '../../services/role.service';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -15,6 +15,7 @@ import { VerificationStatus } from '../../../../shared/enums/verification-status
 import { VerificationBadgeDirective } from "../../../../shared/directives/verification-badge-directive";
 import { RoleBadgeDirective } from "../../../../shared/directives/role-badge-directive";
 import { BlockBadgeDirective } from "../../../../shared/directives/block-badge-directive";
+import Swal from 'sweetalert2';
 
 interface PermissionGroup {
   groupName: string;
@@ -35,6 +36,7 @@ export class UserDetails implements OnInit {
   public authService = inject(AuthService);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
+  private snackbar = inject(SnackbarService);
 
   userId = signal<string>('');
   user = signal<GetUserByIdDto | null>(null);
@@ -49,7 +51,6 @@ export class UserDetails implements OnInit {
   isLoading = signal<boolean>(true);
   isSavingPerms = signal<boolean>(false);
   isActionLoading = signal<boolean>(false);
-  apiErrorMessage = signal<string>('');
 
   verificationStatusEnum = VerificationStatus;
 
@@ -129,7 +130,6 @@ export class UserDetails implements OnInit {
 
   loadUserData() {
     this.isLoading.set(true);
-    this.apiErrorMessage.set('');
     
     this.userService.getUserById(this.userId()).subscribe({
       next: (res) => {
@@ -140,7 +140,7 @@ export class UserDetails implements OnInit {
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.apiErrorMessage.set(err.error?.detail || 'فشل في تحميل بيانات المستخدم.');
+        this.snackbar.error(err.error?.detail || 'فشل في تحميل بيانات المستخدم.');
       }
     });
   }
@@ -234,17 +234,16 @@ export class UserDetails implements OnInit {
 
   private executeAction(observable: any, successMessage: string) {
     this.isActionLoading.set(true);
-    this.apiErrorMessage.set('');
 
     observable.subscribe({
       next: () => {
         this.isActionLoading.set(false);
-        Swal.fire({ toast: true, position: 'bottom-start', icon: 'success', title: successMessage, showConfirmButton: false, timer: 3000, customClass: { popup: 'bg-inverse-surface text-inverse-on-surface' } });
+        this.snackbar.success(successMessage);
         this.loadUserData();
       },
       error: (err: any) => {
         this.isActionLoading.set(false);
-        this.apiErrorMessage.set(err.error?.detail || err.error?.message || 'حدث خطأ غير متوقع. قد لا تملك الصلاحية الكافية.');
+        this.snackbar.error(err.error?.detail || err.error?.message || 'حدث خطأ غير متوقع. قد لا تملك الصلاحية الكافية.');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     });
@@ -265,18 +264,17 @@ export class UserDetails implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         this.isSavingPerms.set(true);
-        this.apiErrorMessage.set('');
         const selectedValues = this.permissionsList().filter(p => p.isSelected).map(p => p.permissionValue);
         
         this.userService.assignUserPermissions({ userId: this.userId(), selectedPermissions: selectedValues }).subscribe({
           next: () => {
             this.isSavingPerms.set(false);
             this.originalPermissionsList.set(this.permissionsList().map(p => ({...p})));
-            Swal.fire({ toast: true, position: 'bottom-start', icon: 'success', title: 'تم تحديث صلاحيات المستخدم', showConfirmButton: false, timer: 3000, customClass: { popup: 'bg-inverse-surface text-inverse-on-surface' } });
+            this.snackbar.success('تم تحديث صلاحيات المستخدم');
           },
           error: (err) => {
             this.isSavingPerms.set(false);
-            this.apiErrorMessage.set(err.error?.detail || 'فشل حفظ الصلاحيات. تأكد من امتلاكك الصلاحية اللازمة.');
+            this.snackbar.error(err.error?.detail || 'فشل حفظ الصلاحيات. تأكد من امتلاكك الصلاحية اللازمة.');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }
         });

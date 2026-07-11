@@ -78,12 +78,11 @@ export class Overview implements OnInit {
       },
     }).then((result) => {
       if (result.isConfirmed) {
+        this.authService.clearSession();
+        this.router.navigate(['/auth']);
         this.authService.revokeToken().subscribe({
-          next: () => this.router.navigate(['/auth']),
-          error: () => {
-            this.authService.clearSession();
-            this.router.navigate(['/auth']);
-          },
+          next: () => {},
+          error: () => {},
         });
       }
     });

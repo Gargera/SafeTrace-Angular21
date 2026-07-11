@@ -2,6 +2,7 @@ import { Component, inject, signal, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { SnackbarService } from '../../../../core/services/toast.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -14,6 +15,7 @@ export class ResetPassword implements OnDestroy {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private snackbar = inject(SnackbarService);
 
   step = signal<number>(1);
   isLoading = signal<boolean>(false);
@@ -74,13 +76,7 @@ export class ResetPassword implements OnDestroy {
     this.authService.forgetPassword(this.savedEmail()).subscribe({
       next: (res) => {
         this.isResending.set(false);
-        Swal.fire({
-          title: 'تم الإرسال!',
-          text: 'تم إرسال رمز جديد إلى بريدك الإلكتروني، الرمز صالح لمدة 10 دقائق.',
-          icon: 'success',
-          confirmButtonColor: '#0058be',
-          customClass: { popup: 'rounded-xl font-body-md' }
-        });
+        this.snackbar.success('تم إرسال رمز جديد إلى بريدك الإلكتروني، الرمز صالح لمدة 10 دقائق.');
       },
       error: (err) => {
         this.isResending.set(false);
