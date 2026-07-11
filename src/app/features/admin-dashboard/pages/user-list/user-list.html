@@ -3,13 +3,10 @@
     <h1 class="text-headline-lg font-bold text-primary">إدارة المستخدمين</h1>
     <p class="text-body-md text-on-surface-variant mt-1">متابعة حسابات المستخدمين، التحقق من التوثيق، وإدارة الصلاحيات.</p>
   </div>
-  @if(authService.isAdmin() == true)
-  { 
-    <button routerLink="/admin/users/registerByAdmin" class="flex items-center gap-sm bg-surface-container-lowest border border-outline-variant text-primary px-lg py-sm rounded-xl font-semibold shadow-sm hover:bg-surface-container-low transition-all">
-      <span class="material-symbols-outlined">person_add</span>
-      إنشاء حساب جديد
-    </button>
-  }
+  <button routerLink="/admin/users/registerByAdmin" class="flex items-center gap-sm bg-surface-container-lowest border border-outline-variant text-primary px-lg py-sm rounded-xl font-semibold shadow-sm hover:bg-surface-container-low transition-all">
+    <span class="material-symbols-outlined">person_add</span>
+    إنشاء حساب جديد
+  </button>
 </header>
 
 <section class="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg">
@@ -43,7 +40,7 @@
       <select [ngModel]="filter().roleId" (ngModelChange)="updateFilter({ roleId: $event })" class="w-full border-outline-variant rounded-lg bg-surface text-body-sm focus:ring-secondary cursor-pointer">
         <option [ngValue]="undefined">الكل</option>
         @for (role of roles(); track role.id) {
-          <option [value]="role.id">{{ role.name }}</option>
+          <option [value]="role.id">{{ getRoleName(role.name) }}</option>
         }
       </select>
     </div>
@@ -74,7 +71,7 @@
           <th class="px-lg py-md">رقم الهاتف</th>
           <th class="px-lg py-md">حالة التوثيق</th>
           <th class="px-lg py-md">الدور</th>
-          <th class="px-lg py-md">محظور؟</th>
+          <th class="px-lg py-md">حالة الحظر</th>
           <th class="px-lg py-md text-center">الإجراءات</th>
         </tr>
       </thead>
@@ -100,7 +97,7 @@
               <span [appBlockBadgeDirective]="user.isBlocked"></span>
             </td>
             <td class="px-lg py-md text-center">
-              <button class="bg-surface-container border border-outline-variant text-primary px-md py-1.5 rounded-lg text-label-sm font-bold hover:bg-primary hover:text-white transition-all shadow-sm">
+              <button routerLink="/admin/users/{{ user.id }}" class="bg-surface-container border border-outline-variant text-primary px-md py-1.5 rounded-lg text-label-sm font-bold hover:bg-primary hover:text-white transition-all shadow-sm">
                 التفاصيل
               </button>
             </td>

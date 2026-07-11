@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment.development';
+import { environment } from '../../../../environments/environment';
 import {
   AddIdImageDTO,
   ChangePasswordDTO,
@@ -57,6 +57,9 @@ export class ProfileService {
     return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateHomeLocation`, formData);
   }
 
+  removeProfileImage(): Observable<ApiResponse<boolean>> {  
+    return this.#http.delete<ApiResponse<boolean>>(`${this.#profileUrl}/ProfileImage`);
+  }
   /**
    * POST /Account/change-password
    * NOTE: this one is JSON, not form-data — different controller, different binding ([FromBody]).

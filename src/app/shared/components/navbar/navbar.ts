@@ -1,10 +1,12 @@
-import { Component, inject, OnInit, signal, HostListener, effect } from '@angular/core';
+import { Component, inject, OnInit, signal, HostListener, effect, input } from '@angular/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { Router, RouterModule } from '@angular/router';
 import { NotificationService } from '../../../core/services/notification.service';
 import { GetUserNotificationsDTO } from '../../../core/models/notification.model';
-import { environment } from '../../../../environments/environment.development';
+import { environment } from '../../../../environments/environment';
 import Swal from 'sweetalert2';
+import { GetUserInfoDTO } from '../../../core/models/profile.model';
+import { UserRole } from '../../enums/user-role';
 
 @Component({
   selector: 'app-navbar',
@@ -20,13 +22,14 @@ export class Navbar implements OnInit {
 
   isLoggedIn = this.authService.isLoggedIn;
   currentUser = this.authService.currentUser;
-  
+
   isNotificationDropdownOpen = signal(false);
   isProfileDropdownOpen = signal(false);
   isMobileMenuOpen = signal(false);
 
   constructor() {
     effect(() => {
+      console.log('currentUser', this.currentUser());
       if (this.isLoggedIn()) {
         this.notificationService.startConnection();
       } else {
@@ -40,7 +43,7 @@ export class Navbar implements OnInit {
   toggleNotificationDropdown(event: Event): void {
     event.stopPropagation();
     this.isNotificationDropdownOpen.update((v) => !v);
-    this.isProfileDropdownOpen.set(false); 
+    this.isProfileDropdownOpen.set(false);
   }
 
   toggleProfileDropdown(event: Event): void {
@@ -57,7 +60,7 @@ export class Navbar implements OnInit {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
-    
+
     if (!target.closest('.notification-container')) {
       this.isNotificationDropdownOpen.set(false);
     }
@@ -68,6 +71,7 @@ export class Navbar implements OnInit {
       this.isMobileMenuOpen.set(false);
     }
   }
+
 
   @HostListener('window:resize')
   onResize(): void {

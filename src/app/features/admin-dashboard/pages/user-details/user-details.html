@@ -1,0 +1,295 @@
+<main class="w-full max-w-7xl mx-auto space-y-lg pb-12" dir="rtl">
+  
+  <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-xl">
+    <div>
+        <h1 class="text-headline-lg font-bold text-primary">ملف المستخدم</h1>
+        <p class="text-body-md text-on-surface-variant mt-1">عرض وإدارة بيانات، وحالة، وصلاحيات المستخدم في النظام.</p>
+    </div>
+    <button (click)="goBack()" class="flex items-center gap-sm bg-surface-container-lowest border border-outline-variant text-primary px-lg py-sm rounded-xl font-semibold shadow-sm hover:bg-surface-container-low transition-all active:scale-95">
+        <span class="material-symbols-outlined">arrow_forward</span>
+        العودة للقائمة
+    </button>
+  </header>
+
+  @if (apiErrorMessage()) {
+    <div class="bg-error-container border border-error/30 text-on-error-container p-4 rounded-xl shadow-sm flex items-start gap-3 animate-fade-in">
+      <span class="material-symbols-outlined text-error text-[24px]">error</span>
+      <div class="flex flex-col gap-1">
+        <span class="font-bold">إجراء غير مسموح</span>
+        <span class="text-body-sm">{{ apiErrorMessage() }}</span>
+      </div>
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div class="flex justify-center items-center h-64">
+      <span class="material-symbols-outlined animate-spin text-secondary text-[40px]">progress_activity</span>
+    </div>
+  } @else if (user()) {
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+      
+      <aside class="col-span-1 bg-white rounded-2xl shadow-sm border border-outline-variant p-lg flex flex-col gap-lg items-center text-center">
+        
+        <div class="relative group mt-4">
+          <div class="w-36 h-36 rounded-full ring-4 ring-surface shadow-md overflow-hidden bg-secondary-container flex items-center justify-center">
+            @if (user()?.profileImage) {
+              <img [src]="getImageUrl(user()?.profileImage)" class="w-full h-full object-cover">
+            } @else {
+              <span class="text-[56px] font-bold text-on-secondary-container font-sans">{{ user()?.fName?.charAt(0) }}</span>
+            }
+          </div>
+          @if (user()?.verificationStatus === verificationStatusEnum.Verified) {
+            <div class="absolute bottom-2 left-2 bg-tertiary-fixed text-on-tertiary-fixed p-1.5 rounded-full border-2 border-white shadow-sm" title="مستخدم موثق">
+              <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+            </div>
+          }
+        </div>
+
+        <div class="space-y-1 w-full">
+          <h2 class="text-headline-sm font-bold text-primary wrap-break-word flex items-center justify-center gap-2">
+            @if (isCurrentUser()) {
+              أنت
+            } @else {
+              {{ user()?.fName }} {{ user()?.lName }}
+            }
+          </h2>
+          <p class="text-body-md text-on-surface-variant wrap-break-word" dir="ltr">{{ user()?.email }}</p>
+        </div>
+
+        <div class="w-full space-y-3 pt-md border-t border-outline-variant/50">
+          
+          <div class="flex flex-col gap-3 px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl">
+            <div class="flex justify-between items-center">
+              <span class="text-label-md text-on-surface-variant">الدور في النظام</span>
+              <span [appRoleBadgeDirective]="user()?.role || ''"></span>
+            </div>
+            
+            @if (canManageUser()) {
+              <div class="flex gap-2 pt-3 border-t border-outline-variant/50">
+                <select #roleSelect class="flex-1 bg-white border border-outline-variant rounded-lg px-2 py-1.5 text-label-sm text-on-surface focus:ring-1 focus:ring-secondary outline-none cursor-pointer">
+                  @for (role of roles(); track role.id) {
+                    <option [value]="role.name" [selected]="role.name === user()?.role">{{ getRoleName(role.name) }}</option>
+                  }
+                </select>
+                <button (click)="onChangeRole(roleSelect.value)" [disabled]="isActionLoading() || roleSelect.value === user()?.role" class="bg-secondary text-white px-4 py-1.5 rounded-lg text-label-sm font-bold hover:bg-secondary-container transition-colors disabled:opacity-50">
+                  تغيير
+                </button>
+              </div>
+            }
+          </div>
+
+          <div class="flex justify-between items-center px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl">
+            <span class="text-label-md text-on-surface-variant">حالة التوثيق</span>
+            <span [appVerificationBadgeDirective]="user()!.verificationStatus"></span>
+          </div>
+
+          <div class="flex justify-between items-center px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl">
+            <span class="text-label-md text-on-surface-variant">حالة الحساب</span>
+            <span [appBlockBadgeDirective]="user()!.isBlocked"></span>
+          </div>
+        </div>
+
+      </aside>
+
+      <div class="col-span-1 lg:col-span-2 flex flex-col gap-lg">
+        
+        <div class="bg-white rounded-2xl shadow-sm border border-outline-variant p-lg flex flex-col gap-6">
+          <div class="flex items-center justify-between border-b border-outline-variant/50 pb-4">
+            <h3 class="text-headline-sm font-bold text-primary flex items-center gap-2">
+              <span class="material-symbols-outlined text-secondary">badge</span>
+              تفاصيل الهوية والإجراءات
+            </h3>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div class="space-y-2">
+              <span class="text-label-md font-bold text-on-surface-variant">صورة إثبات الهوية</span>
+              @if (user()?.identificationImage) {
+                <div class="relative aspect-[1.6/1] bg-surface-container rounded-xl border-2 border-dashed border-outline-variant overflow-hidden hover:border-secondary transition-colors group">
+                  <img [src]="getImageUrl(user()!.identificationImage!)" class="w-full h-full object-cover">
+                  <div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-zoom-in">
+                    <span class="material-symbols-outlined text-white text-[32px]">zoom_in</span>
+                  </div>
+                </div>
+              } @else {
+                <div class="aspect-[1.6/1] bg-surface-variant/30 rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center text-outline">
+                  <span class="material-symbols-outlined text-[32px] mb-2">no_photography</span>
+                  <span class="text-label-sm">لم يقم المستخدم برفع هوية</span>
+                </div>
+              }
+            </div>
+
+            <div class="flex flex-col justify-between">
+              
+              <div class="space-y-4">
+                <div class="space-y-1">
+                  <span class="text-label-sm text-outline">البريد الإلكتروني</span>
+                  <p class="text-body-md font-bold text-on-surface" dir="ltr">{{ user()?.email }}</p>
+                </div>
+                <div class="space-y-1">
+                  <span class="text-label-sm text-outline">رقم الهاتف</span>
+                  <p class="text-body-md font-bold text-on-surface" dir="ltr">{{ user()?.phoneNumber || 'غير متوفر' }}</p>
+                </div>
+              </div>
+
+              @if (canManageUser()) {
+                <div class="flex flex-wrap gap-3 mt-6 pt-6 border-t border-outline-variant/50">
+                  
+                  @if (user()?.verificationStatus === verificationStatusEnum.Pending) {
+                    <button (click)="onApprove()" [disabled]="isActionLoading()" class="flex-1 px-4 py-2.5 bg-on-tertiary-container text-white rounded-xl text-label-md font-bold hover:bg-[#008f81] transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50">
+                      <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                      قبول
+                    </button>
+                    <button (click)="onReject()" [disabled]="isActionLoading()" class="flex-1 px-4 py-2.5 bg-error text-white rounded-xl text-label-md font-bold hover:bg-error/90 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50">
+                      <span class="material-symbols-outlined text-[20px]">cancel</span>
+                      رفض
+                    </button>
+                  }
+
+                  <button (click)="onToggleBlock()" [disabled]="isActionLoading()" class="w-full px-4 py-2.5 border-2 rounded-xl text-label-md font-bold transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                          [ngClass]="user()?.isBlocked ? 'border-on-tertiary-container text-on-tertiary-container hover:bg-on-tertiary-container/10' : 'border-error text-error hover:bg-error/10'">
+                    <span class="material-symbols-outlined text-[20px]">{{ user()?.isBlocked ? 'lock_open_right' : 'block' }}</span>
+                    {{ user()?.isBlocked ? 'فك الحظر عن المستخدم' : 'حظر المستخدم' }}
+                  </button>
+                </div>
+              } @else if (isCurrentUser()) {
+                <div class="mt-6 pt-6 border-t border-outline-variant/50 text-center">
+                  <span class="text-label-sm text-secondary font-medium flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-[18px]">verified_user</span>
+                    هذا هو حسابك الشخصي النشط حالياً.
+                  </span>
+                </div>
+              }
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <section class="mt-xl space-y-md">
+      <div class="flex justify-between items-end flex-wrap gap-4">
+        <div class="flex flex-col gap-2">
+          <h2 class="text-headline-sm font-bold text-primary flex items-center gap-sm">
+            <span class="material-symbols-outlined text-secondary">admin_panel_settings</span>
+            صلاحيات المستخدم الاستثنائية
+          </h2>
+          <span class="text-body-sm text-on-surface-variant">تجاوز صلاحيات الدور الافتراضية وامنح صلاحيات محددة لهذا المستخدم فقط.</span>
+        </div>
+        <div class="bg-primary text-white px-lg py-sm rounded-xl shadow-sm flex items-center gap-md">
+          <div class="flex flex-col">
+            <span class="text-[10px] font-bold opacity-70 uppercase">الصلاحيات الفردية</span>
+            <span class="text-headline-sm font-bold">{{ totalSelected() }}/{{ totalPermissions() }}</span>
+          </div>
+          <span class="material-symbols-outlined text-tertiary-fixed-dim">tune</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-50">
+        
+        <div class="divide-y divide-outline-variant">
+          
+          <div class="bg-surface-variant/30 p-md">
+            <div class="flex items-center gap-md">
+              <button (click)="toggleRootExpanded()" class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-surface-container-highest transition-all">
+                <span class="material-symbols-outlined transition-transform duration-300" [class.rotate-180]="isRootExpanded()">expand_more</span>
+              </button>
+              <div class="flex items-center gap-3">
+                <input type="checkbox" 
+                       class="w-5 h-5 rounded border-outline-variant text-secondary focus:ring-secondary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                       [checked]="isAllChecked()"
+                       [indeterminate]="isAllIndeterminate()"
+                       [disabled]="!canManageUser()"
+                       (change)="toggleAllPermissions($event)">
+                <span class="material-symbols-outlined text-secondary text-[22px]">hub</span>
+                <span class="text-body-lg font-bold text-primary">كل صلاحيات النظام</span>
+                
+                @if (hasChanges() && canManageUser()) {
+                  <button (click)="resetAll()" class="mr-4 text-error bg-error-container/30 hover:bg-error hover:text-white px-3 py-1 rounded-lg transition-colors flex items-center gap-1 text-label-sm font-bold border border-error/20">
+                    <span class="material-symbols-outlined text-[16px]">undo</span>
+                    إلغاء التعديلات
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+
+          @if (isRootExpanded()) {
+            <div class="divide-y divide-outline-variant pr-8 bg-white">
+              @for (group of groupedPermissions(); track group.groupName) {
+                <div class="tree-group">
+                  <div class="flex items-center justify-between p-md bg-surface-container-low hover:bg-surface-container transition-colors">
+                    <div class="flex items-center gap-md">
+                      <button (click)="toggleGroupExpanded(group.groupName)" class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-surface-container-highest transition-all">
+                        <span class="material-symbols-outlined transition-transform duration-300" [class.rotate-180]="expandedGroups()[group.groupName]">expand_more</span>
+                      </button>
+                      
+                      <div class="flex items-center gap-3">
+                        <input type="checkbox" 
+                               class="w-5 h-5 rounded border-outline-variant text-secondary focus:ring-secondary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                               [checked]="isGroupChecked(group.groupName)"
+                               [indeterminate]="isGroupIndeterminate(group.groupName)"
+                               [disabled]="!canManageUser()"
+                               (change)="toggleGroupCheckbox(group.groupName, $event)">
+                        <span class="material-symbols-outlined text-secondary text-[22px]">{{ group.icon }}</span>
+                        <span class="text-body-md font-bold text-primary">{{ group.groupTitle }}</span>
+
+                        @if (dirtyGroups()[group.groupName] && canManageUser()) {
+                          <button (click)="resetGroup(group.groupName)" class="mr-2 text-error bg-error-container/30 hover:bg-error hover:text-white p-1 rounded-full transition-colors flex items-center justify-center border border-error/20" title="تراجع عن تعديلات هذه المجموعة">
+                            <span class="material-symbols-outlined text-[16px]">undo</span>
+                          </button>
+                        }
+                      </div>
+                    </div>
+                    <span class="text-label-sm text-on-surface-variant opacity-70 bg-white px-2 py-1 rounded-md border border-outline-variant">
+                      {{ group.permissions.length }}
+                    </span>
+                  </div>
+
+                  @if (expandedGroups()[group.groupName]) {
+                    <div class="bg-white p-md pr-16 animate-fade-in border-t border-outline-variant/50">
+                      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-3 gap-x-6">
+                        @for (perm of group.permissions; track perm.permissionValue) {
+                          <label class="flex items-center gap-3 group/item hover:bg-surface-container-lowest p-1 rounded-lg transition-colors" [ngClass]="!canManageUser() ? 'cursor-not-allowed' : 'cursor-pointer'">
+                            <input type="checkbox" 
+                                   class="w-4 h-4 rounded border-outline-variant text-secondary focus:ring-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                                   [checked]="perm.isSelected"
+                                   [disabled]="!canManageUser()"
+                                   (change)="togglePermission(perm.permissionValue)">
+                            <span class="text-body-sm text-on-surface font-medium transition-colors" [class.group-hover/item:text-secondary]="canManageUser()">
+                              {{ getActionName(perm.permissionValue) }}
+                            </span>
+                          </label>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (canManageUser()) {
+        <div class="flex justify-end pt-4">
+          <button (click)="savePermissions()" 
+                  [disabled]="isSavingPerms() || !hasChanges()"
+                  class="flex items-center justify-center gap-sm bg-secondary text-white px-10 h-14 rounded-full font-bold shadow-md hover:bg-secondary-container hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed">
+            @if (isSavingPerms()) {
+              <span class="material-symbols-outlined animate-spin">sync</span>
+              <span>جاري الحفظ...</span>
+            } @else {
+              <span class="material-symbols-outlined">save</span>
+              <span>حفظ الصلاحيات الفردية</span>
+            }
+          </button>
+        </div>
+      }
+    </section>
+
+  }
+</main>
