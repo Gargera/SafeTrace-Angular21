@@ -220,33 +220,7 @@ export class NotificationService implements OnDestroy {
     this.loadPage(this.#currentPage() + 1, true);
   }
 
-  // goToNextPage(): void {
-  //   if (this.hasNextPage()) this.loadPage(this.#currentPage() + 1);
-  // }
-
-  // goToPrevPage(): void {
-  //   if (this.hasPrevPage()) this.loadPage(this.#currentPage() - 1);
-  // }
-
-  // goToPage(page: number): void {
-  //   if (page >= 1 && page <= this.#totalPages()) this.loadPage(page);
-  // }
-
-  // loadNotificationsViaHttp(): void {
-  //   this.#isLoading.set(true);
-  //   this.#http.get<GetUserNotificationsDTO[]>(`${this.#apiUrl}/my-Notifications`).subscribe({
-  //     next: (data) => {
-  //       this.#notifications.set(data);
-  //       this.#isLoading.set(false);
-  //     },
-  //     error: (err) => {
-  //       console.error('Failed to load notifications:', err);
-  //       this.#isLoading.set(false);
-  //     },
-  //   });
-  // }
-
-  // ─── Cleanup ──────────────────────────────────────────────────────────────
+  
 
   stopConnection(): void {
     this.#hubConnection?.stop().catch(console.error);
@@ -357,50 +331,20 @@ export class NotificationService implements OnDestroy {
   }
 
   formatDate(dateStr: string): string {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return '';
+    const date = new Date(dateStr + 'Z'); // اعتبره UTC
 
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    if (diffMs < 0) return 'الآن';
+    const diff = Date.now() - date.getTime();
 
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
 
-    if (diffMins < 1) {
-      return 'الآن';
-    }
+    if (seconds < 60) return 'منذ لحظات';
+    if (minutes < 60) return `منذ ${minutes} دقيقة`;
+    if (hours < 24) return `منذ ${hours} ساعة`;
+    if (days < 30) return `منذ ${days} يوم`;
 
-    if (diffMins < 60) {
-      if (diffMins === 1) return 'منذ دقيقة';
-      if (diffMins === 2) return 'منذ دقيقتين';
-      if (diffMins >= 3 && diffMins <= 10) return `منذ ${diffMins} دقائق`;
-      return `منذ ${diffMins} دقيقة`;
-    }
-
-    if (diffHrs < 24) {
-      if (diffHrs === 1) return 'منذ ساعة';
-      if (diffHrs === 2) return 'منذ ساعتين';
-      if (diffHrs >= 3 && diffHrs <= 10) return `منذ ${diffHrs} ساعات`;
-      return `منذ ${diffHrs} ساعة`;
-    }
-
-    if (diffDays === 1) {
-      return 'أمس';
-    }
-
-    if (diffDays < 7) {
-      if (diffDays === 2) return 'منذ يومين';
-      if (diffDays >= 3 && diffDays <= 10) return `قبل ${diffDays} أيام`;
-      return `قبل ${diffDays} يومًا`;
-    }
-
-    return date.toLocaleDateString('ar-EG', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+    return date.toLocaleDateString('ar-EG');
   }
 }
