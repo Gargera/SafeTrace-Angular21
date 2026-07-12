@@ -1,0 +1,183 @@
+// Enums
+import { AgeSort } from "../../shared/enums/age-sort";
+import { CaseStatus } from "../../shared/enums/case-status";
+import { CaseType } from "../../shared/enums/case-type";
+import { DateSort } from "../../shared/enums/date-sort";
+import { Gender } from "../../shared/enums/gender";
+import { RelationType } from "../../shared/enums/relation-type";
+import { FileType } from "../../shared/enums/file-type";
+
+// ============ RESPONSE MODELS ============
+
+export interface AgeCategoryResponse {
+  id: number;
+  name: string;
+}
+
+export interface UserResponse {
+  fName: string;
+  lName: string;
+  email: string;
+  phoneNumber: string;
+}
+
+export interface CasePhotoResponse {
+  id: number;
+  imagePath: string;
+  isPrimary: boolean;
+  type: FileType;
+}
+
+export interface FoundPersonInfoResponse {
+  id: number;
+  description: string;
+  government: string;
+  city: string;
+  street: string;
+  caseId: number;
+  foundedAt: string; // DateOnly
+  foundedUserId: string;
+}
+
+export interface MatchedCaseResponse {
+  id: number;
+  caseCode: string;
+  caseType: CaseType;
+  status: CaseStatus;
+  fName: string | null;
+  sName: string | null;
+  tName: string | null;
+  lName: string | null;
+  gender: Gender;
+  age: number;
+  city: string;
+  government: string;
+  createdAt: string; // DateTime
+  mainPhoto: string;
+  matchScore: number;
+}
+
+export interface CreateCaseResponse {
+  isCreated: boolean;
+  caseId: number | null;
+  matchedCases: MatchedCaseResponse[];
+}
+
+export interface DuplicateCheckResponse {
+  sameTypeMatch: MatchedCaseResponse | null;
+  crossTypeMatches: MatchedCaseResponse[];
+  hasSameTypeMatch: boolean;
+  hasCrossTypeMatches: boolean;
+}
+
+export interface MatchedCasesResponse {
+  hasMatches: boolean;
+  matchedCases: MatchedCaseResponse[];
+}
+
+export const EmptyMatchedCasesResponse: MatchedCasesResponse = {
+  hasMatches: false,
+  matchedCases: []
+};
+
+export interface CaseDetailResponse {
+  id: number;
+  caseCode: string;
+  caseType: CaseType;
+  status: CaseStatus;
+  gender: Gender;
+  government: string;
+  city: string;
+  street: string;
+  fName: string | null;
+  sName: string | null;
+  tName: string | null;
+  lName: string | null;
+  age: number;
+  communicationPhone: string | null;
+  relation: RelationType;
+  createdAt: string; // DateTime
+  updatedAt: string | null; // DateTime
+  eventDate: string; // DateTime
+  description: string | null;
+  foundPersonInfo: FoundPersonInfoResponse | null;
+  ageCategory: AgeCategoryResponse | null;
+  user: UserResponse | null;
+  photos: CasePhotoResponse[];
+}
+
+export interface CaseListItemResponse {
+  id: number;
+  caseCode: string;
+  caseType: CaseType;
+  status: CaseStatus;
+  fName: string | null;
+  sName: string | null;
+  tName: string | null;
+  lName: string | null;
+  gender: Gender;
+  age: number;
+  city: string;
+  government: string;
+  createdAt: string; // DateTime
+  mainPhoto: string;
+}
+
+// ============ REQUEST MODELS ============
+
+export interface CaseMatchSubjectInfoRequest {
+  gender: Gender;
+  age: number;
+}
+
+export interface CaseUpsertBaseRequest {
+  // REQUIRED FIELDS (Both Create & Update)
+  gender: Gender;
+  age: number;
+  government: string;
+  city: string;
+  street: string | null;
+  primaryImage: File;
+  eventDate: string; // DateTime
+
+  // OPTIONAL FIELDS
+  sName: string | null;
+  tName: string | null;
+  communicationPhone: string | null;
+  description: string | null;
+
+  // PHOTO MANAGEMENT
+  additionalImages: File[] | null;
+  video: File | null;
+}
+export interface CaseCreateBaseRequest extends CaseUpsertBaseRequest {
+}
+
+export interface CaseUpdateBaseRequest extends CaseUpsertBaseRequest {
+  newPhotos: File[] | null;
+  deletedPhotoIds: number[] | null;
+  primaryPhotoId: number | null;
+}
+
+export interface CasesFilterRequest {
+  status: CaseStatus | null;
+  gender: Gender | null;
+  fullName: string | null;
+  government: string | null;
+  city: string | null;
+  minAge: number | null;
+  maxAge: number | null;
+  fromDate: string | null; // DateTime
+  toDate: string | null; // DateTime
+  ageSort: AgeSort | null;
+  dateSort: DateSort | null;
+  page: number; // Default: 1
+}
+
+export interface FoundPersonInfoRequest {
+  description: string;
+  government: string;
+  city: string;
+  street: string;
+  foundedAt: string; // DateOnly
+}
