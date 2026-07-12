@@ -7,10 +7,11 @@ import {
   ALL_SYSTEM_PERMISSIONS,
 } from '../../../../core/constants/permission.dictionary';
 import Swal from 'sweetalert2';
+import { SnackbarService } from '../../../../core/services/toast.service';
 import { RolePermissionDto } from '../../models/Role/RolePermissionDto';
 import { RoleService } from '../../services/role.service';
 import { RoleDto } from '../../models/Role/RoleDto';
-import { ROLE_TRANSLATIONS_AR } from '../../../../core/constants/roles.dictionary';
+import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 
 interface PermissionGroup {
   groupName: string;
@@ -28,6 +29,7 @@ interface PermissionGroup {
 export class RoleManagement implements OnInit {
   private roleService = inject(RoleService);
   private fb = inject(FormBuilder);
+  private snackbar = inject(SnackbarService);
 
   roles = signal<RoleDto[]>([]);
   selectedRoleId = signal<string>('');
@@ -149,23 +151,13 @@ export class RoleManagement implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         this.roleService.createRole(dto).subscribe({
-          next: (res) => {
+          next: () => {
             this.createRoleForm.reset();
             this.loadRoles();
-            Swal.fire({
-              toast: true,
-              position: 'bottom-start',
-              icon: 'success',
-              title: 'تم إنشاء الدور بنجاح',
-              showConfirmButton: false,
-              timer: 3000,
-              customClass: { popup: 'bg-inverse-surface text-inverse-on-surface' },
-            });
+            this.snackbar.success('تم إنشاء الدور بنجاح');
           },
           error: (err) => {
-            this.apiErrorMessage.set(
-              err.error?.detail || err.error?.message || 'حدث خطأ أثناء الإنشاء.',
-            );
+            this.snackbar.error(err.error?.detail || err.error?.message || 'حدث خطأ أثناء الإنشاء.');
           },
         });
       }
@@ -189,7 +181,7 @@ export class RoleManagement implements OnInit {
       if (result.isConfirmed) {
         this.isDeleting.set(true);
         this.roleService.deleteRole(this.selectedRoleId()).subscribe({
-          next: (res) => {
+          next: () => {
             this.isDeleting.set(false);
             this.selectedRoleId.set('');
             const emptyPerms = this.generateEmptyPermissions();
@@ -198,19 +190,11 @@ export class RoleManagement implements OnInit {
             this.expandedGroups.set({});
             this.isRootExpanded.set(true);
             this.loadRoles();
-            Swal.fire({
-              toast: true,
-              position: 'bottom-start',
-              icon: 'success',
-              title: 'تم حذف الدور بنجاح',
-              showConfirmButton: false,
-              timer: 3000,
-              customClass: { popup: 'bg-inverse-surface text-inverse-on-surface' },
-            });
+            this.snackbar.success('تم حذف الدور بنجاح');
           },
           error: (err) => {
             this.isDeleting.set(false);
-            Swal.fire('خطأ', err.error?.detail || err.error?.message || 'فشل حذف الدور', 'error');
+            this.snackbar.error(err.error?.detail || err.error?.message || 'فشل حذف الدور');
           },
         });
       }
@@ -271,22 +255,14 @@ export class RoleManagement implements OnInit {
             selectedPermissions: selectedValues,
           })
           .subscribe({
-            next: (res) => {
+            next: () => {
               this.isSaving.set(false);
               this.originalPermissionsList.set(this.permissionsList().map((p) => ({ ...p })));
-              Swal.fire({
-                toast: true,
-                position: 'bottom-start',
-                icon: 'success',
-                title: 'تم حفظ الصلاحيات',
-                showConfirmButton: false,
-                timer: 3000,
-                customClass: { popup: 'bg-inverse-surface text-inverse-on-surface' },
-              });
+              this.snackbar.success('تم حفظ الصلاحيات');
             },
             error: (err) => {
               this.isSaving.set(false);
-              Swal.fire('خطأ', err.error?.detail || 'فشل حفظ الصلاحيات', 'error');
+              this.snackbar.error(err.error?.detail || 'فشل حفظ الصلاحيات');
             },
           });
       }
@@ -363,7 +339,7 @@ export class RoleManagement implements OnInit {
   }
 
   getRoleName(roleName: string): string {
-    return ROLE_TRANSLATIONS_AR[roleName] || roleName;
+    return getRoleTranslationAr(roleName);
   }
 
   private generateEmptyPermissions(): RolePermissionDto[] {
