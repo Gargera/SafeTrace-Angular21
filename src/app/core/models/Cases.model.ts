@@ -3,9 +3,9 @@ import { AgeSort } from "../../shared/enums/age-sort";
 import { CaseStatus } from "../../shared/enums/case-status";
 import { CaseType } from "../../shared/enums/case-type";
 import { DateSort } from "../../shared/enums/date-sort";
+import { FileType } from "../../shared/enums/file-type";
 import { Gender } from "../../shared/enums/gender";
 import { RelationType } from "../../shared/enums/relation-type";
-import { FileType } from "../../shared/enums/file-type";
 
 // ============ RESPONSE MODELS ============
 
