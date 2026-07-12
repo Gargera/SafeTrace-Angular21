@@ -1,7 +1,6 @@
 import { Component, effect, inject, input, signal } from '@angular/core';
 import { GeocodingService } from '../../../../core/services/gecoding.service';
-
-import { GetUserInfoDTO } from '../../../../core/models/profile.model';
+import { GetUserInfoDTO } from '../../model/profile.model';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';
 import { UserRole } from '../../../../shared/enums/user-role';
 

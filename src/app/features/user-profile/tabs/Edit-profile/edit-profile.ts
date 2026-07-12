@@ -28,14 +28,14 @@ import {
   GetUserInfoDTO,
   UpdateHomeLocationDTO,
   UpdateNameDTO,
-} from '../../../../core/models/profile.model';
+} from '../../model/profile.model';
 import { GeocodingService } from '../../../../core/services/gecoding.service';
-import { ProfileService } from '../../Service/profile.service';
+import { ProfileService } from '../../service/profile.service';
 import { UserRole } from '../../../../shared/enums/user-role';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';
 import { SnackbarService } from '../../../../core/services/toast.service';
-import { ConfirmDialog } from '../../Shared/confirm-dialog/confirm-dialog';
-import { ImageCropDialog } from '../../Shared/image-crop-dialog/image-crop-dialog';
+import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
+import { ImageCropDialog } from '../../shared/image-crop-dialog/image-crop-dialog';
 import { Toast } from '../../../../shared/components/toast/toast';
 
 // ── Egypt center coordinates (default) ────────────────────────────────────
