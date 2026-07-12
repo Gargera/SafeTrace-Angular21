@@ -63,7 +63,9 @@ export class ProfileSidebar {
     return this.userInfo()?.verificationStatus === VerificationStatus.Verified;
   }
   get hasCases(): boolean {
-    return (this.userInfo()?.Cases?.length ?? 0) > 0;
+    console.log('cases', this.userInfo());
+    console.log(this.userInfo()?.cases.length);
+    return (this.userInfo()?.cases?.length ?? 0) > 0;
   }
 
   get verificationLabel(): string {
