@@ -1,7 +1,10 @@
 import { Directive, ElementRef, Input, OnChanges, Renderer2 } from '@angular/core';
+import { UserRole } from '../enums/user-role';
+import { ROLE_TRANSLATIONS_AR, getRoleTranslationAr } from '../../core/constants/roles.dictionary';
 
 @Directive({
-  selector: '[appRoleBadgeDirective]'})
+  selector: '[appRoleBadgeDirective]'
+})
 export class RoleBadgeDirective implements OnChanges {
   @Input('appRoleBadgeDirective') role!: string;
 
@@ -16,23 +19,24 @@ export class RoleBadgeDirective implements OnChanges {
   ngOnChanges() {
     const el = this.el.nativeElement;
     el.className = el.className.replace(/\bbg-\S+|text-\S+/g, '');
-    
-    if (this.role === 'Admin') {
+
+    const roleValue = this.role as UserRole;
+
+    if (roleValue === UserRole.Admin) {
       this.renderer.addClass(el, 'bg-error');
       this.renderer.addClass(el, 'text-white');
-      el.innerText = 'مدير النظام';
-    } else if (this.role === 'Moderator') {
+    } else if (roleValue === UserRole.Moderator) {
       this.renderer.addClass(el, 'bg-secondary-fixed');
       this.renderer.addClass(el, 'text-on-secondary-fixed');
-      el.innerText = 'مشرف';
-    } else if (this.role === 'VerifiedUser') {
+    } else if (roleValue === UserRole.VerifiedUser) {
       this.renderer.addClass(el, 'bg-tertiary-fixed-dim');
       this.renderer.addClass(el, 'text-tertiary');
-      el.innerText = 'مستخدم موثق';
     } else {
       this.renderer.addClass(el, 'bg-surface-container-highest');
       this.renderer.addClass(el, 'text-on-surface-variant');
-      el.innerText = 'مستخدم عادي';
     }
+
+    const translatedRole = getRoleTranslationAr(roleValue);
+    el.innerText = translatedRole || ROLE_TRANSLATIONS_AR[UserRole.User] || this.role;
   }
 }

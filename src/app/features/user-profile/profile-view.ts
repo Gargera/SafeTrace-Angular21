@@ -1,12 +1,12 @@
 import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { ProfileSidebar } from './Shared/profile-sidebar/profile-sidebar';
+import { ProfileSidebar } from './shared/profile-sidebar/profile-sidebar';
 import { ChatTab } from './tabs/chat-tab/chat-tab';
 import { EditProfile } from './tabs/Edit-profile/edit-profile';
 import { NotificationsTab } from './tabs/notifications-tab/notifications-tab';
-import { GetUserInfoDTO } from '../../core/models/profile.model';
+import { GetUserInfoDTO } from './model/profile.model';
 import { NotificationService } from '../../core/services/notification.service';
-import { ProfileService } from './Service/profile.service';
+import { ProfileService } from './service/profile.service';
 
 export type ProfileTab = 'edit' | 'chat' | 'notifications';
 

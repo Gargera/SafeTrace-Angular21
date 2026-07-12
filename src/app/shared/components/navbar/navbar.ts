@@ -5,7 +5,7 @@ import { NotificationService } from '../../../core/services/notification.service
 import { GetUserNotificationsDTO } from '../../../core/models/notification.model';
 import { environment } from '../../../../environments/environment';
 import Swal from 'sweetalert2';
-import { GetUserInfoDTO } from '../../../core/models/profile.model';
+import { GetUserInfoDTO } from '../../../features/user-profile/model/profile.model';
 import { UserRole } from '../../enums/user-role';
 
 @Component({
@@ -72,7 +72,6 @@ export class Navbar implements OnInit {
     }
   }
 
-
   @HostListener('window:resize')
   onResize(): void {
     if (window.innerWidth >= 768) {
@@ -100,6 +99,9 @@ export class Navbar implements OnInit {
   }
 
   getProfileImageUrl(): string {
+    console.log('loggedin ', this.authService.isLoggedIn());
+    console.log(this.authService.currentUser());
+    console.log(this.authService.getUserRoles());
     const imgPath = this.currentUser()?.profileImage;
     if (!imgPath) return '';
 
@@ -116,7 +118,7 @@ export class Navbar implements OnInit {
   logout(): void {
     Swal.fire({
       title: 'تسجيل الخروج',
-      text: 'هل أنت متأكد من رغبتك في تسجيل الخروج من SafeTrace؟',
+      text: 'هل أنت متأكد من رغبتك في تسجيل الخروج من منصة لقاء؟',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'نعم، سجل الخروج',
@@ -131,14 +133,11 @@ export class Navbar implements OnInit {
       },
     }).then((result) => {
       if (result.isConfirmed) {
+        this.authService.clearSession();
+        this.router.navigate(['/auth']);
         this.authService.revokeToken().subscribe({
-          next: () => {
-            this.router.navigate(['/auth']);
-          },
-          error: () => {
-            this.authService.clearSession();
-            this.router.navigate(['/auth']);
-          },
+          next: () => {},
+          error: () => {},
         });
       }
     });

@@ -1,6 +1,5 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import Swal from 'sweetalert2';
 import { AuthService } from '../services/auth.service';
 
 export const roleGuard: CanActivateFn = (route, state) => {
@@ -23,7 +22,8 @@ export const roleGuard: CanActivateFn = (route, state) => {
   const hasRole = expectedRoles.some(role => userRoles.includes(role));
 
   if (!hasRole) {
-    router.navigate(['/403']);
+    void router.navigate(['/403']);
+    return false;
   }
 
   return true;
