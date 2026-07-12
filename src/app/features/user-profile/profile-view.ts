@@ -6,7 +6,7 @@ import { EditProfile } from './tabs/Edit-profile/edit-profile';
 import { NotificationsTab } from './tabs/notifications-tab/notifications-tab';
 import { GetUserInfoDTO } from '../../core/models/profile.model';
 import { NotificationService } from '../../core/services/notification.service';
-import { ProfileService } from './Service/profile.service';
+import { ProfileService } from './service/profile.service';
 
 export type ProfileTab = 'edit' | 'chat' | 'notifications';
 
