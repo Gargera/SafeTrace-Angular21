@@ -1,1 +1,200 @@
-<p>chat-window works!</p>
+<div class="flex flex-col h-screen w-full bg-surface">
+  <!-- ===== 1. مؤشر التحميل (Spinner) ===== -->
+  @if (isLoading()) {
+    <div class="absolute inset-0 flex items-center justify-center bg-surface/70 z-50 backdrop-blur-sm">
+      <div class="flex flex-col items-center gap-sm">
+        <!-- أنيميشن اللف animate-spin الخاص بـ Tailwind -->
+        <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="text-xs text-on-surface-variant font-medium">جاري تحميل المحادثة...</span>
+      </div>
+    </div>
+  }
+  <!-- ===== Header (previously chat-header.component.html) ===== -->
+  @if (chat(); as c) {
+    <div class="flex items-center justify-between bg-surface-container-low border-b border-outline-variant px-md py-sm">
+      <!-- Case badge: small icon + case title (ChatDetailsDto.caseTitle) -->
+      <div class="flex items-center gap-xs bg-surface-container-high rounded-lg px-sm py-xs">
+        <span class="w-6 h-6 rounded flex items-center justify-center bg-primary text-on-primary">
+          <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7a1 1 0 0 1 1-1h4l2 2h10a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7Z" />
+          </svg>
+        </span>
+        <div class="text-xs leading-tight">
+          <p class="text-on-surface-variant">شأن الحالة</p>
+          <p class="font-medium text-on-surface">{{ c.caseTitle }}</p>
+        </div>
+      </div>
+
+      <!-- Other participant's name + actions. No avatar/online status - not in ChatDetailsDto. -->
+      <div class="flex items-center gap-sm">
+        <p class="font-medium text-on-surface">{{ displayName }}</p>
+
+        <span class="w-9 h-9 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center">
+          <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="3.5" />
+            <path d="M5 20a7 7 0 0 1 14 0" />
+          </svg>
+        </span>
+
+        <!-- Delete conversation -->
+        <button
+          type="button"
+          class="text-on-surface-variant hover:text-error"
+          (click)="onDeleteChat()"
+          aria-label="حذف المحادثة"
+        >
+          <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-12" />
+          </svg>
+        </button>
+
+        <!-- Back -->
+        <button
+          type="button"
+          class="text-on-surface-variant hover:text-on-surface"
+          (click)="goBack()"
+          aria-label="رجوع"
+        >
+          <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ===== Messages list (previously message-bubble.component.html, one per message) ===== -->
+  <div class="flex-1 overflow-y-auto px-md py-md">
+    @if (!isLoading()){
+    @for (message of messages(); track message.id) {
+      <div class="flex items-end gap-xs mb-md group" [class.flex-row-reverse]="!message.isMine">
+        <div class="max-w-[70%] flex flex-col" [class.items-end]="message.isMine" [class.items-start]="!message.isMine">
+          <!-- Text content -->
+          @if (message.content) {
+            <div
+              class="px-md py-sm rounded-xl text-sm"
+              [class.bg-primary]="message.isMine"
+              [class.text-on-primary]="message.isMine"
+              [class.bg-surface-container-high]="!message.isMine"
+              [class.text-on-surface]="!message.isMine"
+            >
+              {{ message.content }}
+            </div>
+          }
+
+          <!-- Image attachment -->
+          @if (message.fileType === FileType.Image && attachmentUrl(message); as url) {
+            <img [src]="url" alt="مرفق" class="mt-xs rounded-lg border border-outline-variant max-w-[260px]" />
+          }
+
+          <!-- Video attachment -->
+          @if (message.fileType === FileType.Video && attachmentUrl(message); as url) {
+            <video [src]="url" controls class="mt-xs rounded-lg border border-outline-variant max-w-[260px]"></video>
+          }
+
+          <!-- Document (e.g. PDF) attachment -->
+          @if (message.fileType === FileType.Document && attachmentUrl(message); as url) {
+            <a
+              [href]="url"
+              target="_blank"
+              rel="noopener"
+              class="mt-xs flex items-center gap-xs bg-primary text-on-primary rounded-lg px-md py-sm text-sm hover:opacity-90"
+            >
+              <svg viewBox="0 0 24 24" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 4v11m0 0 4-4m-4 4-4-4M5 19h14" />
+              </svg>
+              <span>تنزيل الملف</span>
+            </a>
+          }
+
+          <!-- Timestamp + read state + delete action -->
+          <span class="flex items-center gap-xs mt-2xs">
+            @if (message.isMine) {
+              <button
+                type="button"
+                class="text-on-surface-variant hover:text-error opacity-0 group-hover:opacity-100 transition-opacity"
+                (click)="onDeleteMessage(message.id)"
+                aria-label="حذف الرسالة"
+              >
+                <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-12" />
+                </svg>
+              </button>
+            }
+
+            <span class="text-xs text-on-surface-variant flex items-center gap-1">
+              @if (message.isMine) {
+                <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 12l4 4 8-9" />
+                  @if (message.isRead) {
+                    <path d="M9 12l4 4 8-9" />
+                  }
+                </svg>
+              }
+              {{ message.sendAt | date: 'shortTime' }}
+            </span>
+          </span>
+        </div>
+      </div>
+    } @empty {
+      <p class="text-center text-on-surface-variant py-2xl">لا توجد رسائل بعد. ابدأ المحادثة!</p>
+    }
+  }
+  </div>
+
+  <!-- ===== Message input (previously message-input.component.html) ===== -->
+  <div class="flex flex-col bg-surface-container-low border-t border-outline-variant">
+    <!-- Selected file preview, shown only when the user picked one -->
+    @if (selectedFile(); as file) {
+      <div class="flex items-center justify-between px-md py-xs text-xs text-on-surface-variant bg-surface-container-high">
+        <span class="truncate">📎 {{ file.name }}</span>
+        <button type="button" class="text-error" (click)="clearSelectedFile()" aria-label="إزالة الملف">✕</button>
+      </div>
+    }
+
+    <div class="flex items-center gap-sm px-md py-sm">
+      <!-- Send button sits at the end (left side in RTL), like in the design -->
+      <button
+        type="button"
+        class="w-9 h-9 rounded-full bg-secondary text-on-secondary flex items-center justify-center shrink-0 disabled:opacity-50"
+        [disabled]="!draft().trim() && !selectedFile()"
+        (click)="onSend()"
+        aria-label="إرسال"
+      >
+        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12 21 3l-5 9 5 9L3 12Zm0 0h9" />
+        </svg>
+      </button>
+
+      <div class="flex-1 flex items-center gap-xs bg-surface-container-lowest rounded-full px-md py-2xs border border-outline-variant">
+        <input
+          type="text"
+          class="flex-1 bg-transparent outline-none text-sm text-on-surface placeholder:text-on-surface-variant"
+          placeholder="اكتب رسالتك هنا..."
+          [ngModel]="draft()"
+          (ngModelChange)="draft.set($event)"
+          (keyup.enter)="onSend()"
+        />
+
+        <!-- Hidden native file input, triggered by the paperclip button -->
+        <input #fileInput type="file" class="hidden" (change)="onFileSelected($event)" />
+
+        <button type="button" class="text-on-surface-variant" (click)="openFilePicker()" aria-label="إرفاق ملف">
+          <svg viewBox="0 0 24 24" class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 12l6.5-6.5a3.5 3.5 0 0 1 5 5L11 19a5 5 0 0 1-7-7l7.5-7.5" />
+          </svg>
+        </button>
+
+        <button type="button" class="text-on-surface-variant" aria-label="إضافة إيموجي">
+          <svg viewBox="0 0 24 24" class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="8.5" />
+            <path d="M9 10h.01M15 10h.01M8.5 14.5a4 4 0 0 0 7 0" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

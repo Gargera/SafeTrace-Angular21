@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { MessageDto, SendMessageRequest } from '../models/message.model';
-import { environment } from '../../../../environments/environment.development';
+import { environment } from '../../../../environments/environment';
 import {ApiResponse} from '../../../shared/models/responses/api-response.model';
 import {PaginationResponse} from '../../../shared/models/responses/pagination-response.model';
 

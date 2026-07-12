@@ -39,11 +39,29 @@ export class StartChat implements OnInit {
     });
   }
 
-  goToChatWindow(): void {
-    const chat = this.chat();
-    if(!chat) return;
+  // goToChatWindow(): void {
+  //   const chat = this.chat();
+  //   if(!chat) return;
 
-    this.router.navigate(['/chat/chat', chat.chatId]);
+  //   this.router.navigate(['/chat/chat', chat.chatId]);
+  // }
+
+  startOrContinueChat(): void {
+    this.chatService.createChat({
+      caseId: this.caseId
+    })
+    .subscribe({
+      next: (res) => {
+        if (!res.data) {
+        this.chatAlertsService.error('لم يتم إنشاء المحادثة');
+        return;
+      }
+        this.router.navigate(['/chat/chat', res.data.chatId]);
+      },
+      error: (err) => {
+        this.chatAlertsService.error(err.error?.message || 'حدث خطأ أثناء بدء المحادثة');
+      }
+    });
   }
 
   

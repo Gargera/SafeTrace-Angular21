@@ -15,6 +15,7 @@ export interface MessageDto {
   fileType?: FileType;
   filePath?: string;
   isRead: boolean;
+  isMine: boolean;
   isDeletedForEveryone: boolean;
   deletedBySender: boolean;
   deletedByReceiver: boolean;
