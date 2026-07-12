@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../user-profile/Service/profile.service';
+import { ApiResponse } from '../../user-profile/service/profile.service';
 import { RoleDto } from '../models/Role/RoleDto';
 import { CreateRoleDto } from '../models/Role/CreateRoleDto';
 import { RolePermissionsResponseDto } from '../models/Role/RolePermissionsResponseDto';
@@ -26,7 +26,9 @@ export class RoleService {
   }
 
   getRolePermissions(roleId: string): Observable<ApiResponse<RolePermissionsResponseDto>> {
-    return this.http.get<ApiResponse<RolePermissionsResponseDto>>(`${this.baseUrl}/GetPermissionsBy/${roleId}`);
+    return this.http.get<ApiResponse<RolePermissionsResponseDto>>(
+      `${this.baseUrl}/GetPermissionsBy/${roleId}`,
+    );
   }
 
   updateRolePermissions(dto: UpdateRolePermissionsDto): Observable<ApiResponse<string>> {

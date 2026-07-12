@@ -1,5 +1,5 @@
-import { UserRole } from '../../shared/enums/user-role';
-import { VerificationStatus } from '../../shared/enums/verification-status';
+import { UserRole } from '../../../shared/enums/user-role';
+import { VerificationStatus } from '../../../shared/enums/verification-status';
 
 export interface GetUserInfoDTO {
   fullName: string;
