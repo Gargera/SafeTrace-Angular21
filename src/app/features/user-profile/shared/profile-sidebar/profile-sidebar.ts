@@ -9,7 +9,6 @@ import { UserRole } from '../../../../shared/enums/user-role';
   imports: [],
   standalone: true,
   templateUrl: './profile-sidebar.html',
-  styleUrl: './profile-sidebar.css',
 })
 export class ProfileSidebar {
   readonly userInfo = input<GetUserInfoDTO | null>(null);
