@@ -1,0 +1,136 @@
+<div class="p-lg" dir="rtl">
+  <!-- Case type sub-tabs -->
+  <div class="flex gap-sm mb-lg border-b border-outline-variant">
+    @for (tab of caseTypeTabs; track tab.id) {
+      <button
+        (click)="switchCaseType(tab.id)"
+        class="py-sm px-lg text-label-sm font-label-sm border-b-2 transition-all"
+        [class.border-secondary]="activeCaseType() === tab.id"
+        [class.text-secondary]="activeCaseType() === tab.id"
+        [class.border-transparent]="activeCaseType() !== tab.id"
+        [class.text-on-surface-variant]="activeCaseType() !== tab.id"
+      >
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-wrap gap-sm items-end mb-lg">
+    <input
+      type="text"
+      [(ngModel)]="fullNameFilter"
+      placeholder="بحث بالاسم..."
+      class="flex-1 min-w-[180px] px-md py-sm rounded-lg border border-outline-variant bg-surface-container-lowest text-body-sm"
+    />
+
+    <select
+      [(ngModel)]="statusFilter"
+      class="px-md py-sm rounded-lg border border-outline-variant bg-surface-container-lowest text-body-sm"
+    >
+      <option [ngValue]="null">كل الحالات</option>
+      @for (status of statusOptions; track status) {
+        <option [ngValue]="status">{{ status }}</option>
+      }
+    </select>
+
+    <button
+      (click)="applyFilters()"
+      class="px-lg py-sm bg-secondary text-white rounded-lg text-label-sm hover:opacity-90"
+    >
+      بحث
+    </button>
+    <button
+      (click)="clearFilters()"
+      class="px-lg py-sm border border-outline-variant rounded-lg text-label-sm hover:bg-surface-container-lowest"
+    >
+      إلغاء الفلاتر
+    </button>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="flex justify-center items-center py-xl">
+      <span class="material-symbols-outlined text-secondary text-[40px] animate-spin">progress_activity</span>
+    </div>
+  }
+
+  <!-- Error -->
+  @else if (errorMessage()) {
+    <div class="p-md bg-error-container text-on-error-container rounded-xl text-center">
+      <p class="text-body-sm font-bold">{{ errorMessage() }}</p>
+    </div>
+  }
+
+  <!-- Empty -->
+  @else if (cases().length === 0) {
+    <div class="py-xl text-center text-on-surface-variant text-body-sm">
+      لا توجد حالات مطابقة.
+    </div>
+  }
+
+  <!-- List -->
+  @else {
+    <div class="flex flex-col gap-md">
+      @for (item of cases(); track item.id) {
+        <div class="flex gap-md p-md rounded-xl border border-outline-variant bg-surface-container-lowest">
+          @if (item.mainImageUrl) {
+            <img [src]="item.mainImageUrl" [alt]="item.fullName" class="w-16 h-16 rounded-lg object-cover" />
+          } @else {
+            <div class="w-16 h-16 rounded-lg bg-surface-container-highest flex items-center justify-center">
+              <span class="material-symbols-outlined text-on-surface-variant">person</span>
+            </div>
+          }
+
+          <div class="flex-1">
+            <div class="flex items-center gap-sm mb-1">
+              <p class="text-body-md font-bold">{{ item.fullName }}</p>
+              <span [appCaseStatusBadgeDirective]="item.status"></span>
+              <span [appAgeBadgeDirective]="item.ageCategory"></span>
+            </div>
+            <p class="text-body-sm text-on-surface-variant">
+              {{ item.government }} - {{ item.city }} • {{ item.age }} سنة
+            </p>
+            <p class="text-label-sm text-on-surface-variant mt-1">
+              {{ item.reportedDate | date: 'yyyy-MM-dd' }}
+            </p>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <div class="flex items-center justify-center gap-sm mt-lg">
+        <button
+          (click)="previousPage()"
+          [disabled]="currentPage() === 1"
+          class="px-md py-sm rounded-lg border border-outline-variant text-label-sm disabled:opacity-40"
+        >
+          السابق
+        </button>
+
+        @for (page of pageNumbers(); track page) {
+          <button
+            (click)="goToPage(page)"
+            class="w-8 h-8 rounded-lg text-label-sm"
+            [class.bg-secondary]="currentPage() === page"
+            [class.text-white]="currentPage() === page"
+            [class.border]="currentPage() !== page"
+            [class.border-outline-variant]="currentPage() !== page"
+          >
+            {{ page }}
+          </button>
+        }
+
+        <button
+          (click)="nextPage()"
+          [disabled]="currentPage() === totalPages()"
+          class="px-md py-sm rounded-lg border border-outline-variant text-label-sm disabled:opacity-40"
+        >
+          التالي
+        </button>
+      </div>
+    }
+  }
+</div>

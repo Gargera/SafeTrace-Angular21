@@ -2,11 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../user-profile/service/profile.service';
 import { RoleDto } from '../models/Role/RoleDto';
 import { CreateRoleDto } from '../models/Role/CreateRoleDto';
 import { RolePermissionsResponseDto } from '../models/Role/RolePermissionsResponseDto';
 import { UpdateRolePermissionsDto } from '../models/Role/UpdateRolePermissionsDto';
+import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 
 @Injectable({ providedIn: 'root' })
 export class RoleService {
