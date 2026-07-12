@@ -5,13 +5,12 @@ import { GetUserDto } from '../models/User/GetUserDto';
 import { environment } from '../../../../environments/environment';
 import { UserFilterDto } from '../models/User/UserFilterDto';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
-import { ApiResponse } from '../../user-profile/Service/profile.service';
+import { ApiResponse } from '../../user-profile/service/profile.service';
 import { GetUserByIdDto } from '../models/User/GetUserByIdDto';
 import { ChangeUserRoleDto } from '../models/User/ChangeUserRoleDto';
 import { UserPermissionsResponseDto } from '../models/User/UserPermissionsResponseDto';
 import { AssignUserPermissionsDto } from '../models/User/AssignUserPermissionsDto';
 import { RegisterByAdminDto } from '../models/User/RegisterByAdminDto';
-
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -24,7 +23,8 @@ export class UserService {
       .set('PageSize', filter.pageSize);
 
     if (filter.searchTerm) params = params.set('SearchTerm', filter.searchTerm);
-    if (filter.verificationStatus) params = params.set('VerificationStatus', filter.verificationStatus);
+    if (filter.verificationStatus)
+      params = params.set('VerificationStatus', filter.verificationStatus);
     if (filter.roleId) params = params.set('RoleId', filter.roleId);
 
     return this.http.get<ApiResponse<PaginationResponse<GetUserDto>>>(this.baseUrl, { params });
@@ -55,7 +55,9 @@ export class UserService {
   }
 
   getUserPermissions(userId: string): Observable<ApiResponse<UserPermissionsResponseDto>> {
-    return this.http.get<ApiResponse<UserPermissionsResponseDto>>(`${this.baseUrl}/GetPermissions/${userId}`);
+    return this.http.get<ApiResponse<UserPermissionsResponseDto>>(
+      `${this.baseUrl}/GetPermissions/${userId}`,
+    );
   }
 
   assignUserPermissions(dto: AssignUserPermissionsDto): Observable<ApiResponse<string>> {
