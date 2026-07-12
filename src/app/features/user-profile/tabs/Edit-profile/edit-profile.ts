@@ -753,7 +753,11 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
    */
   #refreshAndEmit(): void {
     this.#profileService.getUserInfo().subscribe({
-      next: (res) => this.profileUpdated.emit(res.data),
+      next: (res) => {
+        if (res.data) {
+          this.profileUpdated.emit(res.data);
+        }
+      },
       error: () => {
         // Non-fatal — the save itself already succeeded; a failed refresh
         // just means the UI won't reflect it until the next page load.

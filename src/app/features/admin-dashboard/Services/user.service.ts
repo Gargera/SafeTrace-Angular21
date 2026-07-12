@@ -5,12 +5,12 @@ import { GetUserDto } from '../models/User/GetUserDto';
 import { environment } from '../../../../environments/environment';
 import { UserFilterDto } from '../models/User/UserFilterDto';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
-import { ApiResponse } from '../../user-profile/service/profile.service';
 import { GetUserByIdDto } from '../models/User/GetUserByIdDto';
 import { ChangeUserRoleDto } from '../models/User/ChangeUserRoleDto';
 import { UserPermissionsResponseDto } from '../models/User/UserPermissionsResponseDto';
 import { AssignUserPermissionsDto } from '../models/User/AssignUserPermissionsDto';
 import { RegisterByAdminDto } from '../models/User/RegisterByAdminDto';
+import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {

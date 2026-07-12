@@ -10,12 +10,9 @@ import {
   UpdateNameDTO,
   UpdateProfileImageDTO,
 } from '../model/profile.model';
+import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-}
+
 
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
