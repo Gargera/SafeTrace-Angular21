@@ -28,9 +28,9 @@ import {
   GetUserInfoDTO,
   UpdateHomeLocationDTO,
   UpdateNameDTO,
-} from '../../../../core/models/profile.model';
+} from '../../model/profile.model';
 import { GeocodingService } from '../../../../core/services/gecoding.service';
-import { ProfileService } from '../../Service/profile.service';
+import { ProfileService } from '../../service/profile.service';
 import { UserRole } from '../../../../shared/enums/user-role';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';
 import { SnackbarService } from '../../../../core/services/toast.service';

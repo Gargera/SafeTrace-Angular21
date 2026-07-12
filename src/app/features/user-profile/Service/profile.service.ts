@@ -9,7 +9,7 @@ import {
   UpdateHomeLocationDTO,
   UpdateNameDTO,
   UpdateProfileImageDTO,
-} from '../../../core/models/profile.model';
+} from '../model/profile.model';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -57,7 +57,7 @@ export class ProfileService {
     return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateHomeLocation`, formData);
   }
 
-  removeProfileImage(): Observable<ApiResponse<boolean>> {  
+  removeProfileImage(): Observable<ApiResponse<boolean>> {
     return this.#http.delete<ApiResponse<boolean>>(`${this.#profileUrl}/ProfileImage`);
   }
   /**

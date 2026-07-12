@@ -5,7 +5,7 @@ import { GetUserNotificationsDTO, NotificationPage } from '../models/notificatio
 import { NotificationType } from '../../shared/enums/Notification-Type';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
-import { ApiResponse } from '../../features/user-profile/Service/profile.service';
+import { ApiResponse } from '../../features/user-profile/service/profile.service';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -219,8 +219,6 @@ export class NotificationService implements OnDestroy {
 
     this.loadPage(this.#currentPage() + 1, true);
   }
-
-  
 
   stopConnection(): void {
     this.#hubConnection?.stop().catch(console.error);
