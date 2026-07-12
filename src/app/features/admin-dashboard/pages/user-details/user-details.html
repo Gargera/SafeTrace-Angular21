@@ -11,16 +11,6 @@
     </button>
   </header>
 
-  @if (apiErrorMessage()) {
-    <div class="bg-error-container border border-error/30 text-on-error-container p-4 rounded-xl shadow-sm flex items-start gap-3 animate-fade-in">
-      <span class="material-symbols-outlined text-error text-[24px]">error</span>
-      <div class="flex flex-col gap-1">
-        <span class="font-bold">إجراء غير مسموح</span>
-        <span class="text-body-sm">{{ apiErrorMessage() }}</span>
-      </div>
-    </div>
-  }
-
   @if (isLoading()) {
     <div class="flex justify-center items-center h-64">
       <span class="material-symbols-outlined animate-spin text-secondary text-[40px]">progress_activity</span>

@@ -2,11 +2,11 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import Swal from 'sweetalert2';
+import { SnackbarService } from '../../../../core/services/toast.service';
 import { UserService } from '../../services/user.service';
 import { RoleService } from '../../services/role.service';
 import { RoleDto } from '../../models/Role/RoleDto';
-import { ROLE_TRANSLATIONS_AR } from '../../../../core/constants/roles.dictionary';
+import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 
 @Component({
   selector: 'app-register-by-admin',
@@ -18,6 +18,7 @@ export class RegisterByAdmin implements OnInit {
   private userService = inject(UserService);
   private roleService = inject(RoleService);
   private router = inject(Router);
+  private snackbar = inject(SnackbarService);
 
   isLoading = signal<boolean>(false);
   apiErrorMessage = signal<string>('');
@@ -32,7 +33,7 @@ export class RegisterByAdmin implements OnInit {
     phoneNumber: ['', [Validators.required, Validators.pattern('^01[0125][0-9]{8}$')]],
     password: [
       '',
-      [Validators.required, Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).+$')],
+      [Validators.required, Validators.minLength(8), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$')],
     ],
     role: ['', Validators.required],
   });
@@ -65,15 +66,8 @@ export class RegisterByAdmin implements OnInit {
     this.userService.registerByAdmin(this.registerForm.value).subscribe({
       next: (res) => {
         this.isLoading.set(false);
-        Swal.fire({
-          title: 'تم إنشاء الحساب بنجاح!',
-          text: 'تمت إضافة المستخدم وتعيين الصلاحيات الخاصة به في النظام.',
-          icon: 'success',
-          confirmButtonColor: '#0058be',
-          customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' },
-        }).then(() => {
-          this.router.navigate(['/admin/users']);
-        });
+        this.snackbar.success('تمت إضافة المستخدم وتعيين الصلاحيات الخاصة به في النظام.');
+        this.router.navigate(['/admin/users']);
       },
       error: (err) => {
         this.isLoading.set(false);
@@ -98,6 +92,6 @@ export class RegisterByAdmin implements OnInit {
   }
 
   getRoleName(roleName: string): string {
-    return ROLE_TRANSLATIONS_AR[roleName] || roleName;
+    return getRoleTranslationAr(roleName);
   }
 }
