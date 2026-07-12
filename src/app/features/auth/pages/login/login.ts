@@ -30,6 +30,11 @@ export class Login implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
+    if (this.authService.isLoggedIn()) {
+      this.router.navigate(['/home'], { replaceUrl: true });
+      return;
+    }
+
     this.authSubscription = this.socialAuthService.authState.subscribe((user) => {
       if (user) {
         this.isLoading.set(true);
@@ -83,10 +88,11 @@ export class Login implements OnInit, OnDestroy {
     if (this.loginForm.invalid) return;
 
     this.isLoading.set(true);
+
     this.authService.login(this.loginForm.value).subscribe({
-      next: (res) => {
+      next: () => {
         this.isLoading.set(false);
-        this.router.navigate(['/home']);
+        this.router.navigate(['/home'], { replaceUrl: true });
       },
       error: (err) => {
         this.isLoading.set(false);

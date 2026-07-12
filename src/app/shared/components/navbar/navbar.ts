@@ -118,7 +118,7 @@ export class Navbar implements OnInit {
   logout(): void {
     Swal.fire({
       title: 'تسجيل الخروج',
-      text: 'هل أنت متأكد من رغبتك في تسجيل الخروج من SafeTrace؟',
+      text: 'هل أنت متأكد من رغبتك في تسجيل الخروج من منصة لقاء؟',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'نعم، سجل الخروج',
@@ -133,14 +133,11 @@ export class Navbar implements OnInit {
       },
     }).then((result) => {
       if (result.isConfirmed) {
+        this.authService.clearSession();
+        this.router.navigate(['/auth']);
         this.authService.revokeToken().subscribe({
-          next: () => {
-            this.router.navigate(['/auth']);
-          },
-          error: () => {
-            this.authService.clearSession();
-            this.router.navigate(['/auth']);
-          },
+          next: () => {},
+          error: () => {},
         });
       }
     });

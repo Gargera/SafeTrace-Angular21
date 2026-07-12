@@ -101,7 +101,7 @@
 
       @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
         <span class="text-error text-xs font-medium">
-          @if (registerForm.get('password')?.errors?.['serverError']) { {{ registerForm.get('password')?.errors?.['serverError'] }} } @else { يجب أن تتكون كلمة المرور من 8 أحرف، وتتضمن حرف كبير وصغير ورقم ورمز. }
+          @if (registerForm.get('password')?.errors?.['serverError']) { {{ registerForm.get('password')?.errors?.['serverError'] }} } @else { يجب أن تتكون كلمة المرور من 8 أحرف على الأقل، وتتضمن حرفًا كبيرًا، وحرفًا صغيرًا، ورقمًا، ورمزًا خاصًا. }
         </span>
       }
     </div>

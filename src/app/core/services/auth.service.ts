@@ -1,5 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { environment } from '../../../environments/environment';
 import { Observable, tap, firstValueFrom } from 'rxjs';
 import { ApiResponse } from '../../shared/models/responses/api-response.model';
@@ -15,6 +16,7 @@ import { UserRole } from '../../shared/enums/user-role';
 })
 export class AuthService {
   private http = inject(HttpClient);
+  private socialAuthService = inject(SocialAuthService);
   private readonly baseUrl = `${environment.baseUrl}/api/Account`;
 
   private accessToken: string | null = null;
@@ -135,6 +137,11 @@ export class AuthService {
     localStorage.removeItem('refreshTokenExpiration');
     this.isLoggedIn.set(false);
     this.currentUser.set(null);
+    this.signOutSocialProviders();
+  }
+
+  private signOutSocialProviders(): void {
+    void this.socialAuthService.signOut().catch(() => undefined);
   }
 
   register(data: RegisterRequest): Observable<ApiResponse<string>> {

@@ -2,6 +2,7 @@ import { Component, inject, signal, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { SnackbarService } from '../../../../core/services/toast.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -14,6 +15,7 @@ export class ResetPassword implements OnDestroy {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private snackbar = inject(SnackbarService);
 
   step = signal<number>(1);
   isLoading = signal<boolean>(false);
@@ -21,7 +23,7 @@ export class ResetPassword implements OnDestroy {
   apiErrorMessage = signal<string>('');
   savedEmail = signal<string>('');
   countdown = signal<number>(0);
-  private intervalId: any;
+  private intervalId: ReturnType<typeof setInterval> | null = null;
 
   showPassword = signal<boolean>(false);
 
@@ -31,12 +33,13 @@ export class ResetPassword implements OnDestroy {
 
   resetForm: FormGroup = this.fb.group({
     otpCode: ['', [Validators.required, Validators.minLength(6)]],
-    newPassword: ['', [Validators.required, Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).+$')]]
+    newPassword: ['', [Validators.required, Validators.minLength(8), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$')]]
   });
 
   ngOnDestroy() {
     if (this.intervalId) {
       clearInterval(this.intervalId);
+      this.intervalId = null;
     }
   }
 
@@ -74,18 +77,15 @@ export class ResetPassword implements OnDestroy {
     this.authService.forgetPassword(this.savedEmail()).subscribe({
       next: (res) => {
         this.isResending.set(false);
-        Swal.fire({
-          title: 'تم الإرسال!',
-          text: 'تم إرسال رمز جديد إلى بريدك الإلكتروني، الرمز صالح لمدة 10 دقائق.',
-          icon: 'success',
-          confirmButtonColor: '#0058be',
-          customClass: { popup: 'rounded-xl font-body-md' }
-        });
+        this.snackbar.success('تم إرسال رمز جديد إلى بريدك الإلكتروني، الرمز صالح لمدة 10 دقائق.');
       },
       error: (err) => {
         this.isResending.set(false);
         this.countdown.set(0);
-        clearInterval(this.intervalId);
+        if (this.intervalId) {
+          clearInterval(this.intervalId);
+          this.intervalId = null;
+        }
         this.apiErrorMessage.set(err.error?.detail || 'حدث خطأ أثناء إعادة إرسال الرمز. يرجى المحاولة لاحقاً.');
       }
     });
@@ -121,15 +121,19 @@ export class ResetPassword implements OnDestroy {
   }
 
   private startCountdown() {
-    this.countdown.set(60);
     if (this.intervalId) {
       clearInterval(this.intervalId);
     }
+
+    this.countdown.set(60);
     this.intervalId = setInterval(() => {
       if (this.countdown() > 0) {
         this.countdown.update(c => c - 1);
       } else {
-        clearInterval(this.intervalId);
+        if (this.intervalId) {
+          clearInterval(this.intervalId);
+          this.intervalId = null;
+        }
       }
     }, 1000);
   }
