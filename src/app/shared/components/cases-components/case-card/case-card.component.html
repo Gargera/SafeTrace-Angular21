@@ -51,9 +51,7 @@
       <div class="flex items-center justify-between">
         <span class="text-on-surface-variant"> الجنس </span>
 
-        <span class="font-medium text-on-surface">
-          {{ getGenderLabel() }}
-        </span>
+        <span [appGenderBadgeDirective]="caseItem.gender"></span>
       </div>
 
       <div class="flex items-center justify-between">
@@ -62,15 +60,11 @@
         <span class="font-medium text-on-surface"> {{ caseItem.age }} سنة </span>
       </div>
 
-      @if (hasAgeCategory()) {
-        <div class="flex items-center justify-between">
-          <span class="text-on-surface-variant"> الفئة العمرية </span>
+      <div class="flex items-center justify-between">
+        <span class="text-on-surface-variant"> الفئة العمرية </span>
 
-          <span class="font-medium text-on-surface">
-            {{ getAgeCategoryLabel() }}
-          </span>
-        </div>
-      }
+        <span [appAgeBadgeDirective]="getAgeCategoryEnum()"></span>
+      </div>
 
       @if (hasCreatedAt()) {
         <div class="flex items-center justify-between">
