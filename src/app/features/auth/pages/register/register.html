@@ -1,0 +1,120 @@
+<div class="min-h-screen bg-surface flex flex-col justify-center items-center px-margin-mobile py-12">
+  
+  <div class="absolute top-6 right-6 md:top-8 md:right-8">
+    <a routerLink="/home" class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-medium text-body-sm bg-surface-container-lowest px-4 py-2 rounded-full shadow-sm border border-outline-variant hover:shadow-md">
+      <svg class="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+      العودة للرئيسية
+    </a>
+  </div>
+
+  <div class="text-center mb-8">
+    <a routerLink="/home" class="inline-flex items-center justify-center text-on-primary w-12 h-12 rounded-xl mb-4 hover:scale-105 transition-transform shadow-md">
+      <img src="images/logo.svg" alt="منصة لقاء" class="h-10 w-auto" />
+    </a>
+    <h1 class="text-3xl font-headline-lg font-bold text-primary mb-2">إنشاء حساب جديد</h1>
+    <p class="text-on-surface-variant text-body-md max-w-87.5 mx-auto">انضم إلى مجتمع لقاء للمساهمة في عمليات البحث والإنقاذ.</p>
+  </div>
+
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-sm w-full max-w-112.5 p-6 md:p-8">
+    
+    @if (apiErrorMessage()) {
+      <div class="bg-error-container text-on-error-container p-4 rounded-xl mb-6 flex justify-between items-start gap-3 border border-error/20">
+        <span class="font-body-sm font-medium">{{ apiErrorMessage() }}</span>
+        <button type="button" (click)="apiErrorMessage.set('')" class="text-on-error-container hover:text-error transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+    }
+
+    <form [formGroup]="registerForm" autocomplete="on" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+      
+      <div class="grid grid-cols-2 gap-4">
+        <div class="flex flex-col gap-1">
+          <label class="text-label-md font-medium text-on-surface">الاسم الأول</label>
+          <input type="text" formControlName="fName" placeholder="أحمد" [class.border-error]="registerForm.get('fName')?.touched && registerForm.get('fName')?.invalid"
+                 class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all">
+          @if (registerForm.get('fName')?.touched && registerForm.get('fName')?.invalid) {
+            <span class="text-error text-xs font-medium">
+              @if (registerForm.get('fName')?.errors?.['serverError']) { {{ registerForm.get('fName')?.errors?.['serverError'] }} } @else { الاسم الأول مطلوب ويجب ألا يزيد عن 100 حرف. }
+            </span>
+          }
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-label-md font-medium text-on-surface">الاسم الأخير</label>
+          <input type="text" formControlName="lName" placeholder="محمد" [class.border-error]="registerForm.get('lName')?.touched && registerForm.get('lName')?.invalid"
+                 class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all">
+          @if (registerForm.get('lName')?.touched && registerForm.get('lName')?.invalid) {
+            <span class="text-error text-xs font-medium">
+              @if (registerForm.get('lName')?.errors?.['serverError']) { {{ registerForm.get('lName')?.errors?.['serverError'] }} } @else { اسم العائلة مطلوب ويجب ألا يزيد عن 100 حرف.  }
+            </span>
+          }
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-label-md font-medium text-on-surface">البريد الإلكتروني</label>
+          <input type="email" id="email" name="username" formControlName="email" placeholder="example@email.com" dir="ltr" autocomplete="username" autocapitalize="off"
+               [class.border-error]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid"
+               class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all text-right focus:text-left">
+        @if (registerForm.get('email')?.touched && registerForm.get('email')?.invalid) {
+          <span class="text-error text-xs font-medium">
+            @if (registerForm.get('email')?.errors?.['serverError']) { {{ registerForm.get('email')?.errors?.['serverError'] }} } @else { صيغة البريد الإلكتروني غير صحيحة.}
+          </span>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-label-md font-medium text-on-surface">رقم الهاتف</label>
+        <input type="tel" formControlName="phoneNumber" placeholder="01234567890" dir="ltr" [class.border-error]="registerForm.get('phoneNumber')?.touched && registerForm.get('phoneNumber')?.invalid"
+               class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all text-right focus:text-left">
+        @if (registerForm.get('phoneNumber')?.touched && registerForm.get('phoneNumber')?.invalid) {
+          <span class="text-error text-xs font-medium">
+            @if (registerForm.get('phoneNumber')?.errors?.['serverError']) { {{ registerForm.get('phoneNumber')?.errors?.['serverError'] }} } @else { يرجى إدخال رقم هاتف مصري صحيح.}
+          </span>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-label-md font-medium text-on-surface">كلمة المرور</label>
+        
+        <div class="relative w-full">
+          <input [type]="isPasswordVisible() ? 'text' : 'password'" id="password" name="password" formControlName="password" placeholder="••••••••" dir="ltr" autocomplete="new-password" autocapitalize="off"
+                 [class.border-error]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid"
+                 class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 pr-12 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all text-right focus:text-left">
+
+          <button type="button" (click)="togglePasswordVisibility()" class="absolute inset-y-0 right-0 px-4 flex items-center text-on-surface-variant hover:text-secondary transition-colors focus:outline-none">
+            @if (isPasswordVisible()) {
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+              </svg>
+            } @else {
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              </svg>
+            }
+          </button>
+        </div>
+
+        @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
+          <span class="text-error text-xs font-medium">
+            @if (registerForm.get('password')?.errors?.['serverError']) { {{ registerForm.get('password')?.errors?.['serverError'] }} } @else { يجب أن تتكون كلمة المرور من 8 أحرف على الأقل، وأن تتضمن حرفًا كبيرًا، وحرفًا صغيرًا، ورقمًا، ورمزًا خاصًا. }
+          </span>
+        }
+      </div>
+
+      <button type="submit" [disabled]="isLoading()" class="w-full bg-secondary text-on-secondary hover:bg-secondary-container py-3 rounded-xl font-label-lg font-semibold mt-4">
+        @if (isLoading()) { جاري الإنشاء... } @else { المتابعة }
+      </button>
+
+    </form>
+
+    <div class="text-center mt-6 pt-4 border-t border-outline-variant">
+      <p class="text-on-surface-variant text-body-sm">
+        لديك حساب بالفعل؟ <a routerLink="/auth" class="text-secondary font-semibold hover:underline">سجل الدخول الآن</a>
+      </p>
+    </div>
+
+  </div>
+</div>
