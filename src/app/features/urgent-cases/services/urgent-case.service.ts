@@ -6,7 +6,7 @@ import { UrgentCaseDetailResponse } from '../models/response/UrgentCaseDetailRes
 import { UrgentCaseCreateRequest } from '../models/request/UrgentCaseCreateRequest';
 import { UrgentCaseUpdateRequest } from '../models/request/UrgentCaseUpdateRequest';
 import { FoundPersonInfoRequest } from '../../../core/models/Cases.model';
-import { ApiResponse } from '../../founded/models/founded.models';
+import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
 import { environment } from '../../../../environments/environment';
 import { UrgentCasesFilterRequest } from '../models/request/UrgentCaseFilterRequest';

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UnknownCaseService } from '../../services/unknown-case.service';
@@ -29,43 +29,45 @@ import { CaseCardComponent } from '../../../../shared/components/cases-component
 export class UnknownList implements OnInit {
   private router = inject(Router);
   private unknownCaseService = inject(UnknownCaseService);
-  private cdr = inject(ChangeDetectorRef);
 
-  cases: UnknownCaseListItemResponse[] = [];
-  loading = true;
+  cases = signal<UnknownCaseListItemResponse[]>([]);
+  loading = signal(true);
 
   currentPage = signal(1);
   totalPages = signal(1);
-  totalItems = 0;
-  pageSize = 8;
+  totalItems = signal(0);
+  pageSize = signal(8);
 
-  private currentFilter: CasesFilterRequest = this.emptyFilter();
+  filter = signal<CasesFilterRequest>(this.emptyFilter());
 
   ngOnInit(): void {
-    // The shared filter component emits the initial valid request after it is fully initialized.
+    this.fetchCases();
   }
 
   navigateToCreate(): void {
-    this.router.navigate(['/cases/unknown/create']);
+    this.router.navigate(['/unknown/create']);
   }
 
-  onFilterChange(filter: CasesFilterRequest): void {
-    this.currentFilter = { ...this.sanitizeFilter(filter), page: 1 };
+  onFilterChange(newFilter: CasesFilterRequest): void {
+    this.filter.update((f) => ({
+      ...this.sanitizeFilter(newFilter),
+      page: 1,
+    }));
     this.fetchCases();
   }
 
   onFilterReset(): void {
-    this.currentFilter = this.emptyFilter();
+    this.filter.set(this.emptyFilter());
     this.fetchCases();
   }
 
   onPageChange(page: number): void {
-    this.currentFilter = { ...this.currentFilter, page };
+    this.filter.update((f) => ({ ...f, page }));
     this.fetchCases();
   }
 
   onViewDetails(caseId: number): void {
-    this.router.navigate(['/cases/unknown', caseId]);
+    this.router.navigate(['/unknown', caseId]);
   }
 
   onContactReporter(caseId: number): void {
@@ -77,20 +79,20 @@ export class UnknownList implements OnInit {
   }
 
   private fetchCases(): void {
-    this.loading = true;
-    this.unknownCaseService.getAllCases(this.currentFilter as any).subscribe({
+    this.loading.set(true);
+    this.unknownCaseService.getAllCases(this.filter() as any).subscribe({
       next: (apiRes) => {
         const res = apiRes.data;
-        this.cases = res.items;
-        this.totalItems = res.totalCount;
-        this.totalPages.set(res.totalPages);
-        this.currentPage.set(this.currentFilter.page);
-        this.loading = false;
-        this.cdr.detectChanges();
+        if (res) {
+          this.cases.set(res.items);
+          this.totalItems.set(res.totalCount);
+          this.totalPages.set(res.totalPages);
+          this.currentPage.set(this.filter().page);
+        }
+        this.loading.set(false);
       },
       error: () => {
-        this.loading = false;
-        this.cdr.detectChanges();
+        this.loading.set(false);
       },
     });
   }

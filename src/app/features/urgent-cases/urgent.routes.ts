@@ -6,4 +6,12 @@ export const URGENT_ROUTES: Routes = [
     path: '', 
     component: UrgentListComponent
   },
+  {
+    path: 'create',
+    loadComponent: () => import('./pages/urgent-create/urgent-create').then(c => c.UrgentCreate)
+  },
+  {
+    path: ':id',
+    loadComponent: () => import('./pages/urgent-details/urgent-details').then(c => c.UrgentDetails)
+  }
 ];

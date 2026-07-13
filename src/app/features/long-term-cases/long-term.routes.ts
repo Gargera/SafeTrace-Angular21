@@ -6,4 +6,12 @@ export const LONG_TERM_ROUTES: Routes = [
       path: '', 
       component: LongTermList
     },
+    {
+      path: 'create',
+      loadComponent: () => import('./pages/long-term-create/long-term-create').then(c => c.LongTermCreate)
+    },
+    {
+      path: ':id',
+      loadComponent: () => import('./pages/long-term-details/long-term-details').then(c => c.LongTermDetails)
+    }
 ];
