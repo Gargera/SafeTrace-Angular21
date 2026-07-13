@@ -1,5 +1,18 @@
-import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import {
+  AfterContentInit,
+  Component,
+  ContentChildren,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  QueryList,
+  inject,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NgModel } from '@angular/forms';
+import { debounceTime, distinctUntilChanged, map, merge } from 'rxjs';
 import { CasesFilterRequest } from '../../../../core/models/Cases.model';
 import { AgeCategories } from '../../../enums/age-categories';
 import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.categories.dictionary';
@@ -11,11 +24,11 @@ import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.cate
 @Component({
   selector: 'app-case-filters',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, FormsModule],
   templateUrl: './case-filters.component.html',
   styleUrls: ['./case-filters.component.css'],
 })
-export class CaseFiltersComponent implements OnInit {
+export class CaseFiltersComponent implements OnInit, AfterContentInit {
   // Pass the enum value arrays in from the parent (e.g. Object.values(CaseStatus))
   @Input() genders: number[] = [0, 1];
   @Input() ageSorts: number[] = [0, 1];
@@ -29,6 +42,8 @@ export class CaseFiltersComponent implements OnInit {
   filterForm!: FormGroup;
 
   private fb = inject(FormBuilder);
+
+  @ContentChildren(NgModel, { descendants: true }) private projectedModels!: QueryList<NgModel>;
 
   // fields that live behind the "advanced filters" toggle - used to show a counter badge
   private readonly advancedFieldKeys = ['government', 'city', 'fromDate', 'toDate', 'ageSort'];
@@ -45,6 +60,46 @@ export class CaseFiltersComponent implements OnInit {
       ageSort: [null],
       dateSort: [null],
     });
+
+    const formControlStreams = [
+      this.filterForm.get('fullName')!,
+      this.filterForm.get('gender')!,
+      this.filterForm.get('ageCategory')!,
+      this.filterForm.get('government')!,
+      this.filterForm.get('city')!,
+      this.filterForm.get('fromDate')!,
+      this.filterForm.get('toDate')!,
+      this.filterForm.get('ageSort')!,
+      this.filterForm.get('dateSort')!,
+    ].map((control) => {
+      const debounceMs = control === this.filterForm.get('fullName') ? 400 : 0;
+      return control.valueChanges.pipe(
+        debounceTime(debounceMs),
+        map(() => this.buildFilterRequest()),
+        distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)),
+      );
+    });
+
+    merge(...formControlStreams)
+      .pipe(takeUntilDestroyed())
+      .subscribe((request) => {
+        this.filterChange.emit(request);
+      });
+  }
+
+  ngAfterContentInit(): void {
+    this.bindProjectedModelChanges();
+    this.projectedModels.changes.pipe(takeUntilDestroyed()).subscribe(() => {
+      this.bindProjectedModelChanges();
+    });
+  }
+
+  private bindProjectedModelChanges(): void {
+    this.projectedModels.forEach((model) => {
+      model.valueChanges?.pipe(takeUntilDestroyed()).subscribe(() => {
+        this.filterChange.emit(this.buildFilterRequest());
+      });
+    });
   }
 
   /** Number of advanced filters currently set - shown as a badge on the toggle button. */
@@ -59,12 +114,8 @@ export class CaseFiltersComponent implements OnInit {
     this.showAdvanced = !this.showAdvanced;
   }
 
-  onSubmit(): void {
-    this.filterChange.emit(this.buildFilterRequest());
-  }
-
   resetFilters(): void {
-    this.filterForm.reset();
+    this.filterForm.reset(null, { emitEvent: false });
     this.showAdvanced = false;
     this.reset.emit();
     this.filterChange.emit(this.buildFilterRequest());
