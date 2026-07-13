@@ -1,5 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { environment } from '../../../environments/environment';
 import { Observable, tap, firstValueFrom } from 'rxjs';
@@ -17,6 +18,7 @@ import { UserRole } from '../../shared/enums/user-role';
 export class AuthService {
   private http = inject(HttpClient);
   private socialAuthService = inject(SocialAuthService);
+  private router = inject(Router);
   private readonly baseUrl = `${environment.baseUrl}/api/Account`;
 
   private accessToken: string | null = null;
@@ -30,10 +32,6 @@ export class AuthService {
     if (userData) {
       this.currentUser.set(userData);
       this.isLoggedIn.set(true);
-
-      this.refreshToken().subscribe({
-        error: () => this.clearSession(),
-      });
     }
   }
 
@@ -44,7 +42,7 @@ export class AuthService {
         this.isLoggedIn.set(true);
       }
     } catch (error) {
-      this.clearSession();
+      this.handleSessionExpiration();
     }
   }
 
@@ -129,6 +127,29 @@ export class AuthService {
     }
     this.isLoggedIn.set(true);
     this.currentUser.set(userData);
+  }
+
+  handleSessionExpiration(): void {
+    if (!this.isLoggedIn()) return; // Already cleared
+    
+    this.clearSession();
+    
+    import('sweetalert2').then((SwalModule) => {
+      const Swal = SwalModule.default;
+      Swal.fire({
+        title: 'انتهت الجلسة',
+        text: 'تم تسجيل الخروج لانتهاء الجلسة أو كإجراء أمني، يرجى تسجيل الدخول من جديد.',
+        icon: 'warning',
+        confirmButtonText: 'تسجيل الدخول',
+        confirmButtonColor: '#091426',
+        allowOutsideClick: false,
+        customClass: {
+          popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl'
+        }
+      }).then(() => {
+        this.router.navigate(['/auth']);
+      });
+    });
   }
 
   clearSession(): void {

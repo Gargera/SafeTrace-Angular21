@@ -9,13 +9,10 @@ import {
   UpdateHomeLocationDTO,
   UpdateNameDTO,
   UpdateProfileImageDTO,
-} from '../../../core/models/profile.model';
+} from '../model/profile.model';
+import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-}
+
 
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
@@ -57,14 +54,7 @@ export class ProfileService {
     return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateHomeLocation`, formData);
   }
 
-  removeProfileImage(): Observable<ApiResponse<boolean>> {  
+  removeProfileImage(): Observable<ApiResponse<boolean>> {
     return this.#http.delete<ApiResponse<boolean>>(`${this.#profileUrl}/ProfileImage`);
-  }
-  /**
-   * POST /Account/change-password
-   * NOTE: this one is JSON, not form-data — different controller, different binding ([FromBody]).
-   */
-  changePassword(dto: ChangePasswordDTO): Observable<ApiResponse<boolean>> {
-    return this.#http.post<ApiResponse<boolean>>(`${this.#accountUrl}/change-password`, dto);
   }
 }

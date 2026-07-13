@@ -5,7 +5,7 @@ import { GetUserNotificationsDTO, NotificationPage } from '../models/notificatio
 import { NotificationType } from '../../shared/enums/Notification-Type';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
-import { ApiResponse } from '../../features/user-profile/service/profile.service';
+import { ApiResponse } from '../../shared/models/responses/api-response.model';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -95,16 +95,13 @@ export class NotificationService implements OnDestroy {
     this.#hubConnection.on('ReceiveNotifications', (response: ApiResponse<NotificationPage>) => {
       console.log('1');
       console.log(response);
-      console.log(response.data.items);
-      this.#notifications.set(response.data.items);
-      this.#currentPage.set(response.data.page);
-      this.#totalPages.set(response.data.totalPages);
-      this.#totalCount.set(response.data.totalCount);
-      console.log('2');
-
-      console.log(response);
-      console.log(response.data.items);
-      console.log(this.#notifications());
+      console.log(response.data?.items);
+      if (response.success && response.data) {
+        this.#notifications.set(response.data.items);
+        this.#currentPage.set(response.data.page);
+        this.#totalPages.set(response.data.totalPages);
+        this.#totalCount.set(response.data.totalCount);
+      }
     });
 
     // Fired when a new notification is pushed from server
@@ -193,6 +190,15 @@ export class NotificationService implements OnDestroy {
       .subscribe({
         next: (res) => {
           const data = res.data;
+
+          if (!data) {
+            this.#notifications.set([]);
+            this.#currentPage.set(1);
+            this.#totalPages.set(0);
+            this.#totalCount.set(0);
+            this.#isLoading.set(false);
+            return;
+          }
 
           if (append) {
             this.#notifications.update((old) => [...old, ...data.items]);

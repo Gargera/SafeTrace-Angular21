@@ -1,7 +1,6 @@
 import { Component, effect, inject, input, signal } from '@angular/core';
 import { GeocodingService } from '../../../../core/services/gecoding.service';
-
-import { GetUserInfoDTO } from '../../../../core/models/profile.model';
+import { GetUserInfoDTO } from '../../model/profile.model';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';
 import { UserRole } from '../../../../shared/enums/user-role';
 
@@ -10,7 +9,6 @@ import { UserRole } from '../../../../shared/enums/user-role';
   imports: [],
   standalone: true,
   templateUrl: './profile-sidebar.html',
-  styleUrl: './profile-sidebar.css',
 })
 export class ProfileSidebar {
   readonly userInfo = input<GetUserInfoDTO | null>(null);
@@ -65,7 +63,9 @@ export class ProfileSidebar {
     return this.userInfo()?.verificationStatus === VerificationStatus.Verified;
   }
   get hasCases(): boolean {
-    return (this.userInfo()?.Cases?.length ?? 0) > 0;
+    console.log('cases', this.userInfo());
+    console.log(this.userInfo()?.cases.length);
+    return (this.userInfo()?.cases?.length ?? 0) > 0;
   }
 
   get verificationLabel(): string {

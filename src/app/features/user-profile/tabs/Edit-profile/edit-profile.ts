@@ -28,14 +28,15 @@ import {
   GetUserInfoDTO,
   UpdateHomeLocationDTO,
   UpdateNameDTO,
-} from '../../../../core/models/profile.model';
+} from '../../model/profile.model';
 import { GeocodingService } from '../../../../core/services/gecoding.service';
 import { ProfileService } from '../../service/profile.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { UserRole } from '../../../../shared/enums/user-role';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';
 import { SnackbarService } from '../../../../core/services/toast.service';
-import { ConfirmDialog } from '../../Shared/confirm-dialog/confirm-dialog';
-import { ImageCropDialog } from '../../Shared/image-crop-dialog/image-crop-dialog';
+import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
+import { ImageCropDialog } from '../../shared/image-crop-dialog/image-crop-dialog';
 import { Toast } from '../../../../shared/components/toast/toast';
 
 // ── Egypt center coordinates (default) ────────────────────────────────────
@@ -82,6 +83,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   readonly #profileService = inject(ProfileService);
   readonly #geocodingService = inject(GeocodingService);
   readonly #snackbar = inject(SnackbarService);
+  readonly #authService = inject(AuthService);
   readonly #destroy$ = new Subject<void>();
   readonly #platformId = inject(PLATFORM_ID);
 
@@ -726,7 +728,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
       // currentRefreshToken: this.#tokenService.getRefreshToken(),
     };
 
-    this.#profileService.changePassword(dto).subscribe({
+    this.#authService.changePassword(dto).subscribe({
       next: () => {
         this.isSavingPassword.set(false);
         this.togglePasswordEdit(false);
@@ -753,7 +755,11 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
    */
   #refreshAndEmit(): void {
     this.#profileService.getUserInfo().subscribe({
-      next: (res) => this.profileUpdated.emit(res.data),
+      next: (res) => {
+        if (res.data) {
+          this.profileUpdated.emit(res.data);
+        }
+      },
       error: () => {
         // Non-fatal — the save itself already succeeded; a failed refresh
         // just means the UI won't reflect it until the next page load.
