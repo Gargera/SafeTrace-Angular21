@@ -469,11 +469,10 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   // ── Profile photo: remove ─────────────────────────────────────────────────
 
   requestRemoveProfilePhoto(): void {
-    console.log(this.profileImagePreview());
-    console.log(this.isRemovingProfileImage());
+ 
     if (!this.profileImagePreview() || this.isRemovingProfileImage()) return;
     this.showRemoveConfirm.set(true);
-    console.log(this.showRemoveConfirm());
+
   }
 
   cancelRemoveProfilePhoto(): void {
