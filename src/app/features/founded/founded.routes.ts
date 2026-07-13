@@ -4,11 +4,12 @@ export const FOUNDED_ROUTES: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./list/founded-list.component').then((m) => m.FoundedListComponent),
+      import('./pages/founded-list/founded-list').then((m) => m.FoundedList),
   },
   {
     path: ':id',
     loadComponent: () =>
-      import('./detail/founded-detail.component').then((m) => m.FoundedDetailComponent),
+      import('./pages/founded-details/founded-details').then((m) => m.FoundedDetails),
   },
 ];
+
