@@ -2,6 +2,7 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, switchMap, throwError, BehaviorSubject, filter, take } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { SnackbarService } from '../services/toast.service';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 
@@ -12,6 +13,7 @@ import { environment } from '../../../environments/environment.development';
 
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
+  const snackbarService = inject(SnackbarService);
   const router = inject(Router);
   const token = authService.getToken();
 
@@ -46,6 +48,12 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   /////////////////////////////////
   return next(clonedReq).pipe(
     catchError((error: HttpErrorResponse) => {
+      if (error.status === 429) {
+        const errorMessage = error.error?.detail || 'طلبات كثيرة جداً: لقد تجاوزت الحد المسموح به من الطلبات. يرجى الانتظار.';
+        snackbarService.error(errorMessage);
+        return throwError(() => error);
+      }
+
       if (error.status === 401 && token) {
         const expirationString = authService.getRefreshTokenExpiration();
         if (expirationString) {
@@ -80,23 +88,18 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
 
           return authService.refreshToken().pipe(
             switchMap((res) => {
-              ////////////////////Edit by youseef
-              const newReq =
-                isApiUrl && !isGoogleMapsRequest
-                  ? req.clone({
-                      setHeaders: {
-                        Authorization: `Bearer ${res.data?.accessToken}`,
-                      },
-                    })
-                  : req;
-              ///////////////////////////
               isRefreshing = false;
               if (res.success && res.data) {
                 refreshTokenSubject.next(res.data.accessToken);
-                const newReq = req.clone({
-                  setHeaders: { Authorization: `Bearer ${res.data.accessToken}` },
-                });
-                return next(newReq);
+                const retryReq =
+                  isApiUrl && !isGoogleMapsRequest
+                    ? req.clone({
+                        setHeaders: {
+                          Authorization: `Bearer ${res.data.accessToken}`,
+                        },
+                      })
+                    : req;
+                return next(retryReq);
               }
               return throwError(() => new Error('Refresh failed'));
             }),
