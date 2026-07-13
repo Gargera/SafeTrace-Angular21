@@ -3,14 +3,11 @@
     <!-- Page Header -->
     <section class="space-y-3 pb-2">
       <app-case-header
-        title="الحالات المجهولة"
-        subtitle="قائمة الحالات المجهولة"
+        title="تم العثور عليهم"
+        subtitle="نحن نحتفل بكل لقاء جديد. هنا تجد قائمة بالأشخاص الذين تم العثور عليهم."
         [badge]="!loading() ? totalItems() + ' حالة' : ''"
         [loading]="loading()"
-        primaryActionLabel="إنشاء حالة مجهولة"
-        primaryButtonClass="bg-primary hover:opacity-90 text-on-primary shadow-sm"
         [bordered]="false"
-        (primaryAction)="navigateToCreate()"
       >
       </app-case-header>
     </section>
@@ -35,8 +32,8 @@
       <!-- Empty State -->
       @if (!loading() && cases().length === 0) {
         <app-empty-state
-          title="لا توجد حالات مجهولة"
-          message="لم يتم العثور على أي حالات تطابق معايير البحث الحالية."
+          title="لا توجد نتائج"
+          message="جرّب تغيير معايير البحث أو الفلاتر"
         >
         </app-empty-state>
       }
@@ -47,8 +44,8 @@
           @for (c of cases(); track trackByCaseId($index, c)) {
             <app-case-card
               [caseItem]="c"
-              [detailRoute]="['/unknown', c.id]"
-              (onContact)="onContactReporter($event)"
+              [detailRoute]="['/founded', c.id]"
+              [isFounded]="true"
               class="block"
             >
             </app-case-card>

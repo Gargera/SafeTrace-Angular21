@@ -2,16 +2,16 @@ import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import { FoundedService } from '../services/founded.service';
-import { PostDetailsResponseDTO } from '../models/founded.models';
+import { FoundedService } from '../../services/founded.service';
+import { PostDetailsResponseDTO } from '../../models/founded.models';
 
 @Component({
-  selector: 'app-founded-detail',
+  selector: 'app-founded-details',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './founded-detail.component.html',
+  templateUrl: './founded-details.html',
 })
-export class FoundedDetailComponent implements OnInit, OnDestroy {
+export class FoundedDetails implements OnInit, OnDestroy {
   private readonly foundedService = inject(FoundedService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -63,3 +63,4 @@ export class FoundedDetailComponent implements OnInit, OnDestroy {
       });
   }
 }
+
