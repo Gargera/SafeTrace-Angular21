@@ -10,7 +10,7 @@ import { PaginationComponent } from '../../../../shared/components/cases-compone
 import { EmptyStateComponent } from '../../../../shared/components/cases-components/empty-state/empty-state.component';
 import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
 import { UrgentCasesFilterRequest } from '../../models/request/UrgentCaseFilterRequest';
-import { UrgentCaseCardComponent } from '../../components/urgent-case-card/urgent-case-card.component';
+import { CaseCardComponent } from "../../../../shared/components/cases-components/case-card/case-card.component";
 
 @Component({
   selector: 'app-urgent-list',
@@ -22,8 +22,8 @@ import { UrgentCaseCardComponent } from '../../components/urgent-case-card/urgen
     PaginationComponent,
     CaseSkeletonGridComponent,
     EmptyStateComponent,
-    UrgentCaseCardComponent,
-  ],
+    CaseCardComponent
+],
   templateUrl: './urgent-list.html',
   styleUrls: ['./urgent-list.css'],
 })

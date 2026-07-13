@@ -23,38 +23,19 @@
       <app-case-filters (filterChange)="onFilterChange($event)" (reset)="onFilterReset()">
         <!-- Urgent-only extra filter -->
         <div extendedFilters>
-          <label class="mb-2 block text-sm font-medium text-on-surface-variant">
+          <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
             نطاق البحث (متر)
           </label>
 
-          <div class="relative">
-            <input
-              type="number"
-              min="100"
-              [(ngModel)]="radiusInMeters"
-              [ngModelOptions]="{ standalone: true }"
-              placeholder="بدون حد"
-              class="h-12 w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 pr-10 text-on-surface placeholder:text-on-surface-variant outline-none transition-all duration-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20"
-            />
-
-            <svg
-              class="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-on-surface-variant"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17.657 16.657L13.414 12.414a4 4 0 10-.707.707l4.243 4.243a1 1 0 001.414-1.414z"
-              />
-            </svg>
-          </div>
-
-          <p class="mt-2 text-xs text-on-surface-variant">
-            اترك الحقل فارغًا للبحث بدون تحديد نطاق.
-          </p>
+          <input
+            type="number"
+            min="100"
+            step="100"
+            [(ngModel)]="radiusInMeters"
+            [ngModelOptions]="{ standalone: true }"
+            placeholder="بدون حد أقصى"
+            class="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3.5 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none transition-all duration-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20"
+          />
         </div>
       </app-case-filters>
     </section>
@@ -79,13 +60,14 @@
         <!-- Cases Grid -->
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           @for (case of cases; track trackByCaseId($index, case)) {
-            <app-urgent-case-card
+            <app-case-card
               [caseItem]="case"
               [showUrgentTag]="true"
+              [detailRoute]="['/urgent-cases', case.id]"
               (onContact)="onContactReporter($event)"
-              class="block transition-transform duration-200 will-change-transform hover:-translate-y-1"
+              class="block"
             >
-            </app-urgent-case-card>
+            </app-case-card>
           }
         </div>
 
