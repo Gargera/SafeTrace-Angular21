@@ -123,6 +123,7 @@ export class UrgentListComponent implements OnInit {
       ageSort: null,
       dateSort: null,
       page: 1,
+      pageSize: 12,
       latitude: null,
       longitude: null,
       radiusInMeters: null,

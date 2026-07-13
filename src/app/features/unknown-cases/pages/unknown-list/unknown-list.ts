@@ -110,6 +110,7 @@ export class UnknownList implements OnInit {
       ageSort: null,
       dateSort: null,
       page: 1,
+      pageSize: 12
     };
   }
 
