@@ -1,0 +1,131 @@
+<div class="bg-gray-50 min-h-screen pb-12">
+  <!-- Error or Empty State -->
+  @if (!loading && !caseDetail) {
+    <app-empty-state
+      title="الحالة غير موجودة"
+      message="لم نتمكن من العثور على تفاصيل هذه الحالة.">
+    </app-empty-state>
+  }
+
+  <!-- Content -->
+  @if (!loading && caseDetail) {
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+    
+    <!-- Breadcrumb & Header -->
+    <div class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+      <a routerLink="/home" class="hover:text-blue-600">الرئيسية</a>
+      <span>/</span>
+      <a routerLink="/urgent-cases" class="hover:text-blue-600">الحالات العاجلة</a>
+      <span>/</span>
+      <span class="text-gray-900 font-medium">حالة {{ caseDetail.caseCode }}</span>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- Left Column (or Right in RTL) - Image and Quick Info -->
+      <div class="lg:col-span-1 space-y-6">
+        <!-- Main Image Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative">
+          <!-- Urgent Badge -->
+          <div class="absolute top-4 right-4 bg-red-600 text-white px-3 py-1.5 rounded text-sm font-bold flex items-center gap-1.5 shadow-md z-10">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            حالة عاجلة
+          </div>
+          <img [src]="getPrimaryPhoto()" alt="Case Photo" class="w-full h-80 object-cover" />
+        </div>
+
+        <!-- Action Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+          <h3 class="font-bold text-gray-900 mb-4">اتخاذ إجراء</h3>
+          <div class="space-y-3">
+            <button class="w-full flex justify-center items-center gap-2 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              الإبلاغ عن مشاهدة
+            </button>
+            <button class="w-full flex justify-center items-center gap-2 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              تواصل مع المُبلّغ
+            </button>
+            <button class="w-full flex justify-center items-center gap-2 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+              مشاركة الحالة
+            </button>
+          </div>
+          <div class="mt-4 pt-4 border-t border-gray-100 flex items-start gap-3">
+            <div class="bg-blue-50 p-2 rounded-lg text-blue-600">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-gray-900 text-sm">حالة موثقة</p>
+              <p class="text-xs text-gray-500">من قبل فريق SafeTrace</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Column - Details -->
+      <div class="lg:col-span-2 space-y-6">
+        <div>
+          <h1 class="text-4xl font-bold text-gray-900 mb-2">
+            {{ caseDetail.fName }} {{ caseDetail.lName }}
+          </h1>
+          <div class="flex items-center gap-2 text-blue-600 font-medium">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            آخر تواجد: {{ caseDetail.street }}, {{ caseDetail.city }}
+          </div>
+        </div>
+
+        <!-- Info Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <p class="text-xs text-gray-500 mb-1">الفئة العمرية</p>
+            <p class="font-bold text-gray-900">{{ caseDetail.ageCategory?.name }} ({{ caseDetail.age }})</p>
+          </div>
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <p class="text-xs text-gray-500 mb-1">الجنس</p>
+            <p class="font-bold text-gray-900">{{ getGenderLabel(caseDetail.gender) }}</p>
+          </div>
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 col-span-2 md:col-span-1">
+            <p class="text-xs text-gray-500 mb-1">مفقود منذ</p>
+            <p class="font-bold text-gray-900">{{ caseDetail.eventDate | date:'mediumDate':'':'ar' }}</p>
+          </div>
+        </div>
+
+        <!-- Incident Summary -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-4">ملخص الحادثة</h2>
+          <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ caseDetail.description }}</p>
+
+          <div class="mt-6 pt-6 border-t border-gray-100">
+            <h3 class="font-bold text-gray-900 mb-3">حالة التحقيق</h3>
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm font-medium text-gray-700">تقدم البحث</span>
+              <span class="text-sm font-bold text-teal-600">المرحلة 3: خيوط نشطة</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+              <div class="bg-teal-500 h-2.5 rounded-full" style="width: 65%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Specific: We would include related cases, etc here -->
+      </div>
+    </div>
+  </div>
+  }
+</div>

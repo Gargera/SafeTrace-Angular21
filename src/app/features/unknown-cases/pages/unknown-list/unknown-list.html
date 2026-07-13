@@ -1,1 +1,96 @@
-<p>unknown-list works!</p>
+<div class="min-h-screen bg-background">
+  <div class="mx-auto max-w-7xl space-y-6 px-4 py-6">
+    <!-- Page Header -->
+    <section class="space-y-3 pb-2">
+      <app-case-header
+        title="الحالات المجهولة"
+        subtitle="قائمة الحالات المجهولة"
+        [badge]="!loading ? totalItems + ' حالة' : ''"
+        [loading]="loading"
+        primaryActionLabel="إنشاء حالة مجهولة"
+        primaryButtonClass="bg-primary hover:opacity-90 text-on-primary shadow-sm"
+        [bordered]="false"
+        (primaryAction)="navigateToCreate()"
+      >
+      </app-case-header>
+    </section>
+
+    <!-- Filters Card -->
+    <section
+      class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm"
+    >
+      <app-case-filters
+        (filterChange)="onFilterChange($event)"
+        (reset)="onFilterReset()"
+      ></app-case-filters>
+    </section>
+
+    <!-- Main Content -->
+    <div class="space-y-4">
+      <!-- Loading Skeleton -->
+      @if (loading) {
+        <app-case-skeleton-grid></app-case-skeleton-grid>
+      }
+
+      <!-- Empty State -->
+      @if (!loading && cases.length === 0) {
+        <app-empty-state
+          title="لا توجد حالات مجهولة"
+          message="لم يتم العثور على أي حالات تطابق معايير البحث الحالية."
+        >
+        </app-empty-state>
+      }
+
+      @if (!loading && cases.length > 0) {
+        <!-- Cases Grid -->
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          @for (c of cases; track trackByCaseId($index, c)) {
+            <article
+              class="rounded-xl border border-outline-variant bg-surface-container p-4 shadow-sm transition-transform duration-200 hover:-translate-y-1"
+            >
+              <div class="flex items-start gap-3">
+                <img
+                  src="{{ c.mainPhoto }}"
+                  alt="صورة الحالة"
+                  class="h-20 w-20 rounded-md object-cover"
+                />
+                <div class="min-w-0">
+                  <h3 class="truncate text-sm font-semibold text-on-surface">
+                    {{ c.fName }} {{ c.lName }}
+                  </h3>
+                  <p class="mt-1 text-xs text-on-surface-variant">
+                    {{ c.age }} سنة • {{ c.city }}، {{ c.government }}
+                  </p>
+                  <p class="mt-2 text-xs text-on-surface-variant">رمز: {{ c.caseCode }}</p>
+                </div>
+              </div>
+
+              <div class="mt-4 flex items-center justify-between">
+                <button
+                  type="button"
+                  (click)="onViewDetails(c.id)"
+                  class="rounded-md px-3 py-2 text-sm font-medium bg-primary text-on-primary transition hover:opacity-95"
+                >
+                  عرض التفاصيل
+                </button>
+                <span class="text-xs text-on-surface-variant">{{
+                  c.createdAt | date: 'short'
+                }}</span>
+              </div>
+            </article>
+          }
+        </div>
+
+        <!-- Pagination -->
+        <app-pagination
+          [currentPage]="currentPage"
+          [totalPages]="totalPages"
+          [totalItems]="totalItems"
+          [pageSize]="pageSize"
+          (pageChange)="onPageChange($event)"
+        >
+        </app-pagination>
+      }
+    </div>
+  </div>
+</div>
