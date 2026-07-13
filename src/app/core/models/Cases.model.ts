@@ -173,6 +173,7 @@ export interface CasesFilterRequest {
   ageSort: AgeSort | null;
   dateSort: DateSort | null;
   page: number; // Default: 1
+  pageSize: number; // Default: 12
 }
 
 export interface FoundPersonInfoRequest {

@@ -24,7 +24,7 @@
             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
-        <span dir="ltr">{{ getUrgentEndDate() }}</span>
+        <span dir="ltr">{{ getUrgentEndDate() | date: 'dd MMM yyyy, h:mm a' : '' : 'ar' }}</span>
       </div>
     }
   </div>
@@ -51,9 +51,7 @@
       <div class="flex items-center justify-between">
         <span class="text-on-surface-variant"> الجنس </span>
 
-        <span class="font-medium text-on-surface">
-          {{ getGenderLabel() }}
-        </span>
+        <span [appGenderBadgeDirective]="caseItem.gender"></span>
       </div>
 
       <div class="flex items-center justify-between">
@@ -62,22 +60,18 @@
         <span class="font-medium text-on-surface"> {{ caseItem.age }} سنة </span>
       </div>
 
-      @if (hasAgeCategory()) {
-        <div class="flex items-center justify-between">
-          <span class="text-on-surface-variant"> الفئة العمرية </span>
+      <div class="flex items-center justify-between">
+        <span class="text-on-surface-variant"> الفئة العمرية </span>
 
-          <span class="font-medium text-on-surface">
-            {{ getAgeCategoryLabel() }}
-          </span>
-        </div>
-      }
+        <span [appAgeBadgeDirective]="getAgeCategoryEnum()"></span>
+      </div>
 
       @if (hasCreatedAt()) {
         <div class="flex items-center justify-between">
           <span class="text-on-surface-variant"> تاريخ الإضافة </span>
 
           <span class="font-medium text-on-surface">
-            {{ caseItem.createdAt | date: 'dd MMM yyyy' : '' : 'ar' }}
+            {{ caseItem.createdAt | date: 'dd MMM yyyy, h:mm a' : '' : 'ar' }}
           </span>
         </div>
       }
@@ -87,7 +81,7 @@
           <span class="text-error"> ينتهي في </span>
 
           <span class="font-semibold text-error">
-            {{ getUrgentEndDate() }}
+            {{ getUrgentEndDate() | date: 'dd MMM yyyy, h:mm a' : '' : 'ar' }}
           </span>
         </div>
       }

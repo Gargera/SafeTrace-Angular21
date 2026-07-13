@@ -5,8 +5,8 @@
       <app-case-header
         title="الحالات المجهولة"
         subtitle="قائمة الحالات المجهولة"
-        [badge]="!loading ? totalItems + ' حالة' : ''"
-        [loading]="loading"
+        [badge]="!loading() ? totalItems() + ' حالة' : ''"
+        [loading]="loading()"
         primaryActionLabel="إنشاء حالة مجهولة"
         primaryButtonClass="bg-primary hover:opacity-90 text-on-primary shadow-sm"
         [bordered]="false"
@@ -28,12 +28,12 @@
     <!-- Main Content -->
     <div class="space-y-4">
       <!-- Loading Skeleton -->
-      @if (loading) {
+      @if (loading()) {
         <app-case-skeleton-grid></app-case-skeleton-grid>
       }
 
       <!-- Empty State -->
-      @if (!loading && cases.length === 0) {
+      @if (!loading() && cases().length === 0) {
         <app-empty-state
           title="لا توجد حالات مجهولة"
           message="لم يتم العثور على أي حالات تطابق معايير البحث الحالية."
@@ -41,13 +41,13 @@
         </app-empty-state>
       }
 
-      @if (!loading && cases.length > 0) {
+      @if (!loading() && cases().length > 0) {
         <!-- Cases Grid -->
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          @for (c of cases; track trackByCaseId($index, c)) {
+          @for (c of cases(); track trackByCaseId($index, c)) {
             <app-case-card
               [caseItem]="c"
-              [detailRoute]="['/cases/unknown', c.id]"
+              [detailRoute]="['/unknown', c.id]"
               (onContact)="onContactReporter($event)"
               class="block"
             >
@@ -59,8 +59,8 @@
         <app-pagination
           [currentPage]="currentPage"
           [totalPages]="totalPages"
-          [totalItems]="totalItems"
-          [pageSize]="pageSize"
+          [totalItems]="totalItems()"
+          [pageSize]="pageSize()"
           (pageChange)="onPageChange($event)"
         >
         </app-pagination>

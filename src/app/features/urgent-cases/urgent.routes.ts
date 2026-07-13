@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { UrgentListComponent } from './pages/urgent-list/urgent-list';
-import { UrgentDetailComponent } from './pages/urgent-detail/urgent-detail';
 
 export const URGENT_ROUTES: Routes = [
   { 
@@ -8,7 +7,11 @@ export const URGENT_ROUTES: Routes = [
     component: UrgentListComponent
   },
   {
+    path: 'create',
+    loadComponent: () => import('./pages/urgent-create/urgent-create').then(c => c.UrgentCreate)
+  },
+  {
     path: ':id',
-    component: UrgentDetailComponent
+    loadComponent: () => import('./pages/urgent-details/urgent-details').then(c => c.UrgentDetails)
   }
 ];

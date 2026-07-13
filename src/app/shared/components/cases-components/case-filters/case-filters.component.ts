@@ -2,6 +2,7 @@ import {
   AfterContentInit,
   Component,
   ContentChildren,
+  DestroyRef,
   EventEmitter,
   Input,
   OnInit,
@@ -12,7 +13,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgModel } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, map, merge } from 'rxjs';
+import { Subscription, debounceTime, distinctUntilChanged, map, merge } from 'rxjs';
 import { CasesFilterRequest } from '../../../../core/models/Cases.model';
 import { AgeCategories } from '../../../enums/age-categories';
 import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.categories.dictionary';
@@ -41,9 +42,13 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   showAdvanced = false;
   filterForm!: FormGroup;
 
-  private fb = inject(FormBuilder);
+  private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   @ContentChildren(NgModel, { descendants: true }) private projectedModels!: QueryList<NgModel>;
+  private readonly projectedModelSubscriptions = new Map<NgModel, Subscription>();
+  private lastEmittedRequest: CasesFilterRequest | null = null;
+  private hasEmittedInitialRequest = false;
 
   // fields that live behind the "advanced filters" toggle - used to show a counter badge
   private readonly advancedFieldKeys = ['government', 'city', 'fromDate', 'toDate', 'ageSort'];
@@ -81,25 +86,59 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     });
 
     merge(...formControlStreams)
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((request) => {
-        this.filterChange.emit(request);
+        this.emitFilterChange(request);
       });
   }
 
   ngAfterContentInit(): void {
     this.bindProjectedModelChanges();
-    this.projectedModels.changes.pipe(takeUntilDestroyed()).subscribe(() => {
+    this.projectedModels.changes.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.bindProjectedModelChanges();
     });
+
+    queueMicrotask(() => this.emitInitialFilterChange());
   }
 
   private bindProjectedModelChanges(): void {
+    this.projectedModelSubscriptions.forEach((subscription) => subscription.unsubscribe());
+    this.projectedModelSubscriptions.clear();
+
     this.projectedModels.forEach((model) => {
-      model.valueChanges?.pipe(takeUntilDestroyed()).subscribe(() => {
-        this.filterChange.emit(this.buildFilterRequest());
-      });
+      const subscription = model.valueChanges
+        ?.pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => {
+          this.emitFilterChange(this.buildFilterRequest());
+        });
+
+      if (subscription) {
+        this.projectedModelSubscriptions.set(model, subscription);
+      }
     });
+  }
+
+  private emitInitialFilterChange(): void {
+    if (this.hasEmittedInitialRequest) {
+      return;
+    }
+
+    this.hasEmittedInitialRequest = true;
+    this.emitFilterChange(this.buildFilterRequest());
+  }
+
+  private emitFilterChange(request: CasesFilterRequest): void {
+    const sanitizedRequest = this.normalizeFilterRequest(request);
+    const isDuplicate =
+      this.lastEmittedRequest !== null &&
+      JSON.stringify(this.lastEmittedRequest) === JSON.stringify(sanitizedRequest);
+
+    if (isDuplicate) {
+      return;
+    }
+
+    this.lastEmittedRequest = sanitizedRequest;
+    this.filterChange.emit(sanitizedRequest);
   }
 
   /** Number of advanced filters currently set - shown as a badge on the toggle button. */
@@ -118,30 +157,79 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     this.filterForm.reset(null, { emitEvent: false });
     this.showAdvanced = false;
     this.reset.emit();
-    this.filterChange.emit(this.buildFilterRequest());
+    this.emitFilterChange(this.buildFilterRequest());
   }
 
   buildFilterRequest(): CasesFilterRequest {
     const raw = this.filterForm.value;
-    return {
+    return this.normalizeFilterRequest({
       status: null,
-      gender: raw.gender || null,
-      ageCategory: raw.ageCategory || null,
-      fullName: raw.fullName || null,
-      government: raw.government || null,
-      city: raw.city || null,
+      gender: raw.gender,
+      ageCategory: raw.ageCategory,
+      fullName: raw.fullName,
+      government: raw.government,
+      city: raw.city,
       minAge: null,
       maxAge: null,
-      fromDate: raw.fromDate || null,
-      toDate: raw.toDate || null,
-      ageSort: this.toNumberOrNull(raw.ageSort),
-      dateSort: this.toNumberOrNull(raw.dateSort),
+      fromDate: raw.fromDate,
+      toDate: raw.toDate,
+      ageSort: raw.ageSort,
+      dateSort: raw.dateSort,
       page: 1,
+      pageSize: 12,
+    });
+  }
+
+  private normalizeFilterRequest(request: CasesFilterRequest): CasesFilterRequest {
+    return {
+      ...request,
+      gender: this.toEnumOrNull(request.gender),
+      ageCategory: this.toEnumOrNull(request.ageCategory),
+      fullName: this.toStringOrNull(request.fullName),
+      government: this.toStringOrNull(request.government),
+      city: this.toStringOrNull(request.city),
+      minAge: this.toNumberOrNull(request.minAge),
+      maxAge: this.toNumberOrNull(request.maxAge),
+      fromDate: this.toStringOrNull(request.fromDate),
+      toDate: this.toStringOrNull(request.toDate),
+      ageSort: this.toNumberOrNull(request.ageSort),
+      dateSort: this.toNumberOrNull(request.dateSort),
+      page: request.page ?? 1,
     };
   }
 
   private toNumberOrNull(value: unknown): number | null {
-    return value === null || value === undefined || value === '' ? null : Number(value);
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+
+    const numericValue = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(numericValue) && numericValue !== Number.MAX_VALUE ? numericValue : null;
+  }
+
+  private toEnumOrNull<T>(value: T | null | undefined): T | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    if (typeof value === 'string') {
+      return value.trim().length > 0 ? value : null;
+    }
+
+    if (typeof value === 'number') {
+      return Number.isFinite(value) && value !== Number.MAX_VALUE ? value : null;
+    }
+
+    return value;
+  }
+
+  private toStringOrNull(value: unknown): string | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    const textValue = String(value).trim();
+    return textValue.length > 0 ? textValue : null;
   }
 
   // --- Placeholder labels: replace with your real enum labels ---
