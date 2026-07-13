@@ -31,6 +31,7 @@ import {
 } from '../../model/profile.model';
 import { GeocodingService } from '../../../../core/services/gecoding.service';
 import { ProfileService } from '../../service/profile.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { UserRole } from '../../../../shared/enums/user-role';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';
 import { SnackbarService } from '../../../../core/services/toast.service';
@@ -82,6 +83,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   readonly #profileService = inject(ProfileService);
   readonly #geocodingService = inject(GeocodingService);
   readonly #snackbar = inject(SnackbarService);
+  readonly #authService = inject(AuthService);
   readonly #destroy$ = new Subject<void>();
   readonly #platformId = inject(PLATFORM_ID);
 
@@ -726,7 +728,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
       // currentRefreshToken: this.#tokenService.getRefreshToken(),
     };
 
-    this.#profileService.changePassword(dto).subscribe({
+    this.#authService.changePassword(dto).subscribe({
       next: () => {
         this.isSavingPassword.set(false);
         this.togglePasswordEdit(false);

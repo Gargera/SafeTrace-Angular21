@@ -54,16 +54,13 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
-      if (error.status === 401 && token) {
+      if (error.status === 401 && token && !req.url.includes('/refresh-token')) {
         const expirationString = authService.getRefreshTokenExpiration();
         if (expirationString) {
           const expirationDate = new Date(expirationString);
           const now = new Date();
 
           if (now >= expirationDate) {
-            
-            authService.clearSession();
-            
             Swal.fire({
               title: 'انتهت الجلسة',
               text: 'انتهت صلاحية الجلسة بالكامل، يرجى تسجيل الدخول من جديد.',
@@ -75,6 +72,7 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
                 popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl'
               }
             }).then(() => {
+              authService.clearSession();
               router.navigate(['/auth']);
             });
 
@@ -105,8 +103,22 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
             }),
             catchError((refreshErr) => {
               isRefreshing = false;
-              authService.clearSession();
-              router.navigate(['/auth']);
+
+              Swal.fire({
+                title: 'انتهت الجلسة',
+                text: 'تم تسجيل الخروج لانتهاء الجلسة أو كإجراء أمني، يرجى تسجيل الدخول من جديد.',
+                icon: 'warning',
+                confirmButtonText: 'تسجيل الدخول',
+                confirmButtonColor: '#091426',
+                allowOutsideClick: false,
+                customClass: {
+                  popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl'
+                }
+              }).then(() => {
+                authService.clearSession();
+                router.navigate(['/auth']);
+              });
+
               return throwError(() => refreshErr);
             }),
           );
