@@ -1,5 +1,4 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LongTermCaseService } from '../../services/long-term-case.service';
@@ -10,6 +9,7 @@ import { CaseFiltersComponent } from '../../../../shared/components/cases-compon
 import { PaginationComponent } from '../../../../shared/components/cases-components/case-pagination/case-pagination.component';
 import { EmptyStateComponent } from '../../../../shared/components/cases-components/empty-state/empty-state.component';
 import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
+import { CaseCardComponent } from "../../../../shared/components/cases-components/case-card/case-card.component";
 
 @Component({
   selector: 'app-long-term-list',
@@ -21,8 +21,8 @@ import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-c
     PaginationComponent,
     CaseSkeletonGridComponent,
     EmptyStateComponent,
-    DatePipe,
-  ],
+    CaseCardComponent
+],
   templateUrl: './long-term-list.html',
   styleUrls: ['./long-term-list.css'],
 })
@@ -65,6 +65,10 @@ export class LongTermList implements OnInit {
 
   onViewDetails(caseId: number): void {
     this.router.navigate(['/cases/long-term', caseId]);
+  }
+
+  onContactReporter(caseId: number): void {
+    this.onViewDetails(caseId);
   }
 
   trackByCaseId(_index: number, item: LongTermCaseListItemResponse): number {

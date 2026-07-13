@@ -1,9 +1,10 @@
-<div class="flex flex-col items-center justify-center py-12 text-center" [ngClass]="containerClass">
+<div class="flex flex-col items-center justify-center py-16 text-center" [ngClass]="containerClass">
+  <!-- Icon -->
   <div
-    class="flex h-16 w-16 items-center justify-center rounded-full bg-surface-container-lowest mb-4"
+    class="flex h-20 w-20 items-center justify-center rounded-full border border-outline-variant bg-surface-container ring-4 ring-surface-container-low"
   >
     <svg
-      class="h-8 w-8 text-on-surface-variant"
+      class="h-10 w-10 text-on-surface-variant"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -12,16 +13,24 @@
       <path
         stroke-linecap="round"
         stroke-linejoin="round"
-        stroke-width="2"
+        stroke-width="1.8"
         d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
       />
     </svg>
   </div>
 
-  <h3 class="text-lg font-semibold text-on-surface">{{ title }}</h3>
-  <p class="mt-1 text-sm text-on-surface-variant max-w-xl">{{ message }}</p>
+  <!-- Title -->
+  <h2 class="mt-6 text-xl font-bold text-on-surface">
+    {{ title }}
+  </h2>
 
-  <div class="mt-4 flex gap-3">
+  <!-- Message -->
+  <p class="mt-2 max-w-3xl text-sm leading-7 text-on-surface-variant">
+    {{ message }}
+  </p>
+
+  <!-- Actions -->
+  <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
     <ng-content select="[emptyActions]"></ng-content>
   </div>
 </div>
