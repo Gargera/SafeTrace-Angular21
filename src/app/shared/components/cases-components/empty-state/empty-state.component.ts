@@ -8,7 +8,8 @@ import { NgClass } from '@angular/common';
   templateUrl: './empty-state.component.html',
 })
 export class EmptyStateComponent {
-  @Input() title: string = 'لا توجد بيانات';
-  @Input() message: string = 'لم يتم العثور على أي عناصر تطابق بحثك.';
-  @Input() containerClass: string = '';
+  @Input() icon = 'images/empty.png';
+  @Input() title = 'لا توجد بيانات';
+  @Input() message = 'لم يتم العثور على أي عناصر تطابق بحثك.';
+  @Input() containerClass = '';
 }

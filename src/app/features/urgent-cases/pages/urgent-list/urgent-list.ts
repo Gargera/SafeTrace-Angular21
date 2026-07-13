@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UrgentCaseService } from '../../services/urgent-case.service';
@@ -10,7 +10,7 @@ import { PaginationComponent } from '../../../../shared/components/cases-compone
 import { EmptyStateComponent } from '../../../../shared/components/cases-components/empty-state/empty-state.component';
 import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
 import { UrgentCasesFilterRequest } from '../../models/request/UrgentCaseFilterRequest';
-import { CaseCardComponent } from "../../../../shared/components/cases-components/case-card/case-card.component";
+import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
 
 @Component({
   selector: 'app-urgent-list',
@@ -22,14 +22,15 @@ import { CaseCardComponent } from "../../../../shared/components/cases-component
     PaginationComponent,
     CaseSkeletonGridComponent,
     EmptyStateComponent,
-    CaseCardComponent
-],
+    CaseCardComponent,
+  ],
   templateUrl: './urgent-list.html',
   styleUrls: ['./urgent-list.css'],
 })
 export class UrgentListComponent implements OnInit {
   private router = inject(Router);
   private urgentCaseService = inject(UrgentCaseService);
+  private cdr = inject(ChangeDetectorRef);
 
   cases: UrgentCaseListItemResponse[] = [];
   loading = true;
@@ -47,7 +48,7 @@ export class UrgentListComponent implements OnInit {
   private currentFilter: UrgentCasesFilterRequest = this.emptyFilter();
 
   ngOnInit(): void {
-    this.fetchCases();
+    // The shared filter component emits the initial valid request after it is fully initialized.
   }
 
   navigateToCreate(): void {
@@ -56,10 +57,10 @@ export class UrgentListComponent implements OnInit {
 
   onFilterChange(filter: CasesFilterRequest): void {
     this.currentFilter = {
-      ...filter,
+      ...this.sanitizeFilter(filter),
       latitude: this.currentFilter.latitude,
       longitude: this.currentFilter.longitude,
-      radiusInMeters: this.radiusInMeters ?? Number.MAX_VALUE,
+      radiusInMeters: this.normalizeRadius(this.radiusInMeters),
       page: 1,
     };
     this.fetchCases();
@@ -98,9 +99,11 @@ export class UrgentListComponent implements OnInit {
         this.totalPages.set(res.totalPages);
         this.currentPage.set(this.currentFilter.page);
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.loading = false;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -120,9 +123,66 @@ export class UrgentListComponent implements OnInit {
       ageSort: null,
       dateSort: null,
       page: 1,
+      pageSize: 12,
       latitude: null,
       longitude: null,
-      radiusInMeters: Number.MAX_VALUE,
+      radiusInMeters: null,
     };
+  }
+
+  private sanitizeFilter(filter: CasesFilterRequest): CasesFilterRequest {
+    return {
+      ...filter,
+      gender: this.normalizeEnum(filter.gender),
+      ageCategory: this.normalizeEnum(filter.ageCategory),
+      fullName: this.normalizeText(filter.fullName),
+      government: this.normalizeText(filter.government),
+      city: this.normalizeText(filter.city),
+      minAge: this.normalizeNumber(filter.minAge),
+      maxAge: this.normalizeNumber(filter.maxAge),
+      fromDate: this.normalizeText(filter.fromDate),
+      toDate: this.normalizeText(filter.toDate),
+      ageSort: this.normalizeNumber(filter.ageSort),
+      dateSort: this.normalizeNumber(filter.dateSort),
+      page: 1,
+    };
+  }
+
+  private normalizeNumber(value: number | null | undefined): number | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    const numericValue = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(numericValue) && numericValue !== Number.MAX_VALUE ? numericValue : null;
+  }
+
+  private normalizeEnum<T>(value: T | null | undefined): T | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    if (typeof value === 'string') {
+      return value.trim().length > 0 ? value : null;
+    }
+
+    if (typeof value === 'number') {
+      return Number.isFinite(value) && value !== Number.MAX_VALUE ? value : null;
+    }
+
+    return value;
+  }
+
+  private normalizeText(value: string | null | undefined): string | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    const textValue = String(value).trim();
+    return textValue.length > 0 ? textValue : null;
+  }
+
+  private normalizeRadius(value: number | null | undefined): number | null {
+    return this.normalizeNumber(value);
   }
 }
