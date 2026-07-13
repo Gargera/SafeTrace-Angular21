@@ -3,21 +3,19 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CaseListItemResponse } from '../../../../core/models/Cases.model';
+import { getGenderTranslationAr } from '../../../../core/constants/gender.dictionary';
+import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.categories.dictionary';
 import { AgeCategories } from '../../../enums/age-categories';
-import { GenderBadgeDirective } from '../../../directives/gender-badge-directive';
-import { AgeBadgeDirective } from '../../../directives/age-badge-directive';
-import { CaseStatusBadgeDirective } from '../../../directives/case-status-badge-directive';
 
 @Component({
   selector: 'app-case-card',
   standalone: true,
-  imports: [DatePipe, RouterModule, GenderBadgeDirective, AgeBadgeDirective, CaseStatusBadgeDirective],
+  imports: [DatePipe, RouterModule],
   templateUrl: './case-card.component.html',
 })
 export class CaseCardComponent {
   @Input({ required: true }) caseItem!: CaseListItemResponse;
   @Input() showUrgentTag = false;
-  @Input() isFounded = false;
   @Input() detailRoute: Array<string | number> | null = null;
   @Output() onContact = new EventEmitter<number>();
 
@@ -49,12 +47,20 @@ export class CaseCardComponent {
     return parts.length ? parts.join(' • ') : null;
   }
 
+  getGenderLabel(): string {
+    return getGenderTranslationAr(this.caseItem.gender);
+  }
+
+  getAgeCategoryLabel(): string {
+    const ageCategory = this.getAgeCategory(this.caseItem.age);
+    return ageCategory ? getAgeCategoryTranslationAr(ageCategory) : '';
+  }
+
   getUrgentEndDate(): string | null {
     return (this.caseItem as CaseListItemResponse & { endDate?: string | null }).endDate ?? null;
   }
 
-  getAgeCategoryEnum(): AgeCategories {
-    const age = this.caseItem.age;
+  private getAgeCategory(age: number): AgeCategories | null {
     if (age <= 12) return AgeCategories.Child;
     if (age <= 24) return AgeCategories.Young;
     if (age <= 60) return AgeCategories.Adult;
@@ -70,6 +76,10 @@ export class CaseCardComponent {
     return !!this.getLocation();
   }
 
+  hasAgeCategory(): boolean {
+    return !!this.getAgeCategoryLabel();
+  }
+
   hasCreatedAt(): boolean {
     return !!this.caseItem?.createdAt;
   }
@@ -77,4 +87,4 @@ export class CaseCardComponent {
   hasUrgentEndDate(): boolean {
     return !!this.getUrgentEndDate();
   }
-}
+}
