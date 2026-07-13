@@ -1,1 +1,86 @@
-<p>urgent-list works!</p>
+<div class="min-h-screen bg-background">
+  <div class="mx-auto max-w-7xl space-y-6 px-4 py-6">
+    <!-- Page Header -->
+    <section class="space-y-3 pb-2">
+      <app-case-header
+        title="الحالات العاجلة"
+        subtitle="إدارة وعرض جميع الحالات العاجلة"
+        [badge]="!loading ? totalItems + ' حالة' : ''"
+        badgeClass="bg-error-container text-on-error-container"
+        [loading]="loading"
+        primaryActionLabel="إنشاء حالة عاجلة"
+        primaryButtonClass="bg-error hover:opacity-90 text-on-error shadow-sm"
+        [bordered]="false"
+        (primaryAction)="navigateToCreate()"
+      >
+      </app-case-header>
+    </section>
+
+    <!-- Filters Card -->
+    <section
+      class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm"
+    >
+      <app-case-filters (filterChange)="onFilterChange($event)" (reset)="onFilterReset()">
+        <!-- Urgent-only extra filter -->
+        <div extendedFilters>
+          <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
+            نطاق البحث (متر)
+          </label>
+
+          <input
+            type="number"
+            min="100"
+            step="100"
+            [(ngModel)]="radiusInMeters"
+            [ngModelOptions]="{ standalone: true }"
+            placeholder="بدون حد أقصى"
+            class="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3.5 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none transition-all duration-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20"
+          />
+        </div>
+      </app-case-filters>
+    </section>
+
+    <!-- Main Content -->
+    <div class="space-y-4">
+      <!-- Loading Skeleton -->
+      @if (loading) {
+        <app-case-skeleton-grid></app-case-skeleton-grid>
+      }
+
+      <!-- Empty State -->
+      @if (!loading && cases.length === 0) {
+        <app-empty-state
+          title="لا توجد حالات عاجلة"
+          message="لم يتم العثور على أي حالات عاجلة تطابق معايير البحث الحالية."
+        >
+        </app-empty-state>
+      }
+
+      @if (!loading && cases.length > 0) {
+        <!-- Cases Grid -->
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          @for (case of cases; track trackByCaseId($index, case)) {
+            <app-case-card
+              [caseItem]="case"
+              [showUrgentTag]="true"
+              [detailRoute]="['/urgent-cases', case.id]"
+              (onContact)="onContactReporter($event)"
+              class="block"
+            >
+            </app-case-card>
+          }
+        </div>
+
+        <!-- Pagination (shows its own "showing X-Y of Z" summary since totalItems/pageSize are passed) -->
+        <app-pagination
+          [currentPage]="currentPage"
+          [totalPages]="totalPages"
+          [totalItems]="totalItems"
+          [pageSize]="pageSize"
+          (pageChange)="onPageChange($event)"
+        >
+        </app-pagination>
+      }
+    </div>
+  </div>
+</div>

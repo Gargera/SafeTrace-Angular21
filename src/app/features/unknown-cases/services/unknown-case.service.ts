@@ -1,0 +1,152 @@
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { ApiService } from '../../../shared/services/api.service';
+import { UnknownCaseFilterRequest } from '../models/request/UnknownCaseFilterRequest';
+import { UnknownCaseListItemResponse } from '../models/response/UnknownCaseListItemResponse';
+import { UnknownCaseDetailResponse } from '../models/response/UnknownCaseDetailResponse';
+import { UnknownCaseCreateRequest } from '../models/request/UnknownCaseCreateRequest';
+import { UnknownCaseUpdateRequest } from '../models/request/UnknownCaseUpdateRequest';
+import { FoundPersonInfoRequest } from '../../../core/models/Cases.model';
+import { ApiResponse } from '../../founded/models/founded.models';
+import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
+import { environment } from '../../../../environments/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+
+export class UnknownCaseService extends ApiService {
+  private readonly baseUrl = `${environment.baseUrl}/api/UnknownCase`;
+
+  /**
+   * Get all unknown cases with filters (public)
+   * GET: /api/UnknownCase/GetCases
+   */
+  getAllCases(filter: UnknownCaseFilterRequest): Observable<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>> {
+    return this.get<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>>(
+      `${this.baseUrl}/GetCases`,
+      filter as Record<string, any>
+    );
+  }
+
+  /**
+   * Get all unknown cases with filters (admin only)
+   * GET: /api/UnknownCase/Admin/GetCases
+   */
+  adminGetAllCases(filter: UnknownCaseFilterRequest): Observable<ApiResponse<PaginationResponse<UnknownCaseDetailResponse>>> {
+    return this.get<ApiResponse<PaginationResponse<UnknownCaseDetailResponse>>>(
+      `${this.baseUrl}/Admin/GetCases`,
+      filter as Record<string, any>
+    );
+  }
+
+  /**
+   * Get current user's unknown cases
+   * GET: /api/UnknownCase/GetMyCases
+   */
+  getMyCases(filter: UnknownCaseFilterRequest): Observable<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>> {
+    return this.get<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>>(
+      `${this.baseUrl}/GetMyCases`,
+      filter as Record<string, any>
+    );
+  }
+
+  /**
+   * Get unknown case by ID (public)
+   * GET: /api/UnknownCase/GetCaseDetails/{id}
+   */
+  getCaseById(id: number): Observable<ApiResponse<UnknownCaseDetailResponse>> {
+    return this.get<ApiResponse<UnknownCaseDetailResponse>>(
+      `${this.baseUrl}/GetCaseDetails/${id}`
+    );
+  }
+
+  /**
+   * Get unknown case by ID (admin only)
+   * GET: /api/UnknownCase/Admin/GetCaseDetails/{id}
+   */
+  adminGetCaseById(id: number): Observable<ApiResponse<UnknownCaseDetailResponse>> {
+    return this.get<ApiResponse<UnknownCaseDetailResponse>>(
+      `${this.baseUrl}/Admin/GetCaseDetails/${id}`
+    );
+  }
+
+  /**
+   * Create a new unknown case
+   * POST: /api/UnknownCase/CreateCase
+   * Content-Type: multipart/form-data
+   */
+  createCase(request: UnknownCaseCreateRequest): Observable<ApiResponse<string>> {
+    const formData = this.buildFormData(request);
+    return this.postFormData<ApiResponse<string>>(
+      `${this.baseUrl}/CreateCase`,
+      formData
+    );
+  }
+
+  /**
+   * Update an unknown case
+   * PUT: /api/UnknownCase/UpdateCase/{id}
+   * Content-Type: multipart/form-data
+   */
+  updateCase(id: number, request: UnknownCaseUpdateRequest): Observable<ApiResponse<string>> {
+    const formData = this.buildFormData(request);
+    return this.putFormData<ApiResponse<string>>(
+      `${this.baseUrl}/UpdateCase/${id}`,
+      formData
+    );
+  }
+
+  /**
+   * Approve an unknown case
+   * PUT: /api/UnknownCase/Approve/{id}
+   */
+  approveCase(id: number): Observable<ApiResponse<string>> {
+    return this.put<ApiResponse<string>>(
+      `${this.baseUrl}/Approve/${id}`,
+      {}
+    );
+  }
+
+  /**
+   * Reject an unknown case
+   * PUT: /api/UnknownCase/Reject/{id}
+   */
+  rejectCase(id: number): Observable<ApiResponse<string>> {
+    return this.put<ApiResponse<string>>(
+      `${this.baseUrl}/Reject/${id}`,
+      {}
+    );
+  }
+
+  /**
+   * Soft delete an unknown case
+   * DELETE: /api/UnknownCase/Delete/{id}
+   */
+  deleteCase(id: number): Observable<ApiResponse<string>> {
+    return this.delete<ApiResponse<string>>(
+      `${this.baseUrl}/Delete/${id}`
+    );
+  }
+
+  /**
+   * Mark an unknown case as found
+   * PUT: /api/UnknownCase/MarkAsFound/{id}
+   */
+  markAsFound(id: number, request: FoundPersonInfoRequest): Observable<ApiResponse<string>> {
+    return this.put<ApiResponse<string>>(
+      `${this.baseUrl}/MarkAsFound/${id}`,
+      request
+    );
+  }
+
+  /**
+   * Permanently delete an unknown case
+   * DELETE: /api/UnknownCase/PermanentDeletion/{id}
+   */
+  permanentDelete(id: number): Observable<ApiResponse<string>> {
+    return this.delete<ApiResponse<string>>(
+      `${this.baseUrl}/PermanentDeletion/${id}`
+    );
+  }
+}
