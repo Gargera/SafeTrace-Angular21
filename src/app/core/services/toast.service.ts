@@ -46,7 +46,7 @@ export class SnackbarService {
     this.show(text, 'success', durationMs);
   }
 
-  error(text: string, durationMs = 1000000000): void {
+  error(text: string, durationMs = 5000): void {
     this.show(text, 'error', durationMs);
   }
 
