@@ -18,27 +18,13 @@ import { CasesFilterRequest } from '../../../../core/models/Cases.model';
 import { AgeCategories } from '../../../enums/age-categories';
 import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.categories.dictionary';
 import { CardComponent } from '../../card/card';
-import { LabelComponent } from '../../label/label';
-import { TextInputComponent } from '../../text-input/text-input';
-import { SelectInputComponent } from '../../select-input/select-input';
-import { DateInputComponent } from '../../date-input/date-input';
 import { ButtonComponent } from '../../button/button';
-import { IconComponent } from '../../icon/icon';
+import { FormField } from '../../form-field/form-field';
 
 @Component({
   selector: 'app-case-filters',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    FormsModule,
-    CardComponent,
-    LabelComponent,
-    TextInputComponent,
-    SelectInputComponent,
-    DateInputComponent,
-    ButtonComponent,
-    IconComponent,
-  ],
+  imports: [ReactiveFormsModule, FormsModule, CardComponent, FormField, ButtonComponent],
   templateUrl: './case-filters.component.html',
   styleUrls: ['./case-filters.component.css'],
 })
@@ -165,17 +151,20 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   }
 
   resetFilters(): void {
-    this.filterForm.reset({
-      fullName: '',
-      gender: '',
-      ageCategory: '',
-      government: '',
-      city: '',
-      fromDate: '',
-      toDate: '',
-      ageSort: '',
-      dateSort: '',
-    }, { emitEvent: false });
+    this.filterForm.reset(
+      {
+        fullName: '',
+        gender: '',
+        ageCategory: '',
+        government: '',
+        city: '',
+        fromDate: '',
+        toDate: '',
+        ageSort: '',
+        dateSort: '',
+      },
+      { emitEvent: false },
+    );
     this.showAdvanced = false;
     this.reset.emit();
     this.emitFilterChange(this.buildFilterRequest());
@@ -236,7 +225,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
 
     if (typeof value === 'string') {
       const trimmed = value.trim();
-      return (trimmed === '' || trimmed === 'null') ? null : (trimmed as any);
+      return trimmed === '' || trimmed === 'null' ? null : (trimmed as any);
     }
 
     if (typeof value === 'number') {
@@ -252,7 +241,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     }
 
     const textValue = String(value).trim();
-    return (textValue === '' || textValue === 'null') ? null : textValue;
+    return textValue === '' || textValue === 'null' ? null : textValue;
   }
 
   getGenderLabel(gender: number): string {

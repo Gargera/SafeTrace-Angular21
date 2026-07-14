@@ -9,7 +9,9 @@
         (onClick)="backAction.emit()"
         extraClass="h-11 w-11 shrink-0 bg-surface-container-low hover:bg-surface-container-high hover:shadow-sm"
       >
-        <app-icon name="back" size="1.25rem" extraClass="text-on-surface-variant transition-transform group-hover:-translate-x-1"></app-icon>
+        <i
+          class="fa-solid fa-arrow-left rtl:fa-flip-horizontal text-xl text-on-surface-variant transition-transform duration-200 rtl:group-hover:translate-x-1 ltr:group-hover:-translate-x-1"
+        ></i>
       </app-button>
     }
 
@@ -30,7 +32,14 @@
 
         @if (loading) {
           <svg class="h-5 w-5 animate-spin text-secondary" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <circle
+              class="opacity-20"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            />
             <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
           </svg>
         }
