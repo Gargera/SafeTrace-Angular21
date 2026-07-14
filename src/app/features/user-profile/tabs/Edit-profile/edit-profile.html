@@ -661,10 +661,10 @@
 
         <div class="flex-1">
           <div class="flex items-center gap-2 flex-wrap">
-            <h3 class="text-xl font-bold">حساب مسؤول النظام</h3>
-            <span class="px-3 py-1 rounded-full bg-white/15 text-xs font-semibold tracking-wide"
-              >ADMIN</span
-            >
+            <h3 class="text-xl font-bold">{{ verificationLabel }}</h3>
+            <span class="px-3 py-1 rounded-full bg-white/15 text-xs font-semibold tracking-wide">{{
+              verificationLabel
+            }}</span>
           </div>
 
           <p class="mt-2 text-sm text-blue-100 leading-6">هذا الحساب يمتلك صلاحيات الإدارة.</p>
@@ -692,7 +692,7 @@
               >
               <div>
                 <p class="text-xs text-blue-100">الصلاحيات</p>
-                <p class="font-semibold">Administrator</p>
+                <p class="font-semibold">{{ verificationLabel }}</p>
               </div>
             </div>
 
@@ -744,10 +744,10 @@
 
         <div class="flex-1">
           <div class="flex items-center gap-2 flex-wrap">
-            <h3 class="text-xl font-bold">حساب مشرف</h3>
+            <h3 class="text-xl font-bold">{{ verificationLabel }}</h3>
 
             <span class="px-3 py-1 rounded-full bg-white/15 text-xs font-semibold tracking-wide">
-              MODERATOR
+              {{ verificationLabel }}
             </span>
           </div>
 
@@ -764,7 +764,7 @@
 
               <div>
                 <p class="text-xs text-emerald-100">الحالة</p>
-                <p class="font-semibold">مشرف معتمد</p>
+                <p class="font-semibold">{{ verificationLabel }} معتمد</p>
               </div>
             </div>
 
@@ -775,7 +775,7 @@
 
               <div>
                 <p class="text-xs text-emerald-100">الصلاحيات</p>
-                <p class="font-semibold">Moderator</p>
+                <p class="font-semibold">{{ verificationLabel }}</p>
               </div>
             </div>
 

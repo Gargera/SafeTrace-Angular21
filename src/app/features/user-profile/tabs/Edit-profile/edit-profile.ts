@@ -39,6 +39,8 @@ import { SnackbarService } from '../../../../core/services/toast.service';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
 import { ImageCropDialog } from '../../shared/image-crop-dialog/image-crop-dialog';
 import { Toast } from '../../../../shared/components/toast/toast';
+import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
+import { getVerificationStatusTranslationAr } from '../../../../core/constants/verification.status.dictionary';
 
 // ── Egypt center coordinates (default) ────────────────────────────────────
 const EGYPT_LAT = 26.8206;
@@ -308,6 +310,27 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   get isVerified(): boolean {
     return this.userInfo()?.verificationStatus === VerificationStatus.Verified;
   }
+
+  getRoleName(roleName: string | undefined): string {
+    return getRoleTranslationAr(roleName);
+  }
+  getVerificationStatus(ver: string | undefined): string {
+    return getVerificationStatusTranslationAr(ver);
+  }
+  get verificationLabel(): string {
+    if (this.userInfo()?.role === UserRole.Moderator) {
+      return this.getRoleName(UserRole.Moderator);
+    } else if (this.userInfo()?.role === UserRole.Admin) {
+      return this.getRoleName(UserRole.Admin);
+    } else if (this.userInfo()?.verificationStatus === VerificationStatus.Verified) {
+      return this.getVerificationStatus(VerificationStatus.Verified);
+    } else if (this.userInfo()?.verificationStatus === VerificationStatus.Pending) {
+      return this.getVerificationStatus(VerificationStatus.Pending);
+    } else {
+      return getVerificationStatusTranslationAr(VerificationStatus.Unverified);
+    }
+  }
+
   #updateMapAndMarker(lat: number, lng: number, zoom?: number): void {
     if (!this.map) return;
     this.map.setCenter({ lat, lng });
