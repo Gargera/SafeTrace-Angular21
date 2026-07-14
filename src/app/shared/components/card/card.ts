@@ -6,6 +6,8 @@ import { Component, Input } from '@angular/core';
   templateUrl: './card.html',
 })
 export class CardComponent {
-  @Input() extraClass = 'rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm';
+  @Input() extraClass = '';
   @Input() dir: 'ltr' | 'rtl' | 'auto' = 'rtl';
+
+  protected readonly baseClass = 'rounded-xl shadow-sm p-6';
 }
