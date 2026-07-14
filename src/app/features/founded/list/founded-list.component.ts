@@ -7,6 +7,7 @@ import { FoundedService } from '../services/founded.service';
 import { CaseType } from '../../../shared/enums/case-type';
 import { FoundPersonListItemDto, Gender, FoundedHeaderQueryDTO } from '../models/founded.models';
 import { environment } from '../../../../environments/environment';
+import { getGenderTranslationAr } from '../../../core/constants/gender.dictionary';
 @Component({
   selector: 'app-founded-list',
   standalone: true,
@@ -19,6 +20,8 @@ export class FoundedListComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   private readonly searchSubject = new Subject<string>();
   public readonly environment = environment;
+
+  public getGenderTranslationAr = getGenderTranslationAr;
 
   // State signals
   items = signal<FoundPersonListItemDto[]>([]);
