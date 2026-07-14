@@ -171,7 +171,6 @@ export class NotificationService implements OnDestroy {
 
   // ─── REST API Fallback (used if SignalR is not connected) ─────────────────
   loadPage(page: number, append = false): void {
-    console.trace('loadPage', page, append);
 
     this.#isLoading.set(true);
 
