@@ -17,17 +17,13 @@ import { Subscription, debounceTime, distinctUntilChanged, map, merge } from 'rx
 import { CasesFilterRequest } from '../../../../core/models/Cases.model';
 import { AgeCategories } from '../../../enums/age-categories';
 import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.categories.dictionary';
-import { CardComponent } from '../../../ui/card/card.component';
-import { DividerComponent } from '../../../ui/divider/divider.component';
-import { FormLabelComponent } from '../../../ui/label/form-label.component';
-import { TextInputComponent } from '../../../ui/text-input/text-input.component';
-import { SelectInputComponent } from '../../../ui/select-input/select-input.component';
-import { DateInputComponent } from '../../../ui/date-input/date-input.component';
-import { BadgeComponent } from '../../../ui/badge/badge.component';
-import { TextButtonComponent } from '../../../ui/button/text-button.component';
-import { SearchIconComponent } from '../../../ui/icon/search-icon.component';
-import { ChevronIconComponent } from '../../../ui/icon/chevron-icon.component';
-import { ResetIconComponent } from '../../../ui/icon/reset-icon.component';
+import { CardComponent } from '../../card/card';
+import { LabelComponent } from '../../label/label';
+import { TextInputComponent } from '../../text-input/text-input';
+import { SelectInputComponent } from '../../select-input/select-input';
+import { DateInputComponent } from '../../date-input/date-input';
+import { ButtonComponent } from '../../button/button';
+import { IconComponent } from '../../icon/icon';
 
 @Component({
   selector: 'app-case-filters',
@@ -36,16 +32,12 @@ import { ResetIconComponent } from '../../../ui/icon/reset-icon.component';
     ReactiveFormsModule,
     FormsModule,
     CardComponent,
-    DividerComponent,
-    FormLabelComponent,
+    LabelComponent,
     TextInputComponent,
     SelectInputComponent,
     DateInputComponent,
-    BadgeComponent,
-    TextButtonComponent,
-    SearchIconComponent,
-    ChevronIconComponent,
-    ResetIconComponent,
+    ButtonComponent,
+    IconComponent,
   ],
   templateUrl: './case-filters.component.html',
   styleUrls: ['./case-filters.component.css'],
@@ -75,15 +67,15 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
 
   ngOnInit(): void {
     this.filterForm = this.fb.group({
-      fullName: [null],
-      gender: [null],
-      ageCategory: [null],
-      government: [null],
-      city: [null],
-      fromDate: [null],
-      toDate: [null],
-      ageSort: [null],
-      dateSort: [null],
+      fullName: [''],
+      gender: [''],
+      ageCategory: [''],
+      government: [''],
+      city: [''],
+      fromDate: [''],
+      toDate: [''],
+      ageSort: [''],
+      dateSort: [''],
     });
 
     const formControlStreams = [
@@ -173,7 +165,17 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   }
 
   resetFilters(): void {
-    this.filterForm.reset(null, { emitEvent: false });
+    this.filterForm.reset({
+      fullName: '',
+      gender: '',
+      ageCategory: '',
+      government: '',
+      city: '',
+      fromDate: '',
+      toDate: '',
+      ageSort: '',
+      dateSort: '',
+    }, { emitEvent: false });
     this.showAdvanced = false;
     this.reset.emit();
     this.emitFilterChange(this.buildFilterRequest());
@@ -219,7 +221,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   }
 
   private toNumberOrNull(value: unknown): number | null {
-    if (value === null || value === undefined || value === '') {
+    if (value === null || value === undefined || value === '' || value === 'null') {
       return null;
     }
 
@@ -233,14 +235,15 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     }
 
     if (typeof value === 'string') {
-      return value.trim().length > 0 ? value : null;
+      const trimmed = value.trim();
+      return (trimmed === '' || trimmed === 'null') ? null : (trimmed as any);
     }
 
     if (typeof value === 'number') {
       return Number.isFinite(value) && value !== Number.MAX_VALUE ? value : null;
     }
 
-    return value;
+    return value as T;
   }
 
   private toStringOrNull(value: unknown): string | null {
@@ -249,10 +252,9 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     }
 
     const textValue = String(value).trim();
-    return textValue.length > 0 ? textValue : null;
+    return (textValue === '' || textValue === 'null') ? null : textValue;
   }
 
-  // --- Placeholder labels: replace with your real enum labels ---
   getGenderLabel(gender: number): string {
     const labels: Record<number, string> = { 0: 'ذكر', 1: 'أنثى' };
     return labels[gender] ?? String(gender);

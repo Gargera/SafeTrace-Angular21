@@ -1,72 +1,44 @@
-<app-card
-  extraClass="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm"
-  dir="rtl"
->
+<app-card extraClass="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm" dir="rtl">
   <form [formGroup]="filterForm" class="space-y-6">
     <!-- Main Filters Grid -->
     <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-      <!-- Search -->
       <div>
-        <app-form-label>بحث</app-form-label>
-
+        <app-label>بحث</app-label>
         <app-text-input formControlName="fullName" placeholder="ابحث بالاسم..." [prefix]="true">
-          <span prefix
-            ><app-search-icon size="1rem" extraClass="text-on-surface-variant"></app-search-icon
-          ></span>
+          <span prefix><app-icon name="search" size="1rem" extraClass="text-on-surface-variant"></app-icon></span>
         </app-text-input>
       </div>
 
-      <!-- Gender -->
       <div>
-        <app-form-label>النوع</app-form-label>
-
+        <app-label>النوع</app-label>
         <app-select-input formControlName="gender" [icon]="true">
-          <option [ngValue]="null">الكل</option>
-
+          <option value="">الكل</option>
           @for (gender of genders; track gender) {
-            <option [ngValue]="gender">
-              {{ getGenderLabel(gender) }}
-            </option>
+            <option [value]="gender">{{ getGenderLabel(gender) }}</option>
           }
-          <span icon
-            ><app-chevron-icon size="1rem" extraClass="text-on-surface-variant"></app-chevron-icon
-          ></span>
+          <span icon><app-icon name="chevron" size="1rem" extraClass="text-on-surface-variant"></app-icon></span>
         </app-select-input>
       </div>
 
-      <!-- Age Category -->
       <div>
-        <app-form-label>فئة العمر</app-form-label>
-
+        <app-label>فئة العمر</app-label>
         <app-select-input formControlName="ageCategory" [icon]="true">
-          <option [ngValue]="null">الكل</option>
-
+          <option value="">الكل</option>
           @for (ageCategory of ageCategories; track ageCategory) {
-            <option [ngValue]="ageCategory">
-              {{ getAgeCategoryLabel(ageCategory) }}
-            </option>
+            <option [value]="ageCategory">{{ getAgeCategoryLabel(ageCategory) }}</option>
           }
-          <span icon
-            ><app-chevron-icon size="1rem" extraClass="text-on-surface-variant"></app-chevron-icon
-          ></span>
+          <span icon><app-icon name="chevron" size="1rem" extraClass="text-on-surface-variant"></app-icon></span>
         </app-select-input>
       </div>
 
-      <!-- Age Sort -->
       <div>
-        <app-form-label>ترتيب العمر</app-form-label>
-
+        <app-label>ترتيب العمر</app-label>
         <app-select-input formControlName="ageSort" [icon]="true">
-          <option [ngValue]="null">بدون ترتيب</option>
-
+          <option value="">بدون ترتيب</option>
           @for (sort of ageSorts; track sort) {
-            <option [ngValue]="sort">
-              {{ getAgeSortLabel(sort) }}
-            </option>
+            <option [value]="sort">{{ getAgeSortLabel(sort) }}</option>
           }
-          <span icon
-            ><app-chevron-icon size="1rem" extraClass="text-on-surface-variant"></app-chevron-icon
-          ></span>
+          <span icon><app-icon name="chevron" size="1rem" extraClass="text-on-surface-variant"></app-icon></span>
         </app-select-input>
       </div>
     </div>
@@ -75,112 +47,58 @@
     <div class="flex items-center gap-3 pt-1 m-0">
       <div class="h-px flex-1 bg-outline-variant/20"></div>
 
-      <button
-        type="button"
-        (click)="toggleAdvanced()"
-        class="group inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:text-secondary focus:outline-none"
-      >
+      <button type="button" (click)="toggleAdvanced()" class="group inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:text-secondary focus:outline-none">
         <span class="relative">
           فلاتر إضافية
-          <span
-            class="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-secondary transition-all duration-300 group-hover:w-full"
-            [class.w-full]="showAdvanced"
-          ></span>
+          <span class="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-secondary transition-all duration-300 group-hover:w-full" [class.w-full]="showAdvanced"></span>
         </span>
 
-        <!-- Active Filters Badge -->
         @if (activeAdvancedCount > 0) {
-          <app-badge extraClass="bg-secondary/10 px-1.5 text-secondary">
+          <span class="bg-secondary/10 px-1.5 text-secondary rounded-full">
             {{ activeAdvancedCount }}
-          </app-badge>
+          </span>
         }
 
-        <!-- Chevron -->
-        <app-chevron-icon
-          size="0.875rem"
-          extraClass="shrink-0 transition-transform duration-300"
-          [rotation]="showAdvanced ? 180 : 0"
-        ></app-chevron-icon>
+        <app-icon name="chevron" size="0.875rem" extraClass="shrink-0 transition-transform duration-300" [rotation]="showAdvanced ? 180 : 0"></app-icon>
       </button>
 
       <div class="h-px flex-1 bg-outline-variant/20"></div>
     </div>
 
     <!-- Advanced Filters Content -->
-    <div
-      class="grid transition-[grid-template-rows] duration-300 ease-in-out m-0"
-      [style.grid-template-rows]="showAdvanced ? '1fr' : '0fr'"
-    >
+    <div class="grid transition-[grid-template-rows] duration-300 ease-in-out m-0" [style.grid-template-rows]="showAdvanced ? '1fr' : '0fr'">
       <div class="overflow-hidden">
-        <div
-          class="grid grid-cols-1 gap-5 pt-4 transition-all duration-300 ease-out md:grid-cols-2 xl:grid-cols-4"
-          [class.opacity-100]="showAdvanced"
-          [class.translate-y-0]="showAdvanced"
-          [class.opacity-0]="!showAdvanced"
-          [class.-translate-y-2]="!showAdvanced"
-        >
-          <!-- Government -->
+        <div class="grid grid-cols-1 gap-5 pt-4 transition-all duration-300 ease-out md:grid-cols-2 xl:grid-cols-4" [class.opacity-100]="showAdvanced" [class.translate-y-0]="showAdvanced" [class.opacity-0]="!showAdvanced" [class.-translate-y-2]="!showAdvanced">
           <div>
-            <app-form-label>المحافظة</app-form-label>
-
+            <app-label>المحافظة</app-label>
             <app-text-input formControlName="government" placeholder="المحافظة..."></app-text-input>
           </div>
 
-          <!-- City -->
           <div>
-            <app-form-label>المدينة</app-form-label>
-
+            <app-label>المدينة</app-label>
             <app-text-input formControlName="city" placeholder="المدينة..."></app-text-input>
           </div>
 
-          <!-- From Date -->
           <div>
-            <app-form-label>من تاريخ</app-form-label>
-
+            <app-label>من تاريخ</app-label>
             <app-date-input formControlName="fromDate"></app-date-input>
           </div>
 
-          <!-- To Date -->
           <div>
-            <app-form-label>إلى تاريخ</app-form-label>
-
+            <app-label>إلى تاريخ</app-label>
             <app-date-input formControlName="toDate"></app-date-input>
           </div>
 
-          <!-- Date Sort -->
           <div>
-            <app-form-label>ترتيب التاريخ</app-form-label>
-
+            <app-label>ترتيب التاريخ</app-label>
             <app-select-input formControlName="dateSort" [icon]="true">
-              <option [ngValue]="null">بدون ترتيب</option>
-              <option [ngValue]="0">{{ getDateSortLabel(0) }}</option>
-              <option [ngValue]="1">{{ getDateSortLabel(1) }}</option>
-              <span icon
-                ><app-chevron-icon
-                  size="1rem"
-                  extraClass="text-on-surface-variant"
-                ></app-chevron-icon
-              ></span>
+              <option value="">بدون ترتيب</option>
+              <option value="0">{{ getDateSortLabel(0) }}</option>
+              <option value="1">{{ getDateSortLabel(1) }}</option>
+              <span icon><app-icon name="chevron" size="1rem" extraClass="text-on-surface-variant"></app-icon></span>
             </app-select-input>
-
-            <div class="relative">
-              <svg
-                class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </div>
           </div>
 
-          <!-- Extended Filters -->
           <ng-content select="[extendedFilters]"></ng-content>
         </div>
       </div>
@@ -188,18 +106,10 @@
 
     <!-- Footer -->
     <div class="flex flex-wrap justify-end gap-3 pt-2">
-      <app-text-button
-        type="button"
-        (click)="resetFilters()"
-        extraClass="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary"
-      >
-        <app-reset-icon
-          size="1rem"
-          extraClass="transition-transform duration-200 group-hover:-rotate-90"
-        ></app-reset-icon>
-
+      <app-button variant="text" type="button" (onClick)="resetFilters()" extraClass="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary">
+        <app-icon name="reset" size="1rem" extraClass="transition-transform duration-200 group-hover:-rotate-90"></app-icon>
         <span>إعادة تعيين</span>
-      </app-text-button>
+      </app-button>
     </div>
   </form>
 </app-card>

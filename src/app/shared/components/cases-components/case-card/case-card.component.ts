@@ -1,4 +1,4 @@
-// shared/components/case-card/case-card.component.ts
+﻿// shared/components/case-card/case-card.component.ts
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -6,11 +6,11 @@ import { CaseListItemResponse } from '../../../../core/models/Cases.model';
 import { AgeCategories } from '../../../enums/age-categories';
 import { GenderBadgeDirective } from '../../../directives/gender-badge-directive';
 import { AgeBadgeDirective } from '../../../directives/age-badge-directive';
-import { CardComponent } from '../../../ui/card/card.component';
-import { BadgeComponent } from '../../../ui/badge/badge.component';
-import { ButtonComponent } from '../../../ui/button/button.component';
-import { SearchIconComponent } from '../../../ui/icon/search-icon.component';
-import { ChevronIconComponent } from '../../../ui/icon/chevron-icon.component';
+import { CardComponent } from '../../card/card';
+
+import { ButtonComponent } from '../../button/button';
+
+
 
 @Component({
   selector: 'app-case-card',
@@ -21,10 +21,10 @@ import { ChevronIconComponent } from '../../../ui/icon/chevron-icon.component';
     GenderBadgeDirective,
     AgeBadgeDirective,
     CardComponent,
-    BadgeComponent,
+    
     ButtonComponent,
-    SearchIconComponent,
-    ChevronIconComponent,
+    
+    
   ],
   templateUrl: './case-card.component.html',
 })
@@ -59,7 +59,7 @@ export class CaseCardComponent {
     const parts = [this.caseItem?.city, this.caseItem?.government].filter(
       (value): value is string => Boolean(value),
     );
-    return parts.length ? parts.join(' • ') : null;
+    return parts.length ? parts.join(' â€¢ ') : null;
   }
 
   getUrgentEndDate(): string | null {
@@ -91,3 +91,5 @@ export class CaseCardComponent {
     return !!this.getUrgentEndDate();
   }
 }
+
+
