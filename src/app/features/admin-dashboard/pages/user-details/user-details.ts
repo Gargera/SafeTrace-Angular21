@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { ALL_SYSTEM_PERMISSIONS, PERMISSION_ACTIONS_AR, PERMISSION_GROUPS_AR } from '../../../../core/constants/permission.dictionary';
@@ -29,6 +29,7 @@ interface PermissionGroup {
   imports: [CommonModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective],
   templateUrl: './user-details.html',
   styleUrl: './user-details.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UserDetails implements OnInit {
   private userService = inject(UserService);

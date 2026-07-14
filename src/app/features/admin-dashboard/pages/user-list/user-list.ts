@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { GetUserDto } from '../../models/User/GetUserDto';
 import { RoleDto } from '../../models/Role/RoleDto';
@@ -27,6 +27,7 @@ import { UserService } from '../../services/user.service';
   ],
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UserList {
   public authService = inject(AuthService);

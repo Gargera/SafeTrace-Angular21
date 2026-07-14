@@ -8,8 +8,6 @@
         [badge]="!loading() ? totalItems() + ' حالة' : ''"
         [loading]="loading()"
         primaryActionLabel="إنشاء حالة طويلة الأمد"
-        primaryButtonClass="bg-primary hover:opacity-90 text-on-primary shadow-sm"
-        [bordered]="false"
         (primaryAction)="navigateToCreate()"
       >
       </app-case-header>

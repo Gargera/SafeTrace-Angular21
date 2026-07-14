@@ -1,33 +1,16 @@
 <div
   class="flex flex-col gap-6 transition-all duration-200 sm:flex-row sm:items-center sm:justify-between"
-  [ngClass]="{
-    'rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm': bordered,
-    'px-0 py-0': !bordered,
-  }"
 >
-  <!-- Left -->
   <div class="flex min-w-0 flex-1 items-start gap-4">
     @if (showBackButton) {
-      <button
-        type="button"
-        [attr.aria-label]="backButtonLabel"
-        (click)="backAction.emit()"
-        class="group flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-outline-variant bg-surface-container-low transition-all duration-200 hover:bg-surface-container-high hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary active:scale-95"
+      <app-button
+        variant="icon"
+        [ariaLabel]="backButtonLabel"
+        (onClick)="backAction.emit()"
+        extraClass="h-11 w-11 shrink-0 bg-surface-container-low hover:bg-surface-container-high hover:shadow-sm"
       >
-        <svg
-          class="h-5 w-5 text-on-surface-variant transition-transform group-hover:-translate-x-1"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-      </button>
+        <app-icon name="back" size="1.25rem" extraClass="text-on-surface-variant transition-transform group-hover:-translate-x-1"></app-icon>
+      </app-button>
     }
 
     <div class="min-w-0 flex-1">
@@ -47,15 +30,7 @@
 
         @if (loading) {
           <svg class="h-5 w-5 animate-spin text-secondary" fill="none" viewBox="0 0 24 24">
-            <circle
-              class="opacity-20"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            />
-
+            <circle class="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
           </svg>
         }
@@ -72,42 +47,30 @@
           {{ description }}
         </p>
       }
-
-      <div class="mt-4">
-        <ng-content select="[headerContent]"></ng-content>
-      </div>
     </div>
-
-    <ng-content select="[headerStart]"></ng-content>
   </div>
 
-  <!-- Right -->
-
   <div class="flex flex-wrap items-center justify-end gap-3">
-    <ng-content select="[headerEnd]"></ng-content>
-
     @if (secondaryActionLabel && showSecondary) {
-      <button
-        type="button"
-        (click)="secondaryAction.emit()"
+      <app-button
+        variant="secondary"
         [disabled]="loading || readonly || secondaryDisabled"
-        class="inline-flex h-11 items-center rounded-xl border border-outline-variant bg-surface-container-low px-5 text-sm font-semibold text-on-surface transition-all duration-200 hover:bg-surface-container-high active:scale-95 disabled:pointer-events-none disabled:opacity-50"
-        [ngClass]="secondaryButtonClass"
+        [extraClass]="secondaryButtonClass"
+        (onClick)="secondaryAction.emit()"
       >
         {{ secondaryActionLabel }}
-      </button>
+      </app-button>
     }
 
     @if (primaryActionLabel && showPrimary) {
-      <button
-        type="button"
-        (click)="primaryAction.emit()"
-        [disabled]="loading || readonly || primaryDisabled"
-        class="inline-flex h-11 items-center rounded-xl bg-secondary px-6 text-sm font-semibold text-on-secondary shadow-sm transition-all duration-200 hover:opacity-90 hover:shadow active:scale-95 disabled:pointer-events-none disabled:opacity-50"
-        [ngClass]="primaryButtonClass"
+      <app-button
+        variant="primary"
+        [disabled]="loading || readonly"
+        [extraClass]="primaryButtonClass"
+        (onClick)="primaryAction.emit()"
       >
         {{ primaryActionLabel }}
-      </button>
+      </app-button>
     }
   </div>
 </div>
