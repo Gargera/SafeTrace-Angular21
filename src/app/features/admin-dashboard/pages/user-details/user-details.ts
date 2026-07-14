@@ -19,8 +19,7 @@ import { BlockBadgeDirective } from "../../../../shared/directives/block-badge-d
 import Swal from 'sweetalert2';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
-
-
+import { FormField } from '../../../../shared/components/form-field/form-field';
 
 interface PermissionGroup {
   groupName: string;
@@ -31,7 +30,7 @@ interface PermissionGroup {
 
 @Component({
   selector: 'app-user-details',
-  imports: [CommonModule, FormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent],
+  imports: [CommonModule, FormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, FormField],
   templateUrl: './user-details.html',
   styleUrl: './user-details.css',
   changeDetection: ChangeDetectionStrategy.OnPush
