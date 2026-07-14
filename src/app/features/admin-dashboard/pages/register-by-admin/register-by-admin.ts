@@ -1,3 +1,4 @@
+import { FormField } from '../../../../shared/components/form-field/form-field';
 import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -8,9 +9,14 @@ import { RoleService } from '../../services/role.service';
 import { RoleDto } from '../../models/Role/RoleDto';
 import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 
+
+
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { CardComponent } from '../../../../shared/components/card/card';
+
 @Component({
   selector: 'app-register-by-admin',
-  imports: [ReactiveFormsModule, RouterModule, CommonModule],
+  imports: [FormField, ReactiveFormsModule, RouterModule, CommonModule,   ButtonComponent, CardComponent],
   templateUrl: './register-by-admin.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
