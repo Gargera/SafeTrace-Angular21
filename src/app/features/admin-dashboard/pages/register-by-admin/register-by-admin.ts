@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -12,6 +12,7 @@ import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionar
   selector: 'app-register-by-admin',
   imports: [ReactiveFormsModule, RouterModule, CommonModule],
   templateUrl: './register-by-admin.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RegisterByAdmin implements OnInit {
   private fb = inject(FormBuilder);

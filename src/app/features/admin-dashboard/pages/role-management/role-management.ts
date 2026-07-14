@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
@@ -25,6 +25,7 @@ interface PermissionGroup {
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './role-management.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RoleManagement implements OnInit {
   private roleService = inject(RoleService);
