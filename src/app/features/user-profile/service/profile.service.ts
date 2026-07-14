@@ -10,12 +10,7 @@ import {
   UpdateNameDTO,
   UpdateProfileImageDTO,
 } from '../model/profile.model';
-
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-}
+import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
@@ -59,5 +54,11 @@ export class ProfileService {
 
   removeProfileImage(): Observable<ApiResponse<boolean>> {
     return this.#http.delete<ApiResponse<boolean>>(`${this.#profileUrl}/ProfileImage`);
+  }
+  updatePhoneNumber(phoneNumber: string): Observable<ApiResponse<boolean>> {
+    const formData = new FormData();
+    formData.append('PhoneNumber', phoneNumber);
+
+    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdatePhoneNumber`, formData);
   }
 }

@@ -9,7 +9,6 @@ import { UserRole } from '../../../../shared/enums/user-role';
   imports: [],
   standalone: true,
   templateUrl: './profile-sidebar.html',
-  styleUrl: './profile-sidebar.css',
 })
 export class ProfileSidebar {
   readonly userInfo = input<GetUserInfoDTO | null>(null);
@@ -26,10 +25,6 @@ export class ProfileSidebar {
     // Re-runs whenever userInfo changes — resolves the address automatically.
     effect(() => {
       const info = this.userInfo();
-      console.log('userInfo changed:', info);
-      console.log('Role:', this.userInfo()?.role);
-      console.log('isAdmin:', this.isAdmin);
-
       if (info?.homeLatitude && info?.homeLongitude) {
         this.isResolvingAddress.set(true);
         this.#geocodingService.reverseGeocode(info.homeLatitude, info.homeLongitude).subscribe({
@@ -64,7 +59,7 @@ export class ProfileSidebar {
     return this.userInfo()?.verificationStatus === VerificationStatus.Verified;
   }
   get hasCases(): boolean {
-    return (this.userInfo()?.Cases?.length ?? 0) > 0;
+    return (this.userInfo()?.cases?.length ?? 0) > 0;
   }
 
   get verificationLabel(): string {

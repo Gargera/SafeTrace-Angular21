@@ -11,7 +11,8 @@ export interface GetUserInfoDTO {
   verificationStatus: VerificationStatus;
   identificationImage: string | null;
   role: UserRole;
-  Cases: any[];
+  phoneNumber: string | null; // ← كانت PhoneNumber بحرف كبير
+  cases: any[];
 }
 
 // ── One DTO per endpoint — matches the backend exactly, keeps sections independent ──
@@ -22,6 +23,9 @@ export interface UpdateNameDTO {
   lastName: string;
 }
 
+export interface ChangePhoneNumberDTO {
+  phoneNumber: string;
+}
 /** PUT /UserProfile/UpdateProfileImage (form-data) */
 export interface UpdateProfileImageDTO {
   profileImage: File;

@@ -18,11 +18,12 @@ import {
   AbstractControl,
   FormBuilder,
   FormGroup,
+  FormsModule,
   ReactiveFormsModule,
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { Subject, switchMap } from 'rxjs';
+import { Subject, switchMap, takeUntil } from 'rxjs';
 import {
   ChangePasswordDTO,
   GetUserInfoDTO,
@@ -71,7 +72,14 @@ function passwordConfirmValidator(group: AbstractControl): ValidationErrors | nu
 @Component({
   selector: 'app-edit-profile',
   standalone: true,
-  imports: [ReactiveFormsModule, NgTemplateOutlet, Toast, ConfirmDialog, ImageCropDialog],
+  imports: [
+    ReactiveFormsModule,
+    FormsModule,
+    NgTemplateOutlet,
+    Toast,
+    ConfirmDialog,
+    ImageCropDialog,
+  ],
   templateUrl: './edit-profile.html',
   styleUrl: './edit-profile.css',
 })
@@ -97,6 +105,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   readonly isEditingPersonal = signal(false);
   readonly isEditingLocation = signal(false);
   readonly isEditingPassword = signal(false);
+  readonly isEditingPhone = signal(false);
   readonly imageFile = input<File | null>(null);
 
   // ── Section Loading States ────────────────────────────────────────────────
@@ -104,6 +113,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   readonly isSavingPersonal = signal(false);
   readonly isSavingLocation = signal(false);
   readonly isSavingPassword = signal(false);
+  readonly isSavingPhone = signal(false);
 
   // ── Profile photo state (independent of the ID-image batch flow) ─────────
   readonly isUploadingProfileImage = signal(false);
@@ -137,6 +147,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   readonly profileImagePreview = signal<string | null>(null);
   readonly idImagePreview = signal<string | null>(null);
   readonly filledIconStyle = "'FILL' 1";
+
   // ── Forms ──────────────────────────────────────────────────────────────────
   readonly personalForm: FormGroup = this.#fb.group({
     firstName: ['', [Validators.required, Validators.maxLength(100)]],
@@ -159,6 +170,10 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     },
     { validators: [passwordMatchValidator, passwordConfirmValidator] },
   );
+
+  readonly phoneForm: FormGroup = this.#fb.group({
+    phoneNumber: ['', [Validators.required, Validators.pattern(/^01[0125][0-9]{8}$/)]],
+  });
 
   constructor() {
     // Dynamic effect to control marker dragability state based on edit location flag
@@ -183,12 +198,20 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
         lastName: nameParts.slice(1).join(' ') ?? '',
       });
 
+      // Patch Phone Form
+      this.phoneForm.patchValue({
+        phoneNumber: info.phoneNumber ?? '',
+      });
+
       // Disable forms initially by default
       if (!this.isEditingPersonal()) {
         this.personalForm.disable();
       }
       if (!this.isEditingPassword()) {
         this.passwordForm.disable();
+      }
+      if (!this.isEditingPhone()) {
+        this.phoneForm.disable();
       }
 
       // Sync the profile photo preview from server data, unless we're
@@ -469,11 +492,8 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   // ── Profile photo: remove ─────────────────────────────────────────────────
 
   requestRemoveProfilePhoto(): void {
-    console.log(this.profileImagePreview());
-    console.log(this.isRemovingProfileImage());
     if (!this.profileImagePreview() || this.isRemovingProfileImage()) return;
     this.showRemoveConfirm.set(true);
-    console.log(this.showRemoveConfirm());
   }
 
   cancelRemoveProfilePhoto(): void {
@@ -527,6 +547,11 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     return !!(ctrl?.invalid && ctrl?.touched);
   }
 
+  isPhoneFieldInvalid(field: string): boolean {
+    const ctrl = this.phoneForm.get(field);
+    return !!(ctrl?.invalid && ctrl?.touched);
+  }
+
   getPasswordError(): string | null {
     const ctrl = this.passwordForm.get('newPassword');
     if (!ctrl?.touched || !ctrl?.invalid) return null;
@@ -566,6 +591,15 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
       this.passwordForm.enable();
     } else {
       this.passwordForm.disable();
+    }
+  }
+
+  togglePhoneEdit(edit: boolean): void {
+    this.isEditingPhone.set(edit);
+    if (edit) {
+      this.phoneForm.enable();
+    } else {
+      this.phoneForm.disable();
     }
   }
 
@@ -611,6 +645,14 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     this.togglePasswordEdit(false);
     this.saveError.set(null);
     this.passwordForm.reset();
+  }
+
+  cancelPhone(): void {
+    this.saveError.set(null);
+    this.phoneForm.patchValue({
+      phoneNumber: this.userInfo()?.phoneNumber ?? '',
+    });
+    this.phoneForm.markAsPristine();
   }
 
   // ── Independent Save methods ────────────────────────────────────────────
@@ -747,6 +789,43 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   }
 
   /**
+   * Phone number save — dedicated endpoint, same independent-section
+   * pattern as savePersonal/saveLocation/savePassword. Relies on
+   * #refreshAndEmit() to pull the fresh GetUserInfoDTO from the server
+   * (UpdatePhoneNumber only returns a bool, not the updated user).
+   */
+  savePhoneNumber(): void {
+    if (this.phoneForm.invalid || this.isSavingPhone()) {
+      this.phoneForm.markAllAsTouched();
+      return;
+    }
+
+    this.isSavingPhone.set(true);
+    this.saveError.set(null);
+    this.saveSuccess.set(false);
+
+    const phoneNumber = this.phoneForm.value.phoneNumber as string;
+
+    this.#profileService
+      .updatePhoneNumber(phoneNumber)
+      .pipe(takeUntil(this.#destroy$))
+      .subscribe({
+        next: () => {
+          this.isSavingPhone.set(false);
+          this.togglePhoneEdit(false);
+          this.saveSuccess.set(true);
+          this.#refreshAndEmit();
+          setTimeout(() => this.saveSuccess.set(false), 3000);
+        },
+        error: (err) => {
+          this.isSavingPhone.set(false);
+          const msg = err?.error?.message ?? 'حدث خطأ اثناء تغيير رقم الهاتف';
+          this.saveError.set(msg);
+        },
+      });
+  }
+
+  /**
    * None of the UserProfile endpoints return the updated profile — they
    * only return { success, message, data: true }. So after any successful
    * save we silently re-fetch GetInfo and push the fresh data up to
@@ -755,7 +834,11 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
    */
   #refreshAndEmit(): void {
     this.#profileService.getUserInfo().subscribe({
-      next: (res) => this.profileUpdated.emit(res.data),
+      next: (res) => {
+        if (res.data) {
+          this.profileUpdated.emit(res.data);
+        }
+      },
       error: () => {
         // Non-fatal — the save itself already succeeded; a failed refresh
         // just means the UI won't reflect it until the next page load.
