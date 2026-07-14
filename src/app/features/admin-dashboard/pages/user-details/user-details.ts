@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ALL_SYSTEM_PERMISSIONS, PERMISSION_ACTIONS_AR, PERMISSION_GROUPS_AR } from '../../../../core/constants/permission.dictionary';
 import { environment } from '../../../../../environments/environment';
@@ -16,6 +17,9 @@ import { VerificationBadgeDirective } from "../../../../shared/directives/verifi
 import { RoleBadgeDirective } from "../../../../shared/directives/role-badge-directive";
 import { BlockBadgeDirective } from "../../../../shared/directives/block-badge-directive";
 import Swal from 'sweetalert2';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { CardComponent } from '../../../../shared/components/card/card';
+import { FormField } from '../../../../shared/components/form-field/form-field';
 
 interface PermissionGroup {
   groupName: string;
@@ -26,7 +30,7 @@ interface PermissionGroup {
 
 @Component({
   selector: 'app-user-details',
-  imports: [CommonModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective],
+  imports: [CommonModule, FormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, FormField],
   templateUrl: './user-details.html',
   styleUrl: './user-details.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -41,6 +45,7 @@ export class UserDetails implements OnInit {
 
   userId = signal<string>('');
   user = signal<GetUserByIdDto | null>(null);
+  selectedRole = signal<string>('');
   roles = signal<RoleDto[]>([]);
   
   originalPermissionsList = signal<UserPermissionDto[]>(this.generateEmptyPermissions());
@@ -57,6 +62,11 @@ export class UserDetails implements OnInit {
 
   isCurrentUser = computed(() => {
     return this.authService.getCurrentUserId() === this.userId();
+  });
+
+  isInternalRole = computed(() => {
+    const role = this.user()?.role;
+    return role === 'Admin' || role === 'Moderator';
   });
 
   canManageUser = computed(() => {
@@ -136,6 +146,7 @@ export class UserDetails implements OnInit {
       next: (res) => {
         if (res.success) {
           this.user.set(res.data);
+          this.selectedRole.set(res.data?.role || '');
           this.loadUserPermissions();
         }
       },
@@ -214,7 +225,7 @@ export class UserDetails implements OnInit {
 
   onToggleBlock() {
     const isCurrentlyBlocked = this.user()?.isBlocked;
-    const actionText = isCurrentlyBlocked ? 'فك الحظر عن' : 'حظر';
+    const actionText = isCurrentlyBlocked ? 'فك الحظر' : 'حظر';
     const color = isCurrentlyBlocked ? '#00a292' : '#ba1a1a';
 
     Swal.fire({
@@ -236,14 +247,25 @@ export class UserDetails implements OnInit {
   private executeAction(observable: any, successMessage: string) {
     this.isActionLoading.set(true);
 
+    Swal.fire({
+      title: 'جاري التنفيذ...',
+      text: 'يرجى الانتظار بينما نقوم بمعالجة طلبك.',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
     observable.subscribe({
       next: () => {
         this.isActionLoading.set(false);
+        Swal.close();
         this.snackbar.success(successMessage);
         this.loadUserData();
       },
       error: (err: any) => {
         this.isActionLoading.set(false);
+        Swal.close();
         this.snackbar.error(err.error?.detail || err.error?.message || 'حدث خطأ غير متوقع. قد لا تملك الصلاحية الكافية.');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -267,14 +289,23 @@ export class UserDetails implements OnInit {
         this.isSavingPerms.set(true);
         const selectedValues = this.permissionsList().filter(p => p.isSelected).map(p => p.permissionValue);
         
+        Swal.fire({
+          title: 'جاري الحفظ...',
+          text: 'يرجى الانتظار...',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+
         this.userService.assignUserPermissions({ userId: this.userId(), selectedPermissions: selectedValues }).subscribe({
           next: () => {
             this.isSavingPerms.set(false);
+            Swal.close();
             this.originalPermissionsList.set(this.permissionsList().map(p => ({...p})));
             this.snackbar.success('تم تحديث صلاحيات المستخدم');
           },
           error: (err) => {
             this.isSavingPerms.set(false);
+            Swal.close();
             this.snackbar.error(err.error?.detail || 'فشل حفظ الصلاحيات. تأكد من امتلاكك الصلاحية اللازمة.');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }

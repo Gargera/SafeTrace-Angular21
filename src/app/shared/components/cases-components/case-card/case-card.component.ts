@@ -1,5 +1,5 @@
-﻿// shared/components/case-card/case-card.component.ts
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+// shared/components/case-card/case-card.component.ts
+import { Component, input, output } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CaseListItemResponse } from '../../../../core/models/Cases.model';
@@ -29,19 +29,19 @@ import { ButtonComponent } from '../../button/button';
   templateUrl: './case-card.component.html',
 })
 export class CaseCardComponent {
-  @Input({ required: true }) caseItem!: CaseListItemResponse;
-  @Input() showUrgentTag = false;
-  @Input() detailRoute: Array<string | number> | null = null;
-  @Output() onContact = new EventEmitter<number>();
+  caseItem = input.required<CaseListItemResponse>();
+  showUrgentTag = input(false);
+  detailRoute = input<Array<string | number> | null>(null);
+  onContact = output<number>();
 
   readonly fallbackImage = '/images/logo.jpg';
   private imageHasError = false;
 
   getImageSrc(): string {
-    if (this.imageHasError || !this.caseItem?.mainPhoto) {
+    if (this.imageHasError || !this.caseItem()?.mainPhoto) {
       return this.fallbackImage;
     }
-    return this.caseItem.mainPhoto;
+    return this.caseItem().mainPhoto;
   }
 
   onImageError(): void {
@@ -49,25 +49,25 @@ export class CaseCardComponent {
   }
 
   getFullName(): string {
-    return [this.caseItem?.fName, this.caseItem?.sName, this.caseItem?.tName, this.caseItem?.lName]
+    return [this.caseItem()?.fName, this.caseItem()?.sName, this.caseItem()?.tName, this.caseItem()?.lName]
       .filter((value): value is string => Boolean(value))
       .join(' ')
       .trim();
   }
 
   getLocation(): string | null {
-    const parts = [this.caseItem?.city, this.caseItem?.government].filter(
+    const parts = [this.caseItem()?.city, this.caseItem()?.government].filter(
       (value): value is string => Boolean(value),
     );
-    return parts.length ? parts.join(' â€¢ ') : null;
+    return parts.length ? parts.join(' ، ') : null;
   }
 
   getUrgentEndDate(): string | null {
-    return (this.caseItem as CaseListItemResponse & { endDate?: string | null }).endDate ?? null;
+    return (this.caseItem() as CaseListItemResponse & { endDate?: string | null }).endDate ?? null;
   }
 
   getAgeCategoryEnum(): AgeCategories {
-    const age = this.caseItem.age;
+    const age = this.caseItem().age;
     if (age <= 12) return AgeCategories.Child;
     if (age <= 24) return AgeCategories.Young;
     if (age <= 60) return AgeCategories.Adult;
@@ -76,7 +76,7 @@ export class CaseCardComponent {
 
   // Helper methods for clean template
   hasImage(): boolean {
-    return !this.imageHasError && !!this.caseItem?.mainPhoto;
+    return !this.imageHasError && !!this.caseItem()?.mainPhoto;
   }
 
   hasLocation(): boolean {
@@ -84,7 +84,7 @@ export class CaseCardComponent {
   }
 
   hasCreatedAt(): boolean {
-    return !!this.caseItem?.createdAt;
+    return !!this.caseItem()?.createdAt;
   }
 
   hasUrgentEndDate(): boolean {

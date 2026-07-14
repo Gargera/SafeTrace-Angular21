@@ -1,4 +1,4 @@
-import { Directive, ElementRef, Input, OnChanges, Renderer2 } from '@angular/core';
+import { Directive, ElementRef, effect, input, Renderer2 } from '@angular/core';
 import { AgeCategories } from '../enums/age-categories';
 import { getAgeCategoryTranslationAr } from '../../core/constants/age.categories.dictionary';
 
@@ -6,8 +6,8 @@ import { getAgeCategoryTranslationAr } from '../../core/constants/age.categories
   selector: '[appAgeBadgeDirective]',
   standalone: true
 })
-export class AgeBadgeDirective implements OnChanges {
-  @Input('appAgeBadgeDirective') ageCategory!: AgeCategories;
+export class AgeBadgeDirective {
+  ageCategory = input.required<AgeCategories>({ alias: 'appAgeBadgeDirective' });
 
   constructor(private el: ElementRef, private renderer: Renderer2) {
     this.renderer.addClass(this.el.nativeElement, 'px-sm');
@@ -16,9 +16,8 @@ export class AgeBadgeDirective implements OnChanges {
     this.renderer.addClass(this.el.nativeElement, 'text-[10px]');
     this.renderer.addClass(this.el.nativeElement, 'font-bold');
     this.renderer.addClass(this.el.nativeElement, 'bg-surface-container-highest');
-  }
-
-  ngOnChanges() {
-    this.el.nativeElement.innerText = getAgeCategoryTranslationAr(this.ageCategory);
+    effect(() => {
+      this.el.nativeElement.innerText = getAgeCategoryTranslationAr(this.ageCategory());
+    });
   }
 }
