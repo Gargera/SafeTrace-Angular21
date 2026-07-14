@@ -22,9 +22,12 @@
       <app-card extraClass="col-span-1 bg-white rounded-2xl shadow-sm border border-outline-variant p-lg flex flex-col gap-lg items-center text-center h-full">
         
         <div class="relative group mt-4">
-          <div class="w-36 h-36 rounded-full ring-4 ring-surface shadow-md overflow-hidden bg-secondary-container flex items-center justify-center">
+          <div class="w-36 h-36 rounded-full ring-4 ring-surface shadow-md overflow-hidden bg-secondary-container flex items-center justify-center relative group cursor-zoom-in" (click)="openImageZoom(user()?.profileImage)">
             @if (user()?.profileImage) {
               <img [src]="getImageUrl(user()?.profileImage)" class="w-full h-full object-cover">
+              <div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <span class="material-symbols-outlined text-white text-[32px]">zoom_in</span>
+              </div>
             } @else {
               <span class="text-[56px] font-bold text-on-secondary-container font-sans">{{ user()?.fName?.charAt(0) }}</span>
             }
@@ -95,17 +98,17 @@
 
           <div class="flex flex-col gap-6">
             
-            <div class="space-y-2">
-              <span class="text-label-md font-bold text-on-surface-variant">صورة إثبات الهوية</span>
+            <div>
+              <span class="block mb-3 text-label-md font-bold text-on-surface-variant">صورة إثبات الهوية</span>
               @if (isInternalRole()) {
                 <div class="aspect-[1.6/1] bg-surface-variant/30 rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center text-outline">
                   <span class="material-symbols-outlined text-[32px] mb-2">admin_panel_settings</span>
                   <span class="text-label-sm">إثبات الهوية غير مطلوب لإدارة النظام</span>
                 </div>
               } @else if (user()?.identificationImage) {
-                <div class="relative aspect-[1.6/1] bg-surface-container rounded-xl border-2 border-dashed border-outline-variant overflow-hidden hover:border-secondary transition-colors group">
+                <div class="relative aspect-[1.6/1] bg-surface-container rounded-xl border-2 border-dashed border-outline-variant overflow-hidden hover:border-secondary transition-colors group cursor-zoom-in" (click)="openImageZoom(user()?.identificationImage)">
                   <img [src]="getImageUrl(user()!.identificationImage!)" class="w-full h-full object-cover">
-                  <div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-zoom-in">
+                  <div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <span class="material-symbols-outlined text-white text-[32px]">zoom_in</span>
                   </div>
                 </div>
@@ -290,3 +293,12 @@
 
   }
 </main>
+
+@if (selectedZoomImage()) {
+  <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 md:p-8 animate-fade-in" (click)="closeImageZoom()">
+    <button class="absolute top-6 right-6 text-white hover:text-error bg-black/20 hover:bg-black/50 w-12 h-12 rounded-full flex items-center justify-center transition-all z-[101]" (click)="closeImageZoom()">
+      <span class="material-symbols-outlined text-[28px]">close</span>
+    </button>
+    <img [src]="selectedZoomImage()" class="max-w-full max-h-full rounded-2xl shadow-2xl ring-1 ring-white/20 object-contain cursor-zoom-out" (click)="$event.stopPropagation(); closeImageZoom()">
+  </div>
+}
