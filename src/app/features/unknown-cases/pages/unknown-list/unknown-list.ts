@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UnknownCaseService } from '../../services/unknown-case.service';
@@ -25,6 +25,7 @@ import { CaseCardComponent } from '../../../../shared/components/cases-component
   ],
   templateUrl: './unknown-list.html',
   styleUrls: ['./unknown-list.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UnknownList implements OnInit {
   private router = inject(Router);

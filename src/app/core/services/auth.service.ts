@@ -71,23 +71,16 @@ export class AuthService {
     return decodedToken['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || decodedToken.sub || null;
   }
 
-  getUserRoles(): string[] {
+  getUserRole(): string | null {
     const decodedToken = this.getDecodedToken();
-    if (!decodedToken) return [];
+    if (!decodedToken) return null;
 
     const roleClaim = decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || decodedToken.role;
-    
-    if (Array.isArray(roleClaim)) {
-      return roleClaim;
-    } else if (roleClaim) {
-      return [roleClaim];
-    }
-    return [];
+    return typeof roleClaim === 'string' ? roleClaim : (Array.isArray(roleClaim) && roleClaim.length > 0 ? roleClaim[0] : null);
   }
 
   hasRole(role: string): boolean {
-    const roles = this.getUserRoles();
-    return roles.includes(role);
+    return this.getUserRole() === role;
   }
 
   isAdmin(): boolean {
