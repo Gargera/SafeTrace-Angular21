@@ -2,13 +2,12 @@ import { NgClass } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 
 import { ButtonComponent } from '../../button/button';
-import { IconComponent } from '../../icon/icon';
 
 
 @Component({
   selector: 'app-case-header',
   standalone: true,
-  imports: [NgClass, ButtonComponent, IconComponent],
+  imports: [NgClass, ButtonComponent],
   templateUrl: './case-header.component.html',
   styleUrls: ['./case-header.component.css'],
 })
