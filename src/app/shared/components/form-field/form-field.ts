@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, forwardRef } from '@angular/core';
+import { Component, input, forwardRef } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 @Component({
@@ -7,6 +7,9 @@ import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/f
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './form-field.html',
+  host: {
+    '[class]': 'extraClass()'
+  },
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -16,15 +19,15 @@ import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/f
   ],
 })
 export class FormField implements ControlValueAccessor {
-  @Input() label = '';
-  @Input() placeholder = '';
-  @Input() type:
-    'text' | 'email' | 'password' | 'number' | 'date' | 'search' | 'textarea' | 'select' = 'text';
+  label = input('');
+  placeholder = input('');
+  type = input<'text' | 'email' | 'password' | 'number' | 'date' | 'search' | 'textarea' | 'select' | 'tel'>('text');
 
-  @Input() rows = 4;
+  rows = input(4);
+  extraClass = input('');
 
-  @Input() prefix = false;
-  @Input() suffix = false;
+  prefix = input(false);
+  suffix = input(false);
 
   value: any = '';
   disabled = false;

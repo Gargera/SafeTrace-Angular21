@@ -21,11 +21,9 @@
       <app-case-filters (filterChange)="onFilterChange($event)" (reset)="onFilterReset()">
         <!-- Urgent-only extra filter -->
         <div extendedFilters>
-          <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-            نطاق البحث (متر)
-          </label>
+          <label class="text-sm font-medium text-on-surface-variant block mb-1">نطاق البحث (متر)</label>
 
-          <input
+          <app-form-field
             type="number"
             min="100"
             step="100"
@@ -33,8 +31,7 @@
             (ngModelChange)="radiusInMeters.set($event)"
             [ngModelOptions]="{ standalone: true }"
             placeholder="بدون حد أقصى"
-            class="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3.5 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none transition-all duration-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20"
-          />
+          ></app-form-field>
         </div>
       </app-case-filters>
     </section>
@@ -72,8 +69,8 @@
 
         <!-- Pagination (shows its own "showing X-Y of Z" summary since totalItems/pageSize are passed) -->
         <app-pagination
-          [currentPage]="currentPage"
-          [totalPages]="totalPages"
+          [currentPage]="currentPage()"
+          [totalPages]="totalPages()"
           [totalItems]="totalItems()"
           [pageSize]="pageSize()"
           (pageChange)="onPageChange($event)"

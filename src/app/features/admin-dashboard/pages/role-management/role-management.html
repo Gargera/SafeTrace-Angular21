@@ -5,7 +5,7 @@
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-lg">
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant flex flex-col gap-4">
+    <app-card extraClass="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant flex flex-col gap-4 h-full">
       <div class="flex items-center gap-2 text-primary mb-2">
         <span class="material-symbols-outlined">badge</span>
         <h2 class="text-headline-sm font-bold">تعديل صلاحيات دور قائم</h2>
@@ -13,28 +13,26 @@
       <p class="text-body-sm text-on-surface-variant">اختر دوراً من القائمة لعرض وتعديل الصلاحيات الممنوحة له.</p>
       
       <div class="flex gap-2">
-        <select [value]="selectedRoleId()" (change)="onRoleSelected($event)" 
-                class="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-body-md text-on-surface bg-surface outline-none transition-all cursor-pointer">
-          <option value="">-- عرض كل صلاحيات النظام (للاطلاع فقط) --</option>
-          @for (role of roles(); track role.id) {
-            <option [value]="role.id">{{ getRoleName(role.name) }}</option>
-          }
-        </select>
+        <div class="flex-1">
+          <app-form-field type="select" [ngModel]="selectedRoleId()" (ngModelChange)="onRoleSelected($event)">
+            <option value="">-- عرض كل صلاحيات النظام (للاطلاع فقط) --</option>
+            @for (role of roles(); track role.id) {
+              <option [value]="role.id">{{ getRoleName(role.name) }}</option>
+            }
+          </app-form-field>
+        </div>
 
         @if (selectedRoleId() && isDeletableRole()) {
-          <button (click)="onDeleteRole()" [disabled]="isDeleting()"
-                  class="bg-error-container text-error px-4 rounded-xl hover:bg-error hover:text-white transition-colors flex items-center justify-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed" title="حذف الدور">
-            @if (isDeleting()) {
-              <span class="material-symbols-outlined animate-spin text-[24px]">progress_activity</span>
-            } @else {
+          <app-button (onClick)="onDeleteRole()" [disabled]="isDeleting()" [loading]="isDeleting()" variant="icon" extraClass="w-11 h-11 !border-none bg-error-container text-error hover:bg-error hover:text-white shrink-0 transition-colors" ariaLabel="حذف الدور">
+            @if (!isDeleting()) {
               <span class="material-symbols-outlined text-[24px]">delete</span>
             }
-          </button>
+          </app-button>
         }
       </div>
-    </div>
+    </app-card>
 
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant flex flex-col gap-4">
+    <app-card extraClass="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant flex flex-col gap-4 h-full">
       <div class="flex items-center gap-2 text-primary mb-2">
         <span class="material-symbols-outlined">add_moderator</span>
         <h2 class="text-headline-sm font-bold">إنشاء دور جديد</h2>
@@ -50,12 +48,11 @@
       <form [formGroup]="createRoleForm" (ngSubmit)="onCreateRole()" class="flex flex-col gap-2">
         <div class="flex gap-2">
           <div class="flex-1">
-            <input type="text" formControlName="roleName" dir="ltr" placeholder="e.g. Volunteer" 
-                   class="w-full border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-body-md text-on-surface bg-surface outline-none transition-all text-right focus:text-left">
+            <app-form-field formControlName="roleName" placeholder="e.g. Volunteer"></app-form-field>
           </div>
-          <button type="submit" [disabled]="createRoleForm.invalid" class="bg-primary text-white px-6 rounded-xl font-bold hover:bg-primary-container transition-colors disabled:opacity-50">
+          <app-button type="submit" [disabled]="createRoleForm.invalid" variant="primary" extraClass="px-6 rounded-xl font-bold shrink-0">
             إنشاء
-          </button>
+          </app-button>
         </div>
         
         @if (createRoleForm.get('roleName')?.touched && createRoleForm.get('roleName')?.invalid) {
@@ -68,7 +65,7 @@
           </span>
         }
       </form>
-    </div>
+    </app-card>
   </div>
 
   <section class="space-y-md mt-xl">
@@ -106,9 +103,9 @@
         
         <div class="bg-surface-variant/30 p-md">
           <div class="flex items-center gap-md">
-            <button (click)="toggleRootExpanded()" class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-surface-container-highest transition-all">
+            <app-button variant="icon" (onClick)="toggleRootExpanded()" extraClass="w-8 h-8 rounded-full border-none hover:bg-surface-container-highest transition-all">
               <span class="material-symbols-outlined transition-transform duration-300" [class.rotate-180]="isRootExpanded()">expand_more</span>
-            </button>
+            </app-button>
             <div class="flex items-center gap-3">
               @if (selectedRoleId()) {
                 <input type="checkbox" 
@@ -122,10 +119,10 @@
               <span class="text-body-lg font-bold text-primary">نظام منصة لقاء</span>
               
               @if (selectedRoleId() && !isReadOnly() && hasChanges()) {
-                <button (click)="resetAll()" class="mr-4 text-error bg-error-container/30 hover:bg-error hover:text-white px-3 py-1 rounded-lg transition-colors flex items-center gap-1 text-label-sm font-bold border border-error/20" title="تراجع عن كل التعديلات">
+                <app-button variant="text" (onClick)="resetAll()" extraClass="mr-4 text-error bg-error-container/30 hover:bg-error hover:text-white px-3 py-1 rounded-lg transition-colors flex items-center gap-1 text-label-sm font-bold border border-error/20" title="إلغاء كل التعديلات">
                   <span class="material-symbols-outlined text-[16px]">undo</span>
-                  إلغاء كل التعديلات
-                </button>
+                  إلغاء التعديلات
+                </app-button>
               }
             </div>
           </div>
@@ -137,9 +134,9 @@
               <div class="tree-group">
                 <div class="flex items-center justify-between p-md bg-surface-container-low hover:bg-surface-container transition-colors">
                   <div class="flex items-center gap-md">
-                    <button (click)="toggleGroupExpanded(group.groupName)" class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-surface-container-highest transition-all">
+                    <app-button variant="icon" (onClick)="toggleGroupExpanded(group.groupName)" extraClass="w-8 h-8 rounded-full border-none hover:bg-surface-container-highest transition-all">
                       <span class="material-symbols-outlined transition-transform duration-300" [class.rotate-180]="expandedGroups()[group.groupName]">expand_more</span>
-                    </button>
+                    </app-button>
                     
                     <div class="flex items-center gap-3">
                       @if (selectedRoleId()) {
@@ -154,9 +151,9 @@
                       <span class="text-body-md font-bold text-primary">{{ group.groupTitle }}</span>
 
                       @if (selectedRoleId() && !isReadOnly() && dirtyGroups()[group.groupName]) {
-                        <button (click)="resetGroup(group.groupName)" class="mr-2 text-error bg-error-container/30 hover:bg-error hover:text-white p-1 rounded-full transition-colors flex items-center justify-center border border-error/20" title="تراجع عن تعديلات هذه المجموعة">
+                        <app-button variant="icon" (onClick)="resetGroup(group.groupName)" extraClass="mr-2 text-error bg-error-container/30 hover:bg-error hover:text-white p-1 rounded-full transition-colors flex items-center justify-center border border-error/20" title="تراجع عن تعديلات هذه المجموعة">
                           <span class="material-symbols-outlined text-[16px]">undo</span>
-                        </button>
+                        </app-button>
                       }
                     </div>
                   </div>
@@ -201,16 +198,17 @@
   </section>
 
   <div class="flex justify-end mt-lg">
-    <button (click)="savePermissions()" 
+    <app-button (onClick)="savePermissions()" 
             [disabled]="!selectedRoleId() || isSaving() || isReadOnly() || !hasChanges()"
-            class="flex items-center justify-center gap-sm bg-secondary text-white px-10 h-14 rounded-full font-bold shadow-md hover:bg-secondary-container hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed">
-      @if (isSaving()) {
-        <span class="material-symbols-outlined animate-spin">sync</span>
-        <span>جاري الحفظ...</span>
-      } @else {
+            [loading]="isSaving()"
+            variant="primary"
+            extraClass="gap-sm px-10 h-14 rounded-full font-bold shadow-md hover:bg-secondary-container transition-all duration-200">
+      @if (!isSaving()) {
         <span class="material-symbols-outlined">save</span>
         <span>حفظ التعديلات</span>
+      } @else {
+        <span>جاري الحفظ...</span>
       }
-    </button>
+    </app-button>
   </div>
 </div>

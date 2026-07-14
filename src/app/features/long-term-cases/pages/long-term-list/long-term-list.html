@@ -55,8 +55,8 @@
 
         <!-- Pagination -->
         <app-pagination
-          [currentPage]="currentPage"
-          [totalPages]="totalPages"
+          [currentPage]="currentPage()"
+          [totalPages]="totalPages()"
           [totalItems]="totalItems()"
           [pageSize]="pageSize()"
           (pageChange)="onPageChange($event)"
