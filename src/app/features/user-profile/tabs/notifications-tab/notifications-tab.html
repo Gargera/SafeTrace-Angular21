@@ -1,0 +1,129 @@
+<div class="p-lg space-y-md" dir="rtl">
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="flex justify-between items-center">
+    <div class="flex items-center gap-sm">
+      <h3 class="text-label-md font-bold text-on-surface">الإشعارات</h3>
+      @if (notificationService.totalCount() > 0) {
+        <span class="text-label-sm text-on-surface-variant">
+          ({{ notificationService.totalCount() }})
+        </span>
+      }
+    </div>
+    @if (notificationService.hasUnread()) {
+      <button
+        (click)="notificationService.markAllAsRead()"
+        class="text-label-sm text-secondary hover:underline transition-colors"
+      >
+        تحديد الكل كمقروء
+      </button>
+    }
+  </div>
+
+  <!-- ── Loading ────────────────────────────────────────────────────────── -->
+  @if (notificationService.isLoading()) {
+    <div class="flex justify-center py-xl">
+      <span class="material-symbols-outlined text-secondary animate-spin text-[32px]">
+        progress_activity
+      </span>
+    </div>
+  }
+
+  <!-- ── Empty ──────────────────────────────────────────────────────────── -->
+  @else if (notificationService.notifications().length === 0) {
+    <div class="flex flex-col items-center justify-center py-xl gap-md text-center">
+      <span class="material-symbols-outlined text-[48px] text-on-surface-variant opacity-40">
+        notifications_off
+      </span>
+      <p class="text-body-sm text-on-surface-variant">لا توجد إشعارات حالياً</p>
+    </div>
+  }
+
+  <!-- ── List ───────────────────────────────────────────────────────────── -->
+  @else {
+    <div class="space-y-sm">
+      @for (n of notificationService.notifications(); track trackById($index, n)) {
+        <div
+          class="flex items-start gap-md p-md rounded-xl border border-outline-variant transition-all duration-200"
+          [class.bg-surface-container-low]="!n.isRead"
+          [class.bg-surface]="n.isRead"
+          [class.opacity-75]="n.isRead"
+        >
+          <!-- Type icon -->
+          <div class="p-2 rounded-lg text-white shrink-0" [class]="getNotificationIconBg(n)">
+            <span
+              class="material-symbols-outlined text-[20px]"
+              style="font-variation-settings: 'FILL' 1"
+            >
+              {{ getNotificationIcon(n) }}
+            </span>
+          </div>
+
+          <!-- Body -->
+          <div class="flex-1 min-w-0">
+            <div class="flex justify-between items-start gap-sm mb-xs">
+              <p class="text-body-sm text-on-surface leading-relaxed" [class.font-bold]="!n.isRead">
+                {{ n.content }}
+              </p>
+              <span class="text-label-sm text-on-surface-variant whitespace-nowrap shrink-0">
+                {{ notificationService.formatDate(n.createdAt) }}
+              </span>
+            </div>
+
+            <!-- Actions row -->
+            <div class="flex items-center gap-md flex-wrap">
+              @if (!n.isRead) {
+                <button
+                  (click)="notificationService.markAsRead(n.id)"
+                  class="text-label-sm text-secondary hover:underline"
+                >
+                  تحديد كمقروء
+                </button>
+              }
+              @if (n.notificationDirectLink) {
+                <a
+                  [href]="n.notificationDirectLink"
+                  class="text-label-sm text-secondary hover:underline"
+                >
+                  عرض التفاصيل
+                </a>
+              }
+              <button
+                (click)="notificationService.removeNotification(n.id)"
+                class="text-label-sm text-error hover:underline mr-auto"
+              >
+                حذف
+              </button>
+            </div>
+          </div>
+
+          <!-- Unread dot -->
+          @if (!n.isRead) {
+            <span class="w-2 h-2 rounded-full bg-secondary shrink-0 mt-1"></span>
+          }
+        </div>
+      }
+    </div>
+    <!-- ── Load More ───────────────────────────────────────────────────── -->
+    @if (notificationService.hasNextPage()) {
+      <div class="flex justify-center mt-4">
+        <button
+          class="px-4 py-2 rounded-lg bg-secondary text-white"
+          (click)="notificationService.loadMore()"
+        >
+          تحميل المزيد
+        </button>
+      </div>
+    }
+
+    <p class="text-center text-label-sm text-on-surface-variant mt-sm">
+      تم عرض {{ notificationService.notifications().length }}
+      من
+      {{ notificationService.totalCount() }}
+      إشعار
+    </p>
+  }
+
+  @if (!notificationService.hasNextPage() && notificationService.notifications().length > 0) {
+    <p class="text-center text-label-sm text-on-surface-variant pt-lg">تم عرض جميع الإشعارات</p>
+  }
+</div>

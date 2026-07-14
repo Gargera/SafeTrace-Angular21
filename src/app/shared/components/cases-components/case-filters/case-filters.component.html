@@ -1,0 +1,174 @@
+<app-card extraClass="p-6" dir="rtl">
+  <form [formGroup]="filterForm" class="space-y-6">
+    <!-- Main Filters Grid -->
+    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <div>
+        <app-form-field
+          type="text"
+          label="بحث"
+          placeholder="ابحث بالاسم..."
+          formControlName="fullName"
+          [prefix]="true"
+        >
+          <i prefix class="fa-solid fa-magnifying-glass text-sm"> </i>
+        </app-form-field>
+      </div>
+
+      <div>
+        <app-form-field type="select" label="النوع" formControlName="gender" [suffix]="true">
+          <option value="">الكل</option>
+          @for (gender of genders; track gender) {
+            <option [value]="gender">{{ getGenderLabel(gender) }}</option>
+          }
+          <i
+            suffix
+            class="fa-solid fa-chevron-down pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm"
+          >
+          </i>
+        </app-form-field>
+      </div>
+
+      <div>
+        <app-form-field
+          type="select"
+          label="فئة العمر"
+          formControlName="ageCategory"
+          [suffix]="true"
+        >
+          <option value="">الكل</option>
+          @for (ageCategory of ageCategories; track ageCategory) {
+            <option [value]="ageCategory">{{ getAgeCategoryLabel(ageCategory) }}</option>
+          }
+          <i
+            suffix
+            class="fa-solid fa-chevron-down pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm"
+          >
+          </i>
+        </app-form-field>
+      </div>
+
+      <div>
+        <app-form-field type="select" formControlName="ageSort" label="ترتيب العمر" [suffix]="true">
+          <option value="">بدون ترتيب</option>
+          @for (sort of ageSorts; track sort) {
+            <option [value]="sort">{{ getAgeSortLabel(sort) }}</option>
+          }
+          <i
+            suffix
+            class="fa-solid fa-chevron-down pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm"
+          >
+          </i>
+        </app-form-field>
+      </div>
+    </div>
+
+    <!-- Advanced Filters Toggle -->
+    <div class="flex items-center gap-3 pt-1 m-0">
+      <div class="h-px flex-1 bg-outline-variant/20"></div>
+
+      <button
+        type="button"
+        (click)="toggleAdvanced()"
+        class="group inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:text-secondary focus:outline-none"
+      >
+        <span class="relative">
+          فلاتر إضافية
+          <span
+            class="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-secondary transition-all duration-300 group-hover:w-full"
+            [class.w-full]="showAdvanced"
+          ></span>
+        </span>
+
+        @if (activeAdvancedCount > 0) {
+          <span class="bg-secondary/10 px-1.5 text-secondary rounded-full">
+            {{ activeAdvancedCount }}
+          </span>
+        }
+
+        <i
+          class="fa-solid fa-chevron-down shrink-0 transition-transform duration-300"
+          [class.rotate-180]="showAdvanced"
+        ></i>
+      </button>
+
+      <div class="h-px flex-1 bg-outline-variant/20"></div>
+    </div>
+
+    <!-- Advanced Filters Content -->
+    <div
+      class="grid transition-[grid-template-rows] duration-300 ease-in-out m-0"
+      [style.grid-template-rows]="showAdvanced ? '1fr' : '0fr'"
+    >
+      <div class="overflow-hidden">
+        <div
+          class="grid grid-cols-1 gap-5 pt-4 transition-all duration-300 ease-out md:grid-cols-2 xl:grid-cols-4"
+          [class.opacity-100]="showAdvanced"
+          [class.translate-y-0]="showAdvanced"
+          [class.opacity-0]="!showAdvanced"
+          [class.-translate-y-2]="!showAdvanced"
+        >
+          <div>
+            <app-form-field
+              type="text"
+              formControlName="government"
+              label="المحافظة"
+              placeholder="المحافظة..."
+            />
+          </div>
+
+          <div>
+            <app-form-field
+              type="text"
+              formControlName="city"
+              label="المدينة"
+              placeholder="المدينة..."
+            />
+          </div>
+
+          <div>
+            <app-form-field type="date" formControlName="fromDate" label="من التاريخ" />
+          </div>
+
+          <div>
+            <app-form-field type="date" formControlName="toDate" label="إلى التاريخ" />
+          </div>
+
+          <div>
+            <app-form-field
+              type="select"
+              formControlName="dateSort"
+              label="ترتيب التاريخ"
+              [suffix]="true"
+            >
+              <option value="">بدون ترتيب</option>
+              <option value="0">{{ getDateSortLabel(0) }}</option>
+              <option value="1">{{ getDateSortLabel(1) }}</option>
+
+              <i
+                suffix
+                class="fa-solid fa-chevron-down pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm"
+              ></i>
+            </app-form-field>
+          </div>
+
+          <ng-content select="[extendedFilters]"></ng-content>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex flex-wrap justify-end gap-3 pt-2">
+      <app-button
+        variant="text"
+        type="button"
+        (onClick)="resetFilters()"
+        extraClass="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary"
+      >
+        <i
+          class="fa-solid fa-rotate-left transition-transform duration-200 group-hover:-rotate-90"
+        ></i>
+        <span>إعادة تعيين</span>
+      </app-button>
+    </div>
+  </form>
+</app-card>
