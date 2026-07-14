@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-icon',
@@ -6,8 +6,8 @@ import { Component, Input } from '@angular/core';
   templateUrl: './icon.html',
 })
 export class IconComponent {
-  @Input({ required: true }) name!: 'search' | 'chevron' | 'reset' | 'close' | 'filter' | 'back';
-  @Input() size = '1.25rem';
-  @Input() extraClass = '';
-  @Input() rotation = 0;
+  name = input.required<'search' | 'chevron' | 'reset' | 'close' | 'filter' | 'back'>();
+  size = input('1.25rem');
+  extraClass = input('');
+  rotation = input(0);
 }

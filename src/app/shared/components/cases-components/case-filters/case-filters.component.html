@@ -13,7 +13,7 @@
         <app-label>النوع</app-label>
         <app-select-input formControlName="gender" [icon]="true">
           <option value="">الكل</option>
-          @for (gender of genders; track gender) {
+          @for (gender of genders(); track gender) {
             <option [value]="gender">{{ getGenderLabel(gender) }}</option>
           }
           <span icon><app-icon name="chevron" size="1rem" extraClass="text-on-surface-variant"></app-icon></span>
@@ -35,7 +35,7 @@
         <app-label>ترتيب العمر</app-label>
         <app-select-input formControlName="ageSort" [icon]="true">
           <option value="">بدون ترتيب</option>
-          @for (sort of ageSorts; track sort) {
+          @for (sort of ageSorts(); track sort) {
             <option [value]="sort">{{ getAgeSortLabel(sort) }}</option>
           }
           <span icon><app-icon name="chevron" size="1rem" extraClass="text-on-surface-variant"></app-icon></span>
@@ -47,7 +47,7 @@
     <div class="flex items-center gap-3 pt-1 m-0">
       <div class="h-px flex-1 bg-outline-variant/20"></div>
 
-      <button type="button" (click)="toggleAdvanced()" class="group inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:text-secondary focus:outline-none">
+      <app-button variant="text" type="button" (onClick)="toggleAdvanced()" extraClass="group inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:text-secondary focus:outline-none">
         <span class="relative">
           فلاتر إضافية
           <span class="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-secondary transition-all duration-300 group-hover:w-full" [class.w-full]="showAdvanced"></span>
@@ -60,7 +60,7 @@
         }
 
         <app-icon name="chevron" size="0.875rem" extraClass="shrink-0 transition-transform duration-300" [rotation]="showAdvanced ? 180 : 0"></app-icon>
-      </button>
+      </app-button>
 
       <div class="h-px flex-1 bg-outline-variant/20"></div>
     </div>

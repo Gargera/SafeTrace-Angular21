@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-card',
@@ -6,6 +6,6 @@ import { Component, Input } from '@angular/core';
   templateUrl: './card.html',
 })
 export class CardComponent {
-  @Input() extraClass = 'rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm';
-  @Input() dir: 'ltr' | 'rtl' | 'auto' = 'rtl';
+  extraClass = input('rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm');
+  dir = input<'ltr' | 'rtl' | 'auto'>('rtl');
 }

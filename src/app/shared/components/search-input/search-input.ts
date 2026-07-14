@@ -1,4 +1,4 @@
-import { Component, Input, forwardRef } from '@angular/core';
+import { Component, input, forwardRef } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { IconComponent } from '../icon/icon';
 
@@ -10,7 +10,7 @@ import { IconComponent } from '../icon/icon';
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => SearchInputComponent), multi: true }]
 })
 export class SearchInputComponent implements ControlValueAccessor {
-  @Input() placeholder = 'بحث...';
+  placeholder = input('بحث...');
   
   value: string = '';
   disabled = false;

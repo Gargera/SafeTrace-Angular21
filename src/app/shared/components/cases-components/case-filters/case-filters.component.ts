@@ -3,12 +3,11 @@ import {
   Component,
   ContentChildren,
   DestroyRef,
-  EventEmitter,
-  Input,
   OnInit,
-  Output,
   QueryList,
   inject,
+  input,
+  output
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -43,12 +42,12 @@ import { IconComponent } from '../../icon/icon';
   styleUrls: ['./case-filters.component.css'],
 })
 export class CaseFiltersComponent implements OnInit, AfterContentInit {
-  @Input() genders: number[] = [0, 1];
-  @Input() ageSorts: number[] = [0, 1];
-  @Input() dateSorts: number[] = [0, 1];
+  genders = input<number[]>([0, 1]);
+  ageSorts = input<number[]>([0, 1]);
+  dateSorts = input<number[]>([0, 1]);
 
-  @Output() filterChange = new EventEmitter<CasesFilterRequest>();
-  @Output() reset = new EventEmitter<void>();
+  filterChange = output<CasesFilterRequest>();
+  reset = output<void>();
 
   readonly ageCategories = Object.values(AgeCategories);
   showAdvanced = false;

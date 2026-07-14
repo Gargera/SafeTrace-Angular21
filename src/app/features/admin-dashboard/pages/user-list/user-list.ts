@@ -14,6 +14,12 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 import { RoleService } from '../../services/role.service';
 import { UserService } from '../../services/user.service';
+import { SearchInputComponent } from '../../../../shared/components/search-input/search-input';
+import { SelectInputComponent } from '../../../../shared/components/select-input/select-input';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { CardComponent } from '../../../../shared/components/card/card';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { IconComponent } from '../../../../shared/components/icon/icon';
 
 @Component({
   selector: 'app-user-list',
@@ -24,6 +30,12 @@ import { UserService } from '../../services/user.service';
     FormsModule,
     CommonModule,
     RouterModule,
+    SearchInputComponent,
+    SelectInputComponent,
+    ButtonComponent,
+    CardComponent,
+    EmptyStateComponent,
+    IconComponent,
   ],
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',
@@ -44,8 +56,8 @@ export class UserList {
     pageNumber: 1,
     pageSize: 10,
     searchTerm: '',
-    verificationStatus: undefined,
-    roleId: undefined,
+    verificationStatus: '' as any,
+    roleId: '' as any,
   });
 
   pagesArray = computed(() => Array.from({ length: this.totalPages() }, (_, i) => i + 1));
@@ -87,12 +99,12 @@ export class UserList {
     });
   }
 
-  onSearchChange(event: Event) {
-    const value = (event.target as HTMLInputElement).value;
+  onSearchChange(value: string) {
     this.searchSubject.next(value);
   }
 
   updateFilter(partialFilter: Partial<UserFilterDto>) {
+
     this.filter.update((f) => ({
       ...f,
       ...partialFilter,
@@ -106,8 +118,8 @@ export class UserList {
       pageNumber: 1,
       pageSize: 10,
       searchTerm: '',
-      verificationStatus: undefined,
-      roleId: undefined,
+      verificationStatus: '' as any,
+      roleId: '' as any,
     });
     this.loadUsers();
   }

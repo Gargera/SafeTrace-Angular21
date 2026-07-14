@@ -5,11 +5,14 @@ import { AuthService } from '../../../../core/services/auth.service';
 import Swal from 'sweetalert2';
 import { SocialAuthService, GoogleLoginProvider, FacebookLoginProvider, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 import { Subscription } from 'rxjs';
+import { TextInputComponent } from '../../../../shared/components/text-input/text-input';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterModule, GoogleSigninButtonModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, GoogleSigninButtonModule, TextInputComponent, ButtonComponent],
   templateUrl: './login.html'
 })
 export class Login implements OnInit, OnDestroy {

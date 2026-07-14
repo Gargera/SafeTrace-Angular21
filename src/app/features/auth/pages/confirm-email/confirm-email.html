@@ -29,26 +29,30 @@
     <form [formGroup]="confirmForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
       <div class="flex flex-col gap-1">
         <label class="text-label-md font-medium text-on-surface text-center mb-2">أدخل الرمز هنا</label>
-        <input type="text" formControlName="otpCode" placeholder="••••••" maxlength="6" dir="ltr"
-               [class.border-error]="confirmForm.get('otpCode')?.touched && confirmForm.get('otpCode')?.invalid"
-               class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-4 text-center tracking-widest text-2xl font-bold text-on-surface bg-surface-container-lowest outline-none transition-all">
+        <app-text-input 
+          formControlName="otpCode" 
+          type="text" 
+          placeholder="••••••"
+          [class.border-error]="confirmForm.get('otpCode')?.touched && confirmForm.get('otpCode')?.invalid"
+          class="text-center tracking-widest text-2xl font-bold">
+        </app-text-input>
       </div>
 
-      <button type="submit" [disabled]="isLoading()" class="w-full bg-secondary text-on-secondary hover:bg-secondary-container disabled:bg-surface-variant disabled:text-outline py-3 rounded-xl font-label-lg font-semibold transition-all mt-2">
+      <app-button type="submit" [disabled]="isLoading()" variant="primary" [loading]="isLoading()" extraClass="w-full justify-center mt-2 font-label-lg transition-all">
         @if (isLoading()) { جاري التأكيد... } @else { تأكيد الحساب }
-      </button>
+      </app-button>
     </form>
 
     <div class="text-center mt-6">
       <p class="text-on-surface-variant text-body-sm">
         لم يصلك الرمز؟ 
-        <button type="button" (click)="resendOtp()" [disabled]="countdown() > 0" class="text-secondary font-semibold hover:underline bg-transparent border-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline">
+        <app-button type="button" (onClick)="resendOtp()" [disabled]="countdown() > 0" variant="text" extraClass="text-secondary font-semibold hover:underline bg-transparent border-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline">
           @if (countdown() > 0) {
             إعادة الإرسال بعد {{ countdown() }} ثانية
           } @else {
             إعادة الإرسال
           }
-        </button>
+        </app-button>
       </p>
     </div>
   </div>

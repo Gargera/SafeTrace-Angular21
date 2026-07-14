@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-label',
@@ -6,5 +6,5 @@ import { Component, Input } from '@angular/core';
   templateUrl: './label.html',
 })
 export class LabelComponent {
-  @Input() extraClass = 'mb-1.5 block text-sm font-medium text-on-surface-variant';
+  extraClass = input('mb-1.5 block text-sm font-medium text-on-surface-variant');
 }

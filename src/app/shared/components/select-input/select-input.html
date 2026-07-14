@@ -1,5 +1,5 @@
-﻿@if (label) {
-  <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">{{ label }}</label>
+@if (label()) {
+  <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">{{ label() }}</label>
 }
 <div class="relative">
   <select
@@ -11,9 +11,13 @@
   >
     <ng-content></ng-content>
   </select>
-  @if (icon) {
+  @if (icon()) {
     <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
       <ng-content select="[icon]"></ng-content>
+    </div>
+  } @else {
+    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant">
+      <span class="material-symbols-outlined text-lg">expand_more</span>
     </div>
   }
 </div>

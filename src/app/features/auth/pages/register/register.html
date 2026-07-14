@@ -30,9 +30,12 @@
       
       <div class="grid grid-cols-2 gap-4">
         <div class="flex flex-col gap-1">
-          <label class="text-label-md font-medium text-on-surface">الاسم الأول</label>
-          <input type="text" formControlName="fName" placeholder="أحمد" [class.border-error]="registerForm.get('fName')?.touched && registerForm.get('fName')?.invalid"
-                 class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all">
+          <app-text-input 
+            formControlName="fName" 
+            label="الاسم الأول" 
+            placeholder="أحمد"
+            [class.border-error]="registerForm.get('fName')?.touched && registerForm.get('fName')?.invalid">
+          </app-text-input>
           @if (registerForm.get('fName')?.touched && registerForm.get('fName')?.invalid) {
             <span class="text-error text-xs font-medium">
               @if (registerForm.get('fName')?.errors?.['serverError']) { {{ registerForm.get('fName')?.errors?.['serverError'] }} } @else { الاسم الأول مطلوب ويجب ألا يزيد عن 100 حرف. }
@@ -41,9 +44,12 @@
         </div>
 
         <div class="flex flex-col gap-1">
-          <label class="text-label-md font-medium text-on-surface">الاسم الأخير</label>
-          <input type="text" formControlName="lName" placeholder="محمد" [class.border-error]="registerForm.get('lName')?.touched && registerForm.get('lName')?.invalid"
-                 class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all">
+          <app-text-input 
+            formControlName="lName" 
+            label="الاسم الأخير" 
+            placeholder="محمد"
+            [class.border-error]="registerForm.get('lName')?.touched && registerForm.get('lName')?.invalid">
+          </app-text-input>
           @if (registerForm.get('lName')?.touched && registerForm.get('lName')?.invalid) {
             <span class="text-error text-xs font-medium">
               @if (registerForm.get('lName')?.errors?.['serverError']) { {{ registerForm.get('lName')?.errors?.['serverError'] }} } @else { اسم العائلة مطلوب ويجب ألا يزيد عن 100 حرف.  }
@@ -53,10 +59,13 @@
       </div>
 
       <div class="flex flex-col gap-1">
-        <label class="text-label-md font-medium text-on-surface">البريد الإلكتروني</label>
-          <input type="email" id="email" name="username" formControlName="email" placeholder="example@email.com" dir="ltr" autocomplete="username" autocapitalize="off"
-               [class.border-error]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid"
-               class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all text-right focus:text-left">
+        <app-text-input 
+          formControlName="email" 
+          type="email"
+          label="البريد الإلكتروني" 
+          placeholder="example@email.com"
+          [class.border-error]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid">
+        </app-text-input>
         @if (registerForm.get('email')?.touched && registerForm.get('email')?.invalid) {
           <span class="text-error text-xs font-medium">
             @if (registerForm.get('email')?.errors?.['serverError']) { {{ registerForm.get('email')?.errors?.['serverError'] }} } @else { صيغة البريد الإلكتروني غير صحيحة.}
@@ -65,9 +74,13 @@
       </div>
 
       <div class="flex flex-col gap-1">
-        <label class="text-label-md font-medium text-on-surface">رقم الهاتف</label>
-        <input type="tel" formControlName="phoneNumber" placeholder="01234567890" dir="ltr" [class.border-error]="registerForm.get('phoneNumber')?.touched && registerForm.get('phoneNumber')?.invalid"
-               class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all text-right focus:text-left">
+        <app-text-input 
+          formControlName="phoneNumber" 
+          type="tel"
+          label="رقم الهاتف" 
+          placeholder="01234567890"
+          [class.border-error]="registerForm.get('phoneNumber')?.touched && registerForm.get('phoneNumber')?.invalid">
+        </app-text-input>
         @if (registerForm.get('phoneNumber')?.touched && registerForm.get('phoneNumber')?.invalid) {
           <span class="text-error text-xs font-medium">
             @if (registerForm.get('phoneNumber')?.errors?.['serverError']) { {{ registerForm.get('phoneNumber')?.errors?.['serverError'] }} } @else { يرجى إدخال رقم هاتف مصري صحيح.}
@@ -76,14 +89,15 @@
       </div>
 
       <div class="flex flex-col gap-1">
-        <label class="text-label-md font-medium text-on-surface">كلمة المرور</label>
-        
-        <div class="relative w-full">
-          <input [type]="isPasswordVisible() ? 'text' : 'password'" id="password" name="password" formControlName="password" placeholder="••••••••" dir="ltr" autocomplete="new-password" autocapitalize="off"
-                 [class.border-error]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid"
-                 class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 pr-12 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all text-right focus:text-left">
-
-          <button type="button" (click)="togglePasswordVisibility()" class="absolute inset-y-0 right-0 px-4 flex items-center text-on-surface-variant hover:text-secondary transition-colors focus:outline-none">
+        <app-text-input 
+          formControlName="password" 
+          [type]="isPasswordVisible() ? 'text' : 'password'"
+          label="كلمة المرور" 
+          placeholder="••••••••"
+          [suffix]="true"
+          [class.border-error]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid">
+          
+          <button type="button" suffix (click)="togglePasswordVisibility()" class="px-4 flex items-center text-on-surface-variant hover:text-secondary transition-colors focus:outline-none pointer-events-auto">
             @if (isPasswordVisible()) {
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
@@ -95,7 +109,7 @@
               </svg>
             }
           </button>
-        </div>
+        </app-text-input>
 
         @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
           <span class="text-error text-xs font-medium">
@@ -104,9 +118,9 @@
         }
       </div>
 
-      <button type="submit" [disabled]="isLoading()" class="w-full bg-secondary text-on-secondary hover:bg-secondary-container py-3 rounded-xl font-label-lg font-semibold mt-4">
+      <app-button type="submit" [disabled]="isLoading()" variant="primary" [loading]="isLoading()" extraClass="w-full justify-center mt-4 font-label-lg">
         @if (isLoading()) { جاري الإنشاء... } @else { المتابعة }
-      </button>
+      </app-button>
 
     </form>
 

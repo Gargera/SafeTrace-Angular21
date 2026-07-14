@@ -1,6 +1,11 @@
 import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
+import { SelectInputComponent } from '../../../../shared/components/select-input/select-input';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { TextInputComponent } from '../../../../shared/components/text-input/text-input';
+import { CardComponent } from '../../../../shared/components/card/card';
+
 import {
   PERMISSION_GROUPS_AR,
   PERMISSION_ACTIONS_AR,
@@ -23,7 +28,7 @@ interface PermissionGroup {
 @Component({
   selector: 'app-role-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, SelectInputComponent, ButtonComponent, TextInputComponent, CardComponent],
   templateUrl: './role-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -202,8 +207,7 @@ export class RoleManagement implements OnInit {
     });
   }
 
-  onRoleSelected(event: Event) {
-    const roleId = (event.target as HTMLSelectElement).value;
+  onRoleSelected(roleId: string) {
     this.selectedRoleId.set(roleId);
 
     if (!roleId) {

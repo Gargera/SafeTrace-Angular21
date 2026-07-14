@@ -4,11 +4,13 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import Swal from 'sweetalert2';
+import { TextInputComponent } from '../../../../shared/components/text-input/text-input';
+import { ButtonComponent } from '../../../../shared/components/button/button';
 
 @Component({
   selector: 'app-confirm-email',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterModule],
+  imports: [ReactiveFormsModule, RouterModule, TextInputComponent, ButtonComponent],
   templateUrl: './confirm-email.html'
 })
 export class ConfirmEmail implements OnInit, OnDestroy {

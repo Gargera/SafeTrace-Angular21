@@ -1,4 +1,4 @@
-import { Component, Input, forwardRef } from '@angular/core';
+import { Component, input, forwardRef } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
 
 @Component({
@@ -9,8 +9,8 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => SelectInputComponent), multi: true }]
 })
 export class SelectInputComponent implements ControlValueAccessor {
-  @Input() label = '';
-  @Input() icon = false;
+  label = input('');
+  icon = input(false);
   
   value: any = null;
   disabled = false;

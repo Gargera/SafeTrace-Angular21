@@ -8,9 +8,14 @@ import { RoleService } from '../../services/role.service';
 import { RoleDto } from '../../models/Role/RoleDto';
 import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 
+import { TextInputComponent } from '../../../../shared/components/text-input/text-input';
+import { SelectInputComponent } from '../../../../shared/components/select-input/select-input';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { CardComponent } from '../../../../shared/components/card/card';
+
 @Component({
   selector: 'app-register-by-admin',
-  imports: [ReactiveFormsModule, RouterModule, CommonModule],
+  imports: [ReactiveFormsModule, RouterModule, CommonModule, TextInputComponent, SelectInputComponent, ButtonComponent, CardComponent],
   templateUrl: './register-by-admin.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

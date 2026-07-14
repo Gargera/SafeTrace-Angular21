@@ -1,4 +1,4 @@
-import { Component, Input, forwardRef } from '@angular/core';
+import { Component, input, forwardRef } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { NgClass } from '@angular/common';
 
@@ -10,11 +10,11 @@ import { NgClass } from '@angular/common';
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => TextInputComponent), multi: true }]
 })
 export class TextInputComponent implements ControlValueAccessor {
-  @Input() label = '';
-  @Input() placeholder = '';
-  @Input() type = 'text';
-  @Input() prefix = false;
-  @Input() suffix = false;
+  label = input('');
+  placeholder = input('');
+  type = input('text');
+  prefix = input(false);
+  suffix = input(false);
   
   value: string = '';
   disabled = false;

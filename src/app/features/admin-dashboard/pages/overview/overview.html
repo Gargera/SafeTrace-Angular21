@@ -11,13 +11,13 @@
         <span class="text-headline-sm font-bold tracking-tight mt-1 whitespace-nowrap" [class.hidden]="!isSidebarExpanded()">لـقـاء</span>
       </a>
 
-      <button class="text-white/70 hover:text-white p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors flex items-center justify-center shrink-0" 
-              (click)="toggleSidebar()" 
-              [title]="isSidebarExpanded() ? 'تصغير القائمة' : 'توسيع القائمة'">
+      <app-button variant="icon" extraClass="text-white/70 hover:text-white p-2 bg-white/5 hover:bg-white/10 border-none shrink-0 transition-colors flex items-center justify-center"
+              (onClick)="toggleSidebar()" 
+              [ariaLabel]="isSidebarExpanded() ? 'تصغير القائمة' : 'توسيع القائمة'">
         <span class="material-symbols-outlined text-[20px]">
           {{ isSidebarExpanded() ? 'keyboard_double_arrow_right' : 'keyboard_double_arrow_left' }}
         </span>
-      </button>
+      </app-button>
     </div>
 
     <nav class="flex-1 mt-8 space-y-2 overflow-y-auto overflow-x-hidden px-3" style="scrollbar-width: thin;">
@@ -102,9 +102,9 @@
           </div>
         </div>
 
-        <button (click)="logout()" class="text-error hover:text-white hover:bg-error p-2 rounded-xl transition-colors shrink-0 flex items-center justify-center" title="تسجيل الخروج">
+        <app-button (onClick)="logout()" variant="icon" extraClass="text-error hover:text-white hover:bg-error p-2 border-none transition-colors shrink-0 flex items-center justify-center" ariaLabel="تسجيل الخروج">
            <span class="material-symbols-outlined text-[22px]">logout</span>
-        </button>
+        </app-button>
       </div>
     </div>
   </aside>
