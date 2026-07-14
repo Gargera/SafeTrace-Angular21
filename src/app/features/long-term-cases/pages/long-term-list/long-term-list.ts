@@ -7,7 +7,7 @@ import { LongTermCaseListItemResponse } from '../../models/response/LongTermCase
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { PaginationComponent } from '../../../../shared/components/cases-components/case-pagination/case-pagination.component';
-import { EmptyStateComponent } from '../../../../shared/components/cases-components/empty-state/empty-state.component';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
 
