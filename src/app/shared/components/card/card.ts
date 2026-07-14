@@ -9,5 +9,5 @@ export class CardComponent {
   @Input() extraClass = '';
   @Input() dir: 'ltr' | 'rtl' | 'auto' = 'rtl';
 
-  protected readonly baseClass = 'rounded-xl shadow-sm p-6';
+  protected readonly baseClass = 'rounded-xl shadow-sm';
 }
