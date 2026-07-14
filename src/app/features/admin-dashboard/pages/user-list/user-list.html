@@ -91,7 +91,7 @@
               <span [appVerificationBadgeDirective]="user.verificationStatus"></span>
             </td>
             <td class="px-lg py-md">
-              <span [appRoleBadgeDirective]="user.role"></span>
+              <span [appRoleBadgeDirective]="user.role || ''"></span>
             </td>
             <td class="px-lg py-md">
               <span [appBlockBadgeDirective]="user.isBlocked"></span>

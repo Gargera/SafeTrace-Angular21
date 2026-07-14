@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LongTermCaseService } from '../../services/long-term-case.service';
@@ -25,6 +25,7 @@ import { CaseCardComponent } from '../../../../shared/components/cases-component
   ],
   templateUrl: './long-term-list.html',
   styleUrls: ['./long-term-list.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LongTermList implements OnInit {
   private router = inject(Router);
