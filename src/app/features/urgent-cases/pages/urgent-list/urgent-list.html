@@ -6,11 +6,9 @@
         title="الحالات العاجلة"
         subtitle="إدارة وعرض جميع الحالات العاجلة"
         [badge]="!loading() ? totalItems() + ' حالة' : ''"
-        badgeClass="bg-error-container text-on-error-container"
         [loading]="loading()"
         primaryActionLabel="إنشاء حالة عاجلة"
         primaryButtonClass="bg-error hover:opacity-90 text-on-error shadow-sm"
-        [bordered]="false"
         (primaryAction)="navigateToCreate()"
       >
       </app-case-header>

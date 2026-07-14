@@ -17,20 +17,32 @@ import { Subscription, debounceTime, distinctUntilChanged, map, merge } from 'rx
 import { CasesFilterRequest } from '../../../../core/models/Cases.model';
 import { AgeCategories } from '../../../enums/age-categories';
 import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.categories.dictionary';
+import { CardComponent } from '../../card/card';
+import { LabelComponent } from '../../label/label';
+import { TextInputComponent } from '../../text-input/text-input';
+import { SelectInputComponent } from '../../select-input/select-input';
+import { DateInputComponent } from '../../date-input/date-input';
+import { ButtonComponent } from '../../button/button';
+import { IconComponent } from '../../icon/icon';
 
-/**
- * NOTE: the label maps use placeholder Arabic strings mapped to numeric enum values
- * for Gender / AgeSort / DateSort. Replace with your real enum values if needed.
- */
 @Component({
   selector: 'app-case-filters',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule],
+  imports: [
+    ReactiveFormsModule,
+    FormsModule,
+    CardComponent,
+    LabelComponent,
+    TextInputComponent,
+    SelectInputComponent,
+    DateInputComponent,
+    ButtonComponent,
+    IconComponent,
+  ],
   templateUrl: './case-filters.component.html',
   styleUrls: ['./case-filters.component.css'],
 })
 export class CaseFiltersComponent implements OnInit, AfterContentInit {
-  // Pass the enum value arrays in from the parent (e.g. Object.values(CaseStatus))
   @Input() genders: number[] = [0, 1];
   @Input() ageSorts: number[] = [0, 1];
   @Input() dateSorts: number[] = [0, 1];
@@ -45,25 +57,25 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
-  @ContentChildren(NgModel, { descendants: true }) private projectedModels!: QueryList<NgModel>;
+  @ContentChildren(NgModel, { descendants: true })
+  private projectedModels!: QueryList<NgModel>;
   private readonly projectedModelSubscriptions = new Map<NgModel, Subscription>();
   private lastEmittedRequest: CasesFilterRequest | null = null;
   private hasEmittedInitialRequest = false;
 
-  // fields that live behind the "advanced filters" toggle - used to show a counter badge
   private readonly advancedFieldKeys = ['government', 'city', 'fromDate', 'toDate', 'ageSort'];
 
   ngOnInit(): void {
     this.filterForm = this.fb.group({
-      fullName: [null],
-      gender: [null],
-      ageCategory: [null],
-      government: [null],
-      city: [null],
-      fromDate: [null],
-      toDate: [null],
-      ageSort: [null],
-      dateSort: [null],
+      fullName: [''],
+      gender: [''],
+      ageCategory: [''],
+      government: [''],
+      city: [''],
+      fromDate: [''],
+      toDate: [''],
+      ageSort: [''],
+      dateSort: [''],
     });
 
     const formControlStreams = [
@@ -141,7 +153,6 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     this.filterChange.emit(sanitizedRequest);
   }
 
-  /** Number of advanced filters currently set - shown as a badge on the toggle button. */
   get activeAdvancedCount(): number {
     const raw = this.filterForm?.value ?? {};
     return this.advancedFieldKeys.filter(
@@ -154,7 +165,17 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   }
 
   resetFilters(): void {
-    this.filterForm.reset(null, { emitEvent: false });
+    this.filterForm.reset({
+      fullName: '',
+      gender: '',
+      ageCategory: '',
+      government: '',
+      city: '',
+      fromDate: '',
+      toDate: '',
+      ageSort: '',
+      dateSort: '',
+    }, { emitEvent: false });
     this.showAdvanced = false;
     this.reset.emit();
     this.emitFilterChange(this.buildFilterRequest());
@@ -195,11 +216,12 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
       ageSort: this.toNumberOrNull(request.ageSort),
       dateSort: this.toNumberOrNull(request.dateSort),
       page: request.page ?? 1,
+      pageSize: request.pageSize ?? 12,
     };
   }
 
   private toNumberOrNull(value: unknown): number | null {
-    if (value === null || value === undefined || value === '') {
+    if (value === null || value === undefined || value === '' || value === 'null') {
       return null;
     }
 
@@ -213,14 +235,15 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     }
 
     if (typeof value === 'string') {
-      return value.trim().length > 0 ? value : null;
+      const trimmed = value.trim();
+      return (trimmed === '' || trimmed === 'null') ? null : (trimmed as any);
     }
 
     if (typeof value === 'number') {
       return Number.isFinite(value) && value !== Number.MAX_VALUE ? value : null;
     }
 
-    return value;
+    return value as T;
   }
 
   private toStringOrNull(value: unknown): string | null {
@@ -229,10 +252,9 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     }
 
     const textValue = String(value).trim();
-    return textValue.length > 0 ? textValue : null;
+    return (textValue === '' || textValue === 'null') ? null : textValue;
   }
 
-  // --- Placeholder labels: replace with your real enum labels ---
   getGenderLabel(gender: number): string {
     const labels: Record<number, string> = { 0: 'ذكر', 1: 'أنثى' };
     return labels[gender] ?? String(gender);
