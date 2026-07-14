@@ -68,7 +68,7 @@
 
       @if (hasCreatedAt()) {
         <div class="flex items-center justify-between">
-          <span class="text-on-surface-variant"> {{ isFounded ? 'تاريخ العثور' : 'تاريخ الإضافة' }} </span>
+          <span class="text-on-surface-variant"> تاريخ الإضافة </span>
 
           <span class="font-medium text-on-surface">
             {{ caseItem.createdAt | date: 'dd MMM yyyy, h:mm a' : '' : 'ar' }}
@@ -117,24 +117,22 @@
         عرض التفاصيل
       </a>
 
-      @if (!isFounded) {
-        <button
-          type="button"
-          (click)="onContact.emit(caseItem.id)"
-          class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-outline-variant bg-surface-container-lowest text-sm font-semibold text-on-surface transition-all duration-200 hover:border-primary hover:bg-primary/5 hover:text-primary"
-        >
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-            />
-          </svg>
+      <button
+        type="button"
+        (click)="onContact.emit(caseItem.id)"
+        class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-outline-variant bg-surface-container-lowest text-sm font-semibold text-on-surface transition-all duration-200 hover:border-primary hover:bg-primary/5 hover:text-primary"
+      >
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+          />
+        </svg>
 
-          تواصل مع المُبلّغ
-        </button>
-      }
+        تواصل مع المُبلّغ
+      </button>
     </div>
   </div>
 </article>

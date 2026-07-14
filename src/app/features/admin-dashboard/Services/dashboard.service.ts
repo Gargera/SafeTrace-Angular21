@@ -5,7 +5,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { DashboardDto } from '../models/DashboardDto';
-import { ApiResponse } from '../../../shared/models/responses/api-response.model';
+import { ApiResponse } from '../../founded/models/founded.models';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {

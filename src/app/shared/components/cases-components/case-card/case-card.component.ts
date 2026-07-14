@@ -6,18 +6,16 @@ import { CaseListItemResponse } from '../../../../core/models/Cases.model';
 import { AgeCategories } from '../../../enums/age-categories';
 import { GenderBadgeDirective } from '../../../directives/gender-badge-directive';
 import { AgeBadgeDirective } from '../../../directives/age-badge-directive';
-import { CaseStatusBadgeDirective } from '../../../directives/case-status-badge-directive';
 
 @Component({
   selector: 'app-case-card',
   standalone: true,
-  imports: [DatePipe, RouterModule, GenderBadgeDirective, AgeBadgeDirective, CaseStatusBadgeDirective],
+  imports: [DatePipe, RouterModule, GenderBadgeDirective, AgeBadgeDirective],
   templateUrl: './case-card.component.html',
 })
 export class CaseCardComponent {
   @Input({ required: true }) caseItem!: CaseListItemResponse;
   @Input() showUrgentTag = false;
-  @Input() isFounded = false;
   @Input() detailRoute: Array<string | number> | null = null;
   @Output() onContact = new EventEmitter<number>();
 
@@ -77,4 +75,4 @@ export class CaseCardComponent {
   hasUrgentEndDate(): boolean {
     return !!this.getUrgentEndDate();
   }
-}
+}

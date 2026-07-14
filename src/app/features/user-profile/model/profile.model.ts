@@ -11,6 +11,7 @@ export interface GetUserInfoDTO {
   verificationStatus: VerificationStatus;
   identificationImage: string | null;
   role: UserRole;
+  phoneNumber: string | null; // ← كانت PhoneNumber بحرف كبير
   cases: any[];
 }
 
@@ -22,6 +23,9 @@ export interface UpdateNameDTO {
   lastName: string;
 }
 
+export interface ChangePhoneNumberDTO {
+  phoneNumber: string;
+}
 /** PUT /UserProfile/UpdateProfileImage (form-data) */
 export interface UpdateProfileImageDTO {
   profileImage: File;
