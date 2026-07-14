@@ -44,7 +44,7 @@ export class NotificationService implements OnDestroy {
 
   startConnection(): void {
     if (this.#hubConnection) return;
-    console.log('startConnection called');
+
     this.#hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(environment.signalRHubUrl, {
         // Cookie-based auth: credentials are sent automatically.
@@ -67,15 +67,11 @@ export class NotificationService implements OnDestroy {
     this.#hubConnection
       ?.start()
       .then(() => {
-        console.log('SignalR Connected');
-
         this.#isConnected.set(true);
         // Load notifications via SignalR after connection
-        console.log('before invoke');
 
         this.#hubConnection?.invoke('GetMyNotifications', 1, DEFAULT_PAGE_SIZE);
       })
-      .then(() => console.log('Invoke Success'))
       .catch((err) => {
         this.#isConnected.set(false);
         console.error('SignalR connection error:', err);
@@ -93,9 +89,6 @@ export class NotificationService implements OnDestroy {
     // Fired after invoking GetMyNotifications
 
     this.#hubConnection.on('ReceiveNotifications', (response: ApiResponse<NotificationPage>) => {
-      console.log('1');
-      console.log(response);
-      console.log(response.data?.items);
       if (response.success && response.data) {
         this.#notifications.set(response.data.items);
         this.#currentPage.set(response.data.page);
@@ -129,14 +122,11 @@ export class NotificationService implements OnDestroy {
       list.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
     );
 
-    this.#hubConnection
-      ?.invoke('GetMyNotifications')
-      .then(() => console.log('Invoke Success'))
-      .catch((err) => {
-        console.error('Invoke Error:', err);
-        console.error(err?.message);
-        console.error(err?.stack);
-      });
+    this.#hubConnection?.invoke('GetMyNotifications').catch((err) => {
+      console.error('Invoke Error:', err);
+      console.error(err?.message);
+      console.error(err?.stack);
+    });
 
     this.#hubConnection?.invoke('MarkAsRead', notificationId).catch((err) => {
       console.error('MarkAsRead failed:', err);
@@ -181,6 +171,7 @@ export class NotificationService implements OnDestroy {
 
   // ─── REST API Fallback (used if SignalR is not connected) ─────────────────
   loadPage(page: number, append = false): void {
+
     this.#isLoading.set(true);
 
     const params = new HttpParams().set('page', page).set('pageSize', DEFAULT_PAGE_SIZE);
@@ -201,7 +192,10 @@ export class NotificationService implements OnDestroy {
           }
 
           if (append) {
-            this.#notifications.update((old) => [...old, ...data.items]);
+            this.#notifications.update((old) => {
+              const merged = [...old, ...data.items];
+              return merged;
+            });
           } else {
             this.#notifications.set(data.items);
           }

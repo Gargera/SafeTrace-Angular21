@@ -84,7 +84,12 @@
           <span class="text-body-sm break-all">{{ userInfo()!.email }}</span>
         </div>
       }
-
+      @if (userInfo()?.phoneNumber) {
+        <div class="flex items-center gap-sm text-on-surface-variant">
+          <span class="material-symbols-outlined text-secondary shrink-0">phone</span>
+          <span class="text-body-sm break-all">{{ userInfo()!.phoneNumber }}</span>
+        </div>
+      }
       <!-- Address (resolved from lat/lng via Geocoding API) -->
       @if (userInfo()?.homeLatitude && userInfo()?.homeLongitude) {
         <div class="flex items-start gap-sm text-on-surface-variant">
