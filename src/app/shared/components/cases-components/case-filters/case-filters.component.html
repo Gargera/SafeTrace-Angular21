@@ -284,9 +284,24 @@
       <button
         type="button"
         (click)="resetFilters()"
-        class="rounded-lg border border-outline-variant bg-surface-container px-5 py-2.5 text-sm font-semibold text-on-surface transition-all duration-200 hover:bg-surface-container-highest hover:border-outline-variant/80"
+        class="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary"
       >
-        إعادة تعيين
+        <svg
+          class="h-4 w-4 transition-transform duration-200 group-hover:-rotate-90"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 4v6h6M20 20v-6h-6M20 9a8 8 0 00-13.66-5.66L4 6M4 15a8 8 0 0013.66 5.66L20 18"
+          />
+        </svg>
+
+        <span>إعادة تعيين</span>
       </button>
     </div>
   </form>

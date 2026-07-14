@@ -18,10 +18,6 @@ import { CasesFilterRequest } from '../../../../core/models/Cases.model';
 import { AgeCategories } from '../../../enums/age-categories';
 import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.categories.dictionary';
 
-/**
- * NOTE: the label maps use placeholder Arabic strings mapped to numeric enum values
- * for Gender / AgeSort / DateSort. Replace with your real enum values if needed.
- */
 @Component({
   selector: 'app-case-filters',
   standalone: true,
@@ -29,8 +25,8 @@ import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.cate
   templateUrl: './case-filters.component.html',
   styleUrls: ['./case-filters.component.css'],
 })
+
 export class CaseFiltersComponent implements OnInit, AfterContentInit {
-  // Pass the enum value arrays in from the parent (e.g. Object.values(CaseStatus))
   @Input() genders: number[] = [0, 1];
   @Input() ageSorts: number[] = [0, 1];
   @Input() dateSorts: number[] = [0, 1];
@@ -45,12 +41,12 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
-  @ContentChildren(NgModel, { descendants: true }) private projectedModels!: QueryList<NgModel>;
+  @ContentChildren(NgModel, { descendants: true })
+  private projectedModels!: QueryList<NgModel>;
   private readonly projectedModelSubscriptions = new Map<NgModel, Subscription>();
   private lastEmittedRequest: CasesFilterRequest | null = null;
   private hasEmittedInitialRequest = false;
 
-  // fields that live behind the "advanced filters" toggle - used to show a counter badge
   private readonly advancedFieldKeys = ['government', 'city', 'fromDate', 'toDate', 'ageSort'];
 
   ngOnInit(): void {
@@ -141,7 +137,6 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     this.filterChange.emit(sanitizedRequest);
   }
 
-  /** Number of advanced filters currently set - shown as a badge on the toggle button. */
   get activeAdvancedCount(): number {
     const raw = this.filterForm?.value ?? {};
     return this.advancedFieldKeys.filter(
@@ -195,6 +190,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
       ageSort: this.toNumberOrNull(request.ageSort),
       dateSort: this.toNumberOrNull(request.dateSort),
       page: request.page ?? 1,
+      pageSize: request.pageSize ?? 12,
     };
   }
 

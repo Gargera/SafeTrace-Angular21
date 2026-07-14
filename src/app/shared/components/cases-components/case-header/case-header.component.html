@@ -1,11 +1,6 @@
 <div
   class="flex flex-col gap-6 transition-all duration-200 sm:flex-row sm:items-center sm:justify-between"
-  [ngClass]="{
-    'rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm': bordered,
-    'px-0 py-0': !bordered,
-  }"
 >
-  <!-- Left -->
   <div class="flex min-w-0 flex-1 items-start gap-4">
     @if (showBackButton) {
       <button
@@ -72,20 +67,10 @@
           {{ description }}
         </p>
       }
-
-      <div class="mt-4">
-        <ng-content select="[headerContent]"></ng-content>
-      </div>
     </div>
-
-    <ng-content select="[headerStart]"></ng-content>
   </div>
 
-  <!-- Right -->
-
   <div class="flex flex-wrap items-center justify-end gap-3">
-    <ng-content select="[headerEnd]"></ng-content>
-
     @if (secondaryActionLabel && showSecondary) {
       <button
         type="button"
@@ -102,7 +87,7 @@
       <button
         type="button"
         (click)="primaryAction.emit()"
-        [disabled]="loading || readonly || primaryDisabled"
+        [disabled]="loading || readonly"
         class="inline-flex h-11 items-center rounded-xl bg-secondary px-6 text-sm font-semibold text-on-secondary shadow-sm transition-all duration-200 hover:opacity-90 hover:shadow active:scale-95 disabled:pointer-events-none disabled:opacity-50"
         [ngClass]="primaryButtonClass"
       >
