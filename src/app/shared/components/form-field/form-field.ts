@@ -7,6 +7,9 @@ import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/f
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './form-field.html',
+  host: {
+    '[class]': 'extraClass()'
+  },
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -18,9 +21,10 @@ import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/f
 export class FormField implements ControlValueAccessor {
   label = input('');
   placeholder = input('');
-  type = input<'text' | 'email' | 'password' | 'number' | 'date' | 'search' | 'textarea' | 'select'>('text');
+  type = input<'text' | 'email' | 'password' | 'number' | 'date' | 'search' | 'textarea' | 'select' | 'tel'>('text');
 
   rows = input(4);
+  extraClass = input('');
 
   prefix = input(false);
   suffix = input(false);

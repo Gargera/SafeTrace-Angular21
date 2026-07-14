@@ -60,6 +60,18 @@
   </div>
 
   <div class="flex flex-wrap items-center justify-end gap-3">
+    @if (showCaseTypeFilter()) {
+      <select
+        (change)="caseTypeChange.emit($any($event.target).value)"
+        class="bg-surface border border-outline-variant rounded-lg px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-secondary cursor-pointer h-11"
+      >
+        <option value="">كل أنواع الحالات</option>
+        @for (type of caseTypes; track type) {
+          <option [value]="type">{{ getCaseTypeName(type) }}</option>
+        }
+      </select>
+    }
+
     @if (secondaryActionLabel() && showSecondary()) {
       <app-button
         variant="secondary"

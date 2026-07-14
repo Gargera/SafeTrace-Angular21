@@ -57,12 +57,12 @@
             
             @if (canManageUser()) {
               <div class="flex flex-col gap-3 pt-3 border-t border-outline-variant/50">
-                <app-select-input [icon]="true" extraClass="w-full" [ngModel]="selectedRole()" (ngModelChange)="selectedRole.set($event)">
+                <app-form-field type="select"  extraClass="w-full" [ngModel]="selectedRole()" (ngModelChange)="selectedRole.set($event)">
                   @for (role of roles(); track role.id) {
                     <option [value]="role.name">{{ getRoleName(role.name) }}</option>
                   }
-                  <span icon><app-icon name="chevron" size="1rem" extraClass="text-on-surface-variant"></app-icon></span>
-                </app-select-input>
+                  <span prefix><span class="material-symbols-outlined text-on-surface-variant">chevron</span></span>
+                </app-form-field>
                 <app-button (onClick)="onChangeRole(selectedRole())" [disabled]="isActionLoading() || selectedRole() === user()?.role" variant="primary" extraClass="w-full py-2.5 rounded-lg text-label-md font-bold justify-center">
                   تغيير
                 </app-button>
@@ -98,19 +98,19 @@
             <div class="space-y-2">
               <span class="text-label-md font-bold text-on-surface-variant">صورة إثبات الهوية</span>
               @if (isInternalRole()) {
-                <div class="aspect-square bg-surface-variant/30 rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center text-outline">
+                <div class="aspect-[1.6/1] bg-surface-variant/30 rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center text-outline">
                   <span class="material-symbols-outlined text-[32px] mb-2">admin_panel_settings</span>
                   <span class="text-label-sm">إثبات الهوية غير مطلوب لإدارة النظام</span>
                 </div>
               } @else if (user()?.identificationImage) {
-                <div class="relative aspect-square bg-surface-container rounded-xl border-2 border-dashed border-outline-variant overflow-hidden hover:border-secondary transition-colors group">
+                <div class="relative aspect-[1.6/1] bg-surface-container rounded-xl border-2 border-dashed border-outline-variant overflow-hidden hover:border-secondary transition-colors group">
                   <img [src]="getImageUrl(user()!.identificationImage!)" class="w-full h-full object-cover">
                   <div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-zoom-in">
                     <span class="material-symbols-outlined text-white text-[32px]">zoom_in</span>
                   </div>
                 </div>
               } @else {
-                <div class="aspect-square bg-surface-variant/30 rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center text-outline">
+                <div class="aspect-[1.6/1] bg-surface-variant/30 rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center text-outline">
                   <span class="material-symbols-outlined text-[32px] mb-2">no_photography</span>
                   <span class="text-label-sm">لم يقم المستخدم برفع هوية</span>
                 </div>

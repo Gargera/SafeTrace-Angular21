@@ -21,9 +21,9 @@
       <app-case-filters (filterChange)="onFilterChange($event)" (reset)="onFilterReset()">
         <!-- Urgent-only extra filter -->
         <div extendedFilters>
-          <app-label>نطاق البحث (متر)</app-label>
+          <label class="text-sm font-medium text-on-surface-variant block mb-1">نطاق البحث (متر)</label>
 
-          <app-text-input
+          <app-form-field
             type="number"
             min="100"
             step="100"
@@ -31,7 +31,7 @@
             (ngModelChange)="radiusInMeters.set($event)"
             [ngModelOptions]="{ standalone: true }"
             placeholder="بدون حد أقصى"
-          ></app-text-input>
+          ></app-form-field>
         </div>
       </app-case-filters>
     </section>

@@ -3,43 +3,40 @@
     <!-- Main Filters Grid -->
     <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
       <div>
-        <app-label>بحث</app-label>
-        <app-text-input formControlName="fullName" placeholder="ابحث بالاسم..." [prefix]="true">
-          <span prefix><app-icon name="search" size="1rem" extraClass="text-on-surface-variant"></app-icon></span>
-        </app-text-input>
+        <label class="text-sm font-medium text-on-surface-variant block mb-1">بحث</label>
+        <app-form-field formControlName="fullName" placeholder="ابحث بالاسم..." [prefix]="true">
+          <span prefix><span class="material-symbols-outlined text-on-surface-variant">search</span></span>
+        </app-form-field>
       </div>
 
       <div>
-        <app-label>النوع</app-label>
-        <app-select-input formControlName="gender" [icon]="true">
+        <label class="text-sm font-medium text-on-surface-variant block mb-1">النوع</label>
+        <app-form-field type="select" formControlName="gender" >
           <option value="">الكل</option>
           @for (gender of genders(); track gender) {
             <option [value]="gender">{{ getGenderLabel(gender) }}</option>
           }
-          <span icon><app-icon name="chevron" size="1rem" extraClass="text-on-surface-variant"></app-icon></span>
-        </app-select-input>
+        </app-form-field>
       </div>
 
       <div>
-        <app-label>فئة العمر</app-label>
-        <app-select-input formControlName="ageCategory" [icon]="true">
+        <label class="text-sm font-medium text-on-surface-variant block mb-1">فئة العمر</label>
+        <app-form-field type="select" formControlName="ageCategory" >
           <option value="">الكل</option>
           @for (ageCategory of ageCategories; track ageCategory) {
             <option [value]="ageCategory">{{ getAgeCategoryLabel(ageCategory) }}</option>
           }
-          <span icon><app-icon name="chevron" size="1rem" extraClass="text-on-surface-variant"></app-icon></span>
-        </app-select-input>
+        </app-form-field>
       </div>
 
       <div>
-        <app-label>ترتيب العمر</app-label>
-        <app-select-input formControlName="ageSort" [icon]="true">
+        <label class="text-sm font-medium text-on-surface-variant block mb-1">ترتيب العمر</label>
+        <app-form-field type="select" formControlName="ageSort" >
           <option value="">بدون ترتيب</option>
           @for (sort of ageSorts(); track sort) {
             <option [value]="sort">{{ getAgeSortLabel(sort) }}</option>
           }
-          <span icon><app-icon name="chevron" size="1rem" extraClass="text-on-surface-variant"></app-icon></span>
-        </app-select-input>
+        </app-form-field>
       </div>
     </div>
 
@@ -59,7 +56,7 @@
           </span>
         }
 
-        <app-icon name="chevron" size="0.875rem" extraClass="shrink-0 transition-transform duration-300" [rotation]="showAdvanced ? 180 : 0"></app-icon>
+        <span class="material-symbols-outlined shrink-0 transition-transform duration-300" [class.-rotate-180]="showAdvanced">expand_more</span>
       </app-button>
 
       <div class="h-px flex-1 bg-outline-variant/20"></div>
@@ -70,33 +67,32 @@
       <div class="overflow-hidden">
         <div class="grid grid-cols-1 gap-5 pt-4 transition-all duration-300 ease-out md:grid-cols-2 xl:grid-cols-4" [class.opacity-100]="showAdvanced" [class.translate-y-0]="showAdvanced" [class.opacity-0]="!showAdvanced" [class.-translate-y-2]="!showAdvanced">
           <div>
-            <app-label>المحافظة</app-label>
-            <app-text-input formControlName="government" placeholder="المحافظة..."></app-text-input>
+            <label class="text-sm font-medium text-on-surface-variant block mb-1">المحافظة</label>
+            <app-form-field formControlName="government" placeholder="المحافظة..."></app-form-field>
           </div>
 
           <div>
-            <app-label>المدينة</app-label>
-            <app-text-input formControlName="city" placeholder="المدينة..."></app-text-input>
+            <label class="text-sm font-medium text-on-surface-variant block mb-1">المدينة</label>
+            <app-form-field formControlName="city" placeholder="المدينة..."></app-form-field>
           </div>
 
           <div>
-            <app-label>من تاريخ</app-label>
-            <app-date-input formControlName="fromDate"></app-date-input>
+            <label class="text-sm font-medium text-on-surface-variant block mb-1">من تاريخ</label>
+            <app-form-field type="date" formControlName="fromDate"></app-form-field>
           </div>
 
           <div>
-            <app-label>إلى تاريخ</app-label>
-            <app-date-input formControlName="toDate"></app-date-input>
+            <label class="text-sm font-medium text-on-surface-variant block mb-1">إلى تاريخ</label>
+            <app-form-field type="date" formControlName="toDate"></app-form-field>
           </div>
 
           <div>
-            <app-label>ترتيب التاريخ</app-label>
-            <app-select-input formControlName="dateSort" [icon]="true">
+            <label class="text-sm font-medium text-on-surface-variant block mb-1">ترتيب التاريخ</label>
+            <app-form-field type="select" formControlName="dateSort" >
               <option value="">بدون ترتيب</option>
               <option value="0">{{ getDateSortLabel(0) }}</option>
               <option value="1">{{ getDateSortLabel(1) }}</option>
-              <span icon><app-icon name="chevron" size="1rem" extraClass="text-on-surface-variant"></app-icon></span>
-            </app-select-input>
+            </app-form-field>
           </div>
 
           <ng-content select="[extendedFilters]"></ng-content>
@@ -107,7 +103,7 @@
     <!-- Footer -->
     <div class="flex flex-wrap justify-end gap-3 pt-2">
       <app-button variant="text" type="button" (onClick)="resetFilters()" extraClass="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary">
-        <app-icon name="reset" size="1rem" extraClass="transition-transform duration-200 group-hover:-rotate-90"></app-icon>
+        <span class="material-symbols-outlined transition-transform duration-200 group-hover:-rotate-90">refresh</span>
         <span>إعادة تعيين</span>
       </app-button>
     </div>

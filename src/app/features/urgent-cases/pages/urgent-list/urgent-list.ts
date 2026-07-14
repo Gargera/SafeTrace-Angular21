@@ -1,3 +1,4 @@
+import { FormField } from '../../../../shared/components/form-field/form-field';
 import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -11,13 +12,13 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
 import { UrgentCasesFilterRequest } from '../../models/request/UrgentCaseFilterRequest';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
-import { LabelComponent } from '../../../../shared/components/label/label';
-import { TextInputComponent } from '../../../../shared/components/text-input/text-input';
+
+
 
 @Component({
   selector: 'app-urgent-list',
   standalone: true,
-  imports: [
+  imports: [FormField, 
     FormsModule,
     CaseHeaderComponent,
     CaseFiltersComponent,
@@ -25,8 +26,8 @@ import { TextInputComponent } from '../../../../shared/components/text-input/tex
     CaseSkeletonGridComponent,
     EmptyStateComponent,
     CaseCardComponent,
-    LabelComponent,
-    TextInputComponent,
+    
+    
   ],
   templateUrl: './urgent-list.html',
   styleUrls: ['./urgent-list.css'],

@@ -14,16 +14,16 @@
       
       <div class="flex gap-2">
         <div class="flex-1">
-          <app-select-input [ngModel]="selectedRoleId()" (ngModelChange)="onRoleSelected($event)">
+          <app-form-field type="select" [ngModel]="selectedRoleId()" (ngModelChange)="onRoleSelected($event)">
             <option value="">-- عرض كل صلاحيات النظام (للاطلاع فقط) --</option>
             @for (role of roles(); track role.id) {
               <option [value]="role.id">{{ getRoleName(role.name) }}</option>
             }
-          </app-select-input>
+          </app-form-field>
         </div>
 
         @if (selectedRoleId() && isDeletableRole()) {
-          <app-button (onClick)="onDeleteRole()" [disabled]="isDeleting()" [loading]="isDeleting()" variant="icon" extraClass="bg-error-container text-error hover:bg-error hover:text-white px-4 shrink-0 transition-colors" ariaLabel="حذف الدور">
+          <app-button (onClick)="onDeleteRole()" [disabled]="isDeleting()" [loading]="isDeleting()" variant="icon" extraClass="w-11 h-11 !border-none bg-error-container text-error hover:bg-error hover:text-white shrink-0 transition-colors" ariaLabel="حذف الدور">
             @if (!isDeleting()) {
               <span class="material-symbols-outlined text-[24px]">delete</span>
             }
@@ -48,7 +48,7 @@
       <form [formGroup]="createRoleForm" (ngSubmit)="onCreateRole()" class="flex flex-col gap-2">
         <div class="flex gap-2">
           <div class="flex-1">
-            <app-text-input formControlName="roleName" placeholder="e.g. Volunteer"></app-text-input>
+            <app-form-field formControlName="roleName" placeholder="e.g. Volunteer"></app-form-field>
           </div>
           <app-button type="submit" [disabled]="createRoleForm.invalid" variant="primary" extraClass="px-6 rounded-xl font-bold shrink-0">
             إنشاء

@@ -1,8 +1,8 @@
 <div class="min-h-screen bg-surface flex flex-col justify-center items-center px-margin-mobile py-12">
   
   <div class="absolute top-6 right-6 md:top-8 md:right-8">
-    <a routerLink="/home" class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-medium text-body-sm bg-surface-container-lowest px-4 py-2 rounded-full shadow-sm border border-outline-variant hover:shadow-md">
-      <svg class="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+    <a routerLink="/home" class="inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold transition-all duration-200 active:scale-95 border border-outline-variant bg-surface-container-low text-on-surface hover:bg-surface-container-high">
+      <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
       العودة للرئيسية
     </a>
   </div>
@@ -30,12 +30,12 @@
       
       <div class="grid grid-cols-2 gap-4">
         <div class="flex flex-col gap-1">
-          <app-text-input 
+          <app-form-field 
             formControlName="fName" 
             label="الاسم الأول" 
             placeholder="أحمد"
             [class.border-error]="registerForm.get('fName')?.touched && registerForm.get('fName')?.invalid">
-          </app-text-input>
+          </app-form-field>
           @if (registerForm.get('fName')?.touched && registerForm.get('fName')?.invalid) {
             <span class="text-error text-xs font-medium">
               @if (registerForm.get('fName')?.errors?.['serverError']) { {{ registerForm.get('fName')?.errors?.['serverError'] }} } @else { الاسم الأول مطلوب ويجب ألا يزيد عن 100 حرف. }
@@ -44,12 +44,12 @@
         </div>
 
         <div class="flex flex-col gap-1">
-          <app-text-input 
+          <app-form-field 
             formControlName="lName" 
             label="الاسم الأخير" 
             placeholder="محمد"
             [class.border-error]="registerForm.get('lName')?.touched && registerForm.get('lName')?.invalid">
-          </app-text-input>
+          </app-form-field>
           @if (registerForm.get('lName')?.touched && registerForm.get('lName')?.invalid) {
             <span class="text-error text-xs font-medium">
               @if (registerForm.get('lName')?.errors?.['serverError']) { {{ registerForm.get('lName')?.errors?.['serverError'] }} } @else { اسم العائلة مطلوب ويجب ألا يزيد عن 100 حرف.  }
@@ -59,13 +59,13 @@
       </div>
 
       <div class="flex flex-col gap-1">
-        <app-text-input 
+        <app-form-field 
           formControlName="email" 
           type="email"
           label="البريد الإلكتروني" 
           placeholder="example@email.com"
           [class.border-error]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid">
-        </app-text-input>
+        </app-form-field>
         @if (registerForm.get('email')?.touched && registerForm.get('email')?.invalid) {
           <span class="text-error text-xs font-medium">
             @if (registerForm.get('email')?.errors?.['serverError']) { {{ registerForm.get('email')?.errors?.['serverError'] }} } @else { صيغة البريد الإلكتروني غير صحيحة.}
@@ -74,13 +74,13 @@
       </div>
 
       <div class="flex flex-col gap-1">
-        <app-text-input 
+        <app-form-field 
           formControlName="phoneNumber" 
           type="tel"
           label="رقم الهاتف" 
           placeholder="01234567890"
           [class.border-error]="registerForm.get('phoneNumber')?.touched && registerForm.get('phoneNumber')?.invalid">
-        </app-text-input>
+        </app-form-field>
         @if (registerForm.get('phoneNumber')?.touched && registerForm.get('phoneNumber')?.invalid) {
           <span class="text-error text-xs font-medium">
             @if (registerForm.get('phoneNumber')?.errors?.['serverError']) { {{ registerForm.get('phoneNumber')?.errors?.['serverError'] }} } @else { يرجى إدخال رقم هاتف مصري صحيح.}
@@ -89,7 +89,7 @@
       </div>
 
       <div class="flex flex-col gap-1">
-        <app-text-input 
+        <app-form-field 
           formControlName="password" 
           [type]="isPasswordVisible() ? 'text' : 'password'"
           label="كلمة المرور" 
@@ -109,7 +109,7 @@
               </svg>
             }
           </button>
-        </app-text-input>
+        </app-form-field>
 
         @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
           <span class="text-error text-xs font-medium">

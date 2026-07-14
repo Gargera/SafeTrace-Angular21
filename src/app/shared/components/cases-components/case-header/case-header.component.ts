@@ -2,6 +2,8 @@ import { NgClass } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 
 import { ButtonComponent } from '../../button/button';
+import { CaseType } from '../../../enums/case-type';
+import { getCaseTypeTranslationAr } from '../../../../core/constants/case.type.dictionary';
 
 
 @Component({
@@ -19,6 +21,16 @@ export class CaseHeaderComponent {
 
   // Loading
   loading = input(false);
+
+  // Filter
+  showCaseTypeFilter = input(false);
+  caseTypeChange = output<string>();
+
+  caseTypes = Object.values(CaseType);
+
+  getCaseTypeName(type: string): string {
+    return getCaseTypeTranslationAr(type);
+  }
 
   // Back Button
   showBackButton = input(false);

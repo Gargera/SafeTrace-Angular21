@@ -14,12 +14,10 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 import { RoleService } from '../../services/role.service';
 import { UserService } from '../../services/user.service';
-import { SearchInputComponent } from '../../../../shared/components/search-input/search-input';
-import { SelectInputComponent } from '../../../../shared/components/select-input/select-input';
+import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
-import { IconComponent } from '../../../../shared/components/icon/icon';
 
 @Component({
   selector: 'app-user-list',
@@ -30,12 +28,10 @@ import { IconComponent } from '../../../../shared/components/icon/icon';
     FormsModule,
     CommonModule,
     RouterModule,
-    SearchInputComponent,
-    SelectInputComponent,
+    FormField,
     ButtonComponent,
     CardComponent,
     EmptyStateComponent,
-    IconComponent,
   ],
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',
@@ -58,6 +54,7 @@ export class UserList {
     searchTerm: '',
     verificationStatus: '' as any,
     roleId: '' as any,
+    isBlocked: '' as any,
   });
 
   pagesArray = computed(() => Array.from({ length: this.totalPages() }, (_, i) => i + 1));
@@ -120,6 +117,7 @@ export class UserList {
       searchTerm: '',
       verificationStatus: '' as any,
       roleId: '' as any,
+      isBlocked: '' as any,
     });
     this.loadUsers();
   }

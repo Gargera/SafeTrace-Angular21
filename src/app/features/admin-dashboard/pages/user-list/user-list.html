@@ -10,39 +10,47 @@
 </header>
 
 <app-card extraClass="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg">
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-md items-end">
+  <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-md items-end">
     
     <div class="flex flex-col gap-xs md:col-span-2">
       <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">بحث</label>
-      <app-search-input 
+      <app-form-field type="search" 
         [ngModel]="filter().searchTerm"
         (ngModelChange)="onSearchChange($event)"
         placeholder="ابحث بالاسم، الإيميل، أو رقم الهاتف..." >
-      </app-search-input>
+      </app-form-field>
     </div>
 
     <div class="flex flex-col gap-xs">
-      <app-select-input [ngModel]="filter().verificationStatus" (ngModelChange)="updateFilter({ verificationStatus: $event })" label="حالة التوثيق">
+      <app-form-field type="select" [ngModel]="filter().verificationStatus" (ngModelChange)="updateFilter({ verificationStatus: $event })" label="حالة التوثيق">
         <option value="">الكل</option>
         <option [value]="VerificationStatusEnum.Verified">موثق</option>
         <option [value]="VerificationStatusEnum.Pending">قيد المراجعة</option>
         <option [value]="VerificationStatusEnum.Unverified">غير موثق</option>
-      </app-select-input>
+      </app-form-field>
     </div>
 
     <div class="flex flex-col gap-xs">
-      <app-select-input [ngModel]="filter().roleId" (ngModelChange)="updateFilter({ roleId: $event })" label="الدور (Role)">
+      <app-form-field type="select" [ngModel]="filter().roleId" (ngModelChange)="updateFilter({ roleId: $event })" label="الدور (Role)">
         <option value="">الكل</option>
         @for (role of roles(); track role.id) {
           <option [value]="role.id">{{ getRoleName(role.name) }}</option>
         }
-      </app-select-input>
+      </app-form-field>
+    </div>
+
+    <div class="flex flex-col gap-xs">
+      <app-form-field type="select" [ngModel]="filter().isBlocked" (ngModelChange)="updateFilter({ isBlocked: $event === '' ? undefined : $event === 'true' })" label="حالة الحظر">
+        <option value="">الكل</option>
+        <option value="true">محظور</option>
+        <option value="false">نشط</option>
+      </app-form-field>
     </div>
   </div>
 
   <div class="flex flex-wrap justify-end gap-3 pt-2">
     <app-button variant="text" (onClick)="resetFilters()" extraClass="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary">
-      <app-icon name="reset" size="1rem" extraClass="transition-transform duration-200 group-hover:-rotate-90"></app-icon>
+      <span class="material-symbols-outlined transition-transform duration-200 group-hover:-rotate-90">refresh</span>
       <span>إعادة تعيين</span>
     </app-button>
   </div>

@@ -24,7 +24,7 @@
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div class="flex flex-col gap-1.5">
-        <app-text-input formControlName="fName" label="الاسم الأول" placeholder="أحمد"></app-text-input>
+        <app-form-field formControlName="fName" label="الاسم الأول" placeholder="أحمد"></app-form-field>
         @if (registerForm.get('fName')?.touched && registerForm.get('fName')?.invalid) {
           <span class="text-error text-xs font-medium">
             @if (registerForm.get('fName')?.errors?.['serverError']) { {{ registerForm.get('fName')?.errors?.['serverError'] }} } @else { الاسم الأول مطلوب ويجب ألا يزيد عن 100 حرف. }
@@ -33,7 +33,7 @@
       </div>
 
       <div class="flex flex-col gap-1.5">
-        <app-text-input formControlName="lName" label="الاسم الأخير" placeholder="محمد"></app-text-input>
+        <app-form-field formControlName="lName" label="الاسم الأخير" placeholder="محمد"></app-form-field>
         @if (registerForm.get('lName')?.touched && registerForm.get('lName')?.invalid) {
           <span class="text-error text-xs font-medium">
             @if (registerForm.get('lName')?.errors?.['serverError']) { {{ registerForm.get('lName')?.errors?.['serverError'] }} } @else { اسم العائلة مطلوب ويجب ألا يزيد عن 100 حرف. }
@@ -43,7 +43,7 @@
     </div>
 
     <div class="flex flex-col gap-1.5">
-      <app-text-input type="email" formControlName="email" label="البريد الإلكتروني" placeholder="example@email.com"></app-text-input>
+      <app-form-field type="email" formControlName="email" label="البريد الإلكتروني" placeholder="example@email.com"></app-form-field>
       @if (registerForm.get('email')?.touched && registerForm.get('email')?.invalid) {
         <span class="text-error text-xs font-medium">
           @if (registerForm.get('email')?.errors?.['serverError']) { {{ registerForm.get('email')?.errors?.['serverError'] }} } @else { صيغة البريد الإلكتروني غير صحيحة. }
@@ -53,7 +53,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div class="flex flex-col gap-1.5">
-        <app-text-input type="tel" formControlName="phoneNumber" label="رقم الهاتف" placeholder="01234567890"></app-text-input>
+        <app-form-field type="tel" formControlName="phoneNumber" label="رقم الهاتف" placeholder="01234567890"></app-form-field>
         @if (registerForm.get('phoneNumber')?.touched && registerForm.get('phoneNumber')?.invalid) {
           <span class="text-error text-xs font-medium">
             @if (registerForm.get('phoneNumber')?.errors?.['serverError']) { {{ registerForm.get('phoneNumber')?.errors?.['serverError'] }} } @else { يرجى إدخال رقم هاتف مصري صحيح. }
@@ -62,12 +62,12 @@
       </div>
 
       <div class="flex flex-col gap-1.5">
-        <app-select-input formControlName="role" label="الدور الإداري (Role)">
+        <app-form-field type="select" formControlName="role" label="الدور الإداري (Role)">
           <option value="" disabled selected>اختر الدور المناسب</option>
           @for (role of roles(); track role.id) {
             <option [value]="role.name">{{ getRoleName(role.name) }}</option>
           }
-        </app-select-input>
+        </app-form-field>
         @if (registerForm.get('role')?.touched && registerForm.get('role')?.invalid) {
           <span class="text-error text-xs font-medium">يرجى تحديد دور للمستخدم.</span>
         }
@@ -75,7 +75,7 @@
     </div>
 
     <div class="flex flex-col gap-1.5">
-      <app-text-input [type]="isPasswordVisible() ? 'text' : 'password'" formControlName="password" label="كلمة المرور المؤقتة" placeholder="••••••••" [suffix]="true">
+      <app-form-field [type]="isPasswordVisible() ? 'text' : 'password'" formControlName="password" label="كلمة المرور المؤقتة" placeholder="••••••••" [suffix]="true">
         <button suffix type="button" (click)="togglePasswordVisibility()" class="flex items-center text-on-surface-variant hover:text-secondary transition-colors focus:outline-none">
           @if (isPasswordVisible()) {
             <span class="material-symbols-outlined text-[20px]">visibility_off</span>
@@ -83,7 +83,7 @@
             <span class="material-symbols-outlined text-[20px]">visibility</span>
           }
         </button>
-      </app-text-input>
+      </app-form-field>
 
       @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
         <span class="text-error text-xs font-medium">

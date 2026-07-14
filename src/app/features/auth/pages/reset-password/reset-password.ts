@@ -1,16 +1,17 @@
+import { FormField } from '../../../../shared/components/form-field/form-field';
 import { Component, inject, signal, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import Swal from 'sweetalert2';
-import { TextInputComponent } from '../../../../shared/components/text-input/text-input';
+
 import { ButtonComponent } from '../../../../shared/components/button/button';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterModule, TextInputComponent, ButtonComponent],
+  imports: [FormField, ReactiveFormsModule, RouterModule,  ButtonComponent],
   templateUrl: './reset-password.html'
 })
 export class ResetPassword implements OnDestroy {

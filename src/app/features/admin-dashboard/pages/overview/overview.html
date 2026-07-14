@@ -81,6 +81,13 @@
           <span class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform">admin_panel_settings</span>
           <span class="text-body-md font-semibold whitespace-nowrap" [class.hidden]="!isSidebarExpanded()">إدارة الأدوار</span>
         </a>
+        
+        <a routerLink="/admin/donations" routerLinkActive="bg-white/10 opacity-100" class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
+           [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"
+           [title]="!isSidebarExpanded() ? 'إدارة التبرعات' : ''">
+          <span class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform">volunteer_activism</span>
+          <span class="text-body-md font-semibold whitespace-nowrap" [class.hidden]="!isSidebarExpanded()">إدارة التبرعات</span>
+        </a>
       }
     </nav>
 

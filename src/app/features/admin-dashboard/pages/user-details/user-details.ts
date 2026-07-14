@@ -19,8 +19,8 @@ import { BlockBadgeDirective } from "../../../../shared/directives/block-badge-d
 import Swal from 'sweetalert2';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
-import { SelectInputComponent } from '../../../../shared/components/select-input/select-input';
-import { IconComponent } from '../../../../shared/components/icon/icon';
+
+
 
 interface PermissionGroup {
   groupName: string;
@@ -31,7 +31,7 @@ interface PermissionGroup {
 
 @Component({
   selector: 'app-user-details',
-  imports: [CommonModule, FormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, SelectInputComponent, IconComponent],
+  imports: [CommonModule, FormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent],
   templateUrl: './user-details.html',
   styleUrl: './user-details.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -248,14 +248,25 @@ export class UserDetails implements OnInit {
   private executeAction(observable: any, successMessage: string) {
     this.isActionLoading.set(true);
 
+    Swal.fire({
+      title: 'جاري التنفيذ...',
+      text: 'يرجى الانتظار بينما نقوم بمعالجة طلبك.',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
     observable.subscribe({
       next: () => {
         this.isActionLoading.set(false);
+        Swal.close();
         this.snackbar.success(successMessage);
         this.loadUserData();
       },
       error: (err: any) => {
         this.isActionLoading.set(false);
+        Swal.close();
         this.snackbar.error(err.error?.detail || err.error?.message || 'حدث خطأ غير متوقع. قد لا تملك الصلاحية الكافية.');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -279,14 +290,23 @@ export class UserDetails implements OnInit {
         this.isSavingPerms.set(true);
         const selectedValues = this.permissionsList().filter(p => p.isSelected).map(p => p.permissionValue);
         
+        Swal.fire({
+          title: 'جاري الحفظ...',
+          text: 'يرجى الانتظار...',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+
         this.userService.assignUserPermissions({ userId: this.userId(), selectedPermissions: selectedValues }).subscribe({
           next: () => {
             this.isSavingPerms.set(false);
+            Swal.close();
             this.originalPermissionsList.set(this.permissionsList().map(p => ({...p})));
             this.snackbar.success('تم تحديث صلاحيات المستخدم');
           },
           error: (err) => {
             this.isSavingPerms.set(false);
+            Swal.close();
             this.snackbar.error(err.error?.detail || 'فشل حفظ الصلاحيات. تأكد من امتلاكك الصلاحية اللازمة.');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }
