@@ -17,15 +17,39 @@ import { Subscription, debounceTime, distinctUntilChanged, map, merge } from 'rx
 import { CasesFilterRequest } from '../../../../core/models/Cases.model';
 import { AgeCategories } from '../../../enums/age-categories';
 import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.categories.dictionary';
+import { CardComponent } from '../../../ui/card/card.component';
+import { DividerComponent } from '../../../ui/divider/divider.component';
+import { FormLabelComponent } from '../../../ui/label/form-label.component';
+import { TextInputComponent } from '../../../ui/text-input/text-input.component';
+import { SelectInputComponent } from '../../../ui/select-input/select-input.component';
+import { DateInputComponent } from '../../../ui/date-input/date-input.component';
+import { BadgeComponent } from '../../../ui/badge/badge.component';
+import { TextButtonComponent } from '../../../ui/button/text-button.component';
+import { SearchIconComponent } from '../../../ui/icon/search-icon.component';
+import { ChevronIconComponent } from '../../../ui/icon/chevron-icon.component';
+import { ResetIconComponent } from '../../../ui/icon/reset-icon.component';
 
 @Component({
   selector: 'app-case-filters',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule],
+  imports: [
+    ReactiveFormsModule,
+    FormsModule,
+    CardComponent,
+    DividerComponent,
+    FormLabelComponent,
+    TextInputComponent,
+    SelectInputComponent,
+    DateInputComponent,
+    BadgeComponent,
+    TextButtonComponent,
+    SearchIconComponent,
+    ChevronIconComponent,
+    ResetIconComponent,
+  ],
   templateUrl: './case-filters.component.html',
   styleUrls: ['./case-filters.component.css'],
 })
-
 export class CaseFiltersComponent implements OnInit, AfterContentInit {
   @Input() genders: number[] = [0, 1];
   @Input() ageSorts: number[] = [0, 1];

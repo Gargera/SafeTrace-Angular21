@@ -1,15 +1,18 @@
 import { NgClass } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { BadgeComponent } from '../../../ui/badge/badge.component';
+import { ButtonComponent } from '../../../ui/button/button.component';
+import { IconButtonComponent } from '../../../ui/button/icon-button.component';
+import { ChevronIconComponent } from '../../../ui/icon/chevron-icon.component';
 
 @Component({
   selector: 'app-case-header',
   standalone: true,
-  imports: [NgClass],
+  imports: [NgClass, BadgeComponent, ButtonComponent, IconButtonComponent, ChevronIconComponent],
   templateUrl: './case-header.component.html',
   styleUrls: ['./case-header.component.css'],
 })
 export class CaseHeaderComponent {
-  
   // Header
   @Input() title = '';
   @Input() subtitle = '';
@@ -38,7 +41,8 @@ export class CaseHeaderComponent {
   @Input() secondaryActionLabel = '';
   @Input() secondaryDisabled = false;
 
-  @Input() secondaryButtonClass = 'border border-outline-variant text-on-surface-variant hover:bg-surface-container-highest';
+  @Input() secondaryButtonClass =
+    'border border-outline-variant text-on-surface-variant hover:bg-surface-container-highest';
 
   // Layout
   @Input() readonly = false;

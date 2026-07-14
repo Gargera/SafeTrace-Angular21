@@ -6,11 +6,26 @@ import { CaseListItemResponse } from '../../../../core/models/Cases.model';
 import { AgeCategories } from '../../../enums/age-categories';
 import { GenderBadgeDirective } from '../../../directives/gender-badge-directive';
 import { AgeBadgeDirective } from '../../../directives/age-badge-directive';
+import { CardComponent } from '../../../ui/card/card.component';
+import { BadgeComponent } from '../../../ui/badge/badge.component';
+import { ButtonComponent } from '../../../ui/button/button.component';
+import { SearchIconComponent } from '../../../ui/icon/search-icon.component';
+import { ChevronIconComponent } from '../../../ui/icon/chevron-icon.component';
 
 @Component({
   selector: 'app-case-card',
   standalone: true,
-  imports: [DatePipe, RouterModule, GenderBadgeDirective, AgeBadgeDirective],
+  imports: [
+    DatePipe,
+    RouterModule,
+    GenderBadgeDirective,
+    AgeBadgeDirective,
+    CardComponent,
+    BadgeComponent,
+    ButtonComponent,
+    SearchIconComponent,
+    ChevronIconComponent,
+  ],
   templateUrl: './case-card.component.html',
 })
 export class CaseCardComponent {

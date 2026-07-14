@@ -1,5 +1,5 @@
-<div
-  class="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm"
+<app-card
+  extraClass="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm"
   dir="rtl"
 >
   <form [formGroup]="filterForm" class="space-y-6">
@@ -7,132 +7,67 @@
     <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
       <!-- Search -->
       <div>
-        <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">بحث</label>
+        <app-form-label>بحث</app-form-label>
 
-        <div class="relative">
-          <input
-            type="text"
-            formControlName="fullName"
-            placeholder="ابحث بالاسم..."
-            class="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-lowest pr-10 pl-3.5 text-sm text-on-surface placeholder:text-on-surface-variant outline-none transition-all duration-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20"
-          />
-
-          <svg
-            class="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"
-            />
-          </svg>
-        </div>
+        <app-text-input formControlName="fullName" placeholder="ابحث بالاسم..." [prefix]="true">
+          <span prefix
+            ><app-search-icon size="1rem" extraClass="text-on-surface-variant"></app-search-icon
+          ></span>
+        </app-text-input>
       </div>
 
       <!-- Gender -->
       <div>
-        <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">النوع</label>
+        <app-form-label>النوع</app-form-label>
 
-        <div class="relative">
-          <select
-            formControlName="gender"
-            class="h-11 w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-lowest px-3.5 pl-10 text-sm text-on-surface outline-none transition-all duration-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20"
-          >
-            <option [ngValue]="null">الكل</option>
+        <app-select-input formControlName="gender" [icon]="true">
+          <option [ngValue]="null">الكل</option>
 
-            @for (gender of genders; track gender) {
-              <option [ngValue]="gender">
-                {{ getGenderLabel(gender) }}
-              </option>
-            }
-          </select>
-
-          <svg
-            class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </div>
+          @for (gender of genders; track gender) {
+            <option [ngValue]="gender">
+              {{ getGenderLabel(gender) }}
+            </option>
+          }
+          <span icon
+            ><app-chevron-icon size="1rem" extraClass="text-on-surface-variant"></app-chevron-icon
+          ></span>
+        </app-select-input>
       </div>
 
       <!-- Age Category -->
       <div>
-        <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">فئة العمر</label>
+        <app-form-label>فئة العمر</app-form-label>
 
-        <div class="relative">
-          <select
-            formControlName="ageCategory"
-            class="h-11 w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-lowest px-3.5 pl-10 text-sm text-on-surface outline-none transition-all duration-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20"
-          >
-            <option [ngValue]="null">الكل</option>
+        <app-select-input formControlName="ageCategory" [icon]="true">
+          <option [ngValue]="null">الكل</option>
 
-            @for (ageCategory of ageCategories; track ageCategory) {
-              <option [ngValue]="ageCategory">
-                {{ getAgeCategoryLabel(ageCategory) }}
-              </option>
-            }
-          </select>
-
-          <svg
-            class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </div>
+          @for (ageCategory of ageCategories; track ageCategory) {
+            <option [ngValue]="ageCategory">
+              {{ getAgeCategoryLabel(ageCategory) }}
+            </option>
+          }
+          <span icon
+            ><app-chevron-icon size="1rem" extraClass="text-on-surface-variant"></app-chevron-icon
+          ></span>
+        </app-select-input>
       </div>
 
       <!-- Age Sort -->
       <div>
-        <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">ترتيب العمر</label>
+        <app-form-label>ترتيب العمر</app-form-label>
 
-        <div class="relative">
-          <select
-            formControlName="ageSort"
-            class="h-11 w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-lowest px-3.5 pl-10 text-sm text-on-surface outline-none transition-all duration-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20"
-          >
-            <option [ngValue]="null">بدون ترتيب</option>
+        <app-select-input formControlName="ageSort" [icon]="true">
+          <option [ngValue]="null">بدون ترتيب</option>
 
-            @for (sort of ageSorts; track sort) {
-              <option [ngValue]="sort">
-                {{ getAgeSortLabel(sort) }}
-              </option>
-            }
-          </select>
-
-          <svg
-            class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </div>
+          @for (sort of ageSorts; track sort) {
+            <option [ngValue]="sort">
+              {{ getAgeSortLabel(sort) }}
+            </option>
+          }
+          <span icon
+            ><app-chevron-icon size="1rem" extraClass="text-on-surface-variant"></app-chevron-icon
+          ></span>
+        </app-select-input>
       </div>
     </div>
 
@@ -155,28 +90,17 @@
 
         <!-- Active Filters Badge -->
         @if (activeAdvancedCount > 0) {
-          <span
-            class="inline-flex h-5 min-w-1.25rem items-center justify-center rounded-full bg-secondary/10 px-1.5 text-xs font-semibold text-secondary transition-all duration-200"
-          >
+          <app-badge extraClass="bg-secondary/10 px-1.5 text-secondary">
             {{ activeAdvancedCount }}
-          </span>
+          </app-badge>
         }
 
         <!-- Chevron -->
-        <svg
-          class="h-3.5 w-3.5 shrink-0 transition-transform duration-300"
-          [class.rotate-180]="showAdvanced"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
+        <app-chevron-icon
+          size="0.875rem"
+          extraClass="shrink-0 transition-transform duration-300"
+          [rotation]="showAdvanced ? 180 : 0"
+        ></app-chevron-icon>
       </button>
 
       <div class="h-px flex-1 bg-outline-variant/20"></div>
@@ -197,66 +121,49 @@
         >
           <!-- Government -->
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">المحافظة</label>
+            <app-form-label>المحافظة</app-form-label>
 
-            <input
-              formControlName="government"
-              placeholder="المحافظة..."
-              class="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3.5 text-sm text-on-surface placeholder:text-on-surface-variant outline-none transition-all duration-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20"
-            />
+            <app-text-input formControlName="government" placeholder="المحافظة..."></app-text-input>
           </div>
 
           <!-- City -->
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">المدينة</label>
+            <app-form-label>المدينة</app-form-label>
 
-            <input
-              formControlName="city"
-              placeholder="المدينة..."
-              class="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3.5 text-sm text-on-surface placeholder:text-on-surface-variant outline-none transition-all duration-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20"
-            />
+            <app-text-input formControlName="city" placeholder="المدينة..."></app-text-input>
           </div>
 
           <!-- From Date -->
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">من تاريخ</label>
+            <app-form-label>من تاريخ</app-form-label>
 
-            <input
-              type="date"
-              formControlName="fromDate"
-              class="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3.5 text-sm text-on-surface outline-none transition-all duration-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20"
-            />
+            <app-date-input formControlName="fromDate"></app-date-input>
           </div>
 
           <!-- To Date -->
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-on-surface-variant"
-              >إلى تاريخ</label
-            >
+            <app-form-label>إلى تاريخ</app-form-label>
 
-            <input
-              type="date"
-              formControlName="toDate"
-              class="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3.5 text-sm text-on-surface outline-none transition-all duration-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20"
-            />
+            <app-date-input formControlName="toDate"></app-date-input>
           </div>
 
           <!-- Date Sort -->
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-on-surface-variant"
-              >ترتيب التاريخ</label
-            >
+            <app-form-label>ترتيب التاريخ</app-form-label>
+
+            <app-select-input formControlName="dateSort" [icon]="true">
+              <option [ngValue]="null">بدون ترتيب</option>
+              <option [ngValue]="0">{{ getDateSortLabel(0) }}</option>
+              <option [ngValue]="1">{{ getDateSortLabel(1) }}</option>
+              <span icon
+                ><app-chevron-icon
+                  size="1rem"
+                  extraClass="text-on-surface-variant"
+                ></app-chevron-icon
+              ></span>
+            </app-select-input>
 
             <div class="relative">
-              <select
-                formControlName="dateSort"
-                class="h-11 w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-lowest px-3.5 pl-10 text-sm text-on-surface outline-none transition-all duration-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20"
-              >
-                <option [ngValue]="null">بدون ترتيب</option>
-                <option [ngValue]="0">{{ getDateSortLabel(0) }}</option>
-                <option [ngValue]="1">{{ getDateSortLabel(1) }}</option>
-              </select>
-
               <svg
                 class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant"
                 fill="none"
@@ -281,28 +188,18 @@
 
     <!-- Footer -->
     <div class="flex flex-wrap justify-end gap-3 pt-2">
-      <button
+      <app-text-button
         type="button"
         (click)="resetFilters()"
-        class="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary"
+        extraClass="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary"
       >
-        <svg
-          class="h-4 w-4 transition-transform duration-200 group-hover:-rotate-90"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 4v6h6M20 20v-6h-6M20 9a8 8 0 00-13.66-5.66L4 6M4 15a8 8 0 0013.66 5.66L20 18"
-          />
-        </svg>
+        <app-reset-icon
+          size="1rem"
+          extraClass="transition-transform duration-200 group-hover:-rotate-90"
+        ></app-reset-icon>
 
         <span>إعادة تعيين</span>
-      </button>
+      </app-text-button>
     </div>
   </form>
-</div>
+</app-card>
