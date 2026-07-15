@@ -2,13 +2,13 @@ import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProfileSidebar } from './shared/profile-sidebar/profile-sidebar';
 import { ChatTab } from './tabs/chat-tab/chat-tab';
-import { EditProfile } from './tabs/Edit-profile/edit-profile';
 import { NotificationsTab } from './tabs/notifications-tab/notifications-tab';
 
 import { GetUserInfoDTO } from './model/profile.model';
 import { NotificationService } from '../../core/services/notification.service';
 import { ProfileService } from './service/profile.service';
 import { MyCasesTab } from './tabs/cases-tab/cases-tab';
+import { EditProfile } from './tabs/Edit-profile/edit-profile';
 
 export type ProfileTab = 'edit' | 'cases' | 'chat' | 'notifications'; // ADDED 'cases'
 
