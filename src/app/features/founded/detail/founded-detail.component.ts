@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { FoundedService } from '../services/founded.service';
 import { PostDetailsResponseDTO } from '../models/founded.models';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-founded-detail',
@@ -16,6 +17,7 @@ export class FoundedDetailComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroy$ = new Subject<void>();
+  public readonly environment = environment;
 
   person = signal<PostDetailsResponseDTO | null>(null);
   isLoading = signal(true);
