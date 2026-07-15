@@ -1,52 +1,46 @@
 <aside class="md:col-span-3 space-y-gutter">
   <!-- Profile Card -->
-  <div class="glass-card rounded-xl p-lg flex flex-col items-center text-center">
+  <div class="rounded-xl p-lg flex flex-col items-center text-center">
     <!-- Avatar -->
-    <div class="relative mb-md">
+
+    <div class="relative mb-md group">
       <div
         class="w-24 h-24 rounded-full overflow-hidden border-4 border-surface-container shadow-sm"
       >
         <img
           [src]="avatarUrl"
           [alt]="userInfo()?.fullName ?? 'User'"
-          class="w-full h-full object-cover"
+          class="w-full h-full object-cover cursor-pointer"
+          (click)="openImageZoom()"
         />
       </div>
-      @if (isAdmin) {
-        <div
-          class="absolute -bottom-1 -left-1 bg-red-600 text-white p-1 rounded-full border-2 border-white flex items-center justify-center shadow-md"
-        >
-          <span
-            class="material-symbols-outlined text-[16px]"
-            style="font-variation-settings: 'FILL' 1"
-          >
-            workspace_premium
-          </span>
-        </div>
-      } @else if (isModerator) {
-        <div
-          class="absolute -bottom-1 -left-1 bg-red-600 text-white p-1 rounded-full border-2 border-white flex items-center justify-center shadow-md"
-        >
-          <span
-            class="material-symbols-outlined text-[16px]"
-            style="font-variation-settings: 'FILL' 1"
-          >
-            security
-          </span>
-        </div>
-      } @else if (isVerified) {
-        <div
-          class="absolute -bottom-1 -left-1 bg-blue-600 text-white p-1 rounded-full border-2 border-white flex items-center justify-center"
-        >
-          <span
-            class="material-symbols-outlined text-[16px]"
-            style="font-variation-settings: 'FILL' 1"
-            >verified</span
-          >
-        </div>
-      }
-    </div>
 
+      <div
+        class="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all pointer-events-none"
+      >
+        <span class="material-symbols-outlined text-white text-3xl"> zoom_in </span>
+      </div>
+    </div>
+    @if (selectedZoomImage()) {
+      <div
+        style="
+          position: fixed;
+          inset: 0;
+          z-index: 2147483647;
+          background: rgba(0, 0, 0, 0.7);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        "
+        (click)="closeImageZoom()"
+      >
+        <img
+          [src]="selectedZoomImage()"
+          class="max-w-[90vw] max-h-[90vh] object-contain"
+          (click)="$event.stopPropagation()"
+        />
+      </div>
+    }
     <!-- Name & Status -->
     <h2 class="text-headline-sm font-bold text-primary mb-xs">
       {{ userInfo()?.fullName ?? '—' }}
