@@ -5,6 +5,7 @@ import { VerificationStatus } from '../../../../shared/enums/verification-status
 import { UserRole } from '../../../../shared/enums/user-role';
 import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 import { getVerificationStatusTranslationAr } from '../../../../core/constants/verification.status.dictionary';
+import { environment } from '../../../../../environments/environment.development';
 
 @Component({
   selector: 'app-profile-sidebar',
@@ -22,6 +23,7 @@ export class ProfileSidebar {
   /** Human-readable Arabic address resolved from lat/lng */
   readonly resolvedAddress = signal<string | null>(null);
   readonly isResolvingAddress = signal(false);
+  selectedZoomImage = signal<string | null>(null);
 
   constructor() {
     // Re-runs whenever userInfo changes — resolves the address automatically.
@@ -51,6 +53,11 @@ export class ProfileSidebar {
     const name = this.userInfo()?.fullName ?? 'User';
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0058be&color=fff`;
   }
+
+  // getImageUrl(path: string | undefined): string {
+  //   if (!path) return '';
+  //   return path.startsWith('http') ? path : `${environment.baseUrl}/${path.replace(/^\//, '')}`;
+  // }
   get isModerator(): boolean {
     return this.userInfo()?.role === UserRole.Moderator;
   }
@@ -82,6 +89,16 @@ export class ProfileSidebar {
     } else {
       return getVerificationStatusTranslationAr(VerificationStatus.Unverified);
     }
+  }
+  openImageZoom() {
+    console.log('avatarUrl:', this.avatarUrl);
+    this.selectedZoomImage.set(this.avatarUrl);
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeImageZoom() {
+    this.selectedZoomImage.set(null);
+    document.body.style.overflow = '';
   }
 }
 //esraataha3092001@gmail.com

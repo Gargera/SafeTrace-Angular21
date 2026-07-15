@@ -82,6 +82,23 @@ export class ProfileView implements OnInit, OnDestroy {
       },
     });
   }
+  selectedZoomImage = signal<string | null>(null);
+  get avatarUrl(): string {
+    const img = this.userInfo()?.profileImage;
+    if (img) return img;
+    const name = this.userInfo()?.fullName ?? 'User';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0058be&color=fff`;
+  }
+  openImageZoom() {
+    console.log('avatarUrl:', this.avatarUrl);
+    this.selectedZoomImage.set(this.avatarUrl);
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeImageZoom() {
+    this.selectedZoomImage.set(null);
+    document.body.style.overflow = '';
+  }
 
   get notificationUnreadCount() {
     return this.#notificationService.unreadCount;
