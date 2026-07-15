@@ -54,9 +54,8 @@
 
     <p class="text-body-sm text-on-surface-variant mb-md">
       @if (isAdmin) {
-      } @else if (isModerator) {  
-      }
-      @else if (isVerified) {
+      } @else if (isModerator) {
+      } @else if (isVerified) {
         مستخدم موثق
       } @else if (userInfo()?.verificationStatus === VerificationStatus.Pending) {
         قيد التوثيق
@@ -85,7 +84,12 @@
           <span class="text-body-sm break-all">{{ userInfo()!.email }}</span>
         </div>
       }
-
+      @if (userInfo()?.phoneNumber) {
+        <div class="flex items-center gap-sm text-on-surface-variant">
+          <span class="material-symbols-outlined text-secondary shrink-0">phone</span>
+          <span class="text-body-sm break-all">{{ userInfo()!.phoneNumber }}</span>
+        </div>
+      }
       <!-- Address (resolved from lat/lng via Geocoding API) -->
       @if (userInfo()?.homeLatitude && userInfo()?.homeLongitude) {
         <div class="flex items-start gap-sm text-on-surface-variant">
@@ -116,7 +120,7 @@
       <div class="grid grid-cols-2 gap-sm">
         <div class="bg-surface-container-low p-md rounded-lg text-center">
           <span class="block text-headline-sm font-bold text-primary">{{
-            userInfo()!.Cases.length + 1
+            userInfo()!.cases.length
           }}</span>
           <span class="text-label-sm text-on-surface-variant">بلاغ مقدم</span>
         </div>

@@ -1,3 +1,4 @@
+import { FormField } from '../../../../shared/components/form-field/form-field';
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -6,10 +7,13 @@ import Swal from 'sweetalert2';
 import { SocialAuthService, GoogleLoginProvider, FacebookLoginProvider, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 import { Subscription } from 'rxjs';
 
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { CommonModule } from '@angular/common';
+
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterModule, GoogleSigninButtonModule],
+  imports: [FormField, CommonModule, ReactiveFormsModule, RouterModule, GoogleSigninButtonModule,  ButtonComponent],
   templateUrl: './login.html'
 })
 export class Login implements OnInit, OnDestroy {

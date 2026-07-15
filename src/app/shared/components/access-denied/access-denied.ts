@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { ButtonComponent } from '../button/button';
 
 @Component({
   selector: 'app-access-denied',
-  imports: [RouterModule],
+  imports: [RouterModule, ButtonComponent],
   templateUrl: './access-denied.html',
   styleUrl: './access-denied.css',
 })

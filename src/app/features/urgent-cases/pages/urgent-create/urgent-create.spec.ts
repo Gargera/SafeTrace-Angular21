@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ProfileSidebar } from './profile-sidebar';
+import { UrgentCreate } from './urgent-create';
 
-describe('ProfileSidebar', () => {
-  let component: ProfileSidebar;
-  let fixture: ComponentFixture<ProfileSidebar>;
+describe('UrgentCreate', () => {
+  let component: UrgentCreate;
+  let fixture: ComponentFixture<UrgentCreate>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProfileSidebar],
+      imports: [UrgentCreate],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ProfileSidebar);
+    fixture = TestBed.createComponent(UrgentCreate);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
