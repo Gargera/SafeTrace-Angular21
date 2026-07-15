@@ -7,7 +7,7 @@ import { LongTermCaseFilterRequest } from '../models/request/LongTermCaseFilterR
 import { LongTermCaseCreateRequest } from '../models/request/LongTermCaseCreateRequest';
 import { LongTermCaseUpdateRequest } from '../models/request/LongTermCaseUpdateRequest';
 import { FoundPersonInfoRequest } from '../../../core/models/Cases.model';
-import { ApiResponse } from '../../founded/models/founded.models';
+import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
 import { environment } from '../../../../environments/environment';
 

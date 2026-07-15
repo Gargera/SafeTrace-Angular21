@@ -1,18 +1,20 @@
 import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { ProfileSidebar } from './Shared/profile-sidebar/profile-sidebar';
+import { ProfileSidebar } from './shared/profile-sidebar/profile-sidebar';
 import { ChatTab } from './tabs/chat-tab/chat-tab';
-import { EditProfile } from './tabs/Edit-profile/edit-profile';
 import { NotificationsTab } from './tabs/notifications-tab/notifications-tab';
-import { GetUserInfoDTO } from '../../core/models/profile.model';
+
+import { GetUserInfoDTO } from './model/profile.model';
 import { NotificationService } from '../../core/services/notification.service';
 import { ProfileService } from './service/profile.service';
+import { MyCasesTab } from './tabs/cases-tab/cases-tab';
+import { EditProfile } from './tabs/Edit-profile/edit-profile';
 
-export type ProfileTab = 'edit' | 'chat' | 'notifications';
+export type ProfileTab = 'edit' | 'cases' | 'chat' | 'notifications'; // ADDED 'cases'
 
 @Component({
   selector: 'app-profile-view',
-  imports: [RouterModule, ProfileSidebar, EditProfile, NotificationsTab, ChatTab],
+  imports: [RouterModule, ProfileSidebar, EditProfile, NotificationsTab, ChatTab, MyCasesTab], // ADDED MyCasesTab
   templateUrl: './profile-view.html',
   styleUrl: './profile-view.css',
 })
@@ -29,7 +31,7 @@ export class ProfileView implements OnInit, OnDestroy {
 
   readonly tabs: { id: ProfileTab; label: string }[] = [
     { id: 'edit', label: 'تعديل البيانات' },
-    // { id: 'reports', label: 'بلاغاتي' },
+    { id: 'cases', label: 'حالاتي' }, // RENAMED from 'بلاغاتي' / uncommented
     { id: 'chat', label: 'المحادثات' },
     { id: 'notifications', label: 'الإشعارات' },
   ];

@@ -1,11 +1,12 @@
 // Enums
-import { AgeSort } from "../../shared/enums/age-sort";
-import { CaseStatus } from "../../shared/enums/case-status";
-import { CaseType } from "../../shared/enums/case-type";
-import { DateSort } from "../../shared/enums/date-sort";
-import { FileType } from "../../shared/enums/file-type";
-import { Gender } from "../../shared/enums/gender";
-import { RelationType } from "../../shared/enums/relation-type";
+import { AgeSort } from '../../shared/enums/age-sort';
+import { AgeCategories } from '../../shared/enums/age-categories';
+import { CaseStatus } from '../../shared/enums/case-status';
+import { CaseType } from '../../shared/enums/case-type';
+import { DateSort } from '../../shared/enums/date-sort';
+import { FileType } from '../../shared/enums/file-type';
+import { Gender } from '../../shared/enums/gender';
+import { RelationType } from '../../shared/enums/relation-type';
 
 // ============ RESPONSE MODELS ============
 
@@ -77,7 +78,7 @@ export interface MatchedCasesResponse {
 
 export const EmptyMatchedCasesResponse: MatchedCasesResponse = {
   hasMatches: false,
-  matchedCases: []
+  matchedCases: [],
 };
 
 export interface CaseDetailResponse {
@@ -150,8 +151,7 @@ export interface CaseUpsertBaseRequest {
   additionalImages: File[] | null;
   video: File | null;
 }
-export interface CaseCreateBaseRequest extends CaseUpsertBaseRequest {
-}
+export interface CaseCreateBaseRequest extends CaseUpsertBaseRequest {}
 
 export interface CaseUpdateBaseRequest extends CaseUpsertBaseRequest {
   newPhotos: File[] | null;
@@ -162,6 +162,7 @@ export interface CaseUpdateBaseRequest extends CaseUpsertBaseRequest {
 export interface CasesFilterRequest {
   status: CaseStatus | null;
   gender: Gender | null;
+  ageCategory: AgeCategories | null;
   fullName: string | null;
   government: string | null;
   city: string | null;
@@ -172,6 +173,7 @@ export interface CasesFilterRequest {
   ageSort: AgeSort | null;
   dateSort: DateSort | null;
   page: number; // Default: 1
+  pageSize: number; // Default: 12
 }
 
 export interface FoundPersonInfoRequest {

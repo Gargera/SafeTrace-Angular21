@@ -1,5 +1,7 @@
-import { CasesFilterRequest } from "../../../../core/models/Cases.model";
+import { CasesFilterRequest } from '../../../../core/models/Cases.model';
 
-export interface UrgentCaseFilterRequest extends CasesFilterRequest {
-  // Urgent case specific filter fields - add here if any
+export interface UrgentCasesFilterRequest extends CasesFilterRequest {
+  latitude: number | null;
+  longitude: number | null;
+  radiusInMeters: number | null;
 }

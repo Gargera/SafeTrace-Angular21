@@ -5,7 +5,7 @@ import { NotificationService } from '../../../core/services/notification.service
 import { GetUserNotificationsDTO } from '../../../core/models/notification.model';
 import { environment } from '../../../../environments/environment';
 import Swal from 'sweetalert2';
-import { GetUserInfoDTO } from '../../../core/models/profile.model';
+import { GetUserInfoDTO } from '../../../features/user-profile/model/profile.model';
 import { UserRole } from '../../enums/user-role';
 
 @Component({
@@ -29,7 +29,6 @@ export class Navbar implements OnInit {
 
   constructor() {
     effect(() => {
-      console.log('currentUser', this.currentUser());
       if (this.isLoggedIn()) {
         this.notificationService.startConnection();
       } else {
@@ -99,9 +98,6 @@ export class Navbar implements OnInit {
   }
 
   getProfileImageUrl(): string {
-    console.log("loggedin ", this.authService.isLoggedIn());
-    console.log(this.authService.currentUser());
-    console.log(this.authService.getUserRoles());
     const imgPath = this.currentUser()?.profileImage;
     if (!imgPath) return '';
 

@@ -1,5 +1,8 @@
 import { CaseDetailResponse } from "../../../../core/models/Cases.model";
 
 export interface UrgentCaseDetailResponse extends CaseDetailResponse {
-  // Urgent case specific detail fields - add here if any
+  endDate: string | null; // DateTime? 
+  limitReachDate: string | null; // DateTime?
+  latitude: number | null; // double?
+  longitude: number | null; // double?
 }

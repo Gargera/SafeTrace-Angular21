@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from '../../../shared/services/api.service';
-import { UrgentCaseFilterRequest } from '../models/request/UrgentCaseFilterRequest';
 import { UrgentCaseListItemResponse } from '../models/response/UrgentCaseListItemResponse';
 import { UrgentCaseDetailResponse } from '../models/response/UrgentCaseDetailResponse';
 import { UrgentCaseCreateRequest } from '../models/request/UrgentCaseCreateRequest';
 import { UrgentCaseUpdateRequest } from '../models/request/UrgentCaseUpdateRequest';
 import { FoundPersonInfoRequest } from '../../../core/models/Cases.model';
-import { ApiResponse } from '../../founded/models/founded.models';
+import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
 import { environment } from '../../../../environments/environment';
+import { UrgentCasesFilterRequest } from '../models/request/UrgentCaseFilterRequest';
 
 @Injectable({
   providedIn: 'root'
@@ -21,7 +21,7 @@ export class UrgentCaseService extends ApiService {
    * Get all urgent cases with filters (public)
    * GET: /api/UrgentCase/GetCases
    */
-  getAllCases(filter: UrgentCaseFilterRequest): Observable<ApiResponse<PaginationResponse<UrgentCaseListItemResponse>>> {
+  getAllCases(filter: UrgentCasesFilterRequest): Observable<ApiResponse<PaginationResponse<UrgentCaseListItemResponse>>> {
     return this.get<ApiResponse<PaginationResponse<UrgentCaseListItemResponse>>>(
       `${this.baseUrl}/GetCases`,
       filter as Record<string, any>
@@ -32,7 +32,7 @@ export class UrgentCaseService extends ApiService {
    * Get all urgent cases with filters (admin only)
    * GET: /api/UrgentCase/Admin/GetCases
    */
-  adminGetAllCases(filter: UrgentCaseFilterRequest): Observable<ApiResponse<PaginationResponse<UrgentCaseDetailResponse>>> {
+  adminGetAllCases(filter: UrgentCasesFilterRequest): Observable<ApiResponse<PaginationResponse<UrgentCaseDetailResponse>>> {
     return this.get<ApiResponse<PaginationResponse<UrgentCaseDetailResponse>>>(
       `${this.baseUrl}/Admin/GetCases`,
       filter as Record<string, any>
@@ -43,7 +43,7 @@ export class UrgentCaseService extends ApiService {
    * Get current user's urgent cases
    * GET: /api/UrgentCase/GetMyCases
    */
-  getMyCases(filter: UrgentCaseFilterRequest): Observable<ApiResponse<PaginationResponse<UrgentCaseListItemResponse>>> {
+  getMyCases(filter: UrgentCasesFilterRequest): Observable<ApiResponse<PaginationResponse<UrgentCaseListItemResponse>>> {
     return this.get<ApiResponse<PaginationResponse<UrgentCaseListItemResponse>>>(
       `${this.baseUrl}/GetMyCases`,
       filter as Record<string, any>
