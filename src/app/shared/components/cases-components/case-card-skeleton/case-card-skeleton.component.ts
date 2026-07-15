@@ -7,7 +7,7 @@ import { Component } from '@angular/core';
     <article
       class="relative overflow-hidden rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md animate-pulse"
     >
-      <div class="relative mb-4 h-56 w-full overflow-hidden rounded-[1.5rem] bg-surface-variant">
+      <div class="relative mb-4 h-56 w-full overflow-hidden rounded-1.5rem bg-surface-variant">
         <div class="absolute top-3 right-3 h-5 w-16 rounded-full bg-surface-container-high"></div>
         <div
           class="absolute bottom-3 right-3 h-6 w-24 rounded-full bg-surface-container-high"
