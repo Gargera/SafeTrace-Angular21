@@ -17,7 +17,6 @@ export class PaginationComponent {
   currentPage = input.required<number>();
   totalPages = input.required<number>();
 
-  /** Optional: pass both to show a "showing X-Y of Z" summary above the buttons. */
   totalItems = input<number | null>(null);
   pageSize = input<number | null>(null);
 
