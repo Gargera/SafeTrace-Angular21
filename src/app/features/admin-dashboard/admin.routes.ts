@@ -64,6 +64,16 @@ export const ADMIN_ROUTES: Routes = [
             (m) => m.UserDetails,
           ), 
       },
+      {
+        path: 'donations',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin] },
+        title: 'إدارة التبرعات | لقاء',
+        loadComponent: () =>
+          import('../donations/pages/donations-list/donations-list').then(
+            (m) => m.DonationsList,
+          ),
+      },
     ],
   },
 ];
