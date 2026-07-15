@@ -57,6 +57,7 @@ export class UserDetails implements OnInit {
   isLoading = signal<boolean>(true);
   isSavingPerms = signal<boolean>(false);
   isActionLoading = signal<boolean>(false);
+  selectedZoomImage = signal<string | null>(null);
 
   verificationStatusEnum = VerificationStatus;
 
@@ -127,6 +128,17 @@ export class UserDetails implements OnInit {
 
   goBack() {
     this.location.back();
+  }
+
+  openImageZoom(imagePath: string | undefined) {
+    if (!imagePath) return;
+    this.selectedZoomImage.set(this.getImageUrl(imagePath));
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeImageZoom() {
+    this.selectedZoomImage.set(null);
+    document.body.style.overflow = '';
   }
 
   loadRoles() {

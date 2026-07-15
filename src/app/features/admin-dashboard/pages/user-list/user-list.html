@@ -40,7 +40,7 @@
     </div>
 
     <div class="flex flex-col gap-xs">
-      <app-form-field type="select" [ngModel]="filter().isBlocked" (ngModelChange)="updateFilter({ isBlocked: $event === '' ? undefined : $event === 'true' })" label="حالة الحظر">
+      <app-form-field type="select" [ngModel]="filter().isBlocked === undefined ? '' : filter().isBlocked" (ngModelChange)="updateFilter({ isBlocked: $event === '' ? undefined : $event === 'true' })" label="حالة الحظر">
         <option value="">الكل</option>
         <option value="true">محظور</option>
         <option value="false">نشط</option>
