@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import Swal from 'sweetalert2';
-import { SocialAuthService, GoogleLoginProvider, FacebookLoginProvider, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
+import { SocialAuthService, GoogleLoginProvider, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 import { Subscription } from 'rxjs';
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
@@ -55,17 +55,6 @@ export class Login implements OnInit, OnDestroy {
               this.handleAuthError(err);
             }
           });
-        } else if (user.provider === FacebookLoginProvider.PROVIDER_ID) {
-          this.authService.facebookLogin({ providerToken: user.authToken! }).subscribe({
-            next: (res) => {
-              this.isLoading.set(false);
-              this.router.navigate(['/home']);
-            },
-            error: (err) => {
-              this.isLoading.set(false);
-              this.handleAuthError(err);
-            }
-          });
         }
       }
     });
@@ -77,9 +66,7 @@ export class Login implements OnInit, OnDestroy {
     }
   }
 
-  signInWithFB(): void {
-    this.socialAuthService.signIn(FacebookLoginProvider.PROVIDER_ID);
-  }
+
 
   togglePassword() {
     this.showPassword.update(v => !v);

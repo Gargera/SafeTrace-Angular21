@@ -184,17 +184,7 @@ export class AuthService {
       );
   }
 
-  facebookLogin(data: { providerToken: string }): Observable<ApiResponse<AuthResponse>> {
-    return this.http
-      .post<
-        ApiResponse<AuthResponse>
-      >(`${this.baseUrl}/facebook-login`, data, { withCredentials: true })
-      .pipe(
-        tap((res) => {
-          if (res.success && res.data) this.setSession(res.data);
-        }),
-      );
-  }
+
 
   confirmEmail(email: string, otpCode: string): Observable<ApiResponse<string>> {
     return this.http.post<ApiResponse<string>>(
