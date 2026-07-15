@@ -11,10 +11,9 @@
      renders — the admin-editing-another-user view only manages the profile
      photo, while the self-service view also manages ID verification.
 
-     Note: the profile photo is intentionally NOT behind an edit/save toggle
-     anymore — "Change Photo" and "Remove Photo" act instantly (validate →
-     crop → upload, or confirm → remove), independent of the ID-image
-     section, which keeps the original batch edit/save/cancel flow. -->
+     Both the profile photo and the ID image share the same edit/save/cancel
+     batch flow: click "تعديل" → pick/crop a file → "حفظ" uploads it, or
+     "إلغاء" discards the pending change and restores the last saved image. -->
 <ng-template #profileImagesCard let-showId="showId">
   <section
     class="bg-surface border border-outline-variant rounded-2xl p-lg space-y-md shadow-sm transition-all duration-300 hover:shadow-md"
@@ -33,9 +32,49 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-lg pt-sm">
       <!-- Profile Image -->
       <div class="space-y-sm">
-        <label id="profile-photo-label" class="text-label-md text-on-surface font-semibold"
-          >صورة الملف الشخصي</label
-        >
+        <div class="flex items-center justify-between">
+          <label id="profile-photo-label" class="text-label-md text-on-surface font-semibold"
+            >صورة الملف الشخصي</label
+          >
+
+          @if (!isEditingProfileImage()) {
+            <button
+              type="button"
+              (click)="toggleProfileImageEdit(true)"
+              class="px-sm py-xs bg-secondary-container text-on-secondary-container hover:bg-secondary-container-high focus-visible:ring-2 focus-visible:ring-secondary rounded-lg text-label-sm font-bold flex items-center gap-xs transition-colors cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-[14px]" aria-hidden="true">edit</span>
+              تعديل
+            </button>
+          } @else {
+            <div class="flex items-center gap-xs">
+              <button
+                type="button"
+                [disabled]="isUploadingProfileImage()"
+                (click)="cancelProfileImage()"
+                class="px-sm py-xs text-secondary border border-secondary rounded-lg text-label-sm font-bold hover:bg-secondary-fixed focus-visible:ring-2 focus-visible:ring-secondary transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                [disabled]="isUploadingProfileImage()"
+                (click)="saveProfileImage()"
+                [attr.aria-busy]="isUploadingProfileImage()"
+                class="px-sm py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 focus-visible:ring-2 focus-visible:ring-secondary transition-all flex items-center gap-xs disabled:opacity-50 cursor-pointer"
+              >
+                @if (isUploadingProfileImage()) {
+                  <span
+                    class="material-symbols-outlined text-[14px] animate-spin"
+                    aria-hidden="true"
+                    >progress_activity</span
+                  >
+                }
+                حفظ
+              </button>
+            </div>
+          }
+        </div>
 
         <div class="flex items-center gap-md">
           <div class="relative w-24 h-24 shrink-0">
@@ -74,49 +113,52 @@
           </div>
 
           <div class="flex-1 flex flex-col gap-xs">
-            <label
-              aria-labelledby="profile-photo-label"
-              class="flex items-center gap-sm cursor-pointer p-md bg-surface-container-low border border-dashed border-outline-variant rounded-lg hover:border-secondary hover:bg-surface-container focus-within:ring-2 focus-within:ring-secondary transition-all group"
-              [class.opacity-50]="isUploadingProfileImage() || isRemovingProfileImage()"
-              [class.pointer-events-none]="isUploadingProfileImage() || isRemovingProfileImage()"
-            >
-              <span
-                class="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform"
-                aria-hidden="true"
+            @if (isEditingProfileImage()) {
+              <label
+                aria-labelledby="profile-photo-label"
+                class="flex items-center gap-sm cursor-pointer p-md bg-surface-container-low border border-dashed border-outline-variant rounded-lg hover:border-secondary hover:bg-surface-container focus-within:ring-2 focus-within:ring-secondary transition-all group"
+                [class.opacity-50]="isUploadingProfileImage() || isRemovingProfileImage()"
+                [class.pointer-events-none]="isUploadingProfileImage() || isRemovingProfileImage()"
               >
-                add_photo_alternate
-              </span>
-              <span class="text-label-sm text-on-surface-variant">
-                {{ profileImagePreview() ? 'تغيير الصورة' : 'اختر صورة' }} · JPG أو PNG أو WEBP، حتى
-                5MB
-              </span>
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                class="hidden"
+                <span
+                  class="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform"
+                  aria-hidden="true"
+                >
+                  add_photo_alternate
+                </span>
+                <span class="text-label-sm text-on-surface-variant">
+                  {{ profileImagePreview() ? 'تغيير الصورة' : 'اختر صورة' }} حتى 5MB
+                </span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  class="hidden"
+                  [disabled]="isUploadingProfileImage() || isRemovingProfileImage()"
+                  (change)="onProfilePhotoFileSelected($event)"
+                />
+              </label>
+            } @else if (!profileImagePreview()) {
+              <span class="text-label-sm text-on-surface-variant">لم يتم رفع صورة شخصية بعد</span>
+            }
+
+            @if (profileImagePreview()) {
+              <button
+                type="button"
                 [disabled]="isUploadingProfileImage() || isRemovingProfileImage()"
-                (change)="onProfilePhotoFileSelected($event)"
-              />
-            </label>
-
-            <button
-              type="button"
-              [disabled]="
-                !profileImagePreview() || isUploadingProfileImage() || isRemovingProfileImage()
-              "
-              (click)="requestRemoveProfilePhoto()"
-              class="inline-flex items-center justify-center gap-2 rounded-xl border border-error/20 bg-error-container/60 px-4 py-2.5 text-sm font-semibold text-error transition-all duration-200 hover:bg-error-container hover:border-error/40 hover:shadow-md active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
-            >
-              <span
-                class="material-symbols-outlined text-[18px]"
-                style="font-variation-settings: 'FILL' 1"
-                aria-hidden="true"
+                (click)="requestRemoveProfilePhoto()"
+                class="inline-flex items-center justify-center gap-2 rounded-xl border border-error/20 bg-error-container/60 px-4 py-2.5 text-sm font-semibold text-error transition-all duration-200 hover:bg-error-container hover:border-error/40 hover:shadow-md active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
               >
-                delete
-              </span>
+                <span
+                  class="material-symbols-outlined text-[18px]"
+                  style="font-variation-settings: 'FILL' 1"
+                  aria-hidden="true"
+                >
+                  delete
+                </span>
 
-              <span>إزالة الصورة الشخصية</span>
-            </button>
+                <span>إزالة الصورة الشخصية</span>
+              </button>
+            }
           </div>
         </div>
       </div>
@@ -224,8 +266,7 @@
                     {{
                       isVerified
                         ? 'تم التحقق من الهوية'
-                        : (idImagePreview() ? 'تغيير الصورة' : 'اختر صورة') +
-                          ' · JPG أو PNG أو WEBP، حتى 5MB'
+                        : (idImagePreview() ? 'تغيير الصورة' : 'اختر صورة') + '  حتى 5MB'
                     }}
                   </span>
 
@@ -535,32 +576,6 @@
     </div>
   </form>
 </ng-template>
-<!-- Shared success / error banner -->
-<ng-template #feedbackAlerts>
-  @if (saveError()) {
-    <div
-      class="p-md bg-error-container text-on-error-container rounded-lg text-body-sm flex items-center gap-sm animate-fade-in"
-      role="alert"
-    >
-      <span class="material-symbols-outlined" aria-hidden="true">error</span>
-      {{ saveError() }}
-    </div>
-  }
-  @if (saveSuccess()) {
-    <div
-      class="p-md bg-surface-container text-on-tertiary-container rounded-lg text-body-sm flex items-center gap-sm font-bold animate-fade-in"
-      role="status"
-    >
-      <span
-        class="material-symbols-outlined"
-        style="font-variation-settings: 'FILL' 1"
-        aria-hidden="true"
-        >check_circle</span
-      >
-      تم حفظ التغييرات بنجاح
-    </div>
-  }
-</ng-template>
 
 <ng-template #personalInfoCard>
   <form
@@ -754,7 +769,6 @@
       [ngTemplateOutlet]="passwordCard"
       [ngTemplateOutletContext]="{ adminOnlyLabel: true }"
     />
-    <ng-container [ngTemplateOutlet]="feedbackAlerts" />
   } @else if (isModerator) {
     <!-- Moderator banner -->
     <div
@@ -971,8 +985,6 @@
         }
       </div>
     </section>
-
-    <ng-container [ngTemplateOutlet]="feedbackAlerts" />
   } @else {
     <ng-container
       [ngTemplateOutlet]="profileImagesCard"
@@ -1119,8 +1131,6 @@
         }
       </div>
     </section>
-
-    <ng-container [ngTemplateOutlet]="feedbackAlerts" />
   }
 </div>
 
@@ -1146,6 +1156,4 @@
   (confirmed)="confirmRemoveProfilePhoto()"
   (cancelled)="cancelRemoveProfilePhoto()"
 />
-
-<!-- App-wide success / error toast -->
 <app-toast />
