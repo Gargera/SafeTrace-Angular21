@@ -41,6 +41,7 @@ import { ImageCropDialog } from '../../shared/image-crop-dialog/image-crop-dialo
 import { Toast } from '../../../../shared/components/toast/toast';
 import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 import { getVerificationStatusTranslationAr } from '../../../../core/constants/verification.status.dictionary';
+import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
 
 // ── Egypt center coordinates (default) ────────────────────────────────────
 const EGYPT_LAT = 26.8206;
@@ -81,6 +82,7 @@ function passwordConfirmValidator(group: AbstractControl): ValidationErrors | nu
     Toast,
     ConfirmDialog,
     ImageCropDialog,
+    ViewProfilePopup,
   ],
   templateUrl: './edit-profile.html',
   styleUrl: './edit-profile.css',

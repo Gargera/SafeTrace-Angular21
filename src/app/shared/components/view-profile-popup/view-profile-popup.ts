@@ -1,0 +1,191 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { catchError, finalize, of } from 'rxjs';
+import { environment } from '../../../../environments/environment.development';
+
+export type UserRole = 'Admin' | 'Moderator' | 'VerifiedUser' | 'User';
+
+export interface VisitUserDTO {
+  fullName: string;
+  profileImage: string | null;
+  role: UserRole;
+  phoneNumber: string;
+}
+
+interface ApiResponse<T> {
+  data: T;
+  message: string;
+  succeeded: boolean;
+}
+
+const ROLE_LABELS: Record<UserRole, string> = {
+  Admin: 'مسؤول',
+  Moderator: 'مشرف',
+  VerifiedUser: 'حساب موثّق',
+  User: 'عضو',
+};
+
+// Tailwind's scanner only picks up class names it can see literally in
+// source, so this lookup must spell every class out in full — no
+// `bg-${role}` string-building.
+const ROLE_STYLES: Record<UserRole, { badge: string; dot: string }> = {
+  Admin: {
+    badge: 'bg-secondary-container text-on-secondary',
+    dot: 'bg-secondary',
+  },
+  Moderator: {
+    badge: 'bg-primary-container text-secondary-fixed',
+    dot: 'bg-primary',
+  },
+  VerifiedUser: {
+    badge: 'bg-tertiary-container text-tertiary-fixed',
+    dot: 'bg-on-tertiary-container',
+  },
+  User: {
+    badge: 'bg-surface-container-high text-on-surface-variant',
+    dot: 'bg-outline',
+  },
+};
+
+@Component({
+  selector: 'app-view-profile-popup',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './view-profile-popup.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(document:keydown.escape)': 'onEscape()',
+  },
+})
+export class ViewProfilePopup {
+  private readonly http = inject(HttpClient);
+  private readonly destroyRef = inject(DestroyRef);
+
+  /**
+   * Id of the user to show. The popup is considered "open" whenever this is
+   * non-null — the parent controls visibility simply by setting/clearing it.
+   * Example (parent template):
+   *   <img (click)="selectedUserId.set(user.id)" ... />
+   *   <app-view-profile-popup
+   *     [userId]="selectedUserId()"
+   *     (closed)="selectedUserId.set(null)" />
+   */
+  readonly userId = input<string | null>(null);
+
+  /** Emitted on backdrop click, Escape key, or the close button. */
+  readonly closed = output<void>();
+
+  readonly profile = signal<VisitUserDTO | null>(null);
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
+
+  readonly isOpen = computed(() => this.userId() !== null);
+
+  readonly initials = computed(() => {
+    const name = this.profile()?.fullName?.trim();
+    if (!name) return '';
+    const [first, second] = name.split(/\s+/).filter(Boolean);
+    return ((first?.[0] ?? '') + (second?.[0] ?? '')).toUpperCase();
+  });
+
+  readonly roleLabel = computed(() => {
+    const role = this.profile()?.role;
+    return role ? ROLE_LABELS[role] : '';
+  });
+
+  readonly roleBadgeClass = computed(() => {
+    const role = this.profile()?.role;
+    return role ? ROLE_STYLES[role].badge : '';
+  });
+
+  readonly roleDotClass = computed(() => {
+    const role = this.profile()?.role;
+    return role ? ROLE_STYLES[role].dot : '';
+  });
+
+  private lastRequestedId: string | null = null;
+
+  constructor() {
+    // Refetch automatically whenever a new userId flows in. Using an effect
+    // (rather than ngOnChanges) keeps this reactive to signal-based inputs
+    // and avoids redundant calls if the same id is set twice in a row.
+    effect(() => {
+      const id = this.userId();
+
+      if (!id) {
+        this.lastRequestedId = null;
+        this.profile.set(null);
+        this.error.set(null);
+        this.loading.set(false);
+        return;
+      }
+
+      if (id === this.lastRequestedId) return;
+      this.lastRequestedId = id;
+      this.fetchProfile(id);
+    });
+  }
+
+  private fetchProfile(id: string): void {
+    this.loading.set(true);
+    this.error.set(null);
+    this.profile.set(null);
+
+    this.http
+      .get<ApiResponse<VisitUserDTO>>(`${environment.apiBaseUrl}/User/GetVisitedUserInfo/${id}`)
+      .pipe(
+        catchError(() => {
+          this.error.set('تعذر تحميل الملف الشخصي، حاول مرة أخرى');
+          return of(null);
+        }),
+        finalize(() => this.loading.set(false)),
+        // Auto-unsubscribe when the component is destroyed — prevents leaks
+        // and stray state updates from in-flight requests.
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((res) => {
+        if (res?.data) this.profile.set(res.data);
+      });
+  }
+
+  retry(): void {
+    const id = this.userId();
+    if (!id) return;
+    this.lastRequestedId = null; // force refetch
+    this.fetchProfile(id);
+    this.lastRequestedId = id;
+  }
+
+  close(): void {
+    this.closed.emit();
+  }
+
+  onBackdropClick(event: MouseEvent): void {
+    // Only close when the backdrop itself (not the panel) was clicked.
+    if (event.target === event.currentTarget) this.close();
+  }
+
+  onEscape(): void {
+    if (this.isOpen()) this.close();
+  }
+
+  onImageError(event: Event): void {
+    // Broken image URL -> fall back to the initials avatar instead of a
+    // broken-image icon.
+    const img = event.target as HTMLImageElement;
+    img.style.display = 'none';
+    this.profile.update((p) => (p ? { ...p, profileImage: null } : p));
+  }
+}
