@@ -1,0 +1,134 @@
+<div class="p-6">
+  <div class="bg-white rounded-xl shadow border">
+    <!-- Header -->
+
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-6 border-b">
+      <h2 class="text-2xl font-bold">سجل التبرعات</h2>
+
+      <div class="flex gap-3 flex-col md:flex-row">
+        <input
+          type="text"
+          placeholder="البحث بالبريد الإلكتروني..."
+          [(ngModel)]="search"
+          (keyup.enter)="onSearch()"
+          class="border rounded-lg px-4 h-10 w-72"
+        />
+
+        <select
+          [(ngModel)]="selectedStatus"
+          (change)="onStatusChange()"
+          class="border rounded-lg px-4 h-10"
+        >
+          <option *ngFor="let status of statuses" [ngValue]="status.value">
+            {{ status.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Loading -->
+
+    <div *ngIf="loading" class="py-16 text-center text-gray-500">جاري تحميل البيانات...</div>
+
+    <!-- Table -->
+
+    <div *ngIf="!loading" class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="p-4 text-right">البريد الإلكتروني</th>
+
+            <th class="p-4 text-right">المبلغ</th>
+
+            <th class="p-4 text-right">الحالة</th>
+
+            <th class="p-4 text-right">تاريخ الإنشاء</th>
+
+            <th class="p-4 text-right">تاريخ الدفع</th>
+
+            <th class="p-4 text-right">الرسالة</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let donation of donations" class="border-b hover:bg-gray-50">
+            <td class="p-4">
+              {{ donation.userEmail }}
+            </td>
+
+            <td class="p-4 font-semibold">{{ donation.amount | number: '1.2-2' }} جنيه</td>
+
+            <td class="p-4">
+              <span
+                class="px-3 py-1 rounded-full text-sm font-medium"
+                [ngClass]="getStatusClass(donation.paymentStatus)"
+              >
+                {{ getStatusText(donation.paymentStatus) }}
+              </span>
+            </td>
+
+            <td class="p-4">
+              {{ donation.createAt | date: 'dd/MM/yyyy HH:mm' }}
+            </td>
+
+            <td class="p-4">
+              {{ donation.paidAt ? (donation.paidAt | date: 'dd/MM/yyyy HH:mm') : '—' }}
+            </td>
+
+            <td class="p-4 text-gray-600">
+              {{ donation.message || 'لا توجد رسالة' }}
+            </td>
+          </tr>
+
+          <tr *ngIf="donations.length === 0">
+            <td colspan="6" class="text-center py-12 text-gray-500">لا توجد تبرعات.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+
+    <div class="flex justify-between items-center p-5 border-t" *ngIf="!loading">
+      <div>
+        عرض
+
+        {{ (pageNumber - 1) * pageSize + 1 }}
+
+        -
+
+        {{ totalCount < pageNumber * pageSize ? totalCount : pageNumber * pageSize }}
+
+        من أصل
+
+        {{ totalCount }}
+      </div>
+
+      <div class="flex gap-2">
+        <button
+          (click)="previousPage()"
+          [disabled]="pageNumber === 1"
+          class="px-4 py-2 border rounded-lg disabled:opacity-50"
+        >
+          السابق
+        </button>
+
+        <span class="px-4 py-2">
+          {{ pageNumber }}
+
+          /
+
+          {{ totalPages }}
+        </span>
+
+        <button
+          (click)="nextPage()"
+          [disabled]="pageNumber === totalPages || totalPages === 0"
+          class="px-4 py-2 border rounded-lg disabled:opacity-50"
+        >
+          التالي
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
