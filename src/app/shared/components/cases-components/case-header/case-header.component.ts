@@ -1,57 +1,69 @@
-﻿import { NgClass } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { NgClass } from '@angular/common';
+import { Component, input, output } from '@angular/core';
 
 import { ButtonComponent } from '../../button/button';
-import { IconComponent } from '../../icon/icon';
+import { CaseType } from '../../../enums/case-type';
+import { getCaseTypeTranslationAr } from '../../../../core/constants/case.type.dictionary';
 
 
 @Component({
   selector: 'app-case-header',
   standalone: true,
-  imports: [NgClass, ButtonComponent, IconComponent],
+  imports: [NgClass, ButtonComponent],
   templateUrl: './case-header.component.html',
   styleUrls: ['./case-header.component.css'],
 })
 export class CaseHeaderComponent {
   // Header
-  @Input() title = '';
-  @Input() subtitle = '';
-  @Input() description = '';
+  title = input('');
+  subtitle = input('');
+  description = input('');
 
   // Loading
-  @Input() loading = false;
+  loading = input(false);
+
+  // Filter
+  showCaseTypeFilter = input(false);
+  caseTypeChange = output<string>();
+
+  caseTypes = Object.values(CaseType);
+
+  getCaseTypeName(type: string): string {
+    return getCaseTypeTranslationAr(type);
+  }
 
   // Back Button
-  @Input() showBackButton = false;
-  @Input() backButtonLabel = 'Back';
+  showBackButton = input(false);
+  backButtonLabel = input('Back');
 
   // Badge
-  @Input() badge = '';
-  @Input() badgeClass = 'bg-tertiary-fixed text-on-tertiary-fixed';
+  badge = input('');
+  badgeClass = input('bg-tertiary-fixed text-on-tertiary-fixed');
 
   // Primary Button
-  @Input() showPrimary = true;
-  @Input() primaryActionLabel = '';
-  @Input() primaryDisabled = false;
+  showPrimary = input(true);
+  primaryActionLabel = input('');
+  primaryDisabled = input(false);
 
-  @Input() primaryButtonClass = 'bg-primary hover:opacity-90 text-on-primary shadow-sm';
+  primaryButtonClass = input('bg-primary hover:opacity-90 text-on-primary shadow-sm');
 
   // Secondary Button
-  @Input() showSecondary = true;
-  @Input() secondaryActionLabel = '';
-  @Input() secondaryDisabled = false;
+  showSecondary = input(true);
+  secondaryActionLabel = input('');
+  secondaryDisabled = input(false);
 
-  @Input() secondaryButtonClass =
-    'border border-outline-variant text-on-surface-variant hover:bg-surface-container-highest';
+  secondaryButtonClass = input(
+    'border border-outline-variant text-on-surface-variant hover:bg-surface-container-highest'
+  );
 
   // Layout
-  @Input() readonly = false;
+  readonly = input(false);
 
   // Events
-  @Output() primaryAction = new EventEmitter<void>();
+  primaryAction = output<void>();
 
-  @Output() secondaryAction = new EventEmitter<void>();
+  secondaryAction = output<void>();
 
-  @Output() backAction = new EventEmitter<void>();
+  backAction = output<void>();
 }
 

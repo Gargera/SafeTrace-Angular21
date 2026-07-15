@@ -1,3 +1,4 @@
+import { FormField } from '../../../../shared/components/form-field/form-field';
 import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -12,10 +13,12 @@ import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-c
 import { UrgentCasesFilterRequest } from '../../models/request/UrgentCaseFilterRequest';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
 
+
+
 @Component({
   selector: 'app-urgent-list',
   standalone: true,
-  imports: [
+  imports: [FormField, 
     FormsModule,
     CaseHeaderComponent,
     CaseFiltersComponent,
@@ -23,6 +26,8 @@ import { CaseCardComponent } from '../../../../shared/components/cases-component
     CaseSkeletonGridComponent,
     EmptyStateComponent,
     CaseCardComponent,
+    
+    
   ],
   templateUrl: './urgent-list.html',
   styleUrls: ['./urgent-list.css'],
