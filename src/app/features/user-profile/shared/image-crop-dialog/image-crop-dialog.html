@@ -18,7 +18,7 @@
           class="text-headline-sm font-bold text-primary flex items-center gap-sm"
         >
           <span class="material-symbols-outlined text-[24px]" aria-hidden="true">crop</span>
-          قص الصورة الشخصية
+          قص الصورة
         </h3>
         <button
           type="button"
@@ -41,16 +41,15 @@
             @if (imageFile()) {
               <image-cropper
                 [imageFile]="imageFile()!"
-                [maintainAspectRatio]="true"
-                [aspectRatio]="1"
+                [maintainAspectRatio]="false"
                 [resizeToWidth]="512"
-                [resizeToHeight]="512"
                 [cropperMinWidth]="128"
+                [cropperMinHeight]="128"
                 [roundCropper]="false"
                 [transform]="{ scale: zoom() }"
                 format="png"
                 output="blob"
-                imageAltText="الصورة الشخصية المراد قصها"
+                imageAltText="الصورة المراد قصها"
                 (imageCropped)="imageCropped($event)"
                 (imageLoaded)="imageLoaded($event)"
                 (loadImageFailed)="loadImageFailed()"
@@ -59,23 +58,23 @@
             }
           </div>
 
-          <!-- Circular live preview -->
+          <!-- Live preview -->
           <div class="flex flex-col items-center gap-sm shrink-0 mx-auto">
             <span class="text-label-sm text-on-surface-variant font-semibold">معاينة</span>
             <div
-              class="w-24 h-24 rounded-full overflow-hidden border-2 border-secondary shadow-sm bg-surface-container-low flex items-center justify-center"
+              class="w-24 h-24 rounded-lg overflow-hidden border-2 border-secondary shadow-sm bg-surface-container-low flex items-center justify-center"
             >
               @if (previewUrl()) {
                 <img
                   [src]="previewUrl()"
-                  alt="معاينة دائرية للصورة المقصوصة"
-                  class="w-full h-full object-cover"
+                  alt="معاينة الصورة المقصوصة"
+                  class="w-full h-full object-contain"
                 />
               } @else {
                 <span
                   class="material-symbols-outlined text-[28px] text-on-surface-variant"
                   aria-hidden="true"
-                  >person</span
+                  >image</span
                 >
               }
             </div>

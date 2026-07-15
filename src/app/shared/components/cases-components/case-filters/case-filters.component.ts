@@ -3,12 +3,11 @@ import {
   Component,
   ContentChildren,
   DestroyRef,
-  EventEmitter,
-  Input,
   OnInit,
-  Output,
   QueryList,
   inject,
+  input,
+  output,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -20,6 +19,7 @@ import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.cate
 import { CardComponent } from '../../card/card';
 import { ButtonComponent } from '../../button/button';
 import { FormField } from '../../form-field/form-field';
+import { getAgeRange } from '../../../helper/age-category.helper';
 
 @Component({
   selector: 'app-case-filters',
@@ -29,12 +29,12 @@ import { FormField } from '../../form-field/form-field';
   styleUrls: ['./case-filters.component.css'],
 })
 export class CaseFiltersComponent implements OnInit, AfterContentInit {
-  @Input() genders: number[] = [0, 1];
-  @Input() ageSorts: number[] = [0, 1];
-  @Input() dateSorts: number[] = [0, 1];
+  genders = input<number[]>([0, 1]);
+  ageSorts = input<number[]>([0, 1]);
+  dateSorts = input<number[]>([0, 1]);
 
-  @Output() filterChange = new EventEmitter<CasesFilterRequest>();
-  @Output() reset = new EventEmitter<void>();
+  filterChange = output<CasesFilterRequest>();
+  reset = output<void>();
 
   readonly ageCategories = Object.values(AgeCategories);
   showAdvanced = false;
@@ -172,6 +172,8 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
 
   buildFilterRequest(): CasesFilterRequest {
     const raw = this.filterForm.value;
+    const { minAge, maxAge } = getAgeRange(raw.ageCategory);
+
     return this.normalizeFilterRequest({
       status: null,
       gender: raw.gender,
@@ -179,8 +181,8 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
       fullName: raw.fullName,
       government: raw.government,
       city: raw.city,
-      minAge: null,
-      maxAge: null,
+      minAge,
+      maxAge,
       fromDate: raw.fromDate,
       toDate: raw.toDate,
       ageSort: raw.ageSort,
@@ -254,7 +256,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   }
 
   getAgeSortLabel(sort: number): string {
-    const labels: Record<number, string> = { 0: 'الأصغر أولاً', 1: 'الأكبر أولاً' };
+    const labels: Record<number, string> = { 0: 'الأكبر أولاً', 1: ' الأصغر أولاً' };
     return labels[sort] ?? String(sort);
   }
 

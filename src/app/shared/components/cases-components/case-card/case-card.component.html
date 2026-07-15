@@ -1,12 +1,12 @@
 <app-card
-  extraClass="group flex h-full flex-col overflow-hidden border-outline-variant/70 bg-surface-container-lowest shadow-sm transition-all duration-300 hover:shadow-xl"
+  extraClass="group flex h-full flex-col overflow-hidden rounded-2xl border border-outline-variant/70 bg-surface-container-lowest shadow-sm transition-all duration-300 hover:shadow-xl"
   dir="rtl"
 >
   <!-- Image Section -->
   <div class="relative aspect-4/3 overflow-hidden bg-surface-container-high rounded-t-2xl">
     <img
       [src]="getImageSrc()"
-      [alt]="getFullName() || caseItem.caseCode"
+      [alt]="getFullName() || caseItem().caseCode"
       class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
       (error)="onImageError()"
       loading="lazy"
@@ -16,8 +16,11 @@
       <div
         class="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-error/95 px-3 py-1 text-xs font-semibold text-on-error shadow-sm backdrop-blur-sm"
       >
-        <i class="fa-regular fa-clock text-xs"></i>
-        <span dir="ltr">{{ getUrgentEndDate() | date: 'dd MMM yyyy, h:mm a' : '' : 'ar' }}</span>
+        <span class="material-symbols-outlined text-[16px]">schedule</span>
+
+        <span dir="ltr">
+          {{ getUrgentEndDate() | date: 'dd MMM yyyy, h:mm a' : '' : 'ar' }}
+        </span>
       </div>
     }
   </div>
@@ -36,11 +39,11 @@
       }
       <div class="flex items-center justify-between">
         <span class="text-on-surface-variant">الجنس</span
-        ><span [appGenderBadgeDirective]="caseItem.gender"></span>
+        ><span [appGenderBadgeDirective]="caseItem().gender"></span>
       </div>
       <div class="flex items-center justify-between">
         <span class="text-on-surface-variant">العمر</span
-        ><span class="font-medium text-on-surface">{{ caseItem.age }} سنة</span>
+        ><span class="font-medium text-on-surface">{{ caseItem().age }} سنة</span>
       </div>
       <div class="flex items-center justify-between">
         <span class="text-on-surface-variant">الفئة العمرية</span
@@ -50,7 +53,7 @@
         <div class="flex items-center justify-between">
           <span class="text-on-surface-variant">تاريخ الإضافة</span
           ><span class="font-medium text-on-surface">{{
-            caseItem.createdAt | date: 'dd MMM yyyy, h:mm a' : '' : 'ar'
+            caseItem().createdAt | date: 'dd MMM yyyy, h:mm a' : '' : 'ar'
           }}</span>
         </div>
       }
@@ -68,19 +71,19 @@
     <div class="flex-1"></div>
 
     <div class="mt-5 flex flex-col gap-3">
-      <a [routerLink]="detailRoute ?? ['/urgent-cases', caseItem.id]" class="block w-full">
+      <a [routerLink]="detailRoute() ?? ['/urgent-cases', caseItem().id]" class="block w-full">
         <app-button variant="primary" extraClass="w-full justify-center gap-2">
-          <i class="fa-regular fa-eye"></i>
+          <span class="material-symbols-outlined material-icon-sm"> visibility </span>
           عرض التفاصيل
         </app-button>
       </a>
 
       <app-button
         variant="secondary"
-        (onClick)="onContact.emit(caseItem.id)"
+        (onClick)="onContact.emit(caseItem().id)"
         extraClass="w-full justify-center gap-2 hover:border-primary hover:bg-primary/5 hover:text-primary"
       >
-        <i class="fa-regular fa-comments"></i>
+        <span class="material-symbols-outlined material-icon-sm">chat</span>
         تواصل مع المُبلّغ
       </app-button>
     </div>

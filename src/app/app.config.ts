@@ -16,7 +16,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { jwtInterceptor } from './core/interceptors/jwt.interceptor';
 import { registerLocaleData } from '@angular/common';
 import localeAr from '@angular/common/locales/ar';
-import { environment } from '../environments/environment.development';
+import { environment } from '../environments/environment';
 import { AuthService } from './core/services/auth.service';
 
 registerLocaleData(localeAr);

@@ -4,7 +4,7 @@ export const ROLE_TRANSLATIONS_AR: Record<UserRole, string> = {
   [UserRole.Admin]: 'مدير النظام',
   [UserRole.Moderator]: 'مشرف',
   [UserRole.VerifiedUser]: 'مستخدم موثق',
-  [UserRole.User]: 'مستخدم عادي'
+  [UserRole.User]: 'مستخدم غير موثق'
 };
 
 export function getRoleTranslationAr(roleName?: string | null): string {
