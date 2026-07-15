@@ -3,6 +3,8 @@ import { GeocodingService } from '../../../../core/services/gecoding.service';
 import { GetUserInfoDTO } from '../../model/profile.model';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';
 import { UserRole } from '../../../../shared/enums/user-role';
+import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
+import { getVerificationStatusTranslationAr } from '../../../../core/constants/verification.status.dictionary';
 
 @Component({
   selector: 'app-profile-sidebar',
@@ -62,17 +64,23 @@ export class ProfileSidebar {
     return (this.userInfo()?.cases?.length ?? 0) > 0;
   }
 
+  getRoleName(roleName: string | undefined): string {
+    return getRoleTranslationAr(roleName);
+  }
+  getVerificationStatus(ver: string | undefined): string {
+    return getVerificationStatusTranslationAr(ver);
+  }
   get verificationLabel(): string {
     if (this.userInfo()?.role === UserRole.Moderator) {
-      return 'مشرف';
+      return this.getRoleName(UserRole.Moderator);
     } else if (this.userInfo()?.role === UserRole.Admin) {
-      return 'مسئول الننظام';
+      return this.getRoleName(UserRole.Admin);
     } else if (this.userInfo()?.verificationStatus === VerificationStatus.Verified) {
-      return 'حساب موثق';
+      return this.getVerificationStatus(VerificationStatus.Verified);
     } else if (this.userInfo()?.verificationStatus === VerificationStatus.Pending) {
-      return 'قيد المراجعة';
+      return this.getVerificationStatus(VerificationStatus.Pending);
     } else {
-      return 'غير موثق';
+      return getVerificationStatusTranslationAr(VerificationStatus.Unverified);
     }
   }
 }
