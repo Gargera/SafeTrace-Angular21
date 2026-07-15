@@ -37,7 +37,7 @@ export class LongTermList implements OnInit {
   currentPage = signal(1);
   totalPages = signal(1);
   totalItems = signal(0);
-  pageSize = signal(8);
+  pageSize = signal(12);
 
   filter = signal<CasesFilterRequest>(this.emptyFilter());
 

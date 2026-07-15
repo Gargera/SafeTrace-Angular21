@@ -13,10 +13,9 @@ import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionar
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
-
 @Component({
   selector: 'app-register-by-admin',
-  imports: [FormField, ReactiveFormsModule, RouterModule, CommonModule,   ButtonComponent, CardComponent],
+  imports: [FormField, ReactiveFormsModule, RouterModule, CommonModule, ButtonComponent, CardComponent],
   templateUrl: './register-by-admin.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

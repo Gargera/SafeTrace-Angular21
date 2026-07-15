@@ -1,12 +1,23 @@
-import { Component, DestroyRef, HostListener, effect, inject, input, output, signal } from '@angular/core';
-import { ImageCroppedEvent, ImageCropperComponent, LoadedImage, } from 'ngx-image-cropper';
+import {
+  Component,
+  DestroyRef,
+  HostListener,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
+import { ImageCroppedEvent, ImageCropperComponent, LoadedImage } from 'ngx-image-cropper';
 
 /**
- * Modal crop dialog for the profile photo. Wraps ngx-image-cropper with:
- *  - drag / pan (built into the cropper by default)
- *  - pinch/slider zoom
- *  - a fixed square crop area (aspectRatio = 1)
- *  - a live circular preview of the crop result
+ * Modal crop dialog, shared by the profile photo and the ID photo. Wraps
+ * ngx-image-cropper with:
+ * - drag / pan (built into the cropper by default)
+ * - pinch/slider zoom
+ * - a fully free-form crop area — the user can resize width and height
+ *   independently, with no fixed or enforced aspect ratio
+ * - a live preview of the crop result
  *
  * The dialog never uploads anything itself — it only ever emits a Blob via
  * `saved` when the user clicks "حفظ". The parent decides what to do with
@@ -34,8 +45,8 @@ export class ImageCropDialog {
   #destroyRef = inject(DestroyRef);
 
   constructor() {
-    // Keep the circular preview's object URL in sync with the latest crop,
-    // and always revoke the previous one to avoid leaking memory.
+    // Keep the preview's object URL in sync with the latest crop, and
+    // always revoke the previous one to avoid leaking memory.
     effect(() => {
       const blob = this.croppedBlob();
 
