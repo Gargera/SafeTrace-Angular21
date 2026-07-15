@@ -51,7 +51,7 @@ const EGYPT_ZOOM = 6;
 const ALLOWED_PROFILE_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_PROFILE_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
-// ── Custom validator: passwords match ─────────────────────────────────────
+// ── Custom validator: passwords match ──────────────────────────────────────
 function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
   const current = group.get('currentPassword')?.value;
   const next = group.get('newPassword')?.value;
@@ -122,9 +122,13 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   readonly isRemovingProfileImage = signal(false);
   readonly showRemoveConfirm = signal(false);
 
-  // ── Crop dialog state ──────────────────────────────────────────────────────
+  // ── Crop dialog state (shared by profile photo + ID image) ───────────────
   readonly showCropDialog = signal(false);
   readonly cropSourceFile = signal<File | null>(null);
+  // Which field the current crop session is for. The cropper itself is now
+  // fully free-form and has no notion of "profile" vs "id" — this only
+  // decides where onCropSaved routes the resulting Blob.
+  #cropTarget: 'profile' | 'id' = 'profile';
 
   // ── Shared Feedback States ────────────────────────────────────────────────
   readonly saveError = signal<string | null>(null);
@@ -301,6 +305,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
       });
     }
   }
+
   get isModerator(): boolean {
     return this.userInfo()?.role === UserRole.Moderator;
   }
@@ -433,33 +438,42 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     this.#geocode$.next({ lat, lng });
   }
 
+  // ── Shared image validation (used by both profile photo + ID image) ──────
+
+  /** Returns true if the file passes type/size checks; shows a toast and
+   *  returns false otherwise. */
+  #validateImageFile(file: File): boolean {
+    if (!ALLOWED_PROFILE_IMAGE_TYPES.includes(file.type)) {
+      this.#snackbar.error('صيغة الصورة غير مدعومة. يُسمح فقط بـ JPG أو PNG أو WEBP.');
+      return false;
+    }
+
+    if (file.size > MAX_PROFILE_IMAGE_SIZE_BYTES) {
+      this.#snackbar.error('حجم الصورة يتجاوز الحد الأقصى المسموح به (5 ميجابايت).');
+      return false;
+    }
+
+    return true;
+  }
+
   // ── Profile photo: select → validate → crop → upload ─────────────────────
 
   /**
    * Triggered by the (hidden) file input under the profile photo.
-   * Validates type/size *before* opening the crop dialog — per spec, a
+   * Validates type/size _before_ opening the crop dialog — per spec, a
    * failing file never reaches the cropper and the current photo is left
    * untouched.
    */
   onProfilePhotoFileSelected(event: Event): void {
     const inputEl = event.target as HTMLInputElement;
     const file = inputEl.files?.[0] ?? null;
-    // Reset the input immediately so selecting the *same* file again still
-    // fires a change event next time.
     inputEl.value = '';
 
     if (!file) return;
 
-    if (!ALLOWED_PROFILE_IMAGE_TYPES.includes(file.type)) {
-      this.#snackbar.error('صيغة الصورة غير مدعومة. يُسمح فقط بـ JPG أو PNG أو WEBP.');
-      return;
-    }
+    if (!this.#validateImageFile(file)) return;
 
-    if (file.size > MAX_PROFILE_IMAGE_SIZE_BYTES) {
-      this.#snackbar.error('حجم الصورة يتجاوز الحد الأقصى المسموح به (5 ميجابايت).');
-      return;
-    }
-
+    this.#cropTarget = 'profile';
     this.cropSourceFile.set(file);
     this.showCropDialog.set(true);
   }
@@ -472,17 +486,27 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   /**
    * The crop dialog only ever hands back a Blob when the user clicks
    * "حفظ" — the original image on screen is untouched until this fires.
-   * From here the flow is: wrap in a File → optimistic preview → upload →
-   * refresh → toast.
+   * Branches on #cropTarget: the profile photo uploads immediately
+   * (optimistic preview → upload → refresh → toast), while the ID image
+   * just updates its preview and stores the cropped File — it still goes
+   * through the existing edit/save/cancel batch flow via saveIdImage().
    */
   onCropSaved(blob: Blob): void {
     this.showCropDialog.set(false);
     this.cropSourceFile.set(null);
 
+    const objectUrl = URL.createObjectURL(blob);
+
+    if (this.#cropTarget === 'id') {
+      const croppedFile = new File([blob], `id-${Date.now()}.png`, { type: 'image/png' });
+      this.idImagePreview.set(objectUrl);
+      this.#selectedIdImage = croppedFile;
+      return;
+    }
+
     const croppedFile = new File([blob], `profile-${Date.now()}.png`, { type: 'image/png' });
 
     // Optimistic preview while the upload is in flight.
-    const objectUrl = URL.createObjectURL(blob);
     this.profileImagePreview.set(objectUrl);
 
     this.#uploadProfilePhoto(croppedFile);
@@ -547,15 +571,26 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     });
   }
 
-  // ── ID image handling (unchanged batch edit/save flow) ────────────────────
+  // ── ID image: select → validate → crop ─────────────────────────────────────
+  // Save/cancel still go through the pre-existing batch flow
+  // (toggleIdImageEdit / saveIdImage / cancelIdImage below).
 
+  /**
+   * Triggered by the (hidden) file input under the ID photo. Same
+   * type/size validation as the profile photo, then opens the shared crop
+   * dialog instead of reading the raw file straight into the preview.
+   */
   onIdImageSelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
+    const inputEl = event.target as HTMLInputElement;
+    const file = inputEl.files?.[0] ?? null;
+    inputEl.value = '';
+
     if (!file) return;
-    this.#selectedIdImage = file;
-    const reader = new FileReader();
-    reader.onload = (e) => this.idImagePreview.set(e.target?.result as string);
-    reader.readAsDataURL(file);
+    if (!this.#validateImageFile(file)) return;
+
+    this.#cropTarget = 'id';
+    this.cropSourceFile.set(file);
+    this.showCropDialog.set(true);
   }
 
   // ── Form helpers ──────────────────────────────────────────────────────────
@@ -750,6 +785,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     if (this.isSavingIdImage()) return;
 
     const idFile = this.#selectedIdImage;
+
     if (!idFile) {
       this.toggleIdImageEdit(false);
       return;
@@ -824,6 +860,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     }
 
     this.isSavingPhone.set(true);
+
     this.saveError.set(null);
     this.saveSuccess.set(false);
 

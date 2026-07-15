@@ -80,7 +80,7 @@ export class ProfileSidebar {
     } else if (this.userInfo()?.verificationStatus === VerificationStatus.Pending) {
       return this.getVerificationStatus(VerificationStatus.Pending);
     } else {
-      return getVerificationStatusTranslationAr(VerificationStatus.Unverified );
+      return getVerificationStatusTranslationAr(VerificationStatus.Unverified);
     }
   }
 }
