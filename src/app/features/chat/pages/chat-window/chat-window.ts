@@ -24,7 +24,7 @@ const PAGE_SIZE = 30;
 export class ChatWindow implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private chatService = inject(ChatService);
+  protected chatService = inject(ChatService);
   private messageService = inject(MessageService);
   private chatAlertsService = inject(ChatAlertsService);
   private chatHubService = inject(ChatHubService);
@@ -44,10 +44,13 @@ export class ChatWindow implements OnInit {
 
   draft = signal<string>('');
   selectedFile = signal<File | null>(null);
+  sending = signal<boolean>(false);
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
 
   async ngOnInit(): Promise<void> {
+      console.log("CURRENT USER ID:", this.currentUserId);
+
     this.chatId = Number(this.route.snapshot.paramMap.get('chatId'));
     if(!this.chatId) {
       return;
@@ -66,12 +69,13 @@ export class ChatWindow implements OnInit {
     });
 
     this.loadMessages();
-    this.markAsRead();
 
     await this.chatHubService.start();
     await this.chatHubService.joinChat(this.chatId);
     this.chatHubService.onReceiveMessage(this.handleReceivedMessage);
     this.chatHubService.onMessagesRead(this.handleMessagesRead);
+
+    this.markAsRead();
   }
 
 
@@ -87,15 +91,24 @@ export class ChatWindow implements OnInit {
     this.chatHubService.markAsRead(this.chatId);
   }
 
+  private normalizeMessage(message: MessageDto):MessageDto{
+    return{...message,isMine:message.senderId === this.currentUserId};
+  }
+
   private handleReceivedMessage = (message: MessageDto) : void => {
     if(message.chatId !== this.chatId) {
       return;
     }
-    this.addMessageIfNew(message);
+    console.log("SIGNALR MESSAGE", message);
+    this.addMessageIfNew(this.normalizeMessage(message));
+
+    if(!this.normalizeMessage(message).isMine){
+      this.markAsRead();
+    }
   };
 
   private handleMessagesRead = (event: MessagesReadEvent) : void => {
-    if(event.chatId !== this.chatId || event.userId !== this.currentUserId) {
+    if(event.chatId !== this.chatId || event.userId === this.currentUserId) {
       return;
     }
     this.messages.update((current) =>
@@ -111,7 +124,7 @@ export class ChatWindow implements OnInit {
   loadMessages(): void {
     this.chatService.getMessages(this.chatId, this.page(), PAGE_SIZE).subscribe({
       next: (res) => {
-        this.messages.set(res.data!.items);
+        this.messages.set(res.data!.items.map((m) => this.normalizeMessage(m)));
         const loadedSoFar = res.data!.pageNumber * res.data!.pageSize;
         this.hasMoreMessages.set(loadedSoFar < res.data!.totalCount);
         this.checkLoadingStatus();
@@ -151,24 +164,33 @@ export class ChatWindow implements OnInit {
   }
 
   onSend() : void {
+    if (this.sending()) {
+      return; // a send is already in flight - ignore extra Enter/click triggers
+    }
+
     const text = this.draft().trim();
     const file = this.selectedFile();
     if (!text && !file) {
       return;
     }
 
+    this.sending.set(true);
+
     this.messageService.sendMessage({chatId: this.chatId, content: text || undefined, file: file || undefined})
     .subscribe({
       next: (res) => {
+      console.log("API MESSAGE", res.data);
         const message = res.data;
 
-      if (message == null) {
-        return;
+      if (message != null) {
+        this.addMessageIfNew(this.normalizeMessage(message));
       }
-
-      this.messages.update(msgs => [...msgs, message]);
+        this.sending.set(false);
+        //this.loadMessages();
       },
-        error: () => this.chatAlertsService.error('تعذر إرسال الرسالة، تحقق من الاتصال وحاول مرة أخرى'),
+        error: () => {this.chatAlertsService.error('تعذر إرسال الرسالة، تحقق من الاتصال وحاول مرة أخرى');
+          this.sending.set(false);
+        }
     });
 
     this.draft.set('');

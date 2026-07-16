@@ -46,11 +46,15 @@ export interface ChatDetailsDto {
   chatId: number;
   caseId: number;
   caseTitle: string;
+  caseImage: string;
   senderId: string;
   senderName?: string;
+  senderImage?:string;
   receiverId: string;
   receiverName?: string;
+  receiverImage?:string;
   otherUserName?: string;
+  otherUserImage?:string;
   createdAt: string; // ISO date string
 
   // Admin-only fields

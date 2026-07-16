@@ -1,12 +1,13 @@
 // shared/components/case-card/case-card.component.ts
-import { Component, input, output } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule,Router } from '@angular/router';
 import { CaseListItemResponse } from '../../../../core/models/Cases.model';
 import { AgeCategories } from '../../../enums/age-categories';
 import { GenderBadgeDirective } from '../../../directives/gender-badge-directive';
 import { AgeBadgeDirective } from '../../../directives/age-badge-directive';
 import { CardComponent } from '../../card/card';
+
 
 import { ButtonComponent } from '../../button/button';
 
@@ -29,6 +30,7 @@ import { ButtonComponent } from '../../button/button';
   templateUrl: './case-card.component.html',
 })
 export class CaseCardComponent {
+  router = inject(Router);
   caseItem = input.required<CaseListItemResponse>();
   showUrgentTag = input(false);
   detailRoute = input<Array<string | number> | null>(null);
@@ -90,6 +92,11 @@ export class CaseCardComponent {
   hasUrgentEndDate(): boolean {
     return !!this.getUrgentEndDate();
   }
+
+  startChat(id: number): void {
+    this.router.navigate(['/chat/start', id]);
+  }
+
 }
 
 

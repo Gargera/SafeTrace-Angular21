@@ -3,7 +3,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProfileSidebar } from './shared/profile-sidebar/profile-sidebar';
 import { ChatTab } from './tabs/chat-tab/chat-tab';
 import { NotificationsTab } from './tabs/notifications-tab/notifications-tab';
-
+import { MyChats } from '../chat/pages/my-chats/my-chats';
 import { GetUserInfoDTO } from './model/profile.model';
 import { NotificationService } from '../../core/services/notification.service';
 import { ProfileService } from './service/profile.service';
@@ -14,7 +14,7 @@ export type ProfileTab = 'edit' | 'cases' | 'chat' | 'notifications'; // ADDED '
 
 @Component({
   selector: 'app-profile-view',
-  imports: [RouterModule, ProfileSidebar, EditProfile, NotificationsTab, ChatTab, MyCasesTab], // ADDED MyCasesTab
+  imports: [RouterModule, ProfileSidebar, EditProfile, NotificationsTab, ChatTab, MyCasesTab,MyChats], // ADDED MyCasesTab
   templateUrl: './profile-view.html',
   styleUrl: './profile-view.css',
 })
