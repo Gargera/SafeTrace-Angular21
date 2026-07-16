@@ -1,0 +1,44 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm p-4 animate-fade-in"
+  (click)="cancel.emit()"
+>
+  <div
+    class="w-full max-w-100 overflow-hidden rounded-lg border border-outline-variant/20 bg-surface shadow-2xl animate-scale-in"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="flex items-start gap-4 px-6 py-5">
+      <div class="min-w-0 flex-1">
+        <h2 class="text-lg font-semibold text-on-surface">
+          {{ title() }}
+        </h2>
+
+        <p class="mt-1 text-sm leading-6 text-on-surface-variant">
+          {{ message() }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div
+      class="flex justify-end gap-3 border-t border-outline-variant/10 bg-surface-container-low px-6 py-4"
+    >
+      <app-button
+        variant="secondary"
+        extraClass="h-10 w-full rounded-md flex items-center justify-center font-medium"
+        (onClick)="cancel.emit()"
+      >
+        {{ cancelText() }}
+      </app-button>
+
+      <app-button
+        variant="danger"
+        extraClass="h-10 w-full rounded-md flex items-center justify-center gap-2 font-medium"
+        (onClick)="confirm.emit()"
+      >
+        <span class="material-symbols-outlined text-[18px]">delete</span>
+        {{ confirmText() }}
+      </app-button>
+    </div>
+  </div>
+</div>

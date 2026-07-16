@@ -1,10 +1,10 @@
 <nav
-  class="bg-surface text-on-surface border-b border-outline-variant px-margin-mobile md:px-margin-desktop h-16 sticky top-0 z-50 transition-colors duration-300"
+  class="bg-surface text-on-surface border-b border-outline-variant px-margin-mobile lg:px-margin-desktop h-16 sticky top-0 z-50 transition-colors duration-300"
 >
   <div class="max-w-max-width mx-auto h-full flex items-center justify-between">
     <div class="flex items-center gap-3">
       <button
-        class="md:hidden p-1 text-on-surface-variant hover:bg-surface-container-low rounded-md transition-colors mobile-menu-button"
+        class="lg:hidden p-1 text-on-surface-variant hover:bg-surface-container-low rounded-md transition-colors mobile-menu-button"
         (click)="toggleMobileMenu($event)"
       >
         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -28,7 +28,7 @@
       </a>
     </div>
 
-    <div class="hidden md:flex items-center gap-gutter h-full">
+    <div class="hidden lg:flex items-center gap-gutter h-full">
       <a
         routerLink="/home"
         routerLinkActive="text-secondary border-b-2 border-secondary font-medium"
@@ -90,6 +90,12 @@
         routerLinkActive="text-secondary border-b-2 border-secondary font-medium"
         class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200"
         >دليل المنصة</a
+      >
+      <a
+        routerLink="/donation"
+        routerLinkActive="text-secondary border-b-2 border-secondary font-medium"
+        class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200"
+        >التبرع</a
       >
     </div>
 
@@ -338,7 +344,7 @@
 
   @if (isMobileMenuOpen()) {
     <div
-      class="md:hidden absolute top-16 left-0 right-0 bg-surface border-b border-outline-variant shadow-lg z-40 mobile-menu-container flex flex-col animate-fade-in max-h-[calc(100vh-4rem)] overflow-y-auto"
+      class="lg:hidden absolute top-16 left-0 right-0 bg-surface border-b border-outline-variant shadow-lg z-40 mobile-menu-container flex flex-col animate-fade-in max-h-[calc(100vh-4rem)] overflow-y-auto"
     >
       <a
         routerLink="/home"

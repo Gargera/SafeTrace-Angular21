@@ -1,9 +1,11 @@
-import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+
 import { LongTermCaseService } from '../../services/long-term-case.service';
 import { CasesFilterRequest } from '../../../../core/models/Cases.model';
 import { LongTermCaseListItemResponse } from '../../models/response/LongTermCaseListItemResponse';
+
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { PaginationComponent } from '../../../../shared/components/cases-components/case-pagination/case-pagination.component';
@@ -25,21 +27,21 @@ import { CaseCardComponent } from '../../../../shared/components/cases-component
   ],
   templateUrl: './long-term-list.html',
   styleUrls: ['./long-term-list.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LongTermList implements OnInit {
-  private router = inject(Router);
-  private longTermCaseService = inject(LongTermCaseService);
+  private readonly router = inject(Router);
+  private readonly longTermCaseService = inject(LongTermCaseService);
 
-  cases = signal<LongTermCaseListItemResponse[]>([]);
-  loading = signal(true);
+  readonly cases = signal<LongTermCaseListItemResponse[]>([]);
+  readonly loading = signal(true);
 
-  currentPage = signal(1);
-  totalPages = signal(1);
-  totalItems = signal(0);
-  pageSize = signal(12);
+  readonly currentPage = signal(1);
+  readonly totalPages = signal(1);
+  readonly totalItems = signal(0);
+  readonly pageSize = signal(12);
 
-  filter = signal<CasesFilterRequest>(this.emptyFilter());
+  readonly filter = signal<CasesFilterRequest>(this.emptyFilter());
 
   ngOnInit(): void {
     this.fetchCases();
@@ -50,10 +52,12 @@ export class LongTermList implements OnInit {
   }
 
   onFilterChange(newFilter: CasesFilterRequest): void {
-    this.filter.update((f) => ({
+    this.filter.update(() => ({
       ...this.sanitizeFilter(newFilter),
       page: 1,
+      pageSize: this.pageSize(),
     }));
+
     this.fetchCases();
   }
 
@@ -63,7 +67,12 @@ export class LongTermList implements OnInit {
   }
 
   onPageChange(page: number): void {
-    this.filter.update((f) => ({ ...f, page }));
+    this.filter.update((f) => ({
+      ...f,
+      page,
+      pageSize: this.pageSize(),
+    }));
+
     this.fetchCases();
   }
 
@@ -81,20 +90,22 @@ export class LongTermList implements OnInit {
 
   private fetchCases(): void {
     this.loading.set(true);
-    this.longTermCaseService.getAllCases(this.filter() as any).subscribe({
+
+    this.longTermCaseService.getAllCases(this.filter()).subscribe({
       next: (apiRes) => {
         const res = apiRes.data;
+
         if (res) {
           this.cases.set(res.items);
           this.totalItems.set(res.totalCount);
           this.totalPages.set(res.totalPages);
-          this.currentPage.set(this.filter().page);
+          this.currentPage.set(res.pageNumber);
+          this.pageSize.set(res.pageSize);
         }
+
         this.loading.set(false);
       },
-      error: () => {
-        this.loading.set(false);
-      },
+      error: () => this.loading.set(false),
     });
   }
 
@@ -113,7 +124,7 @@ export class LongTermList implements OnInit {
       ageSort: null,
       dateSort: null,
       page: 1,
-      pageSize: 12,
+      pageSize: this.pageSize(),
     };
   }
 
@@ -132,6 +143,7 @@ export class LongTermList implements OnInit {
       ageSort: this.normalizeNumber(filter.ageSort),
       dateSort: this.normalizeNumber(filter.dateSort),
       page: 1,
+      pageSize: this.pageSize(),
     };
   }
 
@@ -141,6 +153,7 @@ export class LongTermList implements OnInit {
     }
 
     const numericValue = typeof value === 'number' ? value : Number(value);
+
     return Number.isFinite(numericValue) && numericValue !== Number.MAX_VALUE ? numericValue : null;
   }
 
@@ -166,6 +179,7 @@ export class LongTermList implements OnInit {
     }
 
     const textValue = String(value).trim();
+
     return textValue.length > 0 ? textValue : null;
   }
 }

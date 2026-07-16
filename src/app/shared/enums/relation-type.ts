@@ -1,6 +1,8 @@
 export enum RelationType {
-  Self,
-  Family,
+  Father,
+  Mother,
+  Brother,
+  Sister,
   Friend,
   Other
 }
