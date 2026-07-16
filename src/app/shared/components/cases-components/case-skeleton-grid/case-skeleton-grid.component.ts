@@ -14,5 +14,5 @@ import { CaseCardSkeletonComponent } from '../case-card-skeleton/case-card-skele
   `,
 })
 export class CaseSkeletonGridComponent {
-  skeletonItems = Array.from({ length: 8 }, (_, index) => index);
+  skeletonItems = Array.from({ length: 12 }, (_, index) => index);
 }

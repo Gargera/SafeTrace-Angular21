@@ -39,6 +39,11 @@ export const routes: Routes = [
         component: About
       },
       { 
+        path: 'privacy-policy', 
+        title: "سياسة الخصوصية | لقاء",
+        loadComponent: () => import('./shared/components/privacy-policy/privacy-policy').then(c => c.PrivacyPolicyComponent)
+      },
+      { 
         path: 'founded', 
         title: "الحالات المعثور عليها | لقاء",
         loadChildren: () => import('./features/founded/founded.routes').then(m => m.FOUNDED_ROUTES) 

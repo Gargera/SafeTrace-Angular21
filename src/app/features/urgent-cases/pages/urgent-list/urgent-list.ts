@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { FormField } from '../../../../shared/components/form-field/form-field';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UrgentCaseService } from '../../services/urgent-case.service';
@@ -7,15 +8,17 @@ import { UrgentCaseListItemResponse } from '../../models/response/UrgentCaseList
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { PaginationComponent } from '../../../../shared/components/cases-components/case-pagination/case-pagination.component';
-import { EmptyStateComponent } from '../../../../shared/components/cases-components/empty-state/empty-state.component';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
 import { UrgentCasesFilterRequest } from '../../models/request/UrgentCaseFilterRequest';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
 
+
+
 @Component({
   selector: 'app-urgent-list',
   standalone: true,
-  imports: [
+  imports: [FormField, 
     FormsModule,
     CaseHeaderComponent,
     CaseFiltersComponent,
@@ -23,9 +26,12 @@ import { CaseCardComponent } from '../../../../shared/components/cases-component
     CaseSkeletonGridComponent,
     EmptyStateComponent,
     CaseCardComponent,
+    
+    
   ],
   templateUrl: './urgent-list.html',
   styleUrls: ['./urgent-list.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UrgentListComponent implements OnInit {
   private router = inject(Router);
@@ -37,7 +43,7 @@ export class UrgentListComponent implements OnInit {
   currentPage = signal(1);
   totalPages = signal(1);
   totalItems = signal(0);
-  pageSize = signal(8);
+  pageSize = signal(12);
 
   radiusInMeters = signal<number | null>(null);
 

@@ -2,13 +2,13 @@ import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProfileSidebar } from './shared/profile-sidebar/profile-sidebar';
 import { ChatTab } from './tabs/chat-tab/chat-tab';
-import { EditProfile } from './tabs/Edit-profile/edit-profile';
 import { NotificationsTab } from './tabs/notifications-tab/notifications-tab';
 
 import { GetUserInfoDTO } from './model/profile.model';
 import { NotificationService } from '../../core/services/notification.service';
 import { ProfileService } from './service/profile.service';
 import { MyCasesTab } from './tabs/cases-tab/cases-tab';
+import { EditProfile } from './tabs/Edit-profile/edit-profile';
 
 export type ProfileTab = 'edit' | 'cases' | 'chat' | 'notifications'; // ADDED 'cases'
 
@@ -81,6 +81,23 @@ export class ProfileView implements OnInit, OnDestroy {
         console.error('Load user info error:', err);
       },
     });
+  }
+  selectedZoomImage = signal<string | null>(null);
+  get avatarUrl(): string {
+    const img = this.userInfo()?.profileImage;
+    if (img) return img;
+    const name = this.userInfo()?.fullName ?? 'User';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0058be&color=fff`;
+  }
+  openImageZoom() {
+    console.log('avatarUrl:', this.avatarUrl);
+    this.selectedZoomImage.set(this.avatarUrl);
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeImageZoom() {
+    this.selectedZoomImage.set(null);
+    document.body.style.overflow = '';
   }
 
   get notificationUnreadCount() {
