@@ -90,12 +90,10 @@ export class CaseCardComponent {
     const end = new Date(endDate).getTime();
     const difference = end - now;
 
-    // إذا كانت الحالة انتهت
     if (difference <= 0) {
       return 'انتهت';
     }
 
-    // حساب الوقت المتبقي
     const minutes = Math.floor(difference / 60000);
     const days = Math.floor(minutes / (60 * 24));
     const hours = Math.floor((minutes % (60 * 24)) / 60);
