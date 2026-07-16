@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AiMatchingService, AiMatchedCase } from '../../services/ai-search.service';
 import Swal from 'sweetalert2';
+import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
 
 @Component({
@@ -13,6 +14,7 @@ import { CaseCardComponent } from '../../../../shared/components/cases-component
 })
 export class AiSearch implements OnInit {
   private aiMatchingService = inject(AiMatchingService);
+  private toast = inject(SnackbarService);
   
   isDragging = signal(false);
   isLoading = signal(false);
@@ -123,20 +125,13 @@ export class AiSearch implements OnInit {
             });
           }
         } else {
-          Swal.fire({
-            icon: 'error',
-            title: 'خطأ',
-            text: res.message || 'حدث خطأ أثناء البحث',
-          });
+          this.toast.error(res.message || 'حدث خطأ أثناء البحث');
         }
       },
       error: (err) => {
         this.isLoading.set(false);
-        Swal.fire({
-          icon: 'error',
-          title: 'خطأ',
-          text: 'حدث خطأ في الاتصال بالخادم',
-        });
+        const errorMessage = err.error?.detail || err.error?.title || err.error?.message || 'حدث خطأ في الاتصال بالخادم';
+        this.toast.error(errorMessage);
       }
     });
   }
