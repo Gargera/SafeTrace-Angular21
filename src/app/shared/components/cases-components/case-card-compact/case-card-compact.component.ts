@@ -1,16 +1,18 @@
+// case-card-compact.component.ts
 import { ChangeDetectionStrategy, Component, input, output, signal, computed } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
-import { AgeCategories } from '../../../../shared/enums/age-categories';
 import { GenderBadgeDirective } from '../../../../shared/directives/gender-badge-directive';
 import { AgeBadgeDirective } from '../../../../shared/directives/age-badge-directive';
 import { CaseTypeBadgeDirective } from '../../../../shared/directives/case-type-badge-directive';
 import { CaseStatusBadgeDirective } from '../../../../shared/directives/case-status-badge-directive';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { MyCaseListItemResponse } from '../../../../features/user-profile/model/profile.model';
-import { CardComponent } from "../../card/card";
+import { CardComponent } from '../../card/card';
+import { environment } from '../../../../../environments/environment';
+import { getAgeCategory } from '../../../helper/age-category.helper';
 
 @Component({
   selector: 'app-case-card-compact',
@@ -23,64 +25,50 @@ import { CardComponent } from "../../card/card";
     CaseTypeBadgeDirective,
     CaseStatusBadgeDirective,
     ButtonComponent,
-    CardComponent
-],
+    CardComponent,
+  ],
   templateUrl: './case-card-compact.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CaseCardCompactComponent {
+  // Inputs & outputs
   readonly caseItem = input.required<MyCaseListItemResponse>();
   readonly onDelete = output<number>();
   readonly onMarkAsFound = output<number>();
 
+  // Enums for template
   protected readonly CaseType = CaseType;
   protected readonly CaseStatus = CaseStatus;
-  private readonly fallbackImage = '/images/logo.jpg';
+
+  // Static configuration
+  private readonly baseUrl = environment.baseUrl;
+  protected readonly fallbackImage = '/images/logo.jpg';
+
+  // Reactive image error state
   private imageHasError = signal(false);
 
-  // Map AgeCategoryResponse to AgeCategories enum
-  ageCategoryEnum = computed(() => {
-    const category = this.caseItem().ageCategory;
-    if (!category || !category.name) {
-      return AgeCategories.Adult; // default fallback
-    }
+  // ----- Computed Signals -----
 
-    // Map backend names to frontend AgeCategories enum
-    const nameMap: Record<string, AgeCategories> = {
-      'Infant': AgeCategories.Toddler,
-      'Child': AgeCategories.Child,
-      'Teen': AgeCategories.Teenager,
-      'Teenager': AgeCategories.Teenager,
-      'Young': AgeCategories.Young,
-      'Adult': AgeCategories.Adult,
-      'Mid Adult': AgeCategories.MidAdult,
-      'MidAdult': AgeCategories.MidAdult,
-      'Late Adult': AgeCategories.LateAdult,
-      'LateAdult': AgeCategories.LateAdult,
-      'Elderly': AgeCategories.LateAdult,
-    };
+  /** Age category derived from the case item's age using the provided helper */
+  readonly ageCategoryEnum = computed(() => getAgeCategory(this.caseItem().age));
 
-    return nameMap[category.name] || AgeCategories.Adult;
-  });
-
-  getImageSrc(): string {
+  /** Image source – fallback if error or missing */
+  readonly imageSrc = computed(() => {
     const item = this.caseItem();
     if (this.imageHasError() || !item.mainImageUrl) {
       return this.fallbackImage;
     }
-    return item.mainImageUrl;
-  }
+    return `${this.baseUrl}${item.mainImageUrl}`;
+  });
 
-  onImageError(): void {
-    this.imageHasError.set(true);
-  }
-
-  getLocation(): string {
+  /** Formatted location (city and government) */
+  readonly location = computed(() => {
     const item = this.caseItem();
     return [item.city, item.government].filter(Boolean).join(' ، ') || 'غير محدد';
-  }
+  });
 
-  get computedDetailRoute(): Array<string | number> {
+  /** Router link for the detail page based on case type */
+  readonly detailRoute = computed(() => {
     const item = this.caseItem();
     switch (item.caseType) {
       case CaseType.Urgent:
@@ -92,5 +80,11 @@ export class CaseCardCompactComponent {
       default:
         return ['/cases', item.id];
     }
+  });
+
+  // ----- Event Handlers -----
+
+  onImageError(): void {
+    this.imageHasError.set(true);
   }
 }

@@ -1,18 +1,17 @@
+<!-- case-card-compact.component.html -->
 <app-card
-  extraClass="group flex h-full flex-col overflow-hidden rounded-2xl border border-outline-variant/70 bg-surface-container-lowest shadow-sm transition-all duration-300 hover:shadow-xl"
+  extraClass="flex h-full flex-col overflow-hidden rounded-2xl border border-outline-variant/60 bg-surface-container-lowest shadow-sm transition-all duration-300 hover:shadow-md hover:border-secondary/30"
   dir="rtl"
 >
-  <div
-    class="group flex flex-col sm:flex-row gap-4 p-4 rounded-2xl border border-outline-variant/60 bg-surface-container-lowest shadow-sm hover:shadow-md hover:border-secondary/30 transition-all duration-200"
-  >
+  <div class="grid grid-cols-[160px_1fr] gap-4 p-4">
     <!-- Image -->
     <div
-      class="relative flex-shrink-0 w-full sm:w-[150px] h-[150px] rounded-xl overflow-hidden bg-surface-container-high"
+      class="relative w-full sm:w-40 sm:h-auto overflow-hidden rounded-xl bg-surface-container-high"
     >
       <img
-        [src]="getImageSrc()"
+        [src]="imageSrc()"
         [alt]="caseItem().fullName || 'صورة الحالة'"
-        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        class="absolute inset-0 h-full w-full object-cover"
         (error)="onImageError()"
         loading="lazy"
       />
@@ -49,12 +48,11 @@
         </div>
         <div class="flex items-center gap-1.5 col-span-2 md:col-span-1">
           <span class="text-on-surface-variant text-xs">الفئة:</span>
-          <!-- Use the mapped enum value -->
           <span [appAgeBadgeDirective]="ageCategoryEnum()"></span>
         </div>
         <div class="flex items-center gap-1.5 col-span-2 md:col-span-2">
           <span class="text-on-surface-variant text-xs">الموقع:</span>
-          <span class="truncate">{{ getLocation() }}</span>
+          <span class="truncate">{{ location() }}</span>
         </div>
       </div>
 
@@ -63,7 +61,7 @@
         class="flex flex-wrap items-center justify-end gap-2 mt-3 pt-3 border-t border-outline-variant/50"
       >
         <!-- Details -->
-        <a [routerLink]="computedDetailRoute">
+        <a [routerLink]="detailRoute()">
           <app-button variant="primary" extraClass="h-8 px-3 text-xs gap-1">
             <span class="material-symbols-outlined text-[16px]">visibility</span>
             التفاصيل
@@ -74,7 +72,7 @@
         @if (caseItem().status !== CaseStatus.Found) {
           <app-button
             variant="success"
-            extraClass="h-8 px-3 text-xs gap-1"
+            extraClass="h-8 px-3 text-xs"
             (onClick)="onMarkAsFound.emit(caseItem().id)"
           >
             <span class="material-symbols-outlined text-[16px]">check_circle</span>
@@ -85,7 +83,7 @@
         <!-- Delete -->
         <app-button
           variant="danger"
-          extraClass="h-8 px-3 text-xs gap-1"
+          extraClass="h-8 px-3 text-xs"
           (onClick)="onDelete.emit(caseItem().id)"
         >
           <span class="material-symbols-outlined text-[16px]">delete</span>

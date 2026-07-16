@@ -5,6 +5,7 @@ import {
   signal,
   computed,
   OnInit,
+  OnDestroy,
   effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -27,7 +28,12 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { CaseCardCompactComponent } from '../../../../shared/components/cases-components/case-card-compact/case-card-compact.component';
-// import { MarkAsFoundModalComponent } from '../../shared/mark-as-found-modal/mark-as-found-modal.component';
+import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { FormField } from '../../../../shared/components/form-field/form-field';
+import { CardComponent } from '../../../../shared/components/card/card';
+
+const CASE_TYPE_ORDER: CaseType[] = [CaseType.Urgent, CaseType.LongTerm, CaseType.Unknown];
+const FILTER_DEBOUNCE_MS = 350;
 
 @Component({
   selector: 'app-my-cases-tab',
@@ -41,17 +47,17 @@ import { CaseCardCompactComponent } from '../../../../shared/components/cases-co
     EmptyStateComponent,
     ButtonComponent,
     ConfirmationModalComponent,
-    // MarkAsFoundModalComponent,
+    CaseHeaderComponent,
+    FormField,
+    CardComponent,
   ],
   templateUrl: './cases-tab.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MyCasesTab implements OnInit {
-  // Expose enums to template
+export class MyCasesTab implements OnInit, OnDestroy {
   protected readonly CaseType = CaseType;
   protected readonly CaseStatus = CaseStatus;
 
-  // Services
   private profileService = inject(ProfileService);
   private urgentService = inject(UrgentCaseService);
   private longTermService = inject(LongTermCaseService);
@@ -63,9 +69,11 @@ export class MyCasesTab implements OnInit {
   caseTypeFilter = signal<CaseType | ''>('');
   currentPage = signal(1);
   totalPages = signal(0);
+  totalCount = signal(0); // total number of cases matching current filters
+  overallTotalCount = signal(0); // total number of cases in the system (without any filter)
   readonly pageSize = 10;
 
-  // Data
+  // Data – this is the filtered result from the backend
   allCases = signal<MyCaseListItemResponse[]>([]);
   loading = signal(true);
   loadingMore = signal(false);
@@ -86,15 +94,34 @@ export class MyCasesTab implements OnInit {
   markAsFoundCaseId = signal<number | null>(null);
   markAsFoundCaseType = signal<CaseType | null>(null);
 
+  private isFirstFilterRun = true;
+  private searchDebounceTimer: ReturnType<typeof setTimeout> | undefined;
+
   // Computed
+  // No local filtering – all filtering is done by the backend.
+  filteredCases = computed(() => this.allCases());
+
+  // Whether there are any cases at all (from overall total)
+  hasAnyCases = computed(() => this.overallTotalCount() > 0);
+
+  // Whether the current filtered list has results
+  hasResults = computed(() => this.allCases().length > 0);
+
+  // Total count for header badge (filtered results)
+  totalCases = computed(() => this.totalCount());
+
   hasNextPage = computed(() => this.currentPage() < this.totalPages());
-  totalCases = computed(() => this.allCases().length);
 
   groupedCases = computed(() => {
-    const cases = this.allCases();
+    const cases = this.filteredCases();
+
     const map = new Map<CaseType, MyCaseListItemResponse[]>();
+
     for (const item of cases) {
-      if (!map.has(item.caseType)) map.set(item.caseType, []);
+      if (!map.has(item.caseType)) {
+        map.set(item.caseType, []);
+      }
+
       map.get(item.caseType)!.push(item);
     }
 
@@ -104,27 +131,45 @@ export class MyCasesTab implements OnInit {
       [CaseType.Unknown]: 'حالات مجهولة الهوية',
     };
 
-    return Array.from(map.entries()).map(([type, items]) => ({
+    return CASE_TYPE_ORDER.filter((type) => map.has(type)).map((type) => ({
       type,
-      label: labels[type] || 'حالات',
-      cases: items,
+      label: labels[type],
+      cases: map.get(type)!,
     }));
   });
 
-  // Lifecycle
-  ngOnInit(): void {
-    this.loadCases();
-
-    // Auto-reload when filters change
+  constructor() {
+    // Effect for filter changes – triggers backend fetch with debounce
     effect(() => {
-      if (this.searchQuery() !== undefined || this.caseTypeFilter() !== undefined) {
+      this.searchQuery();
+      this.caseTypeFilter();
+
+      if (this.isFirstFilterRun) {
+        this.isFirstFilterRun = false;
+        return;
+      }
+
+      if (this.searchDebounceTimer) {
+        clearTimeout(this.searchDebounceTimer);
+      }
+
+      this.searchDebounceTimer = setTimeout(() => {
         this.currentPage.set(1);
         this.loadCases();
-      }
+      }, FILTER_DEBOUNCE_MS);
     });
   }
 
-  // ---- Data Loading ----
+  ngOnInit(): void {
+    this.loadCases();
+  }
+
+  ngOnDestroy(): void {
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+    }
+  }
+
   private loadCases(): void {
     this.loading.set(true);
 
@@ -141,17 +186,27 @@ export class MyCasesTab implements OnInit {
           this.toast.error(response.message || 'فشل تحميل الحالات');
           this.allCases.set([]);
           this.totalPages.set(0);
+          this.totalCount.set(0);
+          // Do not reset overallTotalCount here – keep the last known value
           this.loading.set(false);
           return;
         }
 
         const pagination = response.data;
         if (pagination) {
-          this.allCases.set(pagination.items);
+          this.allCases.set(pagination.items ?? []);
           this.totalPages.set(pagination.totalPages);
+          this.totalCount.set(pagination.totalCount ?? 0);
+
+          // Update overall total only when no filters are applied
+          const hasActiveFilter = this.searchQuery().trim() !== '' || this.caseTypeFilter() !== '';
+          if (!hasActiveFilter) {
+            this.overallTotalCount.set(pagination.totalCount ?? 0);
+          }
         } else {
           this.allCases.set([]);
           this.totalPages.set(0);
+          this.totalCount.set(0);
         }
         this.loading.set(false);
       },
@@ -159,12 +214,12 @@ export class MyCasesTab implements OnInit {
         this.toast.error('تعذر الاتصال بالخادم');
         this.allCases.set([]);
         this.totalPages.set(0);
+        this.totalCount.set(0);
         this.loading.set(false);
       },
     });
   }
 
-  // ---- Load More ----
   loadMore(): void {
     if (!this.hasNextPage() || this.loadingMore()) return;
 
@@ -191,6 +246,7 @@ export class MyCasesTab implements OnInit {
           this.allCases.update((items) => [...items, ...pagination.items]);
           this.currentPage.set(pagination.pageNumber);
           this.totalPages.set(pagination.totalPages);
+          this.totalCount.set(pagination.totalCount ?? 0);
         }
         this.loadingMore.set(false);
       },
@@ -201,7 +257,6 @@ export class MyCasesTab implements OnInit {
     });
   }
 
-  // ---- Delete ----
   requestDelete(caseId: number, caseType: CaseType | undefined): void {
     if (!caseType) {
       this.toast.error('نوع الحالة غير معروف');
@@ -220,7 +275,6 @@ export class MyCasesTab implements OnInit {
     this.showConfirmModal.set(true);
   }
 
-  // ---- Mark as Found ----
   requestMarkAsFound(caseId: number, caseType: CaseType | undefined): void {
     if (!caseType) {
       this.toast.error('نوع الحالة غير معروف');
@@ -254,9 +308,15 @@ export class MyCasesTab implements OnInit {
 
     markRequest.subscribe({
       next: () => {
-        // تحديث الحالة محلياً
         this.allCases.update((items) =>
-          items.map((item) => (item.id === id ? { ...item, status: CaseStatus.Found } : item)),
+          items.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  status: CaseStatus.Found,
+                }
+              : item,
+          ),
         );
         this.toast.success('تم تحديث الحالة بنجاح');
         this.showMarkAsFoundModal.set(false);
@@ -275,7 +335,6 @@ export class MyCasesTab implements OnInit {
     this.markAsFoundCaseType.set(null);
   }
 
-  // ---- Confirmation Modal ----
   confirmAction(): void {
     const config = this.modalConfig();
     if (!config || !config.caseId || !config.caseType) return;
@@ -286,7 +345,6 @@ export class MyCasesTab implements OnInit {
     if (action === 'delete') {
       this.executeDelete(caseId, caseType);
     } else if (action === 'markAsFound') {
-      // This path is not used now because we use separate modal, but keep for consistency
       this.showMarkAsFoundModal.set(true);
     }
     this.modalConfig.set(null);
@@ -311,6 +369,15 @@ export class MyCasesTab implements OnInit {
     deleteRequest.subscribe({
       next: () => {
         this.allCases.update((items) => items.filter((item) => item.id !== caseId));
+        // Decrement total count because a case was deleted
+        this.totalCount.update((c) => Math.max(0, c - 1));
+        // Also decrement overall total count if the deleted case was part of the unfiltered set
+        this.overallTotalCount.update((c) => Math.max(0, c - 1));
+
+        if (this.totalCount() === 0) {
+          this.totalPages.set(0);
+        }
+
         this.toast.success('تم حذف الحالة بنجاح');
         this.modalConfig.set(null);
       },

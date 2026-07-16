@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { ButtonComponent } from "../button/button";
+import { ChangeDetectionStrategy, Component, HostListener, input, output } from '@angular/core';
+import { ButtonComponent } from '../button/button';
 
 @Component({
   selector: 'app-confirmation-modal',
@@ -16,4 +16,9 @@ export class ConfirmationModalComponent {
 
   confirm = output<void>();
   cancel = output<void>();
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.cancel.emit();
+  }
 }
