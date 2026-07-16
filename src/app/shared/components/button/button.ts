@@ -7,7 +7,7 @@ import { Component, input, output } from '@angular/core';
   templateUrl: './button.html',
 })
 export class ButtonComponent {
-  variant = input<'primary' | 'secondary' | 'text' | 'icon'>('primary');
+  variant = input<'primary' | 'secondary' | 'text' | 'icon' | 'danger'>('primary');
   type = input<'button' | 'submit' | 'reset'>('button');
   disabled = input(false);
   extraClass = input('');
@@ -29,6 +29,9 @@ export class ButtonComponent {
     }
     if (this.variant() === 'secondary') {
       return common + ' border border-outline-variant bg-surface-container-low text-on-surface hover:bg-surface-container-high';
+    }
+    if (this.variant() === 'danger') {
+      return common + ' bg-error text-on-error shadow-sm hover:opacity-90 hover:shadow';
     }
     return common;
   }
