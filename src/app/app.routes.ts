@@ -6,8 +6,6 @@ import { UserRole } from './shared/enums/user-role';
 import { Home } from './shared/components/home/home';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'home', pathMatch: 'full', title: 'الرئيسية | لقاء' },
-
   { 
     path: 'auth', 
     loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES) 
