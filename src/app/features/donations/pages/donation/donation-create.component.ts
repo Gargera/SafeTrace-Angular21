@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { DonationService } from '../services/donations.service';
+import { DonationService } from './services/donations.service';
 
 @Component({
   selector: 'app-donation-create',
@@ -12,12 +12,6 @@ import { DonationService } from '../services/donations.service';
 })
 export class DonationCreateComponent {
   private donationService = inject(DonationService);
-
-  //   amounts = [10, 50, 100, 500];
-
-  selectedAmount = 10;
-
-  customAmount: number | null = null;
 
   message = '';
 
@@ -31,13 +25,8 @@ export class DonationCreateComponent {
     this.amount = value;
   }
 
-  //   selectAmount(amount: number): void {
-  //     this.selectedAmount = amount;
-  //     this.customAmount = null;
-  //   }
-
   donate(): void {
-    const amount = this.selectedAmount > 0 ? this.selectedAmount : (this.customAmount ?? 0);
+    const amount = this.getDonationAmount();
 
     if (amount <= 0) {
       alert('الرجاء إدخال مبلغ صحيح');
@@ -55,7 +44,7 @@ export class DonationCreateComponent {
         next: (res) => {
           this.loading = false;
 
-          if (res.success && res.data) {
+          if (res.success && res.data?.checkoutUrl) {
             window.location.href = res.data.checkoutUrl;
           }
         },
@@ -64,5 +53,10 @@ export class DonationCreateComponent {
           alert('حدث خطأ أثناء إنشاء عملية الدفع');
         },
       });
+  }
+
+  private getDonationAmount(): number {
+    const parsedAmount = Number(this.amount);
+    return Number.isFinite(parsedAmount) && parsedAmount > 0 ? parsedAmount : 0;
   }
 }

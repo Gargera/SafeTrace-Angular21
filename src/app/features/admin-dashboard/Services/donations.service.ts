@@ -17,16 +17,14 @@ export class DonationService {
   getDonations(
     filter: DonationAdminFilterDto,
   ): Observable<PaginationResponse<DonationAdminListDto>> {
-    let params = new HttpParams()
-      .set('PageNumber', filter.pageNumber)
-      .set('PageSize', filter.pageSize);
+    let params = new HttpParams().set('Page', filter.pageNumber).set('PageSize', filter.pageSize);
 
-    // if (filter.search) {
-    //   params = params.set('Search', filter.search);
-    // }
+    if (filter.userEmail) {
+      params = params.set('UserEmail', filter.userEmail);
+    }
 
     if (filter.paymentStatus !== undefined && filter.paymentStatus !== null) {
-      params = params.set('PaymentStatus', filter.paymentStatus.toString());
+      params = params.set('Status', filter.paymentStatus.toString());
     }
 
     return this.http.get<PaginationResponse<DonationAdminListDto>>(`${this.api}/get-donations`, {
