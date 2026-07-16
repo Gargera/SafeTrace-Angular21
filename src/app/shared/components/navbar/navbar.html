@@ -173,8 +173,8 @@
                     <div
                       (click)="onNotificationClick(n)"
                       class="group flex gap-4 rounded-2xl p-4 cursor-pointer transition-all duration-200 border border-transparent hover:border-outline-variant hover:bg-surface-container-high hover:shadow-md hover:scale-[1.01]"
-                      [class.bg-secondary-container]="!n.isRead"
-                      [class.text-white]="!n.isRead"
+                      [class.bg-surface-container-high]="!n.isRead"
+                      [class.bg-surface]="n.isRead"
                     >
                       <!-- Icon -->
                       <div
@@ -198,7 +198,7 @@
 
                           @if (!n.isRead) {
                             <span
-                              class="w-3 h-3 text-white rounded-full bg-secondary mt-1 shrink-0"
+                              class="w-2 h-2 rounded-full bg-secondary mt-1 shrink-0"
                             ></span>
                           }
                         </div>
@@ -226,7 +226,7 @@
                   routerLink="/profile"
                   [queryParams]="{ tab: 'notifications' }"
                   (click)="isNotificationDropdownOpen.set(false)"
-                  class="block py-4 text-center font-bold text-secondary transition-colors hover:bg-secondary-container"
+                  class="block py-4 text-center font-bold text-secondary transition-colors hover:bg-surface-container-high"
                 >
                   عرض جميع الإشعارات
                 </a>

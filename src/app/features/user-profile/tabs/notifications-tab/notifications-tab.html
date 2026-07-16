@@ -44,7 +44,7 @@
       @for (n of notificationService.notifications(); track trackById($index, n)) {
         <div
           class="flex items-start gap-md p-md rounded-xl border border-outline-variant transition-all duration-200"
-          [class.bg-surface-container-low]="!n.isRead"
+          [class.bg-surface-container-high]="!n.isRead"
           [class.bg-surface]="n.isRead"
           [class.opacity-75]="n.isRead"
         >
