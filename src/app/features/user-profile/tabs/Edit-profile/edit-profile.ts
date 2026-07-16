@@ -30,7 +30,6 @@ import {
   UpdateHomeLocationDTO,
   UpdateNameDTO,
 } from '../../model/profile.model';
-import { GeocodingService } from '../../../../core/services/gecoding.service';
 import { ProfileService } from '../../service/profile.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { UserRole } from '../../../../shared/enums/user-role';
@@ -42,6 +41,7 @@ import { Toast } from '../../../../shared/components/toast/toast';
 import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 import { getVerificationStatusTranslationAr } from '../../../../core/constants/verification.status.dictionary';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
+import { GeocodingService } from '../../../../core/services/geocoding.service';
 
 // ── Egypt center coordinates (default) ────────────────────────────────────
 const EGYPT_LAT = 26.8206;
@@ -82,7 +82,7 @@ function passwordConfirmValidator(group: AbstractControl): ValidationErrors | nu
     Toast,
     ConfirmDialog,
     ImageCropDialog,
-    ViewProfilePopup,
+    
   ],
   templateUrl: './edit-profile.html',
   styleUrl: './edit-profile.css',
