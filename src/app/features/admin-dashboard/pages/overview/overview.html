@@ -1,7 +1,7 @@
-<div class="bg-surface text-on-surface flex h-[100dvh] relative overflow-hidden w-full" dir="rtl">
+<div class="bg-surface text-on-surface flex h-dvh relative overflow-hidden w-full" dir="rtl">
 
   <aside 
-    class="bg-primary text-white flex flex-col fixed h-[100dvh] z-50 shadow-xl transition-all duration-300 ease-in-out right-0 top-0 overflow-hidden"
+    class="bg-primary text-white flex flex-col fixed h-dvh z-50 shadow-xl transition-all duration-300 ease-in-out right-0 top-0 overflow-hidden"
     [ngClass]="isSidebarExpanded() ? 'w-64 md:w-72' : 'w-16 md:w-20'">
     
     <div class="flex items-center mt-6" [ngClass]="isSidebarExpanded() ? 'px-lg justify-between' : 'justify-center flex-col gap-6'">
@@ -231,7 +231,7 @@
   </aside>
 
   <main 
-    class="flex-1 transition-all duration-300 w-full p-4 md:p-8 bg-surface-bright h-[100dvh] overflow-y-auto"
+    class="flex-1 transition-all duration-300 w-full p-4 md:p-8 bg-surface-bright h-dvh overflow-y-auto"
     [ngClass]="isSidebarExpanded() ? 'mr-64 md:mr-72' : 'mr-16 md:mr-20'">
     <router-outlet></router-outlet>
   </main>
