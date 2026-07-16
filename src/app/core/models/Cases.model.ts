@@ -132,23 +132,18 @@ export interface CaseMatchSubjectInfoRequest {
 }
 
 export interface CaseUpsertBaseRequest {
-  // REQUIRED FIELDS (Both Create & Update)
   gender: Gender;
   age: number;
   government: string;
   city: string;
   street: string | null;
-  primaryImage: File;
-  eventDate: string; // DateTime
+  eventDate: string;
 
-  // OPTIONAL FIELDS
   sName: string | null;
   tName: string | null;
   communicationPhone: string | null;
   description: string | null;
 
-  // PHOTO MANAGEMENT
-  additionalImages: File[] | null;
   video: File | null;
 }
 export interface CaseCreateBaseRequest extends CaseUpsertBaseRequest {}

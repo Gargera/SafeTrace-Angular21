@@ -4,17 +4,17 @@ import { ApiService } from '../../../shared/services/api.service';
 import { UnknownCaseFilterRequest } from '../models/request/UnknownCaseFilterRequest';
 import { UnknownCaseListItemResponse } from '../models/response/UnknownCaseListItemResponse';
 import { UnknownCaseDetailResponse } from '../models/response/UnknownCaseDetailResponse';
-import { UnknownCaseCreateRequest } from '../models/request/UnknownCaseCreateRequest';
 import { UnknownCaseUpdateRequest } from '../models/request/UnknownCaseUpdateRequest';
+import { UnknownCaseCreateRequest } from '../models/request/UnknownCaseCreateRequest';
 import { FoundPersonInfoRequest } from '../../../core/models/Cases.model';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
+import { CreateCaseResponse } from '../../../shared/models/responses/create-case-response.model';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
-
 export class UnknownCaseService extends ApiService {
   private readonly baseUrl = `${environment.baseUrl}/api/UnknownCase`;
 
@@ -22,10 +22,12 @@ export class UnknownCaseService extends ApiService {
    * Get all unknown cases with filters (public)
    * GET: /api/UnknownCase/GetCases
    */
-  getAllCases(filter: UnknownCaseFilterRequest): Observable<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>> {
+  getAllCases(
+    filter: UnknownCaseFilterRequest,
+  ): Observable<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>> {
     return this.get<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>>(
       `${this.baseUrl}/GetCases`,
-      filter as Record<string, any>
+      filter as Record<string, any>,
     );
   }
 
@@ -33,10 +35,12 @@ export class UnknownCaseService extends ApiService {
    * Get all unknown cases with filters (admin only)
    * GET: /api/UnknownCase/Admin/GetCases
    */
-  adminGetAllCases(filter: UnknownCaseFilterRequest): Observable<ApiResponse<PaginationResponse<UnknownCaseDetailResponse>>> {
+  adminGetAllCases(
+    filter: UnknownCaseFilterRequest,
+  ): Observable<ApiResponse<PaginationResponse<UnknownCaseDetailResponse>>> {
     return this.get<ApiResponse<PaginationResponse<UnknownCaseDetailResponse>>>(
       `${this.baseUrl}/Admin/GetCases`,
-      filter as Record<string, any>
+      filter as Record<string, any>,
     );
   }
 
@@ -44,10 +48,12 @@ export class UnknownCaseService extends ApiService {
    * Get current user's unknown cases
    * GET: /api/UnknownCase/GetMyCases
    */
-  getMyCases(filter: UnknownCaseFilterRequest): Observable<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>> {
+  getMyCases(
+    filter: UnknownCaseFilterRequest,
+  ): Observable<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>> {
     return this.get<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>>(
       `${this.baseUrl}/GetMyCases`,
-      filter as Record<string, any>
+      filter as Record<string, any>,
     );
   }
 
@@ -56,9 +62,7 @@ export class UnknownCaseService extends ApiService {
    * GET: /api/UnknownCase/GetCaseDetails/{id}
    */
   getCaseById(id: number): Observable<ApiResponse<UnknownCaseDetailResponse>> {
-    return this.get<ApiResponse<UnknownCaseDetailResponse>>(
-      `${this.baseUrl}/GetCaseDetails/${id}`
-    );
+    return this.get<ApiResponse<UnknownCaseDetailResponse>>(`${this.baseUrl}/GetCaseDetails/${id}`);
   }
 
   /**
@@ -66,22 +70,23 @@ export class UnknownCaseService extends ApiService {
    * GET: /api/UnknownCase/Admin/GetCaseDetails/{id}
    */
   adminGetCaseById(id: number): Observable<ApiResponse<UnknownCaseDetailResponse>> {
-    return this.get<ApiResponse<UnknownCaseDetailResponse>>(
-      `${this.baseUrl}/Admin/GetCaseDetails/${id}`
-    );
+    return this.get<ApiResponse<UnknownCaseDetailResponse>>(`${this.baseUrl}/Admin/GetCaseDetails/${id}`);
   }
 
   /**
    * Create a new unknown case
-   * POST: /api/UnknownCase/CreateCase
+   * POST: /api/UnknownCase/CreateCase?forceCreate=false
    * Content-Type: multipart/form-data
+   *
+   * Backend controller for Unknown doesn't implement the duplicate-check yet
+   * (per project notes), but the frontend already sends forceCreate and reads
+   * isCreated/matchedCases so nothing else needs to change here once it's added.
    */
-  createCase(request: UnknownCaseCreateRequest): Observable<ApiResponse<string>> {
+  createCase(request: UnknownCaseCreateRequest, forceCreate = false): Observable<ApiResponse<CreateCaseResponse>> {
     const formData = this.buildFormData(request);
-    return this.postFormData<ApiResponse<string>>(
-      `${this.baseUrl}/CreateCase`,
-      formData
-    );
+    return this.postFormData<ApiResponse<CreateCaseResponse>>(`${this.baseUrl}/CreateCase`, formData, {
+      forceCreate,
+    });
   }
 
   /**
@@ -91,10 +96,7 @@ export class UnknownCaseService extends ApiService {
    */
   updateCase(id: number, request: UnknownCaseUpdateRequest): Observable<ApiResponse<string>> {
     const formData = this.buildFormData(request);
-    return this.putFormData<ApiResponse<string>>(
-      `${this.baseUrl}/UpdateCase/${id}`,
-      formData
-    );
+    return this.putFormData<ApiResponse<string>>(`${this.baseUrl}/UpdateCase/${id}`, formData);
   }
 
   /**
@@ -102,10 +104,7 @@ export class UnknownCaseService extends ApiService {
    * PUT: /api/UnknownCase/Approve/{id}
    */
   approveCase(id: number): Observable<ApiResponse<string>> {
-    return this.put<ApiResponse<string>>(
-      `${this.baseUrl}/Approve/${id}`,
-      {}
-    );
+    return this.put<ApiResponse<string>>(`${this.baseUrl}/Approve/${id}`, {});
   }
 
   /**
@@ -113,10 +112,7 @@ export class UnknownCaseService extends ApiService {
    * PUT: /api/UnknownCase/Reject/{id}
    */
   rejectCase(id: number): Observable<ApiResponse<string>> {
-    return this.put<ApiResponse<string>>(
-      `${this.baseUrl}/Reject/${id}`,
-      {}
-    );
+    return this.put<ApiResponse<string>>(`${this.baseUrl}/Reject/${id}`, {});
   }
 
   /**
@@ -124,9 +120,7 @@ export class UnknownCaseService extends ApiService {
    * DELETE: /api/UnknownCase/Delete/{id}
    */
   deleteCase(id: number): Observable<ApiResponse<string>> {
-    return this.delete<ApiResponse<string>>(
-      `${this.baseUrl}/Delete/${id}`
-    );
+    return this.delete<ApiResponse<string>>(`${this.baseUrl}/Delete/${id}`);
   }
 
   /**
@@ -134,10 +128,7 @@ export class UnknownCaseService extends ApiService {
    * PUT: /api/UnknownCase/MarkAsFound/{id}
    */
   markAsFound(id: number, request: FoundPersonInfoRequest): Observable<ApiResponse<string>> {
-    return this.put<ApiResponse<string>>(
-      `${this.baseUrl}/MarkAsFound/${id}`,
-      request
-    );
+    return this.put<ApiResponse<string>>(`${this.baseUrl}/MarkAsFound/${id}`, request);
   }
 
   /**
@@ -145,8 +136,6 @@ export class UnknownCaseService extends ApiService {
    * DELETE: /api/UnknownCase/PermanentDeletion/{id}
    */
   permanentDelete(id: number): Observable<ApiResponse<string>> {
-    return this.delete<ApiResponse<string>>(
-      `${this.baseUrl}/PermanentDeletion/${id}`
-    );
+    return this.delete<ApiResponse<string>>(`${this.baseUrl}/PermanentDeletion/${id}`);
   }
 }
