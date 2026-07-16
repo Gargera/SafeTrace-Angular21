@@ -1,0 +1,11 @@
+.drag-over {
+    border-color: var(--color-secondary);
+    background-color: var(--color-surface-container);
+    transform: scale(1.01);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.case-card-hover:hover {
+    transform: translateY(-4px);
+    transition: transform 0.2s ease;
+}
