@@ -1,23 +1,27 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CaseListItemResponse } from '../../../../core/models/Cases.model';
 import { AgeCategories } from '../../../enums/age-categories';
 import { getAgeCategory } from '../../../helper/age-category.helper';
 import { GenderBadgeDirective } from '../../../directives/gender-badge-directive';
 import { AgeBadgeDirective } from '../../../directives/age-badge-directive';
+import { CaseTypeBadgeDirective } from '../../../directives/case-type-badge-directive';
 import { CardComponent } from '../../card/card';
 import { ButtonComponent } from '../../button/button';
 import { environment } from '../../../../../environments/environment';
+import { CaseType } from '../../../enums/case-type';
 
 @Component({
   selector: 'app-case-card',
   standalone: true,
   imports: [
     DatePipe,
+    DecimalPipe,
     RouterModule,
     GenderBadgeDirective,
     AgeBadgeDirective,
+    CaseTypeBadgeDirective,
     CardComponent,
     ButtonComponent,
   ],
@@ -28,8 +32,11 @@ export class CaseCardComponent {
   readonly caseItem = input.required<CaseListItemResponse>();
   readonly showUrgentTag = input(false);
   readonly detailRoute = input<Array<string | number> | null>(null);
+  readonly similarity = input<number>();
 
   readonly onContact = output<number>();
+
+  protected readonly CaseTypeEnum = CaseType;
 
   readonly fallbackImage = '/images/logo.jpg';
   private readonly url = environment.baseUrl;
@@ -87,5 +94,22 @@ export class CaseCardComponent {
 
   hasUrgentEndDate(): boolean {
     return !!this.getUrgentEndDate();
+  }
+
+  get computedDetailRoute(): Array<string | number> {
+    if (this.detailRoute()) {
+      return this.detailRoute()!;
+    }
+    const item = this.caseItem();
+    switch (item.caseType) {
+      case CaseType.Urgent:
+        return ['/urgent', item.id];
+      case CaseType.LongTerm:
+        return ['/long-term', item.id];
+      case CaseType.Unknown:
+        return ['/unknown', item.id];
+      default:
+        return ['/cases', item.id];
+    }
   }
 }
