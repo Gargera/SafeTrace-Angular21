@@ -45,19 +45,6 @@ export class UrgentCaseService extends ApiService {
   }
 
   /**
-   * Get current user's urgent cases
-   * GET: /api/UrgentCase/GetMyCases
-   */
-  getMyCases(
-    filter: UrgentCasesFilterRequest,
-  ): Observable<ApiResponse<PaginationResponse<UrgentCaseListItemResponse>>> {
-    return this.get<ApiResponse<PaginationResponse<UrgentCaseListItemResponse>>>(
-      `${this.baseUrl}/GetMyCases`,
-      filter as Record<string, any>,
-    );
-  }
-
-  /**
    * Get urgent case by ID (public)
    * GET: /api/UrgentCase/GetCaseDetails/{id}
    */
@@ -70,7 +57,9 @@ export class UrgentCaseService extends ApiService {
    * GET: /api/UrgentCase/Admin/GetCaseDetails/{id}
    */
   adminGetCaseById(id: number): Observable<ApiResponse<UrgentCaseDetailResponse>> {
-    return this.get<ApiResponse<UrgentCaseDetailResponse>>(`${this.baseUrl}/Admin/GetCaseDetails/${id}`);
+    return this.get<ApiResponse<UrgentCaseDetailResponse>>(
+      `${this.baseUrl}/Admin/GetCaseDetails/${id}`,
+    );
   }
 
   /**
@@ -82,11 +71,18 @@ export class UrgentCaseService extends ApiService {
    * (per project notes), but the frontend already sends forceCreate and reads
    * isCreated/matchedCases so nothing else needs to change here once it's added.
    */
-  createCase(request: UrgentCaseCreateRequest, forceCreate = false): Observable<ApiResponse<CreateCaseResponse>> {
+  createCase(
+    request: UrgentCaseCreateRequest,
+    forceCreate = false,
+  ): Observable<ApiResponse<CreateCaseResponse>> {
     const formData = this.buildFormData(request);
-    return this.postFormData<ApiResponse<CreateCaseResponse>>(`${this.baseUrl}/CreateCase`, formData, {
-      forceCreate,
-    });
+    return this.postFormData<ApiResponse<CreateCaseResponse>>(
+      `${this.baseUrl}/CreateCase`,
+      formData,
+      {
+        forceCreate,
+      },
+    );
   }
 
   /**

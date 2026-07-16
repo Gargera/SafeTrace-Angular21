@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { ApiService } from '../../../shared/services/api.service';
 import { LongTermCaseListItemResponse } from '../models/response/LongTermCaseListItemResponse';
 import { LongTermCaseDetailResponse } from '../models/response/LongTermCaseDetailResponse';
-import { LongTermCaseCreateRequest  } from '../models/request/LongTermCaseCreateRequest';
+import { LongTermCaseCreateRequest } from '../models/request/LongTermCaseCreateRequest';
 import { LongTermCaseUpdateRequest } from '../models/request/LongTermCaseUpdateRequest';
 import { FoundPersonInfoRequest } from '../../../core/models/Cases.model';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
@@ -45,24 +45,13 @@ export class LongTermCaseService extends ApiService {
   }
 
   /**
-   * Get current user's long-term cases
-   * GET: /api/LongTermCase/GetMyCases
-   */
-  getMyCases(
-    filter: LongTermCaseFilterRequest,
-  ): Observable<ApiResponse<PaginationResponse<LongTermCaseListItemResponse>>> {
-    return this.get<ApiResponse<PaginationResponse<LongTermCaseListItemResponse>>>(
-      `${this.baseUrl}/GetMyCases`,
-      filter as Record<string, any>,
-    );
-  }
-
-  /**
    * Get long-term case by ID (public)
    * GET: /api/LongTermCase/GetCaseDetails/{id}
    */
   getCaseById(id: number): Observable<ApiResponse<LongTermCaseDetailResponse>> {
-    return this.get<ApiResponse<LongTermCaseDetailResponse>>(`${this.baseUrl}/GetCaseDetails/${id}`);
+    return this.get<ApiResponse<LongTermCaseDetailResponse>>(
+      `${this.baseUrl}/GetCaseDetails/${id}`,
+    );
   }
 
   /**
@@ -70,7 +59,9 @@ export class LongTermCaseService extends ApiService {
    * GET: /api/LongTermCase/Admin/GetCaseDetails/{id}
    */
   adminGetCaseById(id: number): Observable<ApiResponse<LongTermCaseDetailResponse>> {
-    return this.get<ApiResponse<LongTermCaseDetailResponse>>(`${this.baseUrl}/Admin/GetCaseDetails/${id}`);
+    return this.get<ApiResponse<LongTermCaseDetailResponse>>(
+      `${this.baseUrl}/Admin/GetCaseDetails/${id}`,
+    );
   }
 
   /**
@@ -82,11 +73,18 @@ export class LongTermCaseService extends ApiService {
    * matchedCases populated (nothing created). Call again with forceCreate=true
    * to create anyway.
    */
-  createCase(request: LongTermCaseCreateRequest, forceCreate = false): Observable<ApiResponse<CreateCaseResponse>> {
+  createCase(
+    request: LongTermCaseCreateRequest,
+    forceCreate = false,
+  ): Observable<ApiResponse<CreateCaseResponse>> {
     const formData = this.buildFormData(request);
-    return this.postFormData<ApiResponse<CreateCaseResponse>>(`${this.baseUrl}/CreateCase`, formData, {
-      forceCreate,
-    });
+    return this.postFormData<ApiResponse<CreateCaseResponse>>(
+      `${this.baseUrl}/CreateCase`,
+      formData,
+      {
+        forceCreate,
+      },
+    );
   }
 
   /**
