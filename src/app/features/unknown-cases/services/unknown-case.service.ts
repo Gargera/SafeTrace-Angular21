@@ -40,16 +40,6 @@ export class UnknownCaseService extends ApiService {
     );
   }
 
-  /**
-   * Get current user's unknown cases
-   * GET: /api/UnknownCase/GetMyCases
-   */
-  getMyCases(filter: UnknownCaseFilterRequest): Observable<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>> {
-    return this.get<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>>(
-      `${this.baseUrl}/GetMyCases`,
-      filter as Record<string, any>
-    );
-  }
 
   /**
    * Get unknown case by ID (public)

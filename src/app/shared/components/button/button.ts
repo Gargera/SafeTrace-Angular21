@@ -7,7 +7,7 @@ import { Component, input, output } from '@angular/core';
   templateUrl: './button.html',
 })
 export class ButtonComponent {
-  variant = input<'primary' | 'secondary' | 'text' | 'icon' | 'danger'>('primary');
+  variant = input<'primary' | 'secondary' | 'text' | 'icon' | 'danger' | 'success'>('primary');
   type = input<'button' | 'submit' | 'reset'>('button');
   disabled = input(false);
   extraClass = input('');

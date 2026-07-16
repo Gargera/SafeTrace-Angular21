@@ -1,0 +1,97 @@
+<app-card
+  extraClass="group flex h-full flex-col overflow-hidden rounded-2xl border border-outline-variant/70 bg-surface-container-lowest shadow-sm transition-all duration-300 hover:shadow-xl"
+  dir="rtl"
+>
+  <div
+    class="group flex flex-col sm:flex-row gap-4 p-4 rounded-2xl border border-outline-variant/60 bg-surface-container-lowest shadow-sm hover:shadow-md hover:border-secondary/30 transition-all duration-200"
+  >
+    <!-- Image -->
+    <div
+      class="relative flex-shrink-0 w-full sm:w-[150px] h-[150px] rounded-xl overflow-hidden bg-surface-container-high"
+    >
+      <img
+        [src]="getImageSrc()"
+        [alt]="caseItem().fullName || 'صورة الحالة'"
+        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        (error)="onImageError()"
+        loading="lazy"
+      />
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 min-w-0 flex flex-col">
+      <div class="flex items-start justify-between gap-2">
+        <h4 class="text-base font-semibold text-on-surface truncate">
+          {{ caseItem().fullName || 'شخص غير معروف' }}
+        </h4>
+        <span class="text-xs text-on-surface-variant whitespace-nowrap">
+          {{ caseItem().createdAt | date: 'dd/MM/yyyy' : '' : 'ar' }}
+        </span>
+      </div>
+
+      <!-- Info Grid -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 mt-1 text-sm">
+        <div class="flex items-center gap-1.5">
+          <span class="text-on-surface-variant text-xs">النوع:</span>
+          <span [appCaseTypeBadgeDirective]="caseItem().caseType"></span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-on-surface-variant text-xs">الحالة:</span>
+          <span [appCaseStatusBadgeDirective]="caseItem().status"></span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-on-surface-variant text-xs">الجنس:</span>
+          <span [appGenderBadgeDirective]="caseItem().gender"></span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-on-surface-variant text-xs">العمر:</span>
+          <span class="font-medium">{{ caseItem().age }} سنة</span>
+        </div>
+        <div class="flex items-center gap-1.5 col-span-2 md:col-span-1">
+          <span class="text-on-surface-variant text-xs">الفئة:</span>
+          <!-- Use the mapped enum value -->
+          <span [appAgeBadgeDirective]="ageCategoryEnum()"></span>
+        </div>
+        <div class="flex items-center gap-1.5 col-span-2 md:col-span-2">
+          <span class="text-on-surface-variant text-xs">الموقع:</span>
+          <span class="truncate">{{ getLocation() }}</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div
+        class="flex flex-wrap items-center justify-end gap-2 mt-3 pt-3 border-t border-outline-variant/50"
+      >
+        <!-- Details -->
+        <a [routerLink]="computedDetailRoute">
+          <app-button variant="primary" extraClass="h-8 px-3 text-xs gap-1">
+            <span class="material-symbols-outlined text-[16px]">visibility</span>
+            التفاصيل
+          </app-button>
+        </a>
+
+        <!-- Mark As Found (only if not already found) -->
+        @if (caseItem().status !== CaseStatus.Found) {
+          <app-button
+            variant="success"
+            extraClass="h-8 px-3 text-xs gap-1"
+            (onClick)="onMarkAsFound.emit(caseItem().id)"
+          >
+            <span class="material-symbols-outlined text-[16px]">check_circle</span>
+            تم العثور
+          </app-button>
+        }
+
+        <!-- Delete -->
+        <app-button
+          variant="danger"
+          extraClass="h-8 px-3 text-xs gap-1"
+          (onClick)="onDelete.emit(caseItem().id)"
+        >
+          <span class="material-symbols-outlined text-[16px]">delete</span>
+          حذف
+        </app-button>
+      </div>
+    </div>
+  </div>
+</app-card>

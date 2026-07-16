@@ -40,17 +40,6 @@ export class UrgentCaseService extends ApiService {
   }
 
   /**
-   * Get current user's urgent cases
-   * GET: /api/UrgentCase/GetMyCases
-   */
-  getMyCases(filter: UrgentCasesFilterRequest): Observable<ApiResponse<PaginationResponse<UrgentCaseListItemResponse>>> {
-    return this.get<ApiResponse<PaginationResponse<UrgentCaseListItemResponse>>>(
-      `${this.baseUrl}/GetMyCases`,
-      filter as Record<string, any>
-    );
-  }
-
-  /**
    * Get urgent case by ID (public)
    * GET: /api/UrgentCase/GetCaseDetails/{id}
    */

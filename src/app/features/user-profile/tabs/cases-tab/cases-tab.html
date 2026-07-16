@@ -1,1 +1,133 @@
-<div>CaseTab</div>
+<!-- Page Header -->
+<div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-on-surface">حالاتي</h1>
+    <p class="text-sm text-on-surface-variant">إدارة جميع الحالات التي قمت بإنشائها</p>
+  </div>
+  <div
+    class="px-4 py-2 rounded-xl bg-secondary/10 text-secondary font-semibold text-sm border border-secondary/20"
+  >
+    {{ totalCases() }} حالة
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div
+  class="sticky top-0 z-10 bg-surface/80 backdrop-blur-sm py-3 mb-6 rounded-xl border border-outline-variant/40 shadow-sm px-4"
+>
+  <div class="flex flex-wrap items-center gap-3">
+    <!-- Search -->
+    <div class="flex-1 min-w-[200px]">
+      <div class="relative">
+        <span
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined text-[20px]"
+        >
+          search
+        </span>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          placeholder="البحث بالاسم..."
+          class="w-full h-10 pr-10 pl-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition"
+        />
+      </div>
+    </div>
+
+    <!-- Case Type Filter -->
+    <div class="min-w-[160px]">
+      <select
+        [(ngModel)]="caseTypeFilter"
+        class="w-full h-10 rounded-lg border border-outline-variant bg-surface-container-lowest text-sm text-on-surface outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition px-3"
+      >
+        <option value="">جميع الأنواع</option>
+        <option [value]="CaseType.Urgent">عاجلة</option>
+        <option [value]="CaseType.LongTerm">مفقودين طويل الأمد</option>
+        <option [value]="CaseType.Unknown">مجهولة الهوية</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+@if (loading()) {
+  <app-loading-spinner
+    title="جارٍ التحميل..."
+    subtitle="يرجى الانتظار"
+    size="lg"
+    containerClass="py-16"
+  />
+}
+
+<!-- Content -->
+@if (!loading()) {
+  <!-- Grouped Cases -->
+  @for (group of groupedCases(); track group.type) {
+    <section class="mb-8">
+      <h2 class="text-lg font-semibold text-on-surface mb-3">{{ group.label }}</h2>
+      <div class="space-y-3">
+        @for (caseItem of group.cases; track caseItem.id) {
+          <app-case-card-compact
+            [caseItem]="caseItem"
+            (onDelete)="requestDelete($event, caseItem.caseType)"
+            (onMarkAsFound)="requestMarkAsFound($event, caseItem.caseType)"
+          />
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Load More -->
+  @if (hasNextPage()) {
+    <div class="flex justify-center mt-8">
+      <app-button
+        variant="secondary"
+        [loading]="loadingMore()"
+        [disabled]="loadingMore()"
+        (onClick)="loadMore()"
+        extraClass="px-6 h-10 gap-2 rounded-xl text-sm"
+      >
+        <span class="material-symbols-outlined text-[18px]" *ngIf="!loadingMore()"
+          >expand_more</span
+        >
+        تحميل المزيد
+      </app-button>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (allCases().length === 0) {
+    <app-empty-state
+      icon="images/empty.png"
+      title="لا توجد حالات"
+      message="لم تقم بإضافة أي حالات بعد."
+      containerClass="py-16"
+    >
+      <div emptyActions>
+        <app-button routerLink="/cases/create" variant="primary" extraClass="gap-2">
+          <span class="material-symbols-outlined text-[18px]">add</span>
+          إنشاء حالة جديدة
+        </app-button>
+      </div>
+    </app-empty-state>
+  }
+}
+
+<!-- Confirmation Modal (Delete) -->
+@if (showConfirmModal()) {
+  <app-confirmation-modal
+    [title]="modalConfig()?.title || 'تأكيد'"
+    [message]="modalConfig()?.message || 'هل أنت متأكد؟'"
+    [confirmText]="modalConfig()?.confirmText || 'تأكيد'"
+    [cancelText]="modalConfig()?.cancelText || 'إلغاء'"
+    (confirm)="confirmAction()"
+    (cancel)="closeModal()"
+  />
+}
+
+<!-- Mark as Found Modal
+@if (showMarkAsFoundModal()) {
+  <app-mark-as-found-modal
+    (cancel)="closeMarkAsFoundModal()"
+    (confirm)="handleMarkAsFoundConfirm($event)"
+  />
+} -->

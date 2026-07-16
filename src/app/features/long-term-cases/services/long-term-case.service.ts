@@ -41,17 +41,6 @@ export class LongTermCaseService extends ApiService {
     }
 
     /**
-     * Get current user's long-term cases
-     * GET: /api/LongTermCase/GetMyCases
-     */
-    getMyCases(filter: LongTermCaseFilterRequest): Observable<ApiResponse<PaginationResponse<LongTermCaseListItemResponse>>> {
-        return this.get<ApiResponse<PaginationResponse<LongTermCaseListItemResponse>>>(
-        `${this.baseUrl}/GetMyCases`,
-        filter as Record<string, any>
-        );
-    }
-
-    /**
      * Get long-term case by ID (public)
      * GET: /api/LongTermCase/GetCaseDetails/{id}
      */
