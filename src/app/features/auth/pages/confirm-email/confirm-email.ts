@@ -1,25 +1,30 @@
+import { FormField } from '../../../../shared/components/form-field/form-field';
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { SnackbarService } from '../../../../core/services/toast.service';
 import Swal from 'sweetalert2';
+
+import { ButtonComponent } from '../../../../shared/components/button/button';
 
 @Component({
   selector: 'app-confirm-email',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterModule],
+  imports: [FormField, ReactiveFormsModule, RouterModule,  ButtonComponent],
   templateUrl: './confirm-email.html'
 })
 export class ConfirmEmail implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private snackbar = inject(SnackbarService);
 
   email = signal<string>('');
   isLoading = signal<boolean>(false);
   apiErrorMessage = signal<string>('');
   countdown = signal<number>(0);
-  private intervalId: any;
+  private intervalId: ReturnType<typeof setInterval> | null = null;
 
   confirmForm: FormGroup = this.fb.group({
     otpCode: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]]
@@ -38,6 +43,7 @@ export class ConfirmEmail implements OnInit, OnDestroy {
   ngOnDestroy() {
     if (this.intervalId) {
       clearInterval(this.intervalId);
+      this.intervalId = null;
     }
   }
 
@@ -75,23 +81,33 @@ export class ConfirmEmail implements OnInit, OnDestroy {
 
     this.authService.resendOtp(this.email(), 1).subscribe({
       next: (res) => {
-        Swal.fire('تم الإرسال', res.message, 'success');
+        this.snackbar.success(res.message || 'تم إرسال الرمز بنجاح.');
       },
       error: (err) => {
         this.countdown.set(0);
-        clearInterval(this.intervalId);
-        Swal.fire('خطأ', err.error?.detail || 'حدث خطأ أثناء محاولة إرسال الرمز.', 'error');
+        if (this.intervalId) {
+          clearInterval(this.intervalId);
+          this.intervalId = null;
+        }
+        this.snackbar.error(err.error?.detail || 'حدث خطأ أثناء محاولة إرسال الرمز.');
       }
     });
   }
 
   private startCountdown() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+
     this.countdown.set(60);
     this.intervalId = setInterval(() => {
       if (this.countdown() > 0) {
         this.countdown.update(c => c - 1);
       } else {
-        clearInterval(this.intervalId);
+        if (this.intervalId) {
+          clearInterval(this.intervalId);
+          this.intervalId = null;
+        }
       }
     }, 1000);
   }

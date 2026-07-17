@@ -1,0 +1,135 @@
+@if (loading()) {
+  <!-- Loading Spinner -->
+  <app-loading-spinner
+    title="جارٍ تحميل الحالات..."
+    subtitle="يرجى الانتظار قليلاً"
+    size="md"
+    containerClass="flex min-h-[60vh] items-center justify-center"
+  />
+} @else {
+  <!-- Show header and filters only if there are any cases in the system -->
+  @if (hasAnyCases()) {
+    <!-- Header -->
+    <app-case-header
+      title="حالاتي"
+      subtitle="إدارة ومتابعة جميع الحالات التي قمت بإنشائها"
+      [badge]="totalCases() + ' حالة'"
+      [showBackButton]="false"
+      [showPrimary]="false"
+      [showSecondary]="false"
+    />
+
+    <!-- Filters Card -->
+    <app-card extraClass="my-6 rounded-xl border border-outline-variant/20 bg-surface shadow-sm">
+      <div class="p-5">
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <!-- Search -->
+          <div>
+            <app-form-field
+              type="search"
+              placeholder="ابحث بالاسم..."
+              [ngModel]="searchQuery()"
+              (ngModelChange)="searchQuery.set($event)"
+              [prefix]="true"
+            >
+              <span prefix class="material-symbols-outlined text-on-surface-variant"> search </span>
+            </app-form-field>
+          </div>
+
+          <!-- Case Type -->
+          <div>
+            <app-form-field
+              type="select"
+              [ngModel]="caseTypeFilter()"
+              (ngModelChange)="caseTypeFilter.set($event)"
+            >
+              <option value="">نوع الحاله</option>
+              <option [value]="CaseType.Urgent">حالات عاجلة</option>
+              <option [value]="CaseType.LongTerm">مفقودين طويل الأمد</option>
+              <option [value]="CaseType.Unknown">مجهولة الهوية</option>
+            </app-form-field>
+          </div>
+        </div>
+      </div>
+    </app-card>
+  }
+
+  <!-- Content -->
+  @if (hasResults()) {
+    <!-- Display cases -->
+    <div class="space-y-8">
+      @for (group of groupedCases(); track group.type) {
+        <section class="space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="h-2.5 w-2.5 rounded-full bg-secondary"></div>
+            <h2 class="font-semibold text-on-surface">{{ group.label }}</h2>
+            <span class="rounded-md bg-secondary/10 px-2 py-1 text-xs font-medium text-secondary">
+              {{ group.cases.length }}
+            </span>
+            <div class="h-px flex-1 bg-outline-variant/20"></div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-3">
+            @for (caseItem of group.cases; track caseItem.id) {
+              <app-case-card-compact
+                [caseItem]="caseItem"
+                (onDelete)="requestDelete($event, caseItem.caseType)"
+                (onMarkAsFound)="requestMarkAsFound($event, caseItem.caseType)"
+              />
+            }
+          </div>
+        </section>
+      }
+    </div>
+
+    @if (hasNextPage()) {
+      <div class="mt-8 flex justify-center border-t border-outline-variant/20 pt-6">
+        <app-button
+          variant="secondary"
+          [loading]="loadingMore()"
+          [disabled]="loadingMore()"
+          (onClick)="loadMore()"
+          extraClass="h-11 rounded-xl px-6"
+        >
+          تحميل المزيد
+        </app-button>
+      </div>
+    }
+  } @else {
+    <!-- Empty State: either no cases at all OR no results for the applied filters -->
+    <app-empty-state
+      icon="images/empty.png"
+      [title]="hasAnyCases() ? 'لا توجد نتائج' : 'لا توجد حالات'"
+      [message]="
+        hasAnyCases()
+          ? 'لم يتم العثور على حالات تطابق معايير البحث.'
+          : 'لم تقم بإنشاء أي حالات حتى الآن.'
+      "
+      containerClass="py-16"
+    >
+    </app-empty-state>
+  }
+}
+
+<!-- Confirmation Modal -->
+@if (showConfirmModal() && modalConfig(); as config) {
+  <app-confirmation-modal
+    [title]="config.title"
+    [message]="config.message"
+    [confirmText]="config.confirmText"
+    [cancelText]="config.cancelText"
+    [variant]="config.variant ?? 'primary'"
+    [icon]="config.icon ?? 'help_outline'"
+    (confirm)="confirmAction()"
+    (cancel)="closeModal()"
+  />
+}
+
+<!-- Mark as Found Modal -->
+@if (showMarkAsFoundModal()) {
+  <app-founded-popup
+    [caseId]="markAsFoundCaseId()!"
+    (confirmed)="handleMarkAsFoundConfirm($event)"
+    (cancel)="closeMarkAsFoundModal()"
+  />
+}

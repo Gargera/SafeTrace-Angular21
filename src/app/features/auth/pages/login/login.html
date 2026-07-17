@@ -1,10 +1,10 @@
 <div class="min-h-screen bg-surface flex flex-col justify-center items-center px-margin-mobile py-12 relative">
   
   <div class="absolute top-6 right-6 md:top-8 md:right-8">
-    <a routerLink="/home" class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-medium text-body-sm bg-surface-container-lowest px-4 py-2 rounded-full shadow-sm border border-outline-variant hover:shadow-md">
-      <svg class="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+    <app-button routerLink="/home" variant="secondary">
+      <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
       العودة للرئيسية
-    </a>
+    </app-button>
   </div>
 
   <div class="text-center mb-8">
@@ -26,16 +26,8 @@
       </div>
     }
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-      
-      <div class="flex items-center justify-center border border-outline bg-surface-container-lowest rounded-xl overflow-hidden hover:bg-surface-container-low transition-colors h-11.5">
-        <asl-google-signin-button type="standard" size="large"></asl-google-signin-button>
-      </div>
-
-      <button type="button" (click)="signInWithFB()" class="flex items-center justify-center gap-2 border border-outline text-on-surface bg-surface-container-lowest hover:bg-surface-container-low rounded-xl py-2.5 font-label-md font-medium transition-colors h-11.5">
-        <svg class="w-5 h-5 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-        تسجيل عبر فيسبوك
-      </button>
+    <div class="flex justify-center mb-6 h-[40px] w-full">
+      <asl-google-signin-button type="standard" size="large" locale="ar"></asl-google-signin-button>
     </div>
 
     <div class="relative flex py-2 items-center mb-4">
@@ -44,12 +36,15 @@
       <div class="grow border-t border-outline-variant"></div>
     </div>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+    <form [formGroup]="loginForm" action="#" method="post" autocomplete="on" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
       <div class="flex flex-col gap-1">
-        <label class="text-label-md font-medium text-on-surface">البريد الإلكتروني</label>
-        <input type="email" formControlName="email" placeholder="name@example.com" dir="ltr"
-               [class.border-error]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
-               class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all text-right focus:text-left">
+        <app-form-field 
+          formControlName="email" 
+          type="email" 
+          label="البريد الإلكتروني" 
+          placeholder="name@example.com"
+          [class.border-error]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid">
+        </app-form-field>
         @if (loginForm.get('email')?.touched && loginForm.get('email')?.invalid) {
           <span class="text-error text-xs font-medium">
             @if (loginForm.get('email')?.errors?.['required']) { البريد الإلكتروني مطلوب. }
@@ -60,24 +55,25 @@
       </div>
 
       <div class="flex flex-col gap-1">
-        <div class="flex justify-between items-center">
+        <div class="flex justify-between items-center mb-1">
           <label class="text-label-md font-medium text-on-surface">كلمة المرور</label>
           <a routerLink="/auth/forgot-password" class="text-secondary text-body-sm font-medium hover:underline">نسيت كلمة المرور؟</a>
         </div>
         
-        <div class="relative w-full">
-          <input [type]="showPassword() ? 'text' : 'password'" formControlName="password" placeholder="••••••••" dir="ltr"
-                 [class.border-error]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
-                 class="w-full border border-outline focus:border-secondary focus:ring-1 focus:ring-secondary rounded-xl px-4 py-3 pr-12 text-body-md text-on-surface bg-surface-container-lowest outline-none transition-all text-right focus:text-left">
-          
-          <button type="button" (click)="togglePassword()" class="absolute inset-y-0 right-0 px-4 flex items-center text-on-surface-variant hover:text-primary transition-colors focus:outline-none">
+        <app-form-field 
+          formControlName="password" 
+          [type]="showPassword() ? 'text' : 'password'" 
+          placeholder="••••••••"
+          [suffix]="true"
+          [class.border-error]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
+          <button type="button" suffix (click)="togglePassword()" class="px-4 flex items-center text-on-surface-variant hover:text-primary transition-colors focus:outline-none pointer-events-auto">
             @if (showPassword()) {
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
             } @else {
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
             }
           </button>
-        </div>
+        </app-form-field>
 
         @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
           <span class="text-error text-xs font-medium mt-1">
@@ -87,11 +83,9 @@
         }
       </div>
 
-      <button type="submit" [disabled]="isLoading()" class="w-full bg-secondary text-on-secondary hover:bg-secondary-container py-3 rounded-xl font-label-lg font-semibold mt-2 flex justify-center items-center gap-2">
-        @if (isLoading()) {
-          <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-        } @else { تسجيل الدخول }
-      </button>
+      <app-button type="submit" [disabled]="isLoading()" variant="primary" [loading]="isLoading()" extraClass="w-full justify-center mt-2 font-label-lg">
+        تسجيل الدخول
+      </app-button>
 
     </form>
 

@@ -1,15 +1,19 @@
+import { FormField } from '../../../../shared/components/form-field/form-field';
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import Swal from 'sweetalert2';
-import { SocialAuthService, GoogleLoginProvider, FacebookLoginProvider, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
+import { SocialAuthService, GoogleLoginProvider, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 import { Subscription } from 'rxjs';
+
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterModule, GoogleSigninButtonModule],
+  imports: [FormField, CommonModule, ReactiveFormsModule, RouterModule, GoogleSigninButtonModule,  ButtonComponent],
   templateUrl: './login.html'
 })
 export class Login implements OnInit, OnDestroy {
@@ -30,6 +34,11 @@ export class Login implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
+    if (this.authService.isLoggedIn()) {
+      this.router.navigate(['/home'], { replaceUrl: true });
+      return;
+    }
+
     this.authSubscription = this.socialAuthService.authState.subscribe((user) => {
       if (user) {
         this.isLoading.set(true);
@@ -37,17 +46,6 @@ export class Login implements OnInit, OnDestroy {
         
         if (user.provider === GoogleLoginProvider.PROVIDER_ID) {
           this.authService.googleLogin({ providerToken: user.idToken! }).subscribe({
-            next: (res) => {
-              this.isLoading.set(false);
-              this.router.navigate(['/home']);
-            },
-            error: (err) => {
-              this.isLoading.set(false);
-              this.handleAuthError(err);
-            }
-          });
-        } else if (user.provider === FacebookLoginProvider.PROVIDER_ID) {
-          this.authService.facebookLogin({ providerToken: user.authToken! }).subscribe({
             next: (res) => {
               this.isLoading.set(false);
               this.router.navigate(['/home']);
@@ -68,9 +66,7 @@ export class Login implements OnInit, OnDestroy {
     }
   }
 
-  signInWithFB(): void {
-    this.socialAuthService.signIn(FacebookLoginProvider.PROVIDER_ID);
-  }
+
 
   togglePassword() {
     this.showPassword.update(v => !v);
@@ -83,10 +79,11 @@ export class Login implements OnInit, OnDestroy {
     if (this.loginForm.invalid) return;
 
     this.isLoading.set(true);
+
     this.authService.login(this.loginForm.value).subscribe({
-      next: (res) => {
+      next: () => {
         this.isLoading.set(false);
-        this.router.navigate(['/home']);
+        this.router.navigate(['/home'], { replaceUrl: true });
       },
       error: (err) => {
         this.isLoading.set(false);

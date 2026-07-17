@@ -1,13 +1,16 @@
+import { FormField } from '../../../../shared/components/form-field/form-field';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import Swal from 'sweetalert2';
 
+import { ButtonComponent } from '../../../../shared/components/button/button';
+
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterModule],
+  imports: [FormField, ReactiveFormsModule, RouterModule,  ButtonComponent],
   templateUrl: './register.html',
   styleUrls: ['./register.css']
 })
@@ -26,7 +29,7 @@ export class Register {
     lName: ['', [Validators.required, Validators.maxLength(100)]],
     email: ['', [Validators.required, Validators.email]],
     phoneNumber: ['', [Validators.required, Validators.pattern('^01[0125][0-9]{8}$')]],
-    password: ['', [Validators.required, Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).+$')]]
+    password: ['', [Validators.required, Validators.minLength(8), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$')]]
   });
 
   togglePasswordVisibility() {

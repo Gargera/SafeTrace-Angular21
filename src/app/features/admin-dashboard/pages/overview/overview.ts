@@ -4,11 +4,12 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import Swal from 'sweetalert2';
 import { environment } from '../../../../../environments/environment';
+import { ButtonComponent } from '../../../../shared/components/button/button';
 
 @Component({
   selector: 'app-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule], 
+  imports: [CommonModule, RouterModule, ButtonComponent], 
   templateUrl: './overview.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -29,8 +30,12 @@ export class Overview implements OnInit {
 
   @HostListener('window:resize')
   onResize() {
-    if (typeof window !== 'undefined' && window.innerWidth < 768 && this.isSidebarExpanded()) {
+    if (typeof window === 'undefined') return;
+
+    if (window.innerWidth < 768) {
       this.isSidebarExpanded.set(false);
+    } else {
+      this.isSidebarExpanded.set(true);
     }
   }
   
@@ -78,12 +83,11 @@ export class Overview implements OnInit {
       },
     }).then((result) => {
       if (result.isConfirmed) {
+        this.authService.clearSession();
+        this.router.navigate(['/auth']);
         this.authService.revokeToken().subscribe({
-          next: () => this.router.navigate(['/auth']),
-          error: () => {
-            this.authService.clearSession();
-            this.router.navigate(['/auth']);
-          },
+          next: () => {},
+          error: () => {},
         });
       }
     });

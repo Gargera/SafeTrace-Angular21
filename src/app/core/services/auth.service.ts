@@ -1,5 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { environment } from '../../../environments/environment';
 import { Observable, tap, firstValueFrom } from 'rxjs';
 import { ApiResponse } from '../../shared/models/responses/api-response.model';
@@ -15,6 +17,8 @@ import { UserRole } from '../../shared/enums/user-role';
 })
 export class AuthService {
   private http = inject(HttpClient);
+  private socialAuthService = inject(SocialAuthService);
+  private router = inject(Router);
   private readonly baseUrl = `${environment.baseUrl}/api/Account`;
 
   private accessToken: string | null = null;
@@ -28,10 +32,6 @@ export class AuthService {
     if (userData) {
       this.currentUser.set(userData);
       this.isLoggedIn.set(true);
-
-      this.refreshToken().subscribe({
-        error: () => this.clearSession(),
-      });
     }
   }
 
@@ -42,7 +42,7 @@ export class AuthService {
         this.isLoggedIn.set(true);
       }
     } catch (error) {
-      this.clearSession();
+      this.handleSessionExpiration();
     }
   }
 
@@ -71,23 +71,16 @@ export class AuthService {
     return decodedToken['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || decodedToken.sub || null;
   }
 
-  getUserRoles(): string[] {
+  getUserRole(): string | null {
     const decodedToken = this.getDecodedToken();
-    if (!decodedToken) return [];
+    if (!decodedToken) return null;
 
     const roleClaim = decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || decodedToken.role;
-    
-    if (Array.isArray(roleClaim)) {
-      return roleClaim;
-    } else if (roleClaim) {
-      return [roleClaim];
-    }
-    return [];
+    return typeof roleClaim === 'string' ? roleClaim : (Array.isArray(roleClaim) && roleClaim.length > 0 ? roleClaim[0] : null);
   }
 
   hasRole(role: string): boolean {
-    const roles = this.getUserRoles();
-    return roles.includes(role);
+    return this.getUserRole() === role;
   }
 
   isAdmin(): boolean {
@@ -129,12 +122,40 @@ export class AuthService {
     this.currentUser.set(userData);
   }
 
+  handleSessionExpiration(): void {
+    if (!this.isLoggedIn()) return; // Already cleared
+    
+    this.clearSession();
+    
+    import('sweetalert2').then((SwalModule) => {
+      const Swal = SwalModule.default;
+      Swal.fire({
+        title: 'انتهت الجلسة',
+        text: 'تم تسجيل الخروج لانتهاء الجلسة أو كإجراء أمني، يرجى تسجيل الدخول من جديد.',
+        icon: 'warning',
+        confirmButtonText: 'تسجيل الدخول',
+        confirmButtonColor: '#091426',
+        allowOutsideClick: false,
+        customClass: {
+          popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl'
+        }
+      }).then(() => {
+        this.router.navigate(['/auth']);
+      });
+    });
+  }
+
   clearSession(): void {
     this.accessToken = null;
     localStorage.removeItem(this.userDataKey);
     localStorage.removeItem('refreshTokenExpiration');
     this.isLoggedIn.set(false);
     this.currentUser.set(null);
+    this.signOutSocialProviders();
+  }
+
+  private signOutSocialProviders(): void {
+    void this.socialAuthService.signOut().catch(() => undefined);
   }
 
   register(data: RegisterRequest): Observable<ApiResponse<string>> {
@@ -163,17 +184,7 @@ export class AuthService {
       );
   }
 
-  facebookLogin(data: { providerToken: string }): Observable<ApiResponse<AuthResponse>> {
-    return this.http
-      .post<
-        ApiResponse<AuthResponse>
-      >(`${this.baseUrl}/facebook-login`, data, { withCredentials: true })
-      .pipe(
-        tap((res) => {
-          if (res.success && res.data) this.setSession(res.data);
-        }),
-      );
-  }
+
 
   confirmEmail(email: string, otpCode: string): Observable<ApiResponse<string>> {
     return this.http.post<ApiResponse<string>>(
