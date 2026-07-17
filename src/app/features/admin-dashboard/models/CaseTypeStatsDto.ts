@@ -3,5 +3,8 @@ export interface CaseTypeStatsDto {
   total: number;
   active: number;
   deleted: number;
-  closed: number;
+  pending: number;
+  found: number;
+  rejected: number;
+  expired: number;
 }
