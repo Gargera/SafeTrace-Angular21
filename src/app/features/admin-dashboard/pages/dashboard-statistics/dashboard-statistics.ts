@@ -48,7 +48,6 @@ interface CaseTypeBar {
   selector: 'app-dashboard-statistics',
   imports: [CommonModule],
   templateUrl: './dashboard-statistics.html',
-  styleUrl: './dashboard-statistics.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardStatistics implements OnInit {

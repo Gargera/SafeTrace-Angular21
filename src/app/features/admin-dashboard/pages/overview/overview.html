@@ -1,27 +1,14 @@
-<div class="bg-surface text-on-surface flex min-h-screen relative overflow-hidden" dir="rtl">
-  <aside
-    class="bg-primary text-white flex flex-col fixed h-full z-40 shadow-xl transition-all duration-300 ease-in-out right-0 top-0 overflow-hidden"
-    [ngClass]="isSidebarExpanded() ? 'w-72' : 'w-20'"
-  >
-    <div
-      class="flex items-center mt-6"
-      [ngClass]="isSidebarExpanded() ? 'px-lg justify-between' : 'justify-center flex-col gap-6'"
-    >
-      <a
-        routerLink="/home"
-        class="flex items-center gap-sm overflow-hidden group outline-none"
-        title="العودة للرئيسية"
-      >
-        <img
-          src="images/logo-white.svg"
-          alt="SafeTrace"
-          class="h-8 w-auto shrink-0 group-hover:scale-105 transition-transform"
-        />
-        <span
-          class="text-headline-sm font-bold tracking-tight mt-1 whitespace-nowrap"
-          [class.hidden]="!isSidebarExpanded()"
-          >لـقـاء</span
-        >
+<div class="bg-surface text-on-surface flex h-dvh relative overflow-hidden w-full" dir="rtl">
+
+  <aside 
+    class="bg-primary text-white flex flex-col fixed h-dvh z-50 shadow-xl transition-all duration-300 ease-in-out right-0 top-0 overflow-hidden"
+    [ngClass]="isSidebarExpanded() ? 'w-64 md:w-72' : 'w-16 md:w-20'">
+    
+    <div class="flex items-center mt-6" [ngClass]="isSidebarExpanded() ? 'px-lg justify-between' : 'justify-center flex-col gap-6'">
+      
+      <a routerLink="/home" class="flex items-center gap-sm overflow-hidden group outline-none" title="العودة للرئيسية">
+        <img src="images/logo-white.svg" alt="SafeTrace" class="h-8 w-auto shrink-0 group-hover:scale-105 transition-transform">
+        <span class="text-headline-sm font-bold tracking-tight mt-1 whitespace-nowrap" [class.hidden]="!isSidebarExpanded()">لـقـاء</span>
       </a>
 
       <app-button
@@ -243,10 +230,9 @@
     </div>
   </aside>
 
-  <main
-    class="flex-1 transition-all duration-300 w-full p-margin-mobile md:p-margin-desktop bg-surface-bright min-h-screen overflow-x-hidden"
-    [ngClass]="isSidebarExpanded() ? 'mr-72' : 'mr-20'"
-  >
+  <main 
+    class="flex-1 transition-all duration-300 w-full p-4 md:p-8 bg-surface-bright h-dvh overflow-y-auto"
+    [ngClass]="isSidebarExpanded() ? 'mr-64 md:mr-72' : 'mr-16 md:mr-20'">
     <router-outlet></router-outlet>
   </main>
 </div>
