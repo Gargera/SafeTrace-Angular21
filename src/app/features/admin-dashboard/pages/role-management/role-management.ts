@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } 
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 
 import {
   PERMISSION_GROUPS_AR,
@@ -27,7 +28,7 @@ interface PermissionGroup {
 @Component({
   selector: 'app-role-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent, LoadingSpinnerComponent],
   templateUrl: './role-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -49,6 +50,7 @@ export class RoleManagement implements OnInit {
   isLoadingTree = signal<boolean>(false);
   isSaving = signal<boolean>(false);
   isDeleting = signal<boolean>(false);
+  isCreating = signal<boolean>(false);
   apiErrorMessage = signal<string>('');
 
   createRoleForm: FormGroup = this.fb.group({
@@ -155,16 +157,16 @@ export class RoleManagement implements OnInit {
       customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' },
     }).then((result) => {
       if (result.isConfirmed) {
-        Swal.fire({ title: 'جاري الإنشاء...', text: 'يرجى الانتظار...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+        this.isCreating.set(true);
         this.roleService.createRole(dto).subscribe({
           next: () => {
-            Swal.close();
+            this.isCreating.set(false);
             this.createRoleForm.reset();
             this.loadRoles();
             this.snackbar.success('تم إنشاء الدور بنجاح');
           },
           error: (err) => {
-            Swal.close();
+            this.isCreating.set(false);
             this.snackbar.error(err.error?.detail || err.error?.message || 'حدث خطأ أثناء الإنشاء.');
           },
         });
@@ -188,11 +190,9 @@ export class RoleManagement implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         this.isDeleting.set(true);
-        Swal.fire({ title: 'جاري الحذف...', text: 'يرجى الانتظار...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
         this.roleService.deleteRole(this.selectedRoleId()).subscribe({
           next: () => {
             this.isDeleting.set(false);
-            Swal.close();
             this.selectedRoleId.set('');
             const emptyPerms = this.generateEmptyPermissions();
             this.permissionsList.set(emptyPerms);
@@ -204,7 +204,6 @@ export class RoleManagement implements OnInit {
           },
           error: (err) => {
             this.isDeleting.set(false);
-            Swal.close();
             this.snackbar.error(err.error?.detail || err.error?.message || 'فشل حذف الدور');
           },
         });
@@ -259,8 +258,6 @@ export class RoleManagement implements OnInit {
           .filter((p) => p.isSelected)
           .map((p) => p.permissionValue);
 
-        Swal.fire({ title: 'جاري الحفظ...', text: 'يرجى الانتظار...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-
         this.roleService
           .updateRolePermissions({
             roleId: this.selectedRoleId(),
@@ -269,13 +266,11 @@ export class RoleManagement implements OnInit {
           .subscribe({
             next: () => {
               this.isSaving.set(false);
-              Swal.close();
               this.originalPermissionsList.set(this.permissionsList().map((p) => ({ ...p })));
               this.snackbar.success('تم حفظ الصلاحيات');
             },
             error: (err) => {
               this.isSaving.set(false);
-              Swal.close();
               this.snackbar.error(err.error?.detail || 'فشل حفظ الصلاحيات');
             },
           });

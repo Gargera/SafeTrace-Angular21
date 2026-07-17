@@ -4,11 +4,12 @@ import { AiMatchingService, AiMatchedCase } from '../../services/ai-search.servi
 import Swal from 'sweetalert2';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-ai-search',
   standalone: true,
-  imports: [CommonModule, CaseCardComponent],
+  imports: [CommonModule, CaseCardComponent, LoadingSpinnerComponent],
   templateUrl: './ai-search.html',
   styleUrl: './ai-search.css',
 })

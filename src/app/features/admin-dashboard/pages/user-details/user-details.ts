@@ -20,6 +20,7 @@ import Swal from 'sweetalert2';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { FormField } from '../../../../shared/components/form-field/form-field';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 
 interface PermissionGroup {
   groupName: string;
@@ -30,7 +31,7 @@ interface PermissionGroup {
 
 @Component({
   selector: 'app-user-details',
-  imports: [CommonModule, FormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, FormField],
+  imports: [CommonModule, FormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, FormField, LoadingSpinnerComponent],
   templateUrl: './user-details.html',
   styleUrl: './user-details.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -56,7 +57,7 @@ export class UserDetails implements OnInit {
   
   isLoading = signal<boolean>(true);
   isSavingPerms = signal<boolean>(false);
-  isActionLoading = signal<boolean>(false);
+  loadingAction = signal<string | null>(null);
   selectedZoomImage = signal<string | null>(null);
 
   verificationStatusEnum = VerificationStatus;
@@ -196,7 +197,7 @@ export class UserDetails implements OnInit {
       customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' }
     }).then((result) => {
       if (result.isConfirmed) {
-        this.executeAction(this.userService.changeUserRole({ userId: this.userId(), newRole: newRole }), 'تم تغيير دور المستخدم بنجاح.');
+        this.executeAction(this.userService.changeUserRole({ userId: this.userId(), newRole: newRole }), 'تم تغيير دور المستخدم بنجاح.', 'changeRole');
       }
     });
   }
@@ -213,7 +214,7 @@ export class UserDetails implements OnInit {
       customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' }
     }).then((result) => {
       if (result.isConfirmed) {
-        this.executeAction(this.userService.approveUser(this.userId()), 'تم توثيق حساب المستخدم بنجاح.');
+        this.executeAction(this.userService.approveUser(this.userId()), 'تم توثيق حساب المستخدم بنجاح.', 'approve');
       }
     });
   }
@@ -230,7 +231,7 @@ export class UserDetails implements OnInit {
       customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' }
     }).then((result) => {
       if (result.isConfirmed) {
-        this.executeAction(this.userService.rejectUser(this.userId()), 'تم رفض طلب التوثيق.');
+        this.executeAction(this.userService.rejectUser(this.userId()), 'تم رفض طلب التوثيق.', 'reject');
       }
     });
   }
@@ -251,33 +252,22 @@ export class UserDetails implements OnInit {
       customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' }
     }).then((result) => {
       if (result.isConfirmed) {
-        this.executeAction(this.userService.toggleBlockStatus(this.userId()), `تم ${actionText} المستخدم بنجاح.`);
+        this.executeAction(this.userService.toggleBlockStatus(this.userId()), `تم ${actionText} المستخدم بنجاح.`, 'block');
       }
     });
   }
 
-  private executeAction(observable: any, successMessage: string) {
-    this.isActionLoading.set(true);
-
-    Swal.fire({
-      title: 'جاري التنفيذ...',
-      text: 'يرجى الانتظار بينما نقوم بمعالجة طلبك.',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
+  private executeAction(observable: any, successMessage: string, actionName: string) {
+    this.loadingAction.set(actionName);
 
     observable.subscribe({
       next: () => {
-        this.isActionLoading.set(false);
-        Swal.close();
+        this.loadingAction.set(null);
         this.snackbar.success(successMessage);
         this.loadUserData();
       },
       error: (err: any) => {
-        this.isActionLoading.set(false);
-        Swal.close();
+        this.loadingAction.set(null);
         this.snackbar.error(err.error?.detail || err.error?.message || 'حدث خطأ غير متوقع. قد لا تملك الصلاحية الكافية.');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -300,24 +290,15 @@ export class UserDetails implements OnInit {
       if (result.isConfirmed) {
         this.isSavingPerms.set(true);
         const selectedValues = this.permissionsList().filter(p => p.isSelected).map(p => p.permissionValue);
-        
-        Swal.fire({
-          title: 'جاري الحفظ...',
-          text: 'يرجى الانتظار...',
-          allowOutsideClick: false,
-          didOpen: () => { Swal.showLoading(); }
-        });
 
         this.userService.assignUserPermissions({ userId: this.userId(), selectedPermissions: selectedValues }).subscribe({
           next: () => {
             this.isSavingPerms.set(false);
-            Swal.close();
             this.originalPermissionsList.set(this.permissionsList().map(p => ({...p})));
             this.snackbar.success('تم تحديث صلاحيات المستخدم');
           },
           error: (err) => {
             this.isSavingPerms.set(false);
-            Swal.close();
             this.snackbar.error(err.error?.detail || 'فشل حفظ الصلاحيات. تأكد من امتلاكك الصلاحية اللازمة.');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }

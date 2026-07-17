@@ -50,7 +50,7 @@
           <div class="flex-1">
             <app-form-field formControlName="roleName" placeholder="e.g. Volunteer"></app-form-field>
           </div>
-          <app-button type="submit" [disabled]="createRoleForm.invalid" variant="primary" extraClass="px-6 rounded-xl font-bold shrink-0">
+          <app-button type="submit" [disabled]="createRoleForm.invalid || isCreating()" [loading]="isCreating()" variant="primary" extraClass="px-6 rounded-xl font-bold shrink-0">
             إنشاء
           </app-button>
         </div>
@@ -94,9 +94,7 @@
     <div class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-50">
       
       @if (isLoadingTree()) {
-        <div class="absolute inset-0 bg-white/70 flex items-center justify-center z-10 backdrop-blur-sm">
-          <span class="material-symbols-outlined text-secondary animate-spin text-[32px]">progress_activity</span>
-        </div>
+        <app-loading-spinner title="جارِ تحميل الصلاحيات..." [fullscreen]="false" containerClass="absolute inset-0 bg-white/70 flex items-center justify-center z-10 backdrop-blur-sm"></app-loading-spinner>
       }
 
       <div class="divide-y divide-outline-variant">
