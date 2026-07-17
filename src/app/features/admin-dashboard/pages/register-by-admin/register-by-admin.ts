@@ -54,13 +54,13 @@ export class RegisterByAdmin implements OnInit {
   roles = signal<RoleDto[]>([]);
 
   registerForm: FormGroup = this.fb.group({
-    fName: ['', [Validators.required, Validators.maxLength(100)]],
-    lName: ['', [Validators.required, Validators.maxLength(100)]],
-    email: ['', [Validators.required, Validators.email]],
+    fName: ['', [Validators.required, Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+$')]],
+    lName: ['', [Validators.required, Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+$')]],
+    email: ['', [Validators.required, Validators.email, Validators.pattern('^\\S+$')]],
     phoneNumber: ['', [Validators.required, Validators.pattern('^01[0125][0-9]{8}$')]],
     password: [
       '',
-      [Validators.required, Validators.minLength(8), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$')],
+      [Validators.required, Validators.minLength(8), Validators.maxLength(50), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).+$')],
     ],
     role: ['', Validators.required],
   });
@@ -95,7 +95,12 @@ export class RegisterByAdmin implements OnInit {
       'تأكيد وإنشاء',
       () => {
         this.isLoading.set(true);
-        this.userService.registerByAdmin(this.registerForm.value).subscribe({
+
+        const formData = { ...this.registerForm.value };
+        formData.fName = formData.fName.trim();
+        formData.lName = formData.lName.trim();
+
+        this.userService.registerByAdmin(formData).subscribe({
           next: (res) => {
             this.isLoading.set(false);
             this.snackbar.success('تمت إضافة المستخدم وتعيين الصلاحيات الخاصة به في النظام.');

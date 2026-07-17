@@ -5,6 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import Swal from 'sweetalert2';
+import { mustMatch } from '../../../../shared/validators/must-match.validator';
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
 
@@ -29,15 +30,17 @@ export class ResetPassword implements OnDestroy {
   private intervalId: ReturnType<typeof setInterval> | null = null;
 
   showPassword = signal<boolean>(false);
+  showConfirmPassword = signal<boolean>(false);
 
   emailForm: FormGroup = this.fb.group({
-    email: ['', [Validators.required, Validators.email]]
+    email: ['', [Validators.required, Validators.email, Validators.pattern('^\\S+$')]]
   });
 
   resetForm: FormGroup = this.fb.group({
-    otpCode: ['', [Validators.required, Validators.minLength(6)]],
-    newPassword: ['', [Validators.required, Validators.minLength(8), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$')]]
-  });
+    otpCode: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6), Validators.pattern('^\\d{6}$')]],
+    newPassword: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(50), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).+$')]],
+    confirmPassword: ['', [Validators.required]]
+  }, { validators: mustMatch('newPassword', 'confirmPassword') });
 
   ngOnDestroy() {
     if (this.intervalId) {
@@ -48,6 +51,10 @@ export class ResetPassword implements OnDestroy {
 
   togglePassword() {
     this.showPassword.update(v => !v);
+  }
+
+  toggleConfirmPassword() {
+    this.showConfirmPassword.update(v => !v);
   }
 
   onRequestOtp() {
