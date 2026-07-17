@@ -67,11 +67,13 @@ export class UserDetails implements OnInit {
     title: '',
     message: '',
     confirmText: '',
+    icon: 'help_outline',
+    variant: 'primary' as 'primary' | 'danger',
     action: () => {}
   });
 
-  openConfirmModal(title: string, message: string, confirmText: string, action: () => void) {
-    this.modalConfig.set({ title, message, confirmText, action });
+  openConfirmModal(title: string, message: string, confirmText: string, action: () => void, icon = 'help_outline', variant: 'primary' | 'danger' = 'primary') {
+    this.modalConfig.set({ title, message, confirmText, icon, variant, action });
     this.showConfirmModal.set(true);
   }
 
@@ -209,10 +211,12 @@ export class UserDetails implements OnInit {
     this.openConfirmModal(
       'تأكيد تغيير الدور',
       `هل أنت متأكد من رغبتك في تغيير دور المستخدم إلى ${this.getRoleName(newRole)}؟`,
-      'تأكيد وتغيير',
+      'تغيير',
       () => {
         this.executeAction(this.userService.changeUserRole({ userId: this.userId(), newRole: newRole }), 'تم تغيير دور المستخدم بنجاح.', 'changeRole');
-      }
+      },
+      'manage_accounts',
+      'primary'
     );
   }
 
@@ -223,7 +227,9 @@ export class UserDetails implements OnInit {
       'موافقة وتوثيق',
       () => {
         this.executeAction(this.userService.approveUser(this.userId()), 'تم توثيق حساب المستخدم بنجاح.', 'approve');
-      }
+      },
+      'verified_user',
+      'primary'
     );
   }
 
@@ -234,7 +240,9 @@ export class UserDetails implements OnInit {
       'رفض',
       () => {
         this.executeAction(this.userService.rejectUser(this.userId()), 'تم رفض طلب التوثيق.', 'reject');
-      }
+      },
+      'cancel',
+      'danger'
     );
   }
 
@@ -246,7 +254,9 @@ export class UserDetails implements OnInit {
       actionText,
       () => {
         this.executeAction(this.userService.toggleBlockStatus(this.userId()), `تم ${actionText} المستخدم بنجاح.`, 'block');
-      }
+      },
+      this.user()?.isBlocked ? 'lock_open' : 'block',
+      this.user()?.isBlocked ? 'primary' : 'danger'
     );
   }
 
@@ -290,7 +300,9 @@ export class UserDetails implements OnInit {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }
         });
-      }
+      },
+      'admin_panel_settings',
+      'primary'
     );
   }
 

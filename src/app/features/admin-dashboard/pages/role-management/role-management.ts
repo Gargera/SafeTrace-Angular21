@@ -63,11 +63,13 @@ export class RoleManagement implements OnInit {
     title: '',
     message: '',
     confirmText: '',
+    icon: 'help_outline',
+    variant: 'primary' as 'primary' | 'danger',
     action: () => {}
   });
 
-  openConfirmModal(title: string, message: string, confirmText: string, action: () => void) {
-    this.modalConfig.set({ title, message, confirmText, action });
+  openConfirmModal(title: string, message: string, confirmText: string, action: () => void, icon = 'help_outline', variant: 'primary' | 'danger' = 'primary') {
+    this.modalConfig.set({ title, message, confirmText, icon, variant, action });
     this.showConfirmModal.set(true);
   }
 
@@ -176,7 +178,9 @@ export class RoleManagement implements OnInit {
             this.snackbar.error(err.error?.detail || err.error?.message || 'حدث خطأ أثناء الإنشاء.');
           },
         });
-      }
+      },
+      'add_circle_outline',
+      'primary'
     );
   }
 
@@ -204,7 +208,9 @@ export class RoleManagement implements OnInit {
             this.snackbar.error(err.error?.detail || err.error?.message || 'فشل حذف الدور');
           },
         });
-      }
+      },
+      'delete',
+      'danger'
     );
   }
 
@@ -264,7 +270,9 @@ export class RoleManagement implements OnInit {
               this.snackbar.error(err.error?.detail || 'فشل حفظ الصلاحيات');
             },
           });
-      }
+      },
+      'save',
+      'primary'
     );
   }
 

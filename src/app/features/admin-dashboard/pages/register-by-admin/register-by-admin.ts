@@ -36,11 +36,13 @@ export class RegisterByAdmin implements OnInit {
     title: '',
     message: '',
     confirmText: '',
+    icon: 'help_outline',
+    variant: 'primary' as 'primary' | 'danger',
     action: () => {}
   });
 
-  openConfirmModal(title: string, message: string, confirmText: string, action: () => void) {
-    this.modalConfig.set({ title, message, confirmText, action });
+  openConfirmModal(title: string, message: string, confirmText: string, action: () => void, icon = 'help_outline', variant: 'primary' | 'danger' = 'primary') {
+    this.modalConfig.set({ title, message, confirmText, icon, variant, action });
     this.showConfirmModal.set(true);
   }
 
@@ -119,7 +121,9 @@ export class RegisterByAdmin implements OnInit {
             }
           },
         });
-      }
+      },
+      'person_add',
+      'primary'
     );
   }
 
