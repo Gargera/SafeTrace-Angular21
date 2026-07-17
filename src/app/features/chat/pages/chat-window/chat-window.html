@@ -18,53 +18,43 @@
       </div>
     }
 
-    <!-- ===== Header - text truncates instead of overflowing on narrow phones ===== -->
+    <!-- ===== Header - Fixed name truncation and layout ===== -->
     @if (chat(); as c) {
-      <div class="flex items-center justify-between gap-xs bg-surface-container-low border-b border-outline-variant px-sm py-sm sm:px-md shrink-0 min-w-0">
-        <!-- Case badge: small icon + case title (ChatDetailsDto.caseTitle) -->
-        <div class="flex items-center gap-xs bg-surface-container-high rounded-lg px-sm py-xs min-w-0">
-        @if (c.caseImage) {
-        <img [src]="chatService.getImageUrl(c.caseImage)" alt="Case Image" class="w-6 h-6 rounded object-cover shrink-0" />
-      } @else {
-        <span class="w-6 h-6 rounded flex items-center justify-center bg-primary text-on-primary shrink-0">
-          <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 7a1 1 0 0 1 1-1h4l2 2h10a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7Z" />
-          </svg>
-        </span>
-      }
-          <div class="text-xs leading-tight min-w-0">
-            <p class="text-on-surface-variant">شأن الحالة</p>
-            <p class="font-medium text-on-surface truncate max-w-[28vw] sm:max-w-none">{{ c.caseTitle }}</p>
+      <div class="flex items-center justify-between gap-sm bg-surface-container-low border-b border-outline-variant px-sm py-sm sm:px-md shrink-0 min-w-0">
+        
+        <!-- Case badge: small icon + case title -->
+        <div class="flex items-center gap-xs bg-surface-container-high rounded-lg px-xs py-xs sm:px-sm min-w-0 max-w-[45%]">
+          @if (c.caseImage) {
+            <img [src]="chatService.getImageUrl(c.caseImage)" alt="Case Image" class="w-6 h-6 rounded object-cover shrink-0" />
+          } @else {
+            <span class="w-6 h-6 rounded flex items-center justify-center bg-primary text-on-primary shrink-0">
+              <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 7a1 1 0 0 1 1-1h4l2 2h10a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7Z" />
+              </svg>
+            </span>
+          }
+          <div class="text-[10px] sm:text-xs leading-tight min-w-0">
+            <p class="text-on-surface-variant hidden sm:block">شأن الحالة</p>
+            <p class="font-medium text-on-surface truncate">{{ c.caseTitle }}</p>
           </div>
         </div>
 
-        <!-- Other participant's name + actions. No avatar/online status - not in ChatDetailsDto. -->
-        <div class="flex items-center gap-xs sm:gap-sm shrink-0">
-          <p class="font-medium text-on-surface truncate max-w-[22vw] sm:max-w-none">{{ displayName }}</p>
+        <!-- Other participant's name + actions (Fixed Name Truncation) -->
+        <div class="flex items-center gap-xs sm:gap-sm shrink-0 min-w-0 flex-1 justify-end">
+          <!-- تم إزالة max-w-[22vw] ليعود الاسم للظهور كاملاً بشكل مرن -->
+          <p class="font-medium text-on-surface text-sm sm:text-base truncate max-w-[40vw] sm:max-w-none" dir="auto">{{ displayName }}</p>
 
           <!-- التحقق من وجود صورة المستخدم -->
-        @if (c.otherUserImage) {
-        <img [src]="chatService.getImageUrl(c.otherUserImage)" alt="User Image" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover shrink-0" />
-        } @else {
-        <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center shrink-0">
-        <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="8" r="3.5" />
-        <path d="M5 20a7 7 0 0 1 14 0" />
-      </svg>
-      </span>
-}
-
-          <!-- Delete conversation -->
-          <button
-            type="button"
-            class="text-on-surface-variant hover:text-error shrink-0"
-            (click)="onDeleteChat()"
-            aria-label="حذف المحادثة"
-          >
-            <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-12" />
-            </svg>
-          </button>
+          @if (c.otherUserImage) {
+            <img [src]="chatService.getImageUrl(c.otherUserImage)" alt="User Image" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover shrink-0" />
+          } @else {
+            <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center shrink-0">
+              <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="3.5" />
+                <path d="M5 20a7 7 0 0 1 14 0" />
+              </svg>
+            </span>
+          }
 
           <!-- Back -->
           <button
@@ -81,17 +71,24 @@
       </div>
     }
 
-    <!-- ===== Messages list (scrolls independently; input never moves) ===== -->
-    <div class="flex-1 overflow-y-auto px-sm py-md sm:px-md">
+    <!-- ===== Messages list (Fixed Image/Video responsiveness & alignment) ===== -->
+    <div #messagesContainer class="flex-1 overflow-y-auto px-sm py-md sm:px-md">
       @if (!isLoading()) {
         @for (message of messages(); track message.id) {
-          <div class="flex items-end gap-xs mb-md group" [class.flex-row-reverse]="!message.isMine">
-            <!-- Wider bubbles on small phones (85%), narrower on larger screens (70%) -->
-            <div class="max-w-[85%] sm:max-w-[70%] flex flex-col" [class.items-end]="message.isMine" [class.items-start]="!message.isMine">
+          <div class="flex items-end gap-xs mb-md group" [class.flex-row-reverse]="!message.isMine" [class.justify-end]="message.isMine" [class.justify-start]="!message.isMine">
+            <div 
+              class="flex items-end gap-xs mb-md group w-full" 
+              [class.flex-row-reverse]="!message.isMine"
+              [class.justify-end]="message.isMine"
+              [class.justify-start]="!message.isMine"
+            >
+            <!-- Width container -->
+            <div class="max-w-[75%] sm:max-w-[70%] flex flex-col" [class.items-end]="message.isMine" [class.items-start]="!message.isMine">
+              
               <!-- Text content -->
               @if (message.content) {
                 <div
-                  class="px-md py-sm rounded-xl text-sm break-words"
+                  class="px-md py-sm rounded-xl text-sm break-words mb-xs"
                   [class.bg-primary]="message.isMine"
                   [class.text-on-primary]="message.isMine"
                   [class.bg-surface-container-high]="!message.isMine"
@@ -101,16 +98,19 @@
                 </div>
               }
 
-              <!-- Image attachment -->
+              <!-- Image attachment (Responsive size + aligned to the edge) -->
               @if (message.fileType === FileType.Image && attachmentUrl(message); as url) {
-                <img [src]="url" alt="مرفق" class="mt-xs rounded-lg border border-outline-variant max-w-full sm:max-w-[260px]" />
+                <div class="w-full flex" [class.justify-end]="message.isMine" [class.justify-start]="!message.isMine">
+                  <img [src]="url" alt="مرفق" class="mt-xs rounded-lg border border-outline-variant max-w-[240px] sm:max-w-[320px] w-full h-auto object-contain" />
+                </div>
               }
 
-              <!-- Video attachment -->
+              <!-- Video attachment (Responsive size + aligned to the edge) -->
               @if (message.fileType === FileType.Video && attachmentUrl(message); as url) {
-                <video [src]="url" controls class="mt-xs rounded-lg border border-outline-variant max-w-full sm:max-w-[260px]"></video>
+                <div class="w-full flex" [class.justify-end]="message.isMine" [class.justify-start]="!message.isMine">
+                  <video [src]="url" controls class="mt-xs rounded-lg border border-outline-variant max-w-[240px] sm:max-w-[320px] w-full h-auto"></video>
+                </div>
               }
-
 
               <!-- Timestamp + read state + delete action -->
               <span class="flex items-center gap-xs mt-2xs">
@@ -141,15 +141,15 @@
               </span>
             </div>
           </div>
-        } @empty {
+        } 
+        @empty {
           <p class="text-center text-on-surface-variant py-2xl">لا توجد رسائل بعد. ابدأ المحادثة!</p>
         }
       }
     </div>
 
-    <!-- ===== Message input - fixed at the bottom. Attach button restored, emoji removed. ===== -->
+    <!-- ===== Message input ===== -->
     <div class="flex flex-col bg-surface-container-low border-t border-outline-variant shrink-0 pb-[env(safe-area-inset-bottom)]">
-      <!-- Selected file preview, shown only when the user picked one -->
       @if (selectedFile(); as file) {
         <div class="flex items-center justify-between px-sm sm:px-md py-xs text-xs text-on-surface-variant bg-surface-container-high">
           <span class="truncate">📎 {{ file.name }}</span>
@@ -180,7 +180,6 @@
             (keyup.enter)="onSend()"
           />
 
-          <!-- Hidden native file input, triggered by the paperclip button -->
           <input #fileInput type="file" class="hidden" (change)="onFileSelected($event)" />
 
           <button type="button" class="text-on-surface-variant shrink-0" (click)="openFilePicker()" aria-label="إرفاق ملف">

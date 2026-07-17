@@ -9,6 +9,10 @@ export interface MessagesReadEvent{
   userId:string;
 }
 
+export interface MessageDeletedEvent {
+  chatId: number;
+  messageId: number;
+}
 @Injectable({
   providedIn: 'root',
 })
@@ -79,6 +83,18 @@ export class ChatHubService {
     this.connection?.off('MessagesRead', callback);
   }
 
+  onMessageDeletedForEveryone(
+  callback: (event: MessageDeletedEvent) => void
+): void {
+  this.connection?.on('MessageDeletedForEveryone', callback);
+}
+
+
+offMessageDeletedForEveryone(
+  callback: (event: MessageDeletedEvent) => void
+): void {
+  this.connection?.off('MessageDeletedForEveryone', callback);
+}
   private async ensureStarted(): Promise<void> {
     if(!this.connection || this.connection.state === signalR.HubConnectionState.Disconnected) {
       await this.start();

@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import Swal, { SweetAlertOptions } from 'sweetalert2';
+import { SweetAlertResult } from 'sweetalert2';
+
 
 /**
  * ChatAlertsService
@@ -22,15 +24,15 @@ export class ChatAlertsService {
     this.fire({ icon: 'success', title: message, confirmButtonText: 'حسناً', confirmButtonColor: this.primaryColor });
   }
 
-  error(message: string): void {
-    this.fire({
-      icon: 'error',
-      title: 'حدث خطأ',
-      text: message,
-      confirmButtonText: 'حسناً',
-      confirmButtonColor: this.errorColor,
-    });
-  }
+  error(message: string): Promise<SweetAlertResult> {
+  return this.fire({
+    icon: 'error',
+    title: 'حدث خطأ',
+    text: message,
+    confirmButtonText: 'حسناً',
+    confirmButtonColor: this.errorColor,
+  });
+}
 
   info(message: string): void {
     this.fire({ icon: 'info', title: message, confirmButtonText: 'حسناً', confirmButtonColor: this.primaryColor });

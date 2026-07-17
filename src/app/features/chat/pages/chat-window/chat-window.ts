@@ -1,16 +1,19 @@
-import { Component,ElementRef,ViewChild, inject , OnInit, signal } from '@angular/core';
+import { Component,ElementRef,ViewChild, inject , OnInit, signal, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { ChatService } from '../../services/chat.service';
 import { MessageService } from '../../services/message.service';
 import { ChatAlertsService } from '../../services/chat-alert.service';
-import { ChatHubService, MessagesReadEvent } from '../../services/chat-hub.service';
+import { SnackbarService } from '../../../../core/services/toast.service';
+import { ChatHubService, MessagesReadEvent, MessageDeletedEvent} from '../../services/chat-hub.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import {ChatDetailsDto} from '../../models/chat.model';
 import { MessageDto } from '../../models/message.model';
 import { FileType } from '../../../../shared/enums/file-type';
 import { environment } from '../../../../../environments/environment';
+import { Location } from '@angular/common';
+
 
 const PAGE_SIZE = 30;
 
@@ -21,12 +24,14 @@ const PAGE_SIZE = 30;
   imports: [FormsModule, DatePipe],
   templateUrl: './chat-window.html',
 })
-export class ChatWindow implements OnInit {
+export class ChatWindow implements OnInit, AfterViewInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private location = inject(Location);
   protected chatService = inject(ChatService);
   private messageService = inject(MessageService);
   private chatAlertsService = inject(ChatAlertsService);
+  private snackbarService = inject(SnackbarService);
   private chatHubService = inject(ChatHubService);
   private authService = inject(AuthService);
 
@@ -46,6 +51,7 @@ export class ChatWindow implements OnInit {
   selectedFile = signal<File | null>(null);
   sending = signal<boolean>(false);
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('messagesContainer') messagesContainer!: ElementRef;
 
 
   async ngOnInit(): Promise<void> {
@@ -63,7 +69,9 @@ export class ChatWindow implements OnInit {
         this.checkLoadingStatus();
       },
       error: (err) => {
-        this.chatAlertsService.error('تعذر تحميل بيانات المحادثة');
+        this.snackbarService.error(
+         err.error?.message ?? 'تعذر تحميل بيانات المحادثة'
+        );
         this.isLoading.set(false);
       },
     });
@@ -74,15 +82,23 @@ export class ChatWindow implements OnInit {
     await this.chatHubService.joinChat(this.chatId);
     this.chatHubService.onReceiveMessage(this.handleReceivedMessage);
     this.chatHubService.onMessagesRead(this.handleMessagesRead);
+    this.chatHubService.onMessageDeletedForEveryone(this.handleMessageDeletedForEveryone);
 
     this.markAsRead();
   }
 
-
+ngAfterViewInit(): void {
+  setTimeout(() => {
+    this.scrollToBottom();
+  });
+}
 
   async ngOnDestroy(): Promise<void> {
     this.chatHubService.offReceiveMessage(this.handleReceivedMessage);
     this.chatHubService.offMessagesRead(this.handleMessagesRead);
+    this.chatHubService.offMessageDeletedForEveryone(
+    this.handleMessageDeletedForEveryone
+  );
     await this.chatHubService.leaveChat(this.chatId);
   }
 
@@ -99,8 +115,15 @@ export class ChatWindow implements OnInit {
     if(message.chatId !== this.chatId) {
       return;
     }
-    console.log("SIGNALR MESSAGE", message);
-    this.addMessageIfNew(this.normalizeMessage(message));
+    
+    this.addOrUpdateMessage(this.normalizeMessage(message));
+    setTimeout(() => {
+    this.scrollToBottom();
+    });
+    console.log(
+    "After SignalR:",
+    this.messages().find(m => m.id === message.id)?.sendAt
+  );
 
     if(!this.normalizeMessage(message).isMine){
       this.markAsRead();
@@ -115,12 +138,46 @@ export class ChatWindow implements OnInit {
     current.map((m) => (m.senderId === this.currentUserId ? { ...m, isRead: true } : m)));
   };
 
-  private addMessageIfNew(message: MessageDto): void {
-    const alreadyPresent = this.messages().some((m) => m.id === message.id);
-    if (!alreadyPresent) {
-      this.messages.update((msgs) => [...msgs, message]);
+  private addOrUpdateMessage(message: MessageDto): void {
+  this.messages.update((current) => {
+    const index = current.findIndex((m) => m.id === message.id);
+
+    // الرسالة جديدة
+    if (index === -1) {
+      return [...current, message];
     }
+
+    // الرسالة موجودة -> حدث بياناتها
+    const updated = [...current];
+    updated[index] = {
+      ...updated[index],
+      ...message,
+    };
+
+    return updated;
+  });
+}
+
+private handleMessageDeletedForEveryone = (
+  event: MessageDeletedEvent
+): void => {
+
+  if(event.chatId !== this.chatId) {
+    return;
   }
+
+  this.messages.update((msgs) =>
+    msgs.map((msg) =>
+      msg.id === event.messageId
+        ? {
+            ...msg,
+            isDeletedForEveryone: true,
+            content: 'تم حذف هذه الرسالة'
+          }
+        : msg
+    )
+  );
+};
   loadMessages(): void {
     this.chatService.getMessages(this.chatId, this.page(), PAGE_SIZE).subscribe({
       next: (res) => {
@@ -128,10 +185,16 @@ export class ChatWindow implements OnInit {
         const loadedSoFar = res.data!.pageNumber * res.data!.pageSize;
         this.hasMoreMessages.set(loadedSoFar < res.data!.totalCount);
         this.checkLoadingStatus();
+        setTimeout(() => {
+        this.scrollToBottom();
+        });
       },
-      error: (err) =>{ this.chatAlertsService.error('تعذر تحميل الرسائل');
-            this.isLoading.set(false);
-      }
+      error: (err) => {
+      this.snackbarService.error(
+      err.error?.message ?? 'تعذر تحميل الرسائل'
+      );
+      this.isLoading.set(false);
+    }
     });
   }
 
@@ -180,15 +243,21 @@ export class ChatWindow implements OnInit {
     .subscribe({
       next: (res) => {
       console.log("API MESSAGE", res.data);
+      console.log(typeof res.data!.fileType, res.data!.fileType);
+      console.log(typeof res.data!.sendAt);
+      console.log(res.data!.sendAt);
         const message = res.data;
 
       if (message != null) {
-        this.addMessageIfNew(this.normalizeMessage(message));
+        this.addOrUpdateMessage(this.normalizeMessage(message));
+        setTimeout(() => {
+        this.scrollToBottom();
+        });
       }
         this.sending.set(false);
         //this.loadMessages();
       },
-        error: () => {this.chatAlertsService.error('تعذر إرسال الرسالة، تحقق من الاتصال وحاول مرة أخرى');
+        error: () => {this.snackbarService.error('تعذر إرسال الرسالة، تحقق من الاتصال وحاول مرة أخرى');
           this.sending.set(false);
         }
     });
@@ -197,46 +266,71 @@ export class ChatWindow implements OnInit {
     this.clearSelectedFile();
   }
 
-  async onDeleteMessage(messageId: number): Promise<void> {
-    const choice = await this.chatAlertsService.confirmDeleteMessage();
-    if (choice === 'cancel') {
-      return;
-    }
+ async onDeleteMessage(messageId: number): Promise<void> {
+  const choice = await this.chatAlertsService.confirmDeleteMessage();
 
-    const request$ = choice === 'everyone'
-      ? this.messageService.deleteMessageForEveryone(messageId)
-      : this.messageService.deleteMessageForMe(messageId);
-
-    request$.subscribe({
-      next: () =>{
-        this.messages.update((msgs) => msgs.filter((msg) => msg.id !== messageId));
-        this.chatAlertsService.success('تم حذف الرسالة '); // change to toast
-      },
-      error : (err) => this.chatAlertsService.error('تعذر حذف الرسالة، حاول مرة أخرى'),
-    });
+  if (choice === 'cancel') {
+    return;
   }
 
-  async onDeleteChat(): Promise<void> {
-    const confirmed = await this.chatAlertsService.confirm(
-      'حذف المحادثة',
-      'سيتم حذف هذه المحادثة من قائمتك فقط، ولن تظهر لك مرة أخرى.'
-    );
-    if (!confirmed) {
-      return;
-    }
+  const request$ = choice === 'everyone'
+    ? this.messageService.deleteMessageForEveryone(messageId)
+    : this.messageService.deleteMessageForMe(messageId);
 
-    this.chatService.deleteChatForMe(this.chatId).subscribe({
-      next: () => {
-        this.chatAlertsService.success('تم حذف المحادثة');
-        this.router.navigate(['/chat/conversations']);
-      },
-      error: () => this.chatAlertsService.error('تعذر حذف المحادثة، حاول مرة أخرى'),
-    });
-  }
+  request$.subscribe({
+    next: (res) => {
+
+      if (choice === 'me') {
+        // حذف الرسالة عندي فقط
+        this.messages.update((msgs) =>
+          msgs.filter((msg) => msg.id !== messageId)
+        );
+      }
+
+      // لو everyone:
+      // لا نعدل هنا
+      // SignalR event هو اللي هيحدث الرسالة عند الطرفين
+
+    this.snackbarService.success(res.message);
+    },
+
+    error: () => {
+      this.snackbarService.error(
+        'تعذر حذف الرسالة، حاول مرة أخرى'
+      );
+    },
+  });
+}
+
+  // async onDeleteChat(): Promise<void> {
+  //   const confirmed = await this.chatAlertsService.confirm(
+  //     'حذف المحادثة',
+  //     'سيتم حذف هذه المحادثة من قائمتك فقط، ولن تظهر لك مرة أخرى.'
+  //   );
+  //   if (!confirmed) {
+  //     return;
+  //   }
+
+  //   this.chatService.deleteChatForMe(this.chatId).subscribe({
+  //     next: () => {
+  //       this.chatAlertsService.success('تم حذف المحادثة');
+  //       this.router.navigate(['/chat/conversations']);
+  //     },
+  //     error: () => this.chatAlertsService.error('تعذر حذف المحادثة، حاول مرة أخرى'),
+  //   });
+  // }
 
    goBack(): void {
-    this.router.navigate(['/chat/conversations']);
+    this.location.back();
   }
+
+  private scrollToBottom(): void {
+  const element = this.messagesContainer?.nativeElement;
+
+  if (element) {
+    element.scrollTop = element.scrollHeight;
+  }
+}
 
   private checkLoadingStatus(): void{
     if(this.chat() && this.messages()){
