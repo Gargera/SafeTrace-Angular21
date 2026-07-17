@@ -108,6 +108,11 @@ ngAfterViewInit(): void {
   }
 
   private normalizeMessage(message: MessageDto):MessageDto{
+    console.log({
+    senderId: message.senderId,
+    currentUserId: this.currentUserId,
+    isMine: message.senderId === this.currentUserId
+  });
     return{...message,isMine:message.senderId === this.currentUserId};
   }
 

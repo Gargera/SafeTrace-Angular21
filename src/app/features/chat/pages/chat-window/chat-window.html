@@ -72,76 +72,97 @@
     }
 
     <!-- ===== Messages list (Fixed Image/Video responsiveness & alignment) ===== -->
-    <div #messagesContainer class="flex-1 overflow-y-auto px-sm py-md sm:px-md">
+    <div #messagesContainer dir="ltr" class="flex-1 overflow-y-auto px-sm py-md sm:px-md">
       @if (!isLoading()) {
-        @for (message of messages(); track message.id) {
-          <div class="flex items-end gap-xs mb-md group" [class.flex-row-reverse]="!message.isMine">
-            <div 
-              class="flex items-end gap-xs mb-md group w-full" 
-              [class.flex-row-reverse]="!message.isMine"
-              [class.justify-end]="message.isMine"
-              [class.justify-start]="!message.isMine"
-            >
-            <!-- Width container -->
-            <div class="max-w-[75%] sm:max-w-[70%] flex flex-col" [class.items-end]="message.isMine" [class.items-start]="!message.isMine">
-              
-              <!-- Text content -->
-              @if (message.content) {
-                <div
-                  class="px-md py-sm rounded-xl text-sm break-words mb-xs"
-                  [class.bg-primary]="message.isMine"
-                  [class.text-on-primary]="message.isMine"
-                  [class.bg-surface-container-high]="!message.isMine"
-                  [class.text-on-surface]="!message.isMine"
-                >
-                  {{ message.content }}
-                </div>
-              }
+      @for (message of messages(); track message.id) {
+      <div
+  class="flex w-full mb-4"
+  [class.justify-end]="message.isMine"
+  [class.justify-start]="!message.isMine">
 
-              <!-- Image attachment (Responsive size + aligned to the edge) -->
-              @if (message.fileType === FileType.Image && attachmentUrl(message); as url) {
-                <div class="w-full flex" [class.justify-end]="message.isMine" [class.justify-start]="!message.isMine">
-                  <img [src]="url" alt="مرفق" class="mt-xs rounded-lg border border-outline-variant max-w-[240px] sm:max-w-[320px] w-full h-auto object-contain" />
-                </div>
-              }
+  <div class="flex flex-col max-w-[75%] sm:max-w-[70%]">
 
-              <!-- Video attachment (Responsive size + aligned to the edge) -->
-              @if (message.fileType === FileType.Video && attachmentUrl(message); as url) {
-                <div class="w-full flex" [class.justify-end]="message.isMine" [class.justify-start]="!message.isMine">
-                  <video [src]="url" controls class="mt-xs rounded-lg border border-outline-variant max-w-[240px] sm:max-w-[320px] w-full h-auto"></video>
-                </div>
-              }
+    <!-- Text -->
+    @if (message.content) {
+      <div
+        dir="rtl"
+        class="px-4 py-2 rounded-2xl break-words w-fit"
+        [class.ml-auto]="message.isMine"
+        [class.mr-auto]="!message.isMine"
+        [class.bg-primary]="message.isMine"
+        [class.text-on-primary]="message.isMine"
+        [class.bg-surface-container-high]="!message.isMine"
+        [class.text-on-surface]="!message.isMine">
 
-              <!-- Timestamp + read state + delete action -->
-              <span class="flex items-center gap-xs mt-2xs">
-                @if (message.isMine) {
-                  <button
-                    type="button"
-                    class="text-on-surface-variant hover:text-error opacity-0 group-hover:opacity-100 transition-opacity"
-                    (click)="onDeleteMessage(message.id)"
-                    aria-label="حذف الرسالة"
-                  >
-                    <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-12" />
-                    </svg>
-                  </button>
-                }
+        {{ message.content }}
+      </div>
+    }
 
-                <span class="text-xs text-on-surface-variant flex items-center gap-1">
-                  @if (message.isMine) {
-                    <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M4 12l4 4 8-9" />
-                      @if (message.isRead) {
-                        <path d="M9 12l4 4 8-9" />
-                      }
-                    </svg>
-                  }
-                  {{ message.sendAt | date: 'shortTime' }}
-                </span>
-              </span>
-            </div>
-          </div>
-          </div>
+    <!-- Image -->
+    @if (message.fileType === FileType.Image && attachmentUrl(message); as url) {
+      <img
+        [src]="url"
+        class="rounded-xl mt-2 border border-outline-variant
+               max-w-[240px] sm:max-w-[320px] w-fit"
+        [class.ml-auto]="message.isMine"
+        [class.mr-auto]="!message.isMine">
+    }
+
+    <!-- Video -->
+    @if (message.fileType === FileType.Video && attachmentUrl(message); as url) {
+      <video
+        controls
+        [src]="url"
+        class="rounded-xl mt-2 border border-outline-variant
+               max-w-[240px] sm:max-w-[320px] w-fit"
+        [class.ml-auto]="message.isMine"
+        [class.mr-auto]="!message.isMine">
+      </video>
+    }
+
+    <!-- Time -->
+    <div
+      class="flex items-center gap-1 text-xs text-on-surface-variant mt-1"
+      [class.justify-end]="message.isMine"
+      [class.justify-start]="!message.isMine">
+
+      @if (message.isMine) {
+
+        <button
+          type="button"
+          class="text-on-surface-variant hover:text-error transition-opacity"
+          (click)="onDeleteMessage(message.id)"
+          aria-label="حذف الرسالة">
+
+          <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+             <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-12" />
+          </svg>
+
+        </button>
+
+        <svg
+          viewBox="0 0 24 24"
+          class="w-3.5 h-3.5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5">
+
+          <path d="M4 12l4 4 8-9"/>
+
+          @if(message.isRead){
+            <path d="M9 12l4 4 8-9"/>
+          }
+
+        </svg>
+      }
+
+      {{ message.sendAt | date:'shortTime' }}
+
+    </div>
+
+  </div>
+
+</div>
         } 
         @empty {
           <p class="text-center text-on-surface-variant py-2xl">لا توجد رسائل بعد. ابدأ المحادثة!</p>
