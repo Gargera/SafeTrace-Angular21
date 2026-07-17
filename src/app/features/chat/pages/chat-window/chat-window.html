@@ -75,7 +75,7 @@
     <div #messagesContainer class="flex-1 overflow-y-auto px-sm py-md sm:px-md">
       @if (!isLoading()) {
         @for (message of messages(); track message.id) {
-          <div class="flex items-end gap-xs mb-md group" [class.flex-row-reverse]="!message.isMine" [class.justify-end]="message.isMine" [class.justify-start]="!message.isMine">
+          <div class="flex items-end gap-xs mb-md group" [class.flex-row-reverse]="!message.isMine">
             <div 
               class="flex items-end gap-xs mb-md group w-full" 
               [class.flex-row-reverse]="!message.isMine"
@@ -140,6 +140,7 @@
                 </span>
               </span>
             </div>
+          </div>
           </div>
         } 
         @empty {
