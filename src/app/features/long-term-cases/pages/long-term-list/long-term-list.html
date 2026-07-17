@@ -46,6 +46,7 @@
             <app-case-card
               [caseItem]="c"
               [detailRoute]="['/long-term', c.id]"
+              [showCaseType]="false"
               (onContact)="onContactReporter($event)"
               class="block"
             >

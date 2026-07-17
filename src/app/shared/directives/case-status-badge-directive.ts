@@ -4,12 +4,15 @@ import { getCaseStatusTranslationAr } from '../../core/constants/case.status.dic
 
 @Directive({
   selector: '[appCaseStatusBadgeDirective]',
-  standalone: true
+  standalone: true,
 })
 export class CaseStatusBadgeDirective {
   status = input.required<CaseStatus>({ alias: 'appCaseStatusBadgeDirective' });
 
-  constructor(private el: ElementRef, private renderer: Renderer2) {
+  constructor(
+    private el: ElementRef,
+    private renderer: Renderer2,
+  ) {
     this.renderer.addClass(this.el.nativeElement, 'px-sm');
     this.renderer.addClass(this.el.nativeElement, 'py-1');
     this.renderer.addClass(this.el.nativeElement, 'rounded-full');
@@ -18,7 +21,7 @@ export class CaseStatusBadgeDirective {
     effect(() => {
       const el = this.el.nativeElement;
       el.className = el.className.replace(/\bbg-\S+|text-\S+/g, '');
-      
+
       switch (this.status()) {
         case CaseStatus.Pending:
           this.renderer.addClass(el, 'bg-secondary-container');
@@ -29,8 +32,8 @@ export class CaseStatusBadgeDirective {
           this.renderer.addClass(el, 'text-on-tertiary-fixed');
           break;
         case CaseStatus.Found:
-          this.renderer.addClass(el, 'bg-primary');
-          this.renderer.addClass(el, 'text-white');
+          this.renderer.addClass(el, 'bg-tertiary-fixed-dim');
+          this.renderer.addClass(el, 'text-tertiary');
           break;
         case CaseStatus.Deleted:
           this.renderer.addClass(el, 'bg-error-container');

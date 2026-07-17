@@ -61,6 +61,7 @@
             <app-case-card
               [caseItem]="case"
               [showUrgentTag]="true"
+              [showCaseType]="false"
               [detailRoute]="['/urgent', case.id]"
               (onContact)="onContactReporter($event)"
               class="block"

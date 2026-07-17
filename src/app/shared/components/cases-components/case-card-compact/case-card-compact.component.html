@@ -3,11 +3,9 @@
   extraClass="flex h-full flex-col overflow-hidden rounded-2xl border border-outline-variant/60 bg-surface-container-lowest shadow-sm transition-all duration-300 hover:shadow-md hover:border-secondary/30"
   dir="rtl"
 >
-  <div class="grid grid-cols-[160px_1fr] gap-4 p-4">
+  <div class="grid grid-cols-1 lg:grid-cols-[160px_1fr] gap-4 p-4">
     <!-- Image -->
-    <div
-      class="relative w-full sm:w-40 sm:h-auto overflow-hidden rounded-xl bg-surface-container-high"
-    >
+    <div class="relative hidden lg:block w-40 overflow-hidden rounded-xl bg-surface-container-high">
       <img
         [src]="imageSrc()"
         [alt]="caseItem().fullName || 'صورة الحالة'"
@@ -81,14 +79,16 @@
         }
 
         <!-- Delete -->
-        <app-button
-          variant="danger"
-          extraClass="h-8 px-3 text-xs"
-          (onClick)="onDelete.emit(caseItem().id)"
-        >
-          <span class="material-symbols-outlined text-[16px]">delete</span>
-          حذف
-        </app-button>
+        @if (caseItem().status !== CaseStatus.Found) {
+          <app-button
+            variant="danger"
+            extraClass="h-8 px-3 text-xs"
+            (onClick)="onDelete.emit(caseItem().id)"
+          >
+            <span class="material-symbols-outlined text-[16px]">delete</span>
+            حذف
+          </app-button>
+        }
       </div>
     </div>
   </div>
