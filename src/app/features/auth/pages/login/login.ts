@@ -29,7 +29,7 @@ export class Login implements OnInit, OnDestroy {
   private authSubscription!: Subscription;
 
   loginForm: FormGroup = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
+    email: ['', [Validators.required, Validators.email, Validators.pattern('^\\S+$')]],
     password: ['', [Validators.required]]
   });
 
