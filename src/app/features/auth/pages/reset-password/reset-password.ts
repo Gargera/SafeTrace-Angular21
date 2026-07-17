@@ -38,7 +38,7 @@ export class ResetPassword implements OnDestroy {
 
   resetForm: FormGroup = this.fb.group({
     otpCode: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6), Validators.pattern('^\\d{6}$')]],
-    newPassword: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(50), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).+$')]],
+    newPassword: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(50), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_])\\S+$')]],
     confirmPassword: ['', [Validators.required]]
   }, { validators: mustMatch('newPassword', 'confirmPassword') });
 
