@@ -60,11 +60,11 @@ export const PERMISSION_ACTIONS_AR: Record<string, string> = {
 };
 
 export const ALL_SYSTEM_PERMISSIONS = [
-  "UrgentCases.GetAll", "UrgentCases.GetById", "UrgentCases.GetMyCases", "UrgentCases.Create", "UrgentCases.Update", "UrgentCases.SoftDelete", "UrgentCases.HardDelete", "UrgentCases.Reject", "UrgentCases.Approve", "UrgentCases.MarkAsFounded",
-  "LongTermCases.GetAll", "LongTermCases.GetById", "LongTermCases.GetMyCases", "LongTermCases.Create", "LongTermCases.Update", "LongTermCases.SoftDelete", "LongTermCases.HardDelete", "LongTermCases.Reject", "LongTermCases.Approve", "LongTermCases.MarkAsFounded",
-  "UnknownCases.GetAll", "UnknownCases.GetById", "UnknownCases.GetMyCases", "UnknownCases.Create", "UnknownCases.Update", "UnknownCases.SoftDelete", "UnknownCases.HardDelete", "UnknownCases.Reject", "UnknownCases.Approve", "UnknownCases.MarkAsFounded",
+  "UrgentCases.GetAll", "UrgentCases.GetById", "UrgentCases.Create", "UrgentCases.Update", "UrgentCases.SoftDelete", "UrgentCases.HardDelete", "UrgentCases.Reject", "UrgentCases.Approve", "UrgentCases.MarkAsFounded",
+  "LongTermCases.GetAll", "LongTermCases.GetById", "LongTermCases.Create", "LongTermCases.Update", "LongTermCases.SoftDelete", "LongTermCases.HardDelete", "LongTermCases.Reject", "LongTermCases.Approve", "LongTermCases.MarkAsFounded",
+  "UnknownCases.GetAll", "UnknownCases.GetById", "UnknownCases.Create", "UnknownCases.Update", "UnknownCases.SoftDelete", "UnknownCases.HardDelete", "UnknownCases.Reject", "UnknownCases.Approve", "UnknownCases.MarkAsFounded",
   "Notifications.GetMyNotifications", "Notifications.DeleteNotification", "Notifications.MarkAsRead", "Notifications.MarkAllAsRead",
-  "Profile.GetUserInfo", "Profile.GetVisitedUserInfo", "Profile.UpdateName", "Profile.UpdateHomeLocation", "Profile.UpdateProfileImage", "Profile.UpdateIdImage", "Profile.UpdateUserInfo", "Profile.UpdatePhoneNumber",
+  "Profile.GetUserInfo", "Profile.GetMyCases", "Profile.GetVisitedUserInfo", "Profile.UpdateName", "Profile.UpdateHomeLocation", "Profile.UpdateProfileImage", "Profile.UpdateIdImage", "Profile.UpdateUserInfo", "Profile.UpdatePhoneNumber",
   "Dashboard.GetStatistics", "AiMatching.Search", "Complaints.GetAll", "Complaints.GetById", "Complaints.Create", "Complaints.HardDelete", "Complaints.MarkAsSolved", "Account.ChangePassword",
   "Donations.GetDonations", "Donations.GetMyDonations",
   "Roles.GetAll", "Roles.Create", "Roles.Delete", "Roles.GetPermissionsByRoleId", "Roles.UpdateRolePermissions",

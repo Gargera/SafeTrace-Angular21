@@ -5,6 +5,7 @@ import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 
 import {
   PERMISSION_GROUPS_AR,
@@ -28,7 +29,7 @@ interface PermissionGroup {
 @Component({
   selector: 'app-role-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent, LoadingSpinnerComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent, LoadingSpinnerComponent, ConfirmationModalComponent],
   templateUrl: './role-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -54,11 +55,26 @@ export class RoleManagement implements OnInit {
   apiErrorMessage = signal<string>('');
 
   createRoleForm: FormGroup = this.fb.group({
-    roleName: [
-      '',
-      [Validators.required, Validators.maxLength(100), Validators.pattern(/^[a-zA-Z0-9_ ]+$/)],
-    ],
+    roleName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
   });
+
+  showConfirmModal = signal(false);
+  modalConfig = signal({
+    title: '',
+    message: '',
+    confirmText: '',
+    action: () => {}
+  });
+
+  openConfirmModal(title: string, message: string, confirmText: string, action: () => void) {
+    this.modalConfig.set({ title, message, confirmText, action });
+    this.showConfirmModal.set(true);
+  }
+
+  onConfirmModal() {
+    this.showConfirmModal.set(false);
+    this.modalConfig().action();
+  }
 
   isReadOnly = computed(() => {
     const selectedRole = this.roles().find((r) => r.id === this.selectedRoleId());
@@ -137,26 +153,16 @@ export class RoleManagement implements OnInit {
   }
 
   onCreateRole() {
-    this.apiErrorMessage.set('');
-    if (this.createRoleForm.invalid) {
-      this.createRoleForm.markAllAsTouched();
-      return;
-    }
+    this.createRoleForm.markAllAsTouched();
+    if (this.createRoleForm.invalid) return;
 
-    const dto = { roleName: this.createRoleForm.value.roleName.trim() };
+    const dto = { ...this.createRoleForm.value };
 
-    Swal.fire({
-      title: 'إنشاء دور جديد',
-      text: `هل أنت متأكد من إنشاء دور جديد باسم "${dto.roleName}" في منصة لقاء؟`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'نعم، إنشاء',
-      cancelButtonText: 'إلغاء',
-      confirmButtonColor: '#0058be',
-      cancelButtonColor: '#0b1c30',
-      customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' },
-    }).then((result) => {
-      if (result.isConfirmed) {
+    this.openConfirmModal(
+      'تأكيد إنشاء الدور',
+      'هل أنت متأكد من رغبتك في إنشاء هذا الدور؟',
+      'تأكيد وإنشاء',
+      () => {
         this.isCreating.set(true);
         this.roleService.createRole(dto).subscribe({
           next: () => {
@@ -171,24 +177,17 @@ export class RoleManagement implements OnInit {
           },
         });
       }
-    });
+    );
   }
 
   onDeleteRole() {
-    if (!this.selectedRoleId() || !this.isDeletableRole()) return;
+    if (!this.selectedRoleId()) return;
 
-    Swal.fire({
-      title: 'تأكيد الحذف',
-      text: 'هل أنت متأكد من حذف هذا الدور نهائياً من منصة لقاء؟ لا يمكن التراجع عن هذا الإجراء.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'نعم، حذف',
-      cancelButtonText: 'إلغاء',
-      confirmButtonColor: '#ba1a1a',
-      cancelButtonColor: '#0b1c30',
-      customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' },
-    }).then((result) => {
-      if (result.isConfirmed) {
+    this.openConfirmModal(
+      'تأكيد الحذف',
+      'هل أنت متأكد من رغبتك في حذف هذا الدور؟ لا يمكن التراجع عن هذا الإجراء.',
+      'حذف',
+      () => {
         this.isDeleting.set(true);
         this.roleService.deleteRole(this.selectedRoleId()).subscribe({
           next: () => {
@@ -197,8 +196,6 @@ export class RoleManagement implements OnInit {
             const emptyPerms = this.generateEmptyPermissions();
             this.permissionsList.set(emptyPerms);
             this.originalPermissionsList.set(emptyPerms.map((p) => ({ ...p })));
-            this.expandedGroups.set({});
-            this.isRootExpanded.set(true);
             this.loadRoles();
             this.snackbar.success('تم حذف الدور بنجاح');
           },
@@ -208,7 +205,7 @@ export class RoleManagement implements OnInit {
           },
         });
       }
-    });
+    );
   }
 
   onRoleSelected(roleId: string) {
@@ -239,20 +236,13 @@ export class RoleManagement implements OnInit {
   }
 
   savePermissions() {
-    if (!this.selectedRoleId() || this.isReadOnly() || !this.hasChanges()) return;
+    if (!this.selectedRoleId() || !this.hasChanges()) return;
 
-    Swal.fire({
-      title: 'حفظ الصلاحيات',
-      text: 'هل أنت متأكد من حفظ التعديلات على صلاحيات هذا الدور في منصة لقاء؟',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'نعم، حفظ',
-      cancelButtonText: 'إلغاء',
-      confirmButtonColor: '#0058be',
-      cancelButtonColor: '#0b1c30',
-      customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' },
-    }).then((result) => {
-      if (result.isConfirmed) {
+    this.openConfirmModal(
+      'حفظ الصلاحيات',
+      'هل أنت متأكد من رغبتك في تعديل صلاحيات هذا الدور؟ سيتم تطبيق هذا التغيير على جميع المستخدمين التابعين له.',
+      'تأكيد وحفظ',
+      () => {
         this.isSaving.set(true);
         const selectedValues = this.permissionsList()
           .filter((p) => p.isSelected)
@@ -275,7 +265,7 @@ export class RoleManagement implements OnInit {
             },
           });
       }
-    });
+    );
   }
 
   resetAll() {

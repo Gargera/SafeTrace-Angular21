@@ -295,10 +295,22 @@
 </main>
 
 @if (selectedZoomImage()) {
-  <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 md:p-8 animate-fade-in" (click)="closeImageZoom()">
-    <button class="absolute top-6 right-6 text-white hover:text-error bg-black/20 hover:bg-black/50 w-12 h-12 rounded-full flex items-center justify-center transition-all z-[101]" (click)="closeImageZoom()">
-      <span class="material-symbols-outlined text-[28px]">close</span>
-    </button>
-    <img [src]="selectedZoomImage()" class="max-w-full max-h-full rounded-2xl shadow-2xl ring-1 ring-white/20 object-contain cursor-zoom-out" (click)="$event.stopPropagation(); closeImageZoom()">
+  <div class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" (click)="selectedZoomImage.set(null)">
+    <div class="relative max-w-4xl max-h-[90vh] w-full rounded-2xl overflow-hidden shadow-2xl animate-scale-in" (click)="$event.stopPropagation()">
+      <img [src]="selectedZoomImage()" alt="صورة مكبرة" class="w-full h-full object-contain bg-surface-container-low" />
+      <button (click)="selectedZoomImage.set(null)" class="absolute top-4 right-4 bg-black/50 hover:bg-error text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors backdrop-blur-md">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
   </div>
+}
+
+@if (showConfirmModal()) {
+  <app-confirmation-modal
+    [title]="modalConfig().title"
+    [message]="modalConfig().message"
+    [confirmText]="modalConfig().confirmText"
+    (confirm)="onConfirmModal()"
+    (cancel)="showConfirmModal.set(false)"
+  ></app-confirmation-modal>
 }

@@ -210,3 +210,13 @@
     </app-button>
   </div>
 </div>
+
+@if (showConfirmModal()) {
+  <app-confirmation-modal
+    [title]="modalConfig().title"
+    [message]="modalConfig().message"
+    [confirmText]="modalConfig().confirmText"
+    (confirm)="onConfirmModal()"
+    (cancel)="showConfirmModal.set(false)"
+  ></app-confirmation-modal>
+}
