@@ -1,117 +1,168 @@
 <main class="max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop py-xl">
-    <section class="mb-2xl text-center md:text-right">
-        <h1 class="text-headline-xl font-headline-xl mb-md text-primary">البحث الذكي باستخدام صورة الشخص</h1>
-        <p class="text-body-lg font-body-lg text-on-surface-variant max-w-3xl">
-            تقوم تقنية الذكاء الاصطناعي في منصة "لقاء" بمطابقة ملامح الوجه مع قاعدة البيانات للعثور على المفقودين بدقة متناهية. يرجى رفع صورة واحدة واضحة للوجه للحصول على أفضل النتائج.
+  <section class="mb-2xl text-center md:text-right">
+    <h1 class="text-headline-xl font-headline-xl mb-md text-primary">
+      البحث الذكي باستخدام صورة الشخص
+    </h1>
+    <p class="text-body-lg font-body-lg text-on-surface-variant max-w-3xl">
+      تقوم تقنية الذكاء الاصطناعي في منصة "لقاء" بمطابقة ملامح الوجه مع قاعدة البيانات للعثور على
+      المفقودين بدقة متناهية. يرجى رفع صورة واحدة واضحة للوجه للحصول على أفضل النتائج.
+    </p>
+  </section>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+    <div
+      class="lg:col-span-8 bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant"
+    >
+      <div
+        class="relative group cursor-pointer border-2 border-dashed border-outline-variant rounded-xl p-2xl transition-all duration-300 flex flex-col items-center justify-center min-h-100"
+        [class.drag-over]="isDragging()"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+      >
+        @if (selectedImagePreview()) {
+          <img
+            [src]="selectedImagePreview()"
+            class="absolute inset-0 w-full h-full object-contain rounded-xl p-4 z-0 opacity-20"
+            alt="Preview"
+          />
+        }
+
+        <div
+          class="bg-surface-container p-lg rounded-full mb-lg group-hover:scale-110 transition-transform relative z-10"
+        >
+          <span
+            class="material-symbols-outlined text-secondary text-[48px]"
+            style="font-variation-settings: 'wght' 300"
+            >image_search</span
+          >
+        </div>
+
+        <h3 class="text-headline-sm font-headline-sm mb-sm relative z-10">
+          ارفع صورة لتحليلها والبحث عنها
+        </h3>
+        <p
+          class="text-body-md font-body-md text-on-surface-variant text-center mb-xl relative z-10"
+        >
+          اسحب الصورة وأفلتها هنا أو اضغط لاختيار ملف من جهازك. يدعم صيغ JPG, JPEG, PNG بحد أقصى 5
+          ميجابايت.
         </p>
-    </section>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
-        <div class="lg:col-span-8 bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant">
-            <div 
-                class="relative group cursor-pointer border-2 border-dashed border-outline-variant rounded-xl p-2xl transition-all duration-300 flex flex-col items-center justify-center min-h-100" 
-                [class.drag-over]="isDragging()"
-                (dragover)="onDragOver($event)"
-                (dragleave)="onDragLeave($event)"
-                (drop)="onDrop($event)"
+        <div class="relative z-10 flex gap-4">
+          <label
+            class="bg-secondary text-on-secondary border border-secondary px-2xl py-md rounded-full font-bold text-label-md shadow-sm active:scale-95 transition-transform flex items-center gap-sm cursor-pointer hover:bg-secondary/90"
+          >
+            <span>اختيار صورة</span>
+            <input
+              class="hidden"
+              type="file"
+              accept=".jpg,.jpeg,.png"
+              (change)="onFileSelected($event)"
+            />
+          </label>
+
+          @if (selectedImage()) {
+            <button
+              (click)="startSearch()"
+              [disabled]="isLoading()"
+              class="bg-primary text-on-primary px-2xl py-md rounded-full font-bold text-label-md shadow-md active:scale-95 transition-transform flex items-center gap-sm cursor-pointer disabled:opacity-50 hover:bg-primary/90"
             >
-                @if (selectedImagePreview()) {
-                    <img [src]="selectedImagePreview()" class="absolute inset-0 w-full h-full object-contain rounded-xl p-4 z-0 opacity-20" alt="Preview" />
-                }
-                
-                <div class="bg-surface-container p-lg rounded-full mb-lg group-hover:scale-110 transition-transform relative z-10">
-                    <span class="material-symbols-outlined text-secondary text-[48px]" style="font-variation-settings: 'wght' 300">image_search</span>
-                </div>
-                
-                <h3 class="text-headline-sm font-headline-sm mb-sm relative z-10">ارفع صورة لتحليلها والبحث عنها</h3>
-                <p class="text-body-md font-body-md text-on-surface-variant text-center mb-xl relative z-10">
-                    اسحب الصورة وأفلتها هنا أو اضغط لاختيار ملف من جهازك. يدعم صيغ JPG, JPEG, PNG بحد أقصى 5 ميجابايت.
-                </p>
-                
-                <div class="relative z-10 flex gap-4">
-                    <label class="bg-secondary text-on-secondary border border-secondary px-2xl py-md rounded-full font-bold text-label-md shadow-sm active:scale-95 transition-transform flex items-center gap-sm cursor-pointer hover:bg-secondary/90">
-                        <span>اختيار صورة</span>
-                        <input class="hidden" type="file" accept=".jpg,.jpeg,.png" (change)="onFileSelected($event)">
-                    </label>
-
-                    @if (selectedImage()) {
-                        <button 
-                            (click)="startSearch()"
-                            [disabled]="isLoading()"
-                            class="bg-primary text-on-primary px-2xl py-md rounded-full font-bold text-label-md shadow-md active:scale-95 transition-transform flex items-center gap-sm cursor-pointer disabled:opacity-50 hover:bg-primary/90">
-                            <span>{{ isLoading() ? 'جاري البحث...' : 'بدء البحث الذكي' }}</span>
-                            <span class="material-symbols-outlined">auto_awesome</span>
-                        </button>
-                    }
-                </div>
-            </div>
-
-            <div class="mt-xl flex flex-wrap gap-md justify-center md:justify-start">
-                <div class="flex items-center gap-xs text-body-sm font-body-sm text-on-surface-variant bg-surface-container-low px-md py-xs rounded-full">
-                    <span class="material-symbols-outlined text-[18px]">verified</span>
-                    <span>معالجة خصوصية مشفرة</span>
-                </div>
-                <div class="flex items-center gap-xs text-body-sm font-body-sm text-on-surface-variant bg-surface-container-low px-md py-xs rounded-full">
-                    <span class="material-symbols-outlined text-[18px]">bolt</span>
-                    <span>نتائج فورية في ثوانٍ</span>
-                </div>
-                <div class="flex items-center gap-xs text-body-sm font-body-sm text-on-surface-variant bg-surface-container-low px-md py-xs rounded-full">
-                    <span class="material-symbols-outlined text-[18px]">language</span>
-                    <span>قاعدة بيانات عالمية</span>
-                </div>
-            </div>
+              <span>{{ isLoading() ? 'جاري البحث...' : 'بدء البحث الذكي' }}</span>
+              <span class="material-symbols-outlined">auto_awesome</span>
+            </button>
+          }
         </div>
+      </div>
 
-        <div class="lg:col-span-4 space-y-gutter">
-            <div class="bg-primary-container text-white p-lg rounded-xl shadow-lg relative overflow-hidden h-full min-h-60">
-                <div class="relative z-10">
-                    <span class="text-label-sm font-label-sm text-secondary-fixed bg-secondary-container/30 px-sm py-xs rounded-lg mb-md inline-block">تلميحات الذكاء الاصطناعي</span>
-                    <h4 class="text-headline-sm font-headline-sm mb-md text-on-secondary-container">كيف تزيد دقة البحث؟</h4>
-                    <ul class="space-y-md">
-                        <li class="flex gap-sm items-start">
-                            <span class="material-symbols-outlined text-secondary-fixed">check_circle</span>
-                            <p class="text-body-sm font-body-sm opacity-90">صورة واضحة بوجه مكشوف بالكامل بدون نظارات شمسية أو أقنعة.</p>
-                        </li>
-                        <li class="flex gap-sm items-start">
-                            <span class="material-symbols-outlined text-secondary-fixed">error</span>
-                            <p class="text-body-sm font-body-sm opacity-90">لا يجب أن تحتوي الصورة على أكثر من شخص واحد وإلا سيتم رفضها.</p>
-                        </li>
-                        <li class="flex gap-sm items-start">
-                            <span class="material-symbols-outlined text-secondary-fixed">info</span>
-                            <p class="text-body-sm font-body-sm opacity-90">حجم الصورة لا يتعدى 5 ميجابايت (JPG, JPEG, PNG).</p>
-                        </li>
-                    </ul>
-                </div>
-                <div class="absolute -bottom-8 -left-8 opacity-10">
-                    <span class="material-symbols-outlined text-[180px]">neurology</span>
-                </div>
-            </div>
+      <div class="mt-xl flex flex-wrap gap-md justify-center md:justify-start">
+        <div
+          class="flex items-center gap-xs text-body-sm font-body-sm text-on-surface-variant bg-surface-container-low px-md py-xs rounded-full"
+        >
+          <span class="material-symbols-outlined text-[18px]">verified</span>
+          <span>معالجة خصوصية مشفرة</span>
         </div>
+        <div
+          class="flex items-center gap-xs text-body-sm font-body-sm text-on-surface-variant bg-surface-container-low px-md py-xs rounded-full"
+        >
+          <span class="material-symbols-outlined text-[18px]">bolt</span>
+          <span>نتائج فورية في ثوانٍ</span>
+        </div>
+        <div
+          class="flex items-center gap-xs text-body-sm font-body-sm text-on-surface-variant bg-surface-container-low px-md py-xs rounded-full"
+        >
+          <span class="material-symbols-outlined text-[18px]">language</span>
+          <span>قاعدة بيانات عالمية</span>
+        </div>
+      </div>
     </div>
 
-    @if (isLoading()) {
-        <div class="mt-2xl flex flex-col items-center justify-center">
-            <app-loading-spinner title="جارٍ جلب النتائج..."></app-loading-spinner>
+    <div class="lg:col-span-4 space-y-gutter">
+      <div
+        class="bg-primary-container text-white p-lg rounded-xl shadow-lg relative overflow-hidden h-full min-h-60"
+      >
+        <div class="relative z-10">
+          <span
+            class="text-label-sm font-label-sm text-secondary-fixed bg-secondary-container/30 px-sm py-xs rounded-lg mb-md inline-block"
+            >تلميحات الذكاء الاصطناعي</span
+          >
+          <h4 class="text-headline-sm font-headline-sm mb-md text-on-secondary-container">
+            كيف تزيد دقة البحث؟
+          </h4>
+          <ul class="space-y-md">
+            <li class="flex gap-sm items-start">
+              <span class="material-symbols-outlined text-secondary-fixed">check_circle</span>
+              <p class="text-body-sm font-body-sm opacity-90">
+                صورة واضحة بوجه مكشوف بالكامل بدون نظارات شمسية أو أقنعة.
+              </p>
+            </li>
+            <li class="flex gap-sm items-start">
+              <span class="material-symbols-outlined text-secondary-fixed">error</span>
+              <p class="text-body-sm font-body-sm opacity-90">
+                لا يجب أن تحتوي الصورة على أكثر من شخص واحد وإلا سيتم رفضها.
+              </p>
+            </li>
+            <li class="flex gap-sm items-start">
+              <span class="material-symbols-outlined text-secondary-fixed">info</span>
+              <p class="text-body-sm font-body-sm opacity-90">
+                حجم الصورة لا يتعدى 5 ميجابايت (JPG, JPEG, PNG).
+              </p>
+            </li>
+          </ul>
         </div>
-    }
+        <div class="absolute -bottom-8 -left-8 opacity-10">
+          <span class="material-symbols-outlined text-[180px]">neurology</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    @if (results().length > 0 && !isLoading()) {
-        <section class="mt-2xl">
-            <div class="flex items-center justify-between mb-lg">
-                <div class="flex items-center gap-md">
-                    <h2 class="text-headline-md font-headline-md text-primary">نتائج البحث المقترحة</h2>
-                    <span class="bg-surface-container-high text-primary px-md py-xs rounded-full text-label-sm font-label-sm">{{ results().length }} نتيجة مطابقة</span>
-                </div>
-            </div>
+  @if (isLoading()) {
+    <div class="mt-2xl flex flex-col items-center justify-center">
+      <app-loading-spinner title="جارٍ جلب النتائج..."></app-loading-spinner>
+    </div>
+  }
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter">
-                @for (item of results(); track item.id) {
-                    <app-case-card 
-                        [caseItem]="item" 
-                        [similarity]="item.similarity"
-                    ></app-case-card>
-                }
-            </div>
-        </section>
-    }
+  @if (results().length > 0 && !isLoading()) {
+    <section class="mt-2xl">
+      <div class="flex items-center justify-between mb-lg">
+        <div class="flex items-center gap-md">
+          <h2 class="text-headline-md font-headline-md text-primary">نتائج البحث المقترحة</h2>
+          <span
+            class="bg-surface-container-high text-primary px-md py-xs rounded-full text-label-sm font-label-sm"
+            >{{ results().length }} نتيجة مطابقة</span
+          >
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter">
+        @for (item of results(); track item.id) {
+          <app-case-card
+            [caseItem]="item"
+            [similarity]="item.similarity"
+            [showCaseType]="true"
+          ></app-case-card>
+        }
+      </div>
+    </section>
+  }
 </main>
