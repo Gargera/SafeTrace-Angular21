@@ -136,7 +136,7 @@
           <!-- Image -->
           <div class="relative h-64 overflow-hidden bg-surface-container">
             <img
-              [src]="person.mainImage"
+              [src]="environment.baseUrl + person.mainImage"
               [alt]="person.fullName"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"

@@ -9,12 +9,20 @@ import { NotificationService } from '../../core/services/notification.service';
 import { ProfileService } from './service/profile.service';
 import { MyCasesTab } from './tabs/cases-tab/cases-tab';
 import { EditProfile } from './tabs/Edit-profile/edit-profile';
-
-export type ProfileTab = 'edit' | 'cases' | 'chat' | 'notifications'; // ADDED 'cases'
+import { DonationHistoryComponent } from './tabs/donation-tab/donation-tab';
+export type ProfileTab = 'edit' | 'cases' | 'chat' | 'notifications' | 'donations'; // ADDED 'donations'
 
 @Component({
   selector: 'app-profile-view',
-  imports: [RouterModule, ProfileSidebar, EditProfile, NotificationsTab, ChatTab, MyCasesTab], // ADDED MyCasesTab
+  imports: [
+    RouterModule,
+    ProfileSidebar,
+    EditProfile,
+    NotificationsTab,
+    ChatTab,
+    MyCasesTab,
+    DonationHistoryComponent,
+  ], // ADDED MyCasesTab and DonationHistoryComponent
   templateUrl: './profile-view.html',
   styleUrl: './profile-view.css',
 })
@@ -34,6 +42,7 @@ export class ProfileView implements OnInit, OnDestroy {
     { id: 'cases', label: 'حالاتي' }, // RENAMED from 'بلاغاتي' / uncommented
     { id: 'chat', label: 'المحادثات' },
     { id: 'notifications', label: 'الإشعارات' },
+    { id: 'donations', label: 'التبرعات' },
   ];
 
   ngOnInit(): void {
@@ -81,6 +90,23 @@ export class ProfileView implements OnInit, OnDestroy {
         console.error('Load user info error:', err);
       },
     });
+  }
+  selectedZoomImage = signal<string | null>(null);
+  get avatarUrl(): string {
+    const img = this.userInfo()?.profileImage;
+    if (img) return img;
+    const name = this.userInfo()?.fullName ?? 'User';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0058be&color=fff`;
+  }
+  openImageZoom() {
+    console.log('avatarUrl:', this.avatarUrl);
+    this.selectedZoomImage.set(this.avatarUrl);
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeImageZoom() {
+    this.selectedZoomImage.set(null);
+    document.body.style.overflow = '';
   }
 
   get notificationUnreadCount() {

@@ -1,0 +1,79 @@
+<div class="max-w-6xl mx-auto py-10 px-5">
+  <div class="grid lg:grid-cols-2 gap-8">
+    <!-- Donation Card -->
+    <div class="bg-white rounded-xl shadow-lg border p-8">
+      <h2 class="text-xl font-bold text-center mb-6">اختر مبلغ التبرع</h2>
+
+      <div class="grid grid-cols-4 gap-3 mb-5">
+        <button
+          *ngFor="let value of presetAmounts"
+          type="button"
+          (click)="selectAmount(value)"
+          class="h-12 rounded-lg border transition"
+          [ngClass]="
+            amount === value
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'bg-white hover:bg-gray-50'
+          "
+        >
+          ${{ value }}
+        </button>
+      </div>
+
+      <input
+        type="number"
+        [(ngModel)]="amount"
+        min="1"
+        placeholder="مبلغ مخصص"
+        class="w-full border rounded-lg h-12 px-4 mb-5 outline-none focus:ring-2 focus:ring-blue-500"
+      />
+
+      <textarea
+        rows="5"
+        [(ngModel)]="message"
+        placeholder="رسالة دعم اختيارية..."
+        class="w-full border rounded-lg p-4 mb-6 outline-none focus:ring-2 focus:ring-blue-500"
+      ></textarea>
+
+      <button
+        type="button"
+        (click)="donate()"
+        [disabled]="loading"
+        class="w-full h-12 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {{ loading ? 'جاري التحويل...' : 'تبرع الآن' }}
+      </button>
+    </div>
+
+    <!-- Information Card -->
+    <div class="bg-white rounded-xl shadow-lg border p-8">
+      <div class="text-center mb-6">
+        <div
+          class="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4 text-2xl"
+        >
+          ❤️
+        </div>
+
+        <h2 class="text-2xl font-bold">شكراً لدعمكم</h2>
+      </div>
+
+      <p class="text-gray-600 leading-8 mb-8">
+        تساعد تبرعاتكم في الحفاظ على استقرار المنصة وتطوير خدمات الذكاء الاصطناعي لتسريع عمليات
+        البحث ودعم الفرق التقنية والميدانية.
+      </p>
+
+      <ul class="space-y-4">
+        <li>✔ تطوير نماذج الذكاء الاصطناعي.</li>
+        <li>✔ تحسين سرعة البحث.</li>
+        <li>✔ توفير الدعم الفني.</li>
+        <li>✔ دعم المنصة واستمرارها.</li>
+      </ul>
+
+      <img
+        src="assets/images/donation.jpg"
+        class="rounded-xl mt-8 w-full object-cover"
+        alt="Donation"
+      />
+    </div>
+  </div>
+</div>

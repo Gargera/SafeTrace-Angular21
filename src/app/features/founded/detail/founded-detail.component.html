@@ -59,7 +59,7 @@
           <div class="absolute inset-0 animate-pulse bg-surface-container-high"></div>
         }
         <img
-          [src]="p.mainImage"
+          [src]="environment.baseUrl + p.mainImage"
           [alt]="p.fullName"
           (load)="onImageLoad()"
           class="w-full h-full object-cover transition-opacity duration-500"

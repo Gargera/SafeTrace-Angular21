@@ -7,7 +7,6 @@ import {
 import {
   SocialAuthServiceConfig,
   GoogleLoginProvider,
-  FacebookLoginProvider,
   SOCIAL_AUTH_CONFIG,
 } from '@abacritt/angularx-social-login';
 import { provideRouter } from '@angular/router';
@@ -31,14 +30,13 @@ export const appConfig: ApplicationConfig = {
       provide: SOCIAL_AUTH_CONFIG,
       useValue: {
         autoLogin: false,
+        lang: 'ar',
         providers: [
           {
             id: GoogleLoginProvider.PROVIDER_ID,
-            provider: new GoogleLoginProvider(environment.googleClientId),
-          },
-          {
-            id: FacebookLoginProvider.PROVIDER_ID,
-            provider: new FacebookLoginProvider(environment.facebookAppId),
+            provider: new GoogleLoginProvider(environment.googleClientId, {
+              oneTapEnabled: false,
+            }),
           },
         ],
         onError: (err) => {

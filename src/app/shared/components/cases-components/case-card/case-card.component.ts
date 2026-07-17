@@ -1,27 +1,30 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { DatePipe } from '@angular/common';
+// case-card.component.ts
+import { ChangeDetectionStrategy, Component, input, output, signal, computed } from '@angular/core';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
 import { CaseListItemResponse } from '../../../../core/models/Cases.model';
-import { AgeCategories } from '../../../enums/age-categories';
 import { getAgeCategory } from '../../../helper/age-category.helper';
 
 import { GenderBadgeDirective } from '../../../directives/gender-badge-directive';
 import { AgeBadgeDirective } from '../../../directives/age-badge-directive';
-
+import { CaseTypeBadgeDirective } from '../../../directives/case-type-badge-directive';
 import { CardComponent } from '../../card/card';
 import { ButtonComponent } from '../../button/button';
 
 import { environment } from '../../../../../environments/environment';
+import { CaseType } from '../../../enums/case-type';
 
 @Component({
   selector: 'app-case-card',
   standalone: true,
   imports: [
     DatePipe,
+    DecimalPipe,
     RouterModule,
     GenderBadgeDirective,
     AgeBadgeDirective,
+    CaseTypeBadgeDirective,
     CardComponent,
     ButtonComponent,
   ],
@@ -29,118 +32,82 @@ import { environment } from '../../../../../environments/environment';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CaseCardComponent {
+  // Inputs and outputs
   readonly caseItem = input.required<CaseListItemResponse>();
-
   readonly showUrgentTag = input(false);
-
   readonly detailRoute = input<Array<string | number> | null>(null);
-
+  readonly similarity = input<number>();
   readonly onContact = output<number>();
 
-  readonly fallbackImage = '/images/logo.jpg';
+  // Enums for template
+  protected readonly CaseTypeEnum = CaseType;
 
-  private readonly url = environment.baseUrl;
+  // Static values
+  private readonly baseUrl = environment.baseUrl;
+  protected readonly fallbackImage = '/images/logo.jpg';
 
-  private imageHasError = false;
+  // Reactive state
+  private imageError = signal(false);
 
-  getImageSrc(): string {
+  // Computed signals
+  readonly imageSrc = computed(() => {
     const item = this.caseItem();
-
-    if (this.imageHasError || !item.mainPhoto) {
+    if (this.imageError() || !item.mainPhoto) {
       return this.fallbackImage;
     }
+    return `${this.baseUrl}${item.mainPhoto}`;
+  });
 
-    return `${this.url}${item.mainPhoto}`;
-  }
-
-  onImageError(): void {
-    this.imageHasError = true;
-  }
-
-  getFullName(): string {
+  readonly fullName = computed(() => {
     const item = this.caseItem();
-
     return [item.fName, item.sName, item.tName, item.lName].filter(Boolean).join(' ').trim();
-  }
+  });
 
-  getLocation(): string | null {
+  readonly location = computed(() => {
     const item = this.caseItem();
-
     const parts = [item.city, item.government].filter(Boolean);
-
     return parts.length ? parts.join(' ، ') : null;
-  }
+  });
 
-  getUrgentEndDate(): string | null {
-    const item = this.caseItem() as CaseListItemResponse & {
-      endDate?: string | null;
-    };
+  readonly ageCategory = computed(() => getAgeCategory(this.caseItem().age));
 
-    return item.endDate ?? null;
-  }
-
-  getRemainingTime(): string {
-    const endDate = this.getUrgentEndDate();
-
-    if (!endDate) {
-      return '';
-    }
-
-    const now = new Date().getTime();
-    const end = new Date(endDate).getTime();
-    const difference = end - now;
-
-    // إذا كانت الحالة انتهت
-    if (difference <= 0) {
-      return 'انتهت';
-    }
-
-    // حساب الوقت المتبقي
-    const minutes = Math.floor(difference / 60000);
-    const days = Math.floor(minutes / (60 * 24));
-    const hours = Math.floor((minutes % (60 * 24)) / 60);
-    const remainingMinutes = minutes % 60;
-
-    let result = 'تنتهي بعد ';
-
-    if (days > 0) {
-      result += `${days} يوم`;
-      if (hours > 0) {
-        result += ` و ${hours} ساعة`;
-      }
-    } else if (hours > 0) {
-      result += `${hours} ساعة`;
-      if (remainingMinutes > 0) {
-        result += ` و ${remainingMinutes} دقيقة`;
-      }
-    } else {
-      result += `${remainingMinutes} دقيقة`;
-    }
-
-    return result;
-  }
-
-  isExpired(): boolean {
-    const endDate = this.getUrgentEndDate();
-    if (!endDate) return false;
-    return new Date(endDate).getTime() - Date.now() <= 0;
-  }
-
-  getAgeCategoryEnum(): AgeCategories {
-    return getAgeCategory(this.caseItem().age);
-  }
-
-  hasLocation(): boolean {
+  readonly hasLocation = computed(() => {
     const item = this.caseItem();
-
     return !!(item.city || item.government);
-  }
+  });
 
-  hasCreatedAt(): boolean {
-    return !!this.caseItem().createdAt;
-  }
+  readonly hasCreatedAt = computed(() => !!this.caseItem().createdAt);
 
-  hasUrgentEndDate(): boolean {
-    return !!this.getUrgentEndDate();
+  readonly urgentEndDate = computed(() => {
+    const item = this.caseItem() as CaseListItemResponse & { endDate?: string | null };
+    return item.endDate ?? null;
+  });
+
+  readonly hasUrgentEndDate = computed(() => !!this.urgentEndDate());
+
+  readonly showUrgentBadge = computed(
+    () => this.caseItem().caseType === CaseType.Urgent || this.showUrgentTag(),
+  );
+
+  readonly detailRouteArray = computed(() => {
+    const custom = this.detailRoute();
+    if (custom) return custom;
+
+    const item = this.caseItem();
+    switch (item.caseType) {
+      case CaseType.Urgent:
+        return ['/urgent', item.id];
+      case CaseType.LongTerm:
+        return ['/long-term', item.id];
+      case CaseType.Unknown:
+        return ['/unknown', item.id];
+      default:
+        return ['/cases', item.id];
+    }
+  });
+
+  // Event handler
+  onImageError(): void {
+    this.imageError.set(true);
   }
 }
