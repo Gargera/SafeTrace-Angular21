@@ -1,14 +1,17 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+// case-card.component.ts
+import { ChangeDetectionStrategy, Component, input, output, signal, computed } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
+
 import { CaseListItemResponse } from '../../../../core/models/Cases.model';
-import { AgeCategories } from '../../../enums/age-categories';
 import { getAgeCategory } from '../../../helper/age-category.helper';
+
 import { GenderBadgeDirective } from '../../../directives/gender-badge-directive';
 import { AgeBadgeDirective } from '../../../directives/age-badge-directive';
 import { CaseTypeBadgeDirective } from '../../../directives/case-type-badge-directive';
 import { CardComponent } from '../../card/card';
 import { ButtonComponent } from '../../button/button';
+
 import { environment } from '../../../../../environments/environment';
 import { CaseType } from '../../../enums/case-type';
 
@@ -29,77 +32,67 @@ import { CaseType } from '../../../enums/case-type';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CaseCardComponent {
+  // Inputs and outputs
   readonly caseItem = input.required<CaseListItemResponse>();
   readonly showUrgentTag = input(false);
   readonly detailRoute = input<Array<string | number> | null>(null);
   readonly similarity = input<number>();
-
   readonly onContact = output<number>();
 
+  // Enums for template
   protected readonly CaseTypeEnum = CaseType;
 
-  readonly fallbackImage = '/images/logo.jpg';
-  private readonly url = environment.baseUrl;
+  // Static values
+  private readonly baseUrl = environment.baseUrl;
+  protected readonly fallbackImage = '/images/logo.jpg';
 
-  private imageHasError = false;
+  // Reactive state
+  private imageError = signal(false);
 
-  getImageSrc(): string {
+  // Computed signals
+  readonly imageSrc = computed(() => {
     const item = this.caseItem();
-
-    if (this.imageHasError || !item.mainPhoto) {
+    if (this.imageError() || !item.mainPhoto) {
       return this.fallbackImage;
     }
+    return `${this.baseUrl}${item.mainPhoto}`;
+  });
 
-    return `${this.url}${item.mainPhoto}`;
-  }
-
-  onImageError(): void {
-    this.imageHasError = true;
-  }
-
-  getFullName(): string {
+  readonly fullName = computed(() => {
     const item = this.caseItem();
-
     return [item.fName, item.sName, item.tName, item.lName].filter(Boolean).join(' ').trim();
-  }
+  });
 
-  getLocation(): string | null {
+  readonly location = computed(() => {
     const item = this.caseItem();
-
     const parts = [item.city, item.government].filter(Boolean);
-
     return parts.length ? parts.join(' ، ') : null;
-  }
+  });
 
-  getUrgentEndDate(): string | null {
-    const item = this.caseItem() as CaseListItemResponse & {
-      endDate?: string | null;
-    };
+  readonly ageCategory = computed(() => getAgeCategory(this.caseItem().age));
 
-    return item.endDate ?? null;
-  }
-
-  getAgeCategoryEnum(): AgeCategories {
-    return getAgeCategory(this.caseItem().age);
-  }
-
-  hasLocation(): boolean {
+  readonly hasLocation = computed(() => {
     const item = this.caseItem();
     return !!(item.city || item.government);
-  }
+  });
 
-  hasCreatedAt(): boolean {
-    return !!this.caseItem().createdAt;
-  }
+  readonly hasCreatedAt = computed(() => !!this.caseItem().createdAt);
 
-  hasUrgentEndDate(): boolean {
-    return !!this.getUrgentEndDate();
-  }
+  readonly urgentEndDate = computed(() => {
+    const item = this.caseItem() as CaseListItemResponse & { endDate?: string | null };
+    return item.endDate ?? null;
+  });
 
-  get computedDetailRoute(): Array<string | number> {
-    if (this.detailRoute()) {
-      return this.detailRoute()!;
-    }
+  readonly hasUrgentEndDate = computed(() => !!this.urgentEndDate());
+
+  readonly showUrgentBadge = computed(
+    () => this.caseItem().caseType === CaseType.Urgent || this.showUrgentTag(),
+  );
+
+  readonly detailRouteArray = computed(() => {
+    const custom = this.detailRoute();
+    if (custom) return custom;
+
     const item = this.caseItem();
     switch (item.caseType) {
       case CaseType.Urgent:
@@ -111,5 +104,10 @@ export class CaseCardComponent {
       default:
         return ['/cases', item.id];
     }
+  });
+
+  // Event handler
+  onImageError(): void {
+    this.imageError.set(true);
   }
 }

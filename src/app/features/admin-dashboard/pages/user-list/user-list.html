@@ -59,9 +59,7 @@
 <section class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75">
   
   @if (isLoading()) {
-    <div class="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
-      <span class="material-symbols-outlined text-secondary animate-spin text-[32px]">progress_activity</span>
-    </div>
+    <app-loading-spinner title="جارِ تحميل المستخدمين..." [fullscreen]="false" containerClass="absolute inset-0 bg-white/60 flex items-center justify-center z-10"></app-loading-spinner>
   }
 
   <div class="overflow-x-auto">
