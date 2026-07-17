@@ -112,21 +112,24 @@
 }
 
 <!-- Confirmation Modal -->
-@if (showConfirmModal()) {
+@if (showConfirmModal() && modalConfig(); as config) {
   <app-confirmation-modal
-    [title]="modalConfig()?.title || 'تأكيد'"
-    [message]="modalConfig()?.message || 'هل أنت متأكد؟'"
-    [confirmText]="modalConfig()?.confirmText || 'تأكيد'"
-    [cancelText]="modalConfig()?.cancelText || 'إلغاء'"
+    [title]="config.title"
+    [message]="config.message"
+    [confirmText]="config.confirmText"
+    [cancelText]="config.cancelText"
+    [variant]="config.variant ?? 'primary'"
+    [icon]="config.icon ?? 'help_outline'"
     (confirm)="confirmAction()"
     (cancel)="closeModal()"
   />
 }
 
-<!-- Mark as Found Modal (if implemented) -->
-<!-- @if (showMarkAsFoundModal()) {
-  <app-mark-as-found-modal
-    (confirm)="handleMarkAsFoundConfirm($event)"
+<!-- Mark as Found Modal -->
+@if (showMarkAsFoundModal()) {
+  <app-founded-popup
+    [caseId]="markAsFoundCaseId()!"
+    (confirmed)="handleMarkAsFoundConfirm($event)"
     (cancel)="closeMarkAsFoundModal()"
   />
-} -->
+}

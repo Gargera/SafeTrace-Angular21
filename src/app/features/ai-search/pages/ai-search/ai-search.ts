@@ -5,6 +5,8 @@ import Swal from 'sweetalert2';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { AuthService } from '../../../../core/services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-ai-search',
@@ -16,6 +18,8 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 export class AiSearch implements OnInit {
   private aiMatchingService = inject(AiMatchingService);
   private toast = inject(SnackbarService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
   
   isDragging = signal(false);
   isLoading = signal(false);
@@ -66,7 +70,25 @@ export class AiSearch implements OnInit {
   }
 
   handleFile(file: File) {
-    const validExtensions = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!this.authService.isLoggedIn()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'عذراً!',
+        text: 'يجب تسجيل الدخول أولاً لتتمكن من استخدام تقنية البحث بالذكاء الاصطناعي.',
+        confirmButtonText: 'تسجيل الدخول',
+        showCancelButton: true,
+        cancelButtonText: 'إلغاء',
+        confirmButtonColor: '#0058be',
+        customClass: { popup: 'rounded-xl font-body-md' }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.router.navigate(['/auth/login']);
+        }
+      });
+      return;
+    }
+
+    const validExtensions = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     const maxSizeBytes = 5 * 1024 * 1024; // 5MB
 
     if (!validExtensions.includes(file.type)) {
