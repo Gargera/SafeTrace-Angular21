@@ -128,7 +128,7 @@
       @if (showContactButton()) {
         <app-button
           variant="secondary"
-          (onClick)="onContact.emit(caseItem().id)"
+          (onClick)="startChat(caseItem().id)"
           extraClass="w-full justify-center gap-2 hover:border-primary hover:bg-primary/5 hover:text-primary"
         >
           <span class="material-symbols-outlined material-icon-sm">chat</span>
