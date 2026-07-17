@@ -31,6 +31,7 @@ import { CaseCardCompactComponent } from '../../../../shared/components/cases-co
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
+import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup';
 
 const CASE_TYPE_ORDER: CaseType[] = [CaseType.Urgent, CaseType.LongTerm, CaseType.Unknown];
 const FILTER_DEBOUNCE_MS = 350;
@@ -50,6 +51,7 @@ const FILTER_DEBOUNCE_MS = 350;
     CaseHeaderComponent,
     FormField,
     CardComponent,
+    FoundedPopupComponent,
   ],
   templateUrl: './cases-tab.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -88,6 +90,8 @@ export class MyCasesTab implements OnInit, OnDestroy {
     action: 'delete' | 'markAsFound';
     caseId?: number;
     caseType?: CaseType;
+    variant?: 'primary' | 'danger';
+    icon?: string;
   } | null>(null);
 
   showMarkAsFoundModal = signal(false);
@@ -265,12 +269,14 @@ export class MyCasesTab implements OnInit, OnDestroy {
 
     this.modalConfig.set({
       title: 'حذف الحالة',
-      message: 'هل أنت متأكد من حذف هذه الحالة؟ لا يمكن التراجع عن هذا الإجراء.',
+      message: 'هل أنت متأكد من حذف هذه الحالة؟',
       confirmText: 'حذف',
       cancelText: 'إلغاء',
       action: 'delete',
       caseId,
       caseType,
+      variant: 'danger',
+      icon: 'delete_forever',
     });
     this.showConfirmModal.set(true);
   }

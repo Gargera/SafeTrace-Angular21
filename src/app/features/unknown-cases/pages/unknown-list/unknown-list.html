@@ -47,6 +47,7 @@
             <app-case-card
               [caseItem]="c"
               [detailRoute]="['/unknown', c.id]"
+              [showCaseType]="false"
               (onContact)="onContactReporter($event)"
               class="block"
             >

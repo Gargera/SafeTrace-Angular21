@@ -38,6 +38,8 @@ export class CaseCardComponent {
   readonly detailRoute = input<Array<string | number> | null>(null);
   readonly similarity = input<number>();
   readonly onContact = output<number>();
+  showCaseType = input(true);
+  showContactButton = input(true);
 
   // Enums for template
   protected readonly CaseTypeEnum = CaseType;
