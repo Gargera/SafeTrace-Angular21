@@ -90,9 +90,8 @@
     </div>
 
     @if (isLoading()) {
-        <div class="mt-2xl flex flex-col items-center gap-md">
-            <div class="w-12 h-12 border-4 border-surface-container-highest border-t-secondary rounded-full animate-spin"></div>
-            <p class="text-body-md font-body-md text-on-surface-variant">جارٍ جلب النتائج...</p>
+        <div class="mt-2xl flex flex-col items-center justify-center">
+            <app-loading-spinner title="جارٍ جلب النتائج..."></app-loading-spinner>
         </div>
     }
 
