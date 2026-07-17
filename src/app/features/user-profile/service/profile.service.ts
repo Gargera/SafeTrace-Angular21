@@ -1,18 +1,19 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   AddIdImageDTO,
   ChangePasswordDTO,
   GetUserInfoDTO,
+  MyCaseListItemResponse,
+  MyCasesFilterRequest,
   UpdateHomeLocationDTO,
   UpdateNameDTO,
   UpdateProfileImageDTO,
 } from '../model/profile.model';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
-
-
+import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
@@ -56,5 +57,36 @@ export class ProfileService {
 
   removeProfileImage(): Observable<ApiResponse<boolean>> {
     return this.#http.delete<ApiResponse<boolean>>(`${this.#profileUrl}/ProfileImage`);
+  }
+  updatePhoneNumber(phoneNumber: string): Observable<ApiResponse<boolean>> {
+    const formData = new FormData();
+    formData.append('PhoneNumber', phoneNumber);
+
+    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdatePhoneNumber`, formData);
+  }
+  getMyCases(
+    filter: MyCasesFilterRequest,
+  ): Observable<ApiResponse<PaginationResponse<MyCaseListItemResponse>>> {
+    let params = new HttpParams();
+
+    if (filter.fullName?.trim()) {
+      params = params.set('fullName', filter.fullName.trim());
+    }
+
+    if (filter.caseCode?.trim()) {
+      params = params.set('caseCode', filter.caseCode.trim());
+    }
+
+    if (filter.caseType !== null && filter.caseType !== undefined) {
+      params = params.set('caseType', filter.caseType.toString());
+    }
+
+    params = params.set('page', (filter.page ?? 1).toString());
+    params = params.set('pageSize', (filter.pageSize ?? 6).toString());
+
+    return this.#http.get<ApiResponse<PaginationResponse<MyCaseListItemResponse>>>(
+      `${this.#profileUrl}/MyCases`,
+      { params },
+    );
   }
 }

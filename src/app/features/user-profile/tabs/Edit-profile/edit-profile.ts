@@ -18,11 +18,12 @@ import {
   AbstractControl,
   FormBuilder,
   FormGroup,
+  FormsModule,
   ReactiveFormsModule,
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { Subject, switchMap } from 'rxjs';
+import { Subject, switchMap, takeUntil } from 'rxjs';
 import {
   ChangePasswordDTO,
   GetUserInfoDTO,
@@ -38,7 +39,8 @@ import { SnackbarService } from '../../../../core/services/toast.service';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
 import { ImageCropDialog } from '../../shared/image-crop-dialog/image-crop-dialog';
 import { Toast } from '../../../../shared/components/toast/toast';
-
+import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
+import { getVerificationStatusTranslationAr } from '../../../../core/constants/verification.status.dictionary';
 // ── Egypt center coordinates (default) ────────────────────────────────────
 const EGYPT_LAT = 26.8206;
 const EGYPT_LNG = 30.8025;
@@ -48,7 +50,7 @@ const EGYPT_ZOOM = 6;
 const ALLOWED_PROFILE_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_PROFILE_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
-// ── Custom validator: passwords match ─────────────────────────────────────
+// ── Custom validator: passwords match ──────────────────────────────────────
 function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
   const current = group.get('currentPassword')?.value;
   const next = group.get('newPassword')?.value;
@@ -71,7 +73,14 @@ function passwordConfirmValidator(group: AbstractControl): ValidationErrors | nu
 @Component({
   selector: 'app-edit-profile',
   standalone: true,
-  imports: [ReactiveFormsModule, NgTemplateOutlet, Toast, ConfirmDialog, ImageCropDialog],
+  imports: [
+    ReactiveFormsModule,
+    FormsModule,
+    NgTemplateOutlet,
+    Toast,
+    ConfirmDialog,
+    ImageCropDialog,
+  ],
   templateUrl: './edit-profile.html',
   styleUrl: './edit-profile.css',
 })
@@ -90,13 +99,16 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   @ViewChild('mapContainer', { static: false }) mapElement!: ElementRef<HTMLDivElement>;
 
   // ── Section Editing Flags ─────────────────────────────────────────────────
-  // Note: the profile photo itself is no longer gated behind an edit toggle —
-  // "Change Photo" / "Remove Photo" are always available and act instantly.
-  // Only the ID image keeps the old edit/save/cancel batch flow.
+  // The profile photo and the ID image both use the same edit/save/cancel
+  // batch flow: click "تعديل" → pick/crop a file → "حفظ" uploads it, or
+  // "إلغاء" discards the pending change. "Remove Photo" stays independent of
+  // this toggle and acts instantly (confirm → remove).
   readonly isEditingIdImage = signal(false);
+  readonly isEditingProfileImage = signal(false);
   readonly isEditingPersonal = signal(false);
   readonly isEditingLocation = signal(false);
   readonly isEditingPassword = signal(false);
+  readonly isEditingPhone = signal(false);
   readonly imageFile = input<File | null>(null);
 
   // ── Section Loading States ────────────────────────────────────────────────
@@ -104,19 +116,27 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   readonly isSavingPersonal = signal(false);
   readonly isSavingLocation = signal(false);
   readonly isSavingPassword = signal(false);
+  readonly isSavingPhone = signal(false);
 
-  // ── Profile photo state (independent of the ID-image batch flow) ─────────
+  // ── Profile photo state ────────────────────────────────────────────────────
+  // isUploadingProfileImage doubles as the "saving" flag for the profile
+  // photo's edit/save/cancel flow (equivalent to isSavingIdImage). Removal
+  // stays a separate, instant action independent of edit mode.
   readonly isUploadingProfileImage = signal(false);
   readonly isRemovingProfileImage = signal(false);
   readonly showRemoveConfirm = signal(false);
 
-  // ── Crop dialog state ──────────────────────────────────────────────────────
+  // ── Crop dialog state (shared by profile photo + ID image) ───────────────
   readonly showCropDialog = signal(false);
   readonly cropSourceFile = signal<File | null>(null);
+  // Which field the current crop session is for. The cropper itself is now
+  // fully free-form and has no notion of "profile" vs "id" — this only
+  // decides where onCropSaved routes the resulting Blob.
+  #cropTarget: 'profile' | 'id' = 'profile';
 
   // ── Shared Feedback States ────────────────────────────────────────────────
-  readonly saveError = signal<string | null>(null);
-  readonly saveSuccess = signal(false);
+  // Success/error feedback for every save/upload/remove action is now shown
+  // via the global SnackbarService/<app-toast />, not local signals/banners.
   readonly showPassword = signal(false);
   readonly showNewPassword = signal(false);
 
@@ -132,11 +152,14 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
 
   // ── File state ────────────────────────────────────────────────────────────
   #selectedIdImage: File | null = null;
+  // Cropped file pending upload for the profile photo's batch edit/save flow.
+  #selectedProfileImage: File | null = null;
   // Kept so a failed "remove" can restore exactly what was on screen before.
   #previousProfileImageUrl: string | null = null;
   readonly profileImagePreview = signal<string | null>(null);
   readonly idImagePreview = signal<string | null>(null);
   readonly filledIconStyle = "'FILL' 1";
+
   // ── Forms ──────────────────────────────────────────────────────────────────
   readonly personalForm: FormGroup = this.#fb.group({
     firstName: ['', [Validators.required, Validators.maxLength(100)]],
@@ -160,6 +183,10 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     { validators: [passwordMatchValidator, passwordConfirmValidator] },
   );
 
+  readonly phoneForm: FormGroup = this.#fb.group({
+    phoneNumber: ['', [Validators.required, Validators.pattern(/^01[0125][0-9]{8}$/)]],
+  });
+
   constructor() {
     // Dynamic effect to control marker dragability state based on edit location flag
     effect(() => {
@@ -173,6 +200,9 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   ngOnChanges(changes: SimpleChanges): void {
+    console.log(this.passwordForm.get('newPassword')?.errors);
+    console.log(this.passwordForm.errors);
+    console.log(this.passwordForm.valid);
     if (changes['userInfo'] && this.userInfo()) {
       const info = this.userInfo()!;
       const nameParts = info.fullName.trim().split(' ');
@@ -183,6 +213,11 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
         lastName: nameParts.slice(1).join(' ') ?? '',
       });
 
+      // Patch Phone Form
+      this.phoneForm.patchValue({
+        phoneNumber: info.phoneNumber ?? '',
+      });
+
       // Disable forms initially by default
       if (!this.isEditingPersonal()) {
         this.personalForm.disable();
@@ -190,12 +225,19 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
       if (!this.isEditingPassword()) {
         this.passwordForm.disable();
       }
+      if (!this.isEditingPhone()) {
+        this.phoneForm.disable();
+      }
 
       // Sync the profile photo preview from server data, unless we're
-      // mid-upload/mid-removal — those flows manage the preview themselves
-      // (optimistic clear/preview) and would otherwise get clobbered by a
-      // stale value here.
-      if (!this.isUploadingProfileImage() && !this.isRemovingProfileImage()) {
+      // mid-upload/mid-removal/mid-edit — those flows manage the preview
+      // themselves (optimistic clear/preview) and would otherwise get
+      // clobbered by a stale value here.
+      if (
+        !this.isUploadingProfileImage() &&
+        !this.isRemovingProfileImage() &&
+        !this.isEditingProfileImage()
+      ) {
         this.profileImagePreview.set(info.profileImage);
       }
 
@@ -276,6 +318,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
       });
     }
   }
+
   get isModerator(): boolean {
     return this.userInfo()?.role === UserRole.Moderator;
   }
@@ -285,6 +328,27 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   get isVerified(): boolean {
     return this.userInfo()?.verificationStatus === VerificationStatus.Verified;
   }
+
+  getRoleName(roleName: string | undefined): string {
+    return getRoleTranslationAr(roleName);
+  }
+  getVerificationStatus(ver: string | undefined): string {
+    return getVerificationStatusTranslationAr(ver);
+  }
+  get verificationLabel(): string {
+    if (this.userInfo()?.role === UserRole.Moderator) {
+      return this.getRoleName(UserRole.Moderator);
+    } else if (this.userInfo()?.role === UserRole.Admin) {
+      return this.getRoleName(UserRole.Admin);
+    } else if (this.userInfo()?.verificationStatus === VerificationStatus.Verified) {
+      return this.getVerificationStatus(VerificationStatus.Verified);
+    } else if (this.userInfo()?.verificationStatus === VerificationStatus.Pending) {
+      return this.getVerificationStatus(VerificationStatus.Pending);
+    } else {
+      return getVerificationStatusTranslationAr(VerificationStatus.Unverified);
+    }
+  }
+
   #updateMapAndMarker(lat: number, lng: number, zoom?: number): void {
     if (!this.map) return;
     this.map.setCenter({ lat, lng });
@@ -387,33 +451,44 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     this.#geocode$.next({ lat, lng });
   }
 
-  // ── Profile photo: select → validate → crop → upload ─────────────────────
+  // ── Shared image validation (used by both profile photo + ID image) ──────
 
-  /**
-   * Triggered by the (hidden) file input under the profile photo.
-   * Validates type/size *before* opening the crop dialog — per spec, a
-   * failing file never reaches the cropper and the current photo is left
-   * untouched.
-   */
-  onProfilePhotoFileSelected(event: Event): void {
-    const inputEl = event.target as HTMLInputElement;
-    const file = inputEl.files?.[0] ?? null;
-    // Reset the input immediately so selecting the *same* file again still
-    // fires a change event next time.
-    inputEl.value = '';
+  /** Returns true if the file passes type/size checks; shows a toast and
 
-    if (!file) return;
-
+-    returns false otherwise. */
+  #validateImageFile(file: File): boolean {
     if (!ALLOWED_PROFILE_IMAGE_TYPES.includes(file.type)) {
       this.#snackbar.error('صيغة الصورة غير مدعومة. يُسمح فقط بـ JPG أو PNG أو WEBP.');
-      return;
+      return false;
     }
 
     if (file.size > MAX_PROFILE_IMAGE_SIZE_BYTES) {
       this.#snackbar.error('حجم الصورة يتجاوز الحد الأقصى المسموح به (5 ميجابايت).');
-      return;
+      return false;
     }
 
+    return true;
+  }
+
+  // ── Profile photo: select → validate → crop → upload ─────────────────────
+
+  /**
+
+-    Triggered by the (hidden) file input under the profile photo.
+-    Validates type/size _before_ opening the crop dialog — per spec, a
+-    failing file never reaches the cropper and the current photo is left
+-    untouched.
+     */
+  onProfilePhotoFileSelected(event: Event): void {
+    const inputEl = event.target as HTMLInputElement;
+    const file = inputEl.files?.[0] ?? null;
+    inputEl.value = '';
+
+    if (!file) return;
+
+    if (!this.#validateImageFile(file)) return;
+
+    this.#cropTarget = 'profile';
     this.cropSourceFile.set(file);
     this.showCropDialog.set(true);
   }
@@ -424,33 +499,45 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   }
 
   /**
-   * The crop dialog only ever hands back a Blob when the user clicks
-   * "حفظ" — the original image on screen is untouched until this fires.
-   * From here the flow is: wrap in a File → optimistic preview → upload →
-   * refresh → toast.
-   */
+
+-    The crop dialog only ever hands back a Blob when the user clicks
+-    "حفظ" — the original image on screen is untouched until this fires.
+-    Branches on #cropTarget: the profile photo uploads immediately
+-    (optimistic preview → upload → refresh → toast), while the ID image
+-    just updates its preview and stores the cropped File — it still goes
+-    through the existing edit/save/cancel batch flow via saveIdImage().
+     */
   onCropSaved(blob: Blob): void {
     this.showCropDialog.set(false);
     this.cropSourceFile.set(null);
 
+    const objectUrl = URL.createObjectURL(blob);
+
+    if (this.#cropTarget === 'id') {
+      const croppedFile = new File([blob], `id-${Date.now()}.png`, { type: 'image/png' });
+      this.idImagePreview.set(objectUrl);
+      this.#selectedIdImage = croppedFile;
+      return;
+    }
+
     const croppedFile = new File([blob], `profile-${Date.now()}.png`, { type: 'image/png' });
 
-    // Optimistic preview while the upload is in flight.
-    const objectUrl = URL.createObjectURL(blob);
+    // Preview the crop immediately, but nothing uploads until "حفظ" is
+    // clicked in saveProfileImage() — same batch flow as the ID image.
     this.profileImagePreview.set(objectUrl);
-
-    this.#uploadProfilePhoto(croppedFile);
+    this.#selectedProfileImage = croppedFile;
   }
 
   #uploadProfilePhoto(file: File): void {
     if (this.isUploadingProfileImage()) return;
 
     this.isUploadingProfileImage.set(true);
-    this.saveError.set(null);
 
     this.#profileService.updateProfileImage({ profileImage: file }).subscribe({
       next: () => {
         this.isUploadingProfileImage.set(false);
+        this.isEditingProfileImage.set(false);
+        this.#selectedProfileImage = null;
         this.#snackbar.success('تم تحديث الصورة الشخصية بنجاح');
         this.#refreshAndEmit();
       },
@@ -460,8 +547,10 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
           err?.error?.message ?? 'حدث خطأ أثناء رفع الصورة الشخصية. يرجى المحاولة مجدداً.';
         this.#snackbar.error(msg);
         // Fall back to whatever the server last had, since the optimistic
-        // preview never actually made it to the backend.
+        // preview never actually made it to the backend. Edit mode stays
+        // open so the user can pick another file or cancel.
         this.profileImagePreview.set(this.userInfo()?.profileImage ?? null);
+        this.#selectedProfileImage = null;
       },
     });
   }
@@ -469,11 +558,8 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   // ── Profile photo: remove ─────────────────────────────────────────────────
 
   requestRemoveProfilePhoto(): void {
-    console.log(this.profileImagePreview());
-    console.log(this.isRemovingProfileImage());
     if (!this.profileImagePreview() || this.isRemovingProfileImage()) return;
     this.showRemoveConfirm.set(true);
-    console.log(this.showRemoveConfirm());
   }
 
   cancelRemoveProfilePhoto(): void {
@@ -504,15 +590,28 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     });
   }
 
-  // ── ID image handling (unchanged batch edit/save flow) ────────────────────
+  // ── ID image: select → validate → crop ─────────────────────────────────────
+  // Save/cancel still go through the pre-existing batch flow
+  // (toggleIdImageEdit / saveIdImage / cancelIdImage below).
 
+  /**
+
+-    Triggered by the (hidden) file input under the ID photo. Same
+-    type/size validation as the profile photo, then opens the shared crop
+-    dialog instead of reading the raw file straight into the preview.
+     */
   onIdImageSelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
+    const inputEl = event.target as HTMLInputElement;
+    const file = inputEl.files?.[0] ?? null;
+    inputEl.value = '';
+
     if (!file) return;
-    this.#selectedIdImage = file;
-    const reader = new FileReader();
-    reader.onload = (e) => this.idImagePreview.set(e.target?.result as string);
-    reader.readAsDataURL(file);
+
+    if (!this.#validateImageFile(file)) return;
+
+    this.#cropTarget = 'id';
+    this.cropSourceFile.set(file);
+    this.showCropDialog.set(true);
   }
 
   // ── Form helpers ──────────────────────────────────────────────────────────
@@ -524,6 +623,11 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
 
   isPasswordInvalid(field: string): boolean {
     const ctrl = this.passwordForm.get(field);
+    return !!(ctrl?.invalid && ctrl?.touched);
+  }
+
+  isPhoneFieldInvalid(field: string): boolean {
+    const ctrl = this.phoneForm.get(field);
     return !!(ctrl?.invalid && ctrl?.touched);
   }
 
@@ -569,13 +673,25 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     }
   }
 
+  togglePhoneEdit(edit: boolean): void {
+    this.isEditingPhone.set(edit);
+    if (edit) {
+      this.phoneForm.enable();
+    } else {
+      this.phoneForm.disable();
+    }
+  }
+
   toggleIdImageEdit(edit: boolean): void {
     this.isEditingIdImage.set(edit);
   }
 
+  toggleProfileImageEdit(edit: boolean): void {
+    this.isEditingProfileImage.set(edit);
+  }
+
   cancelPersonal(): void {
     this.togglePersonalEdit(false);
-    this.saveError.set(null);
     const info = this.userInfo();
     if (info) {
       const nameParts = info.fullName.trim().split(' ');
@@ -588,7 +704,6 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
 
   cancelLocation(): void {
     this.isEditingLocation.set(false);
-    this.saveError.set(null);
     const info = this.userInfo();
     if (info && info.homeLatitude && info.homeLongitude) {
       this.selectedLat.set(info.homeLatitude);
@@ -601,16 +716,28 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
 
   cancelIdImage(): void {
     this.toggleIdImageEdit(false);
-    this.saveError.set(null);
     const info = this.userInfo();
     this.idImagePreview.set(info?.identificationImage ?? null);
     this.#selectedIdImage = null;
   }
 
+  cancelProfileImage(): void {
+    this.toggleProfileImageEdit(false);
+    const info = this.userInfo();
+    this.profileImagePreview.set(info?.profileImage ?? null);
+    this.#selectedProfileImage = null;
+  }
+
   cancelPassword(): void {
     this.togglePasswordEdit(false);
-    this.saveError.set(null);
     this.passwordForm.reset();
+  }
+
+  cancelPhone(): void {
+    this.phoneForm.patchValue({
+      phoneNumber: this.userInfo()?.phoneNumber ?? '',
+    });
+    this.phoneForm.markAsPristine();
   }
 
   // ── Independent Save methods ────────────────────────────────────────────
@@ -624,8 +751,6 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     }
 
     this.isSavingPersonal.set(true);
-    this.saveError.set(null);
-    this.saveSuccess.set(false);
 
     const dto: UpdateNameDTO = {
       firstName: this.personalForm.value.firstName,
@@ -636,14 +761,13 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
       next: () => {
         this.isSavingPersonal.set(false);
         this.togglePersonalEdit(false);
-        this.saveSuccess.set(true);
+        this.#snackbar.success('تم حفظ التغييرات بنجاح');
         this.#refreshAndEmit();
-        setTimeout(() => this.saveSuccess.set(false), 3000);
       },
       error: (err) => {
         this.isSavingPersonal.set(false);
         const msg = err?.error?.message ?? 'حدث خطأ أثناء حفظ البيانات. يرجى المحاولة مجدداً.';
-        this.saveError.set(msg);
+        this.#snackbar.error(msg);
       },
     });
   }
@@ -656,8 +780,6 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     }
 
     this.isSavingLocation.set(true);
-    this.saveError.set(null);
-    this.saveSuccess.set(false);
 
     const dto: UpdateHomeLocationDTO = { homeLatitude: lat, homeLongitude: lng };
 
@@ -665,61 +787,75 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
       next: () => {
         this.isSavingLocation.set(false);
         this.isEditingLocation.set(false);
-        this.saveSuccess.set(true);
+        this.#snackbar.success('تم حفظ الموقع بنجاح');
         this.#refreshAndEmit();
-        setTimeout(() => this.saveSuccess.set(false), 3000);
       },
       error: (err) => {
         this.isSavingLocation.set(false);
         const msg = err?.error?.message ?? 'حدث خطأ أثناء حفظ الموقع. يرجى المحاولة مجدداً.';
-        this.saveError.set(msg);
+        this.#snackbar.error(msg);
       },
     });
   }
 
-  /**
-   * ID image only now — the profile photo has its own instant upload path
-   * (see #uploadProfilePhoto) and no longer goes through this batch save.
-   */
   saveIdImage(): void {
     if (this.isSavingIdImage()) return;
 
     const idFile = this.#selectedIdImage;
+
     if (!idFile) {
       this.toggleIdImageEdit(false);
       return;
     }
 
     this.isSavingIdImage.set(true);
-    this.saveError.set(null);
-    this.saveSuccess.set(false);
 
     this.#profileService.addIdImage({ identificationImage: idFile }).subscribe({
       next: () => {
         this.isSavingIdImage.set(false);
         this.toggleIdImageEdit(false);
-        this.saveSuccess.set(true);
         this.#selectedIdImage = null;
+        this.#snackbar.success('تم تحديث صورة الهوية بنجاح');
         this.#refreshAndEmit();
-        setTimeout(() => this.saveSuccess.set(false), 3000);
       },
       error: (err) => {
         this.isSavingIdImage.set(false);
         const msg = err?.error?.message ?? 'حدث خطأ أثناء رفع صورة الهوية. يرجى المحاولة مجدداً.';
-        this.saveError.set(msg);
+        this.#snackbar.error(msg);
       },
     });
   }
 
+  /**
+
+-    Profile photo — uploads the pending cropped file (if any) via the
+-    shared #uploadProfilePhoto helper, which closes edit mode and clears
+-    #selectedProfileImage itself once the request settles.
+     */
+  saveProfileImage(): void {
+    if (this.isUploadingProfileImage()) return;
+
+    const profileFile = this.#selectedProfileImage;
+
+    if (!profileFile) {
+      this.toggleProfileImageEdit(false);
+      return;
+    }
+
+    this.#uploadProfilePhoto(profileFile);
+  }
+
   savePassword(): void {
+    console.log(this.passwordForm.value);
+    console.log(this.passwordForm.get('newPassword')?.errors);
+    console.log(this.passwordForm.errors);
+    console.log(this.passwordForm.valid);
     if (this.passwordForm.invalid || this.isSavingPassword()) {
       this.passwordForm.markAllAsTouched();
       return;
     }
 
     this.isSavingPassword.set(true);
-    this.saveError.set(null);
-    this.saveSuccess.set(false);
 
     const dto: ChangePasswordDTO = {
       currentPassword: this.passwordForm.value.currentPassword,
@@ -732,27 +868,62 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
       next: () => {
         this.isSavingPassword.set(false);
         this.togglePasswordEdit(false);
-        this.saveSuccess.set(true);
+        this.#snackbar.success('تم تغيير كلمة المرور بنجاح');
         this.passwordForm.reset();
-        setTimeout(() => this.saveSuccess.set(false), 3000);
       },
       error: (err) => {
         this.isSavingPassword.set(false);
         const msg =
           err?.error?.message ??
           'كلمة المرور الحالية غير صحيحة أو حدث خطأ أثناء تغيير كلمة المرور.';
-        this.saveError.set(msg);
+        this.#snackbar.error(msg);
       },
     });
   }
 
   /**
-   * None of the UserProfile endpoints return the updated profile — they
-   * only return { success, message, data: true }. So after any successful
-   * save we silently re-fetch GetInfo and push the fresh data up to
-   * ProfileView, which is what actually keeps the sidebar/tabs in sync
-   * and makes the change survive a refresh.
-   */
+
+-    Phone number save — dedicated endpoint, same independent-section
+-    pattern as savePersonal/saveLocation/savePassword. Relies on
+-    #refreshAndEmit() to pull the fresh GetUserInfoDTO from the server
+-    (UpdatePhoneNumber only returns a bool, not the updated user).
+     */
+  savePhoneNumber(): void {
+    if (this.phoneForm.invalid || this.isSavingPhone()) {
+      this.phoneForm.markAllAsTouched();
+      return;
+    }
+
+    this.isSavingPhone.set(true);
+
+    const phoneNumber = this.phoneForm.value.phoneNumber as string;
+
+    this.#profileService
+      .updatePhoneNumber(phoneNumber)
+      .pipe(takeUntil(this.#destroy$))
+      .subscribe({
+        next: () => {
+          this.isSavingPhone.set(false);
+          this.togglePhoneEdit(false);
+          this.#snackbar.success('تم تغيير رقم الهاتف بنجاح');
+          this.#refreshAndEmit();
+        },
+        error: (err) => {
+          this.isSavingPhone.set(false);
+          const msg = err?.error?.message ?? 'حدث خطأ اثناء تغيير رقم الهاتف';
+          this.#snackbar.error(msg);
+        },
+      });
+  }
+
+  /**
+
+- None of the UserProfile endpoints return the updated profile — they
+- only return { success, message, data: true }. So after any successful
+- save we silently re-fetch GetInfo and push the fresh data up to
+- ProfileView, which is what actually keeps the sidebar/tabs in sync
+- and makes the change survive a refresh.
+  */
   #refreshAndEmit(): void {
     this.#profileService.getUserInfo().subscribe({
       next: (res) => {

@@ -1,21 +1,26 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { UrgentCaseService } from '../../services/urgent-case.service';
-import { CasesFilterRequest } from '../../../../core/models/Cases.model';
-import { UrgentCaseListItemResponse } from '../../models/response/UrgentCaseListItemResponse';
+import { finalize } from 'rxjs';
+
+import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { PaginationComponent } from '../../../../shared/components/cases-components/case-pagination/case-pagination.component';
-import { EmptyStateComponent } from '../../../../shared/components/cases-components/empty-state/empty-state.component';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
-import { UrgentCasesFilterRequest } from '../../models/request/UrgentCaseFilterRequest';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
+
+import { UrgentCaseService } from '../../services/urgent-case.service';
+import { CasesFilterRequest } from '../../../../core/models/Cases.model';
+import { UrgentCaseListItemResponse } from '../../models/response/UrgentCaseListItemResponse';
+import { UrgentCasesFilterRequest } from '../../models/request/UrgentCaseFilterRequest';
 
 @Component({
   selector: 'app-urgent-list',
   standalone: true,
   imports: [
+    FormField,
     FormsModule,
     CaseHeaderComponent,
     CaseFiltersComponent,
@@ -26,22 +31,25 @@ import { CaseCardComponent } from '../../../../shared/components/cases-component
   ],
   templateUrl: './urgent-list.html',
   styleUrls: ['./urgent-list.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UrgentListComponent implements OnInit {
-  private router = inject(Router);
-  private urgentCaseService = inject(UrgentCaseService);
+  private readonly router = inject(Router);
+  private readonly urgentCaseService = inject(UrgentCaseService);
 
-  cases = signal<UrgentCaseListItemResponse[]>([]);
-  loading = signal(true);
+  private readonly defaultPageSize = 12;
 
-  currentPage = signal(1);
-  totalPages = signal(1);
-  totalItems = signal(0);
-  pageSize = signal(8);
+  readonly cases = signal<UrgentCaseListItemResponse[]>([]);
+  readonly loading = signal(true);
 
-  radiusInMeters = signal<number | null>(null);
+  readonly currentPage = signal(1);
+  readonly totalPages = signal(1);
+  readonly totalItems = signal(0);
+  readonly pageSize = signal(this.defaultPageSize);
 
-  filter = signal<UrgentCasesFilterRequest>(this.emptyFilter());
+  readonly radiusInMeters = signal<number | null>(null);
+
+  readonly filter = signal<UrgentCasesFilterRequest>(this.emptyFilter());
 
   ngOnInit(): void {
     this.fetchCases();
@@ -58,18 +66,31 @@ export class UrgentListComponent implements OnInit {
       longitude: f.longitude,
       radiusInMeters: this.normalizeRadius(this.radiusInMeters()),
       page: 1,
+      pageSize: this.pageSize(),
     }));
+
     this.fetchCases();
   }
 
   onFilterReset(): void {
     this.radiusInMeters.set(null);
-    this.filter.set(this.emptyFilter());
+
+    this.filter.set({
+      ...this.emptyFilter(),
+      pageSize: this.pageSize(),
+    });
+
     this.fetchCases();
   }
 
   onPageChange(page: number): void {
-    this.filter.update((f) => ({ ...f, page }));
+    this.currentPage.set(page);
+
+    this.filter.update((f) => ({
+      ...f,
+      page,
+    }));
+
     this.fetchCases();
   }
 
@@ -78,7 +99,9 @@ export class UrgentListComponent implements OnInit {
   }
 
   onContactReporter(caseId: number): void {
-    this.router.navigate(['/urgent', caseId], { queryParams: { contact: true } });
+    this.router.navigate(['/urgent', caseId], {
+      queryParams: { contact: true },
+    });
   }
 
   trackByCaseId(_index: number, item: UrgentCaseListItemResponse): number {
@@ -87,21 +110,21 @@ export class UrgentListComponent implements OnInit {
 
   private fetchCases(): void {
     this.loading.set(true);
-    this.urgentCaseService.getAllCases(this.filter()).subscribe({
-      next: (apiRes) => {
-        const res = apiRes.data;
-        if (res) {
-          this.cases.set(res.items);
-          this.totalItems.set(res.totalCount);
-          this.totalPages.set(res.totalPages);
-          this.currentPage.set(this.filter().page);
-        }
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loading.set(false);
-      },
-    });
+
+    this.urgentCaseService
+      .getAllCases(this.filter())
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: ({ data }) => {
+          if (!data) return;
+
+          this.cases.set(data.items);
+          this.totalItems.set(data.totalCount);
+          this.totalPages.set(data.totalPages);
+          this.currentPage.set(data.pageNumber);
+          this.pageSize.set(data.pageSize);
+        },
+      });
   }
 
   private emptyFilter(): UrgentCasesFilterRequest {
@@ -119,7 +142,7 @@ export class UrgentListComponent implements OnInit {
       ageSort: null,
       dateSort: null,
       page: 1,
-      pageSize: 12,
+      pageSize: this.defaultPageSize,
       latitude: null,
       longitude: null,
       radiusInMeters: null,
@@ -141,6 +164,7 @@ export class UrgentListComponent implements OnInit {
       ageSort: this.normalizeNumber(filter.ageSort),
       dateSort: this.normalizeNumber(filter.dateSort),
       page: 1,
+      pageSize: this.pageSize(),
     };
   }
 
@@ -150,6 +174,7 @@ export class UrgentListComponent implements OnInit {
     }
 
     const numericValue = typeof value === 'number' ? value : Number(value);
+
     return Number.isFinite(numericValue) && numericValue !== Number.MAX_VALUE ? numericValue : null;
   }
 
@@ -174,7 +199,8 @@ export class UrgentListComponent implements OnInit {
       return null;
     }
 
-    const textValue = String(value).trim();
+    const textValue = value.trim();
+
     return textValue.length > 0 ? textValue : null;
   }
 

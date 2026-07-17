@@ -3,63 +3,63 @@
     <h1 class="text-headline-lg font-bold text-primary">إدارة المستخدمين</h1>
     <p class="text-body-md text-on-surface-variant mt-1">متابعة حسابات المستخدمين، التحقق من التوثيق، وإدارة الصلاحيات.</p>
   </div>
-  <button routerLink="/admin/users/registerByAdmin" class="flex items-center gap-sm bg-surface-container-lowest border border-outline-variant text-primary px-lg py-sm rounded-xl font-semibold shadow-sm hover:bg-surface-container-low transition-all">
+  <app-button routerLink="/admin/users/registerByAdmin" variant="primary" extraClass="gap-sm px-8 h-12 rounded-full font-bold shadow-md hover:bg-secondary-container transition-all duration-200">
     <span class="material-symbols-outlined">person_add</span>
     إنشاء حساب جديد
-  </button>
+  </app-button>
 </header>
 
-<section class="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg">
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-md items-end">
+<app-card extraClass="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg">
+  <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-md items-end">
     
     <div class="flex flex-col gap-xs md:col-span-2">
-      <label class="text-label-md font-bold text-primary">البحث:</label>
-      <div class="relative">
-        <input 
-          type="text" 
-          [value]="filter().searchTerm"
-          (input)="onSearchChange($event)"
-          class="w-full border-outline-variant rounded-lg bg-surface text-body-sm focus:ring-secondary focus:border-secondary pr-10" 
-          placeholder="ابحث بالاسم، الإيميل، أو رقم الهاتف..." />
-        <span class="material-symbols-outlined absolute right-3 top-2.5 text-outline text-md">search</span>
-      </div>
+      <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">بحث</label>
+      <app-form-field type="search" 
+        [ngModel]="filter().searchTerm"
+        (ngModelChange)="onSearchChange($event)"
+        placeholder="ابحث بالاسم، الإيميل، أو رقم الهاتف..." >
+      </app-form-field>
     </div>
 
     <div class="flex flex-col gap-xs">
-      <label class="text-label-md font-bold text-primary">حالة التوثيق</label>
-      <select [ngModel]="filter().verificationStatus" (ngModelChange)="updateFilter({ verificationStatus: $event })" class="w-full border-outline-variant rounded-lg bg-surface text-body-sm focus:ring-secondary cursor-pointer">
-        <option [ngValue]="undefined">الكل</option>
-        <option [ngValue]="VerificationStatusEnum.Verified">موثق</option>
-        <option [ngValue]="VerificationStatusEnum.Pending">قيد المراجعة</option>
-        <option [ngValue]="VerificationStatusEnum.Unverified">غير موثق</option>
-      </select>
+      <app-form-field type="select" [ngModel]="filter().verificationStatus" (ngModelChange)="updateFilter({ verificationStatus: $event })" label="حالة التوثيق">
+        <option value="">الكل</option>
+        <option [value]="VerificationStatusEnum.Verified">موثق</option>
+        <option [value]="VerificationStatusEnum.Pending">قيد المراجعة</option>
+        <option [value]="VerificationStatusEnum.Unverified">غير موثق</option>
+      </app-form-field>
     </div>
 
     <div class="flex flex-col gap-xs">
-      <label class="text-label-md font-bold text-primary">الدور (Role)</label>
-      <select [ngModel]="filter().roleId" (ngModelChange)="updateFilter({ roleId: $event })" class="w-full border-outline-variant rounded-lg bg-surface text-body-sm focus:ring-secondary cursor-pointer">
-        <option [ngValue]="undefined">الكل</option>
+      <app-form-field type="select" [ngModel]="filter().roleId" (ngModelChange)="updateFilter({ roleId: $event })" label="الدور (Role)">
+        <option value="">الكل</option>
         @for (role of roles(); track role.id) {
           <option [value]="role.id">{{ getRoleName(role.name) }}</option>
         }
-      </select>
+      </app-form-field>
+    </div>
+
+    <div class="flex flex-col gap-xs">
+      <app-form-field type="select" [ngModel]="filter().isBlocked === undefined ? '' : filter().isBlocked" (ngModelChange)="updateFilter({ isBlocked: $event === '' ? undefined : $event === 'true' })" label="حالة الحظر">
+        <option value="">الكل</option>
+        <option value="true">محظور</option>
+        <option value="false">نشط</option>
+      </app-form-field>
     </div>
   </div>
 
-  <div class="flex justify-end mt-md">
-    <button (click)="resetFilters()" class="text-secondary font-bold text-label-md flex items-center gap-xs hover:underline transition-all">
-      <span class="material-symbols-outlined text-sm">filter_list_off</span>
-      إعادة ضبط الفلاتر
-    </button>
+  <div class="flex flex-wrap justify-end gap-3 pt-2">
+    <app-button variant="text" (onClick)="resetFilters()" extraClass="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary">
+      <span class="material-symbols-outlined transition-transform duration-200 group-hover:-rotate-90">refresh</span>
+      <span>إعادة تعيين</span>
+    </app-button>
   </div>
-</section>
+</app-card>
 
 <section class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75">
   
   @if (isLoading()) {
-    <div class="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
-      <span class="material-symbols-outlined text-secondary animate-spin text-[32px]">progress_activity</span>
-    </div>
+    <app-loading-spinner title="جارِ تحميل المستخدمين..." [fullscreen]="false" containerClass="absolute inset-0 bg-white/60 flex items-center justify-center z-10"></app-loading-spinner>
   }
 
   <div class="overflow-x-auto">
@@ -91,21 +91,23 @@
               <span [appVerificationBadgeDirective]="user.verificationStatus"></span>
             </td>
             <td class="px-lg py-md">
-              <span [appRoleBadgeDirective]="user.role"></span>
+              <span [appRoleBadgeDirective]="user.role || ''"></span>
             </td>
             <td class="px-lg py-md">
               <span [appBlockBadgeDirective]="user.isBlocked"></span>
             </td>
             <td class="px-lg py-md text-center">
-              <button routerLink="/admin/users/{{ user.id }}" class="bg-surface-container border border-outline-variant text-primary px-md py-1.5 rounded-lg text-label-sm font-bold hover:bg-primary hover:text-white transition-all shadow-sm">
+              <app-button routerLink="/admin/users/{{ user.id }}" variant="primary" extraClass="px-6 py-2 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200">
                 التفاصيل
-              </button>
+              </app-button>
             </td>
           </tr>
         } @empty {
           @if (!isLoading()) {
             <tr>
-              <td colspan="7" class="text-center py-xl text-outline font-medium">لا يوجد مستخدمين يطابقون شروط البحث.</td>
+              <td colspan="7" class="py-xl">
+                <app-empty-state title="لا يوجد مستخدمين" message="لا يوجد مستخدمين يطابقون شروط البحث."></app-empty-state>
+              </td>
             </tr>
           }
         }

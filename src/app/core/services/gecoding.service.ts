@@ -1,103 +1,82 @@
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, map, catchError, of } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 
-interface ReverseGeocodeResponse {
-  display_name: string;
-  address?: {
-    neighbourhood?: string;
-    suburb?: string;
-    city_district?: string;
-    village?: string;
-    town?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-  };
+declare const google: any;
+
+interface GeocodeAddressComponent {
+  long_name: string;
+  short_name: string;
+  types: string[];
 }
 
-interface ForwardGeocodeResult {
-  lat: string;
-  lon: string;
-  display_name: string;
-}
-
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class GeocodingService {
-  #http = inject(HttpClient);
-
-  /**
-   * Reverse Geocoding
-   * lat/lng -> Address
-   */
   reverseGeocode(lat: number, lng: number): Observable<string> {
-    const url =
-      `https://nominatim.openstreetmap.org/reverse` +
-      `?lat=${lat}` +
-      `&lon=${lng}` +
-      `&format=jsonv2` +
-      `&accept-language=ar`;
-
-    return this.#http.get<ReverseGeocodeResponse>(url).pipe(
-      map((res) => {
-        const address = res.address;
-
-        if (!address) {
-          return this.#coordsFallback(lat, lng);
+    return new Observable((observer) => {
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ location: { lat, lng } }, (results: any, status: string) => {
+        if (status === 'OK' && results && results.length > 0) {
+          const short = this.buildShortAddress(results[0].address_components);
+          observer.next(short ?? results[0].formatted_address);
+        } else {
+          observer.next(this.coordsFallback(lat, lng));
         }
-
-        const district =
-          address.neighbourhood ??
-          address.suburb ??
-          address.city_district ??
-          address.village ??
-          address.town ??
-          address.city;
-
-        const governorate = address.state;
-        const country = address.country;
-
-        const parts = [district, governorate, country].filter(Boolean);
-
-        const unique = [...new Set(parts)];
-
-        return unique.length
-          ? unique.join('، ')
-          : (res.display_name ?? this.#coordsFallback(lat, lng));
-      }),
-      catchError(() => of(this.#coordsFallback(lat, lng))),
-    );
+        observer.complete();
+      });
+    });
   }
 
-  /**
-   * Forward Geocoding
-   * Address -> lat/lng
-   */
   forwardGeocode(address: string): Observable<{ lat: number; lng: number } | null> {
-    const url =
-      `https://nominatim.openstreetmap.org/search` +
-      `?q=${encodeURIComponent(address)}` +
-      `&format=jsonv2` +
-      `&limit=1` +
-      `&accept-language=ar` +
-      `&countrycodes=eg`;
-
-    return this.#http.get<ForwardGeocodeResult[]>(url).pipe(
-      map((results) => {
-        if (!results.length) return null;
-
-        return {
-          lat: Number(results[0].lat),
-          lng: Number(results[0].lon),
-        };
-      }),
-      catchError(() => of(null)),
-    );
+    return new Observable((observer) => {
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ address, region: 'EG' }, (results: any, status: string) => {
+        if (status === 'OK' && results && results.length > 0) {
+          const location = results[0].geometry.location;
+          observer.next({ lat: location.lat(), lng: location.lng() });
+        } else {
+          observer.next(null);
+        }
+        observer.complete();
+      });
+    });
   }
 
-  #coordsFallback(lat: number, lng: number): string {
+  /** يربط Places Autocomplete بحقل input، وينده onPlace لما اليوزر يختار مكان */
+  attachAutocomplete(
+    input: HTMLInputElement,
+    onPlace: (result: { lat: number; lng: number; address: string }) => void
+  ): void {
+    const autocomplete = new google.maps.places.Autocomplete(input, {
+      componentRestrictions: { country: 'eg' },
+      fields: ['geometry', 'formatted_address'],
+    });
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (!place.geometry?.location) return;
+
+      onPlace({
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+        address: place.formatted_address ?? '',
+      });
+    });
+  }
+
+  private buildShortAddress(components: GeocodeAddressComponent[]): string | null {
+    const find = (...types: string[]): string | undefined =>
+      components.find((c) => types.some((t) => c.types.includes(t)))?.long_name;
+
+    const district = find('sublocality_level_1', 'sublocality', 'neighborhood', 'locality');
+    const governorate = find('administrative_area_level_1');
+    const country = find('country');
+
+    const parts = [district, governorate, country].filter((p): p is string => !!p);
+    const unique = parts.filter((p, i) => parts.indexOf(p) === i);
+    return unique.length ? unique.join('، ') : null;
+  }
+
+  private coordsFallback(lat: number, lng: number): string {
     return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
   }
 }

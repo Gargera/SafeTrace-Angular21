@@ -9,7 +9,6 @@
         [loading]="loading()"
         primaryActionLabel="إنشاء حالة مجهولة"
         primaryButtonClass="bg-primary hover:opacity-90 text-on-primary shadow-sm"
-        [bordered]="false"
         (primaryAction)="navigateToCreate()"
       >
       </app-case-header>
@@ -48,6 +47,7 @@
             <app-case-card
               [caseItem]="c"
               [detailRoute]="['/unknown', c.id]"
+              [showCaseType]="false"
               (onContact)="onContactReporter($event)"
               class="block"
             >
@@ -57,8 +57,8 @@
 
         <!-- Pagination -->
         <app-pagination
-          [currentPage]="currentPage"
-          [totalPages]="totalPages"
+          [currentPage]="currentPage()"
+          [totalPages]="totalPages()"
           [totalItems]="totalItems()"
           [pageSize]="pageSize()"
           (pageChange)="onPageChange($event)"

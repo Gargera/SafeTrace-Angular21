@@ -1,1 +1,222 @@
-<p>unknown-create works!</p>
+<div class="page-wrap">
+  <div class="page-card">
+
+    <div class="page-header">
+      <button class="back-btn" (click)="goBack()">
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </button>
+      <div>
+        <h2 class="page-title">الإبلاغ عن شخص مجهول الهوية تم العثور عليه</h2>
+        <p class="page-subtitle">{{ stepTitle }}</p>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div class="stepper">
+        @for (s of steps; track s.num; let i = $index) {
+          <div style="display:flex; flex-direction:column; align-items:center;">
+            <div class="step-circle" [class.done]="currentStep > s.num" [class.active]="currentStep === s.num" [class.idle]="currentStep < s.num">
+              @if (currentStep > s.num) { <span class="material-symbols-outlined" style="font-size:16px;">check</span> } @else { {{ s.num }} }
+            </div>
+            <div class="step-label" [class.active-lbl]="currentStep === s.num" [class.idle-lbl]="currentStep !== s.num">{{ s.label }}</div>
+          </div>
+          @if (i < steps.length - 1) {
+            <div class="step-connector" [style.background]="currentStep > s.num ? '#0058be' : '#dde1ee'"></div>
+          }
+        }
+      </div>
+
+      <form [formGroup]="form">
+        @if (currentStep === 1) {
+          <div class="step-content" style="display:flex; flex-direction:column; gap:20px;">
+            <div class="form-section-title">
+              <span class="material-symbols-outlined" style="font-size:18px;">person_search</span>
+              بيانات الشخص (لو معروفة)
+            </div>
+
+            <div class="info-box">
+              <span class="material-symbols-outlined" style="color:#0058be;">info</span>
+              لو الشخص مش عارف يقول اسمه أو مجهول الهوية، سيب حقول الاسم فاضية.
+            </div>
+
+            <div class="row-4">
+              <div class="field-group">
+                <input formControlName="fName" type="text" placeholder="الاسم الأول (اختياري)" class="field" [class.error]="isInvalid('fName')" />
+                @if (isInvalid('fName')) { <p class="err-msg">حرفين على الأقل</p> }
+              </div>
+              <div class="field-group">
+                <input formControlName="sName" type="text" placeholder="اسم الأب" class="field" />
+              </div>
+              <div class="field-group">
+                <input formControlName="tName" type="text" placeholder="اسم الجد" class="field" />
+              </div>
+              <div class="field-group">
+                <input formControlName="lName" type="text" placeholder="اسم العائلة (اختياري)" class="field" [class.error]="isInvalid('lName')" />
+                @if (isInvalid('lName')) { <p class="err-msg">حرفين على الأقل</p> }
+              </div>
+            </div>
+
+            <div class="row-2">
+              <div class="field-group">
+                <label class="field-label">العمر التقريبي <span class="req">*</span></label>
+                <input formControlName="age" type="number" min="0" max="150" class="field" [class.error]="isInvalid('age')" />
+                @if (isInvalid('age')) { <p class="err-msg">مطلوب بين 0 و150</p> }
+              </div>
+              <div class="field-group">
+                <label class="field-label">الجنس <span class="req">*</span></label>
+                <select formControlName="gender" class="field" [class.error]="isInvalid('gender')">
+                  <option value="" disabled>اختر الجنس</option>
+                  <option [value]="genders.Male">ذكر</option>
+                  <option [value]="genders.Female">أنثى</option>
+                </select>
+                @if (isInvalid('gender')) { <p class="err-msg">مطلوب</p> }
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">رقم تواصل (اختياري)</label>
+              <input formControlName="communicationPhone" type="tel" class="field" placeholder="01xxxxxxxxx" />
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">وصف / علامات مميزة</label>
+              <textarea formControlName="description" rows="3" class="field" placeholder="حالة الشخص، ملابس، علامات مميزة، إلخ"></textarea>
+              <div class="char-count">{{ form.get('description')?.value?.length ?? 0 }} / 2000</div>
+            </div>
+          </div>
+        }
+
+        @if (currentStep === 2) {
+          <div class="step-content" style="display:flex; flex-direction:column; gap:20px;">
+            <div class="form-section-title">
+              <span class="material-symbols-outlined" style="font-size:18px;">location_on</span>
+              مكان وتاريخ العثور عليه
+            </div>
+
+            <div class="row-2">
+              <div class="field-group">
+                <label class="field-label">المحافظة <span class="req">*</span></label>
+                <select formControlName="government" class="field" [class.error]="isInvalid('government')">
+                  <option value="" disabled>اختر المحافظة</option>
+                  @for (g of governorates; track g) { <option [value]="g">{{ g }}</option> }
+                </select>
+                @if (isInvalid('government')) { <p class="err-msg">مطلوب</p> }
+              </div>
+              <div class="field-group">
+                <label class="field-label">المدينة / المركز <span class="req">*</span></label>
+                <input formControlName="city" type="text" class="field" [class.error]="isInvalid('city')" />
+                @if (isInvalid('city')) { <p class="err-msg">مطلوب</p> }
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">الشارع / المنطقة <span class="req">*</span></label>
+              <input formControlName="street" type="text" class="field" [class.error]="isInvalid('street')" />
+              @if (isInvalid('street')) { <p class="err-msg">مطلوب</p> }
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">تاريخ العثور عليه <span class="req">*</span></label>
+              <input formControlName="eventDate" type="date" [max]="today" class="field" [class.error]="isInvalid('eventDate')" />
+              @if (isInvalid('eventDate')) { <p class="err-msg">مطلوب ولا يمكن أن يكون في المستقبل</p> }
+            </div>
+          </div>
+        }
+
+        @if (currentStep === 3) {
+          <div class="step-content" style="display:flex; flex-direction:column; gap:24px;">
+            <div class="form-section-title">
+              <span class="material-symbols-outlined" style="font-size:18px;">photo_library</span>
+              صور
+            </div>
+
+            <div>
+              <div class="field-label" style="margin-bottom:10px;">الصورة الأساسية <span class="req">*</span></div>
+              <div class="upload-zone" [class.has-files]="selectedPhotos().length > 0" (click)="primaryInput.click()">
+                <input #primaryInput type="file" accept="image/jpeg,image/png,image/webp" style="display:none" (change)="onPrimaryPhotoSelected($event)" />
+                <span class="material-symbols-outlined" style="font-size:40px;" [style.color]="selectedPhotos().length ? '#0058be' : '#adb5c9'">add_photo_alternate</span>
+                <p style="font-size:14px; font-weight:600;">{{ selectedPhotos().length ? 'تم اختيار الصورة الأساسية' : 'اضغط لإضافة الصورة الأساسية' }}</p>
+              </div>
+
+              <div class="field-label" style="margin:16px 0 10px;">صور إضافية (حتى 4 صور)</div>
+              <div class="upload-zone" (click)="additionalInput.click()">
+                <input #additionalInput type="file" accept="image/jpeg,image/png,image/webp" multiple style="display:none" (change)="onAdditionalPhotosSelected($event)" />
+                <span class="material-symbols-outlined" style="font-size:32px; color:#adb5c9;">add_photo_alternate</span>
+                <p style="font-size:13px; color:#75777d;">JPG / PNG / WebP — حتى 5MB لكل صورة</p>
+              </div>
+
+              @if (photoPreviews().length > 0) {
+                <div class="photo-grid">
+                  @for (preview of photoPreviews(); track preview; let i = $index) {
+                    <div class="photo-thumb">
+                      <img [src]="preview" alt="صورة" />
+                      <button type="button" (click)="removePhoto(i)">
+                        <span class="material-symbols-outlined" style="font-size:12px;">close</span>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <div>
+              <div class="field-label" style="margin-bottom:10px;">فيديو <span style="font-size:12px; color:#999; font-weight:400;">(اختياري)</span></div>
+              <div class="upload-zone" [class.has-files]="!!videoFile()" (click)="videoInput.click()">
+                <input #videoInput type="file" accept="video/*" style="display:none" (change)="onVideoSelected($event)" />
+                <span class="material-symbols-outlined" style="font-size:36px;" [style.color]="videoFile() ? '#0058be' : '#adb5c9'">videocam</span>
+                <p style="font-size:14px; font-weight:600;">{{ videoFile()?.name ?? 'رفع فيديو' }}</p>
+              </div>
+            </div>
+
+            <div class="info-box" style="background:#f0faf5; border-color:#b2dfce;">
+              <span class="material-symbols-outlined" style="color:#00695c;">pending_actions</span>
+              <span style="color:#1b4f3a;">بعد إرسال البلاغ سيتم مراجعته من قِبَل الإدارة قبل نشره.</span>
+            </div>
+          </div>
+        }
+
+        @if (errorMsg()) {
+          <div class="alert-error">
+            <span class="material-symbols-outlined" style="font-size:18px;">error</span>
+            {{ errorMsg() }}
+          </div>
+        }
+      </form>
+    </div>
+
+    <div class="page-footer">
+      <button type="button" class="btn-secondary" [class.invisible]="currentStep === 1" (click)="prevStep()">
+        <span class="material-symbols-outlined" style="font-size:18px;">arrow_forward</span> السابق
+      </button>
+
+      <div style="display:flex; gap:8px;">
+        @for (s of steps; track s.num) {
+          <div style="width:8px; height:8px; border-radius:50%;" [style.background]="currentStep === s.num ? '#0058be' : '#dde1ee'"></div>
+        }
+      </div>
+
+      @if (currentStep < 3) {
+        <button type="button" class="btn-primary" (click)="nextStep()">
+          التالي <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
+        </button>
+      } @else {
+        <button type="button" class="btn-primary" [disabled]="isSubmitting()" (click)="onSubmit()">
+          @if (isSubmitting()) {
+            <span class="material-symbols-outlined spin" style="font-size:18px;">progress_activity</span> جاري الإرسال...
+          } @else {
+            <span class="material-symbols-outlined" style="font-size:18px;">check_circle</span> إرسال البلاغ
+          }
+        </button>
+      }
+    </div>
+
+    @if (showForceCreatePopup()) {
+      <app-force-create-popup
+        [matches]="matchedCases()"
+        (cancel)="onForceCreateCancel()"
+        (forceCreate)="onForceCreateConfirm()">
+      </app-force-create-popup>
+    }
+
+  </div>
+</div>

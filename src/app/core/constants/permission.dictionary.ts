@@ -10,7 +10,8 @@ export const PERMISSION_GROUPS_AR: Record<string, { title: string, icon: string 
   'Account': { title: 'إعدادات الحساب', icon: 'manage_accounts' },
   'Roles': { title: 'إدارة الأدوار والصلاحيات', icon: 'admin_panel_settings' },
   'Users': { title: 'إدارة المستخدمين', icon: 'group' },
-  'Chat': { title: 'المحادثات والتواصل', icon: 'chat' }
+  'Chat': { title: 'المحادثات والتواصل', icon: 'chat' },
+  'Donations': { title: 'إدارة التبرعات', icon: 'volunteer_activism' }
 };
 
 export const PERMISSION_ACTIONS_AR: Record<string, string> = {
@@ -34,6 +35,8 @@ export const PERMISSION_ACTIONS_AR: Record<string, string> = {
   'UpdateProfileImage': 'تغيير الصورة الشخصية',
   'UpdateIdImage': 'تحديث صورة بطاقة الهوية',
   'UpdateUserInfo': 'تحديث بيانات عامة',
+  'UpdatePhoneNumber': 'تحديث رقم الهاتف',
+  'GetVisitedUserInfo': 'عرض بيانات مستخدم آخر',
   'GetStatistics': 'عرض إحصائيات النظام',
   'Search': 'إجراء عملية مطابقة ذكية بالصور',
   'MarkAsSolved': 'إغلاق الشكوى (محلولة)',
@@ -51,16 +54,19 @@ export const PERMISSION_ACTIONS_AR: Record<string, string> = {
   'SendMessage': 'إرسال رسائل',
   'StartContext': 'بدء محادثة جديدة',
   'DeleteMessage': 'مسح رسالة (من عندي)',
-  'DeleteMessageForEveryone': 'مسح رسالة (من الطرفين)'
+  'DeleteMessageForEveryone': 'مسح رسالة (من الطرفين)',
+  'GetDonations': 'عرض التبرعات',
+  'GetMyDonations': 'عرض تبرعاتي'
 };
 
 export const ALL_SYSTEM_PERMISSIONS = [
-  "UrgentCases.GetAll", "UrgentCases.GetById", "UrgentCases.GetMyCases", "UrgentCases.Create", "UrgentCases.Update", "UrgentCases.SoftDelete", "UrgentCases.HardDelete", "UrgentCases.Reject", "UrgentCases.Approve", "UrgentCases.MarkAsFounded",
-  "LongTermCases.GetAll", "LongTermCases.GetById", "LongTermCases.GetMyCases", "LongTermCases.Create", "LongTermCases.Update", "LongTermCases.SoftDelete", "LongTermCases.HardDelete", "LongTermCases.Reject", "LongTermCases.Approve", "LongTermCases.MarkAsFounded",
-  "UnknownCases.GetAll", "UnknownCases.GetById", "UnknownCases.GetMyCases", "UnknownCases.Create", "UnknownCases.Update", "UnknownCases.SoftDelete", "UnknownCases.HardDelete", "UnknownCases.Reject", "UnknownCases.Approve", "UnknownCases.MarkAsFounded",
+  "UrgentCases.GetAll", "UrgentCases.GetById", "UrgentCases.Create", "UrgentCases.Update", "UrgentCases.SoftDelete", "UrgentCases.HardDelete", "UrgentCases.Reject", "UrgentCases.Approve", "UrgentCases.MarkAsFounded",
+  "LongTermCases.GetAll", "LongTermCases.GetById", "LongTermCases.Create", "LongTermCases.Update", "LongTermCases.SoftDelete", "LongTermCases.HardDelete", "LongTermCases.Reject", "LongTermCases.Approve", "LongTermCases.MarkAsFounded",
+  "UnknownCases.GetAll", "UnknownCases.GetById", "UnknownCases.Create", "UnknownCases.Update", "UnknownCases.SoftDelete", "UnknownCases.HardDelete", "UnknownCases.Reject", "UnknownCases.Approve", "UnknownCases.MarkAsFounded",
   "Notifications.GetMyNotifications", "Notifications.DeleteNotification", "Notifications.MarkAsRead", "Notifications.MarkAllAsRead",
-  "Profile.GetUserInfo", "Profile.UpdateName", "Profile.UpdateHomeLocation", "Profile.UpdateProfileImage", "Profile.UpdateIdImage", "Profile.UpdateUserInfo",
+  "Profile.GetUserInfo", "Profile.GetMyCases", "Profile.GetVisitedUserInfo", "Profile.UpdateName", "Profile.UpdateHomeLocation", "Profile.UpdateProfileImage", "Profile.UpdateIdImage", "Profile.UpdateUserInfo", "Profile.UpdatePhoneNumber",
   "Dashboard.GetStatistics", "AiMatching.Search", "Complaints.GetAll", "Complaints.GetById", "Complaints.Create", "Complaints.HardDelete", "Complaints.MarkAsSolved", "Account.ChangePassword",
+  "Donations.GetDonations", "Donations.GetMyDonations",
   "Roles.GetAll", "Roles.Create", "Roles.Delete", "Roles.GetPermissionsByRoleId", "Roles.UpdateRolePermissions",
   "Users.GetAll", "Users.GetById", "Users.RegisterByAdmin", "Users.ChangeRole", "Users.GetPermissions", "Users.AssignPermissions", "Users.Approve", "Users.Reject", "Users.ToggleBlock",
   "Chat.GetAll", "Chat.GetMyChats", "Chat.GetById", "Chat.GetMessages", "Chat.SendMessage", "Chat.StartContext", "Chat.Create", "Chat.MarkAsRead", "Chat.HardDelete", "Chat.SoftDelete", "Chat.DeleteMessage", "Chat.DeleteMessageForEveryone"

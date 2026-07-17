@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { GetUserDto } from '../../models/User/GetUserDto';
 import { RoleDto } from '../../models/Role/RoleDto';
@@ -14,6 +14,11 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 import { RoleService } from '../../services/role.service';
 import { UserService } from '../../services/user.service';
+import { FormField } from '../../../../shared/components/form-field/form-field';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { CardComponent } from '../../../../shared/components/card/card';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-user-list',
@@ -24,9 +29,15 @@ import { UserService } from '../../services/user.service';
     FormsModule,
     CommonModule,
     RouterModule,
+    FormField,
+    ButtonComponent,
+    CardComponent,
+    EmptyStateComponent,
+    LoadingSpinnerComponent,
   ],
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UserList {
   public authService = inject(AuthService);
@@ -43,8 +54,9 @@ export class UserList {
     pageNumber: 1,
     pageSize: 10,
     searchTerm: '',
-    verificationStatus: undefined,
-    roleId: undefined,
+    verificationStatus: '' as any,
+    roleId: '' as any,
+    isBlocked: '' as any,
   });
 
   pagesArray = computed(() => Array.from({ length: this.totalPages() }, (_, i) => i + 1));
@@ -86,12 +98,12 @@ export class UserList {
     });
   }
 
-  onSearchChange(event: Event) {
-    const value = (event.target as HTMLInputElement).value;
+  onSearchChange(value: string) {
     this.searchSubject.next(value);
   }
 
   updateFilter(partialFilter: Partial<UserFilterDto>) {
+
     this.filter.update((f) => ({
       ...f,
       ...partialFilter,
@@ -105,8 +117,9 @@ export class UserList {
       pageNumber: 1,
       pageSize: 10,
       searchTerm: '',
-      verificationStatus: undefined,
-      roleId: undefined,
+      verificationStatus: '' as any,
+      roleId: '' as any,
+      isBlocked: '' as any,
     });
     this.loadUsers();
   }

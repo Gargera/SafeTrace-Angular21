@@ -1,5 +1,6 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ALL_SYSTEM_PERMISSIONS, PERMISSION_ACTIONS_AR, PERMISSION_GROUPS_AR } from '../../../../core/constants/permission.dictionary';
 import { environment } from '../../../../../environments/environment';
@@ -16,6 +17,11 @@ import { VerificationBadgeDirective } from "../../../../shared/directives/verifi
 import { RoleBadgeDirective } from "../../../../shared/directives/role-badge-directive";
 import { BlockBadgeDirective } from "../../../../shared/directives/block-badge-directive";
 import Swal from 'sweetalert2';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { CardComponent } from '../../../../shared/components/card/card';
+import { FormField } from '../../../../shared/components/form-field/form-field';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 
 interface PermissionGroup {
   groupName: string;
@@ -26,9 +32,11 @@ interface PermissionGroup {
 
 @Component({
   selector: 'app-user-details',
-  imports: [CommonModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective],
+  standalone: true,
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, FormField, LoadingSpinnerComponent, ConfirmationModalComponent],
   templateUrl: './user-details.html',
   styleUrl: './user-details.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UserDetails implements OnInit {
   private userService = inject(UserService);
@@ -40,6 +48,7 @@ export class UserDetails implements OnInit {
 
   userId = signal<string>('');
   user = signal<GetUserByIdDto | null>(null);
+  selectedRole = signal<string>('');
   roles = signal<RoleDto[]>([]);
   
   originalPermissionsList = signal<UserPermissionDto[]>(this.generateEmptyPermissions());
@@ -50,12 +59,38 @@ export class UserDetails implements OnInit {
   
   isLoading = signal<boolean>(true);
   isSavingPerms = signal<boolean>(false);
-  isActionLoading = signal<boolean>(false);
+  loadingAction = signal<string | null>(null);
+  selectedZoomImage = signal<string | null>(null);
+
+  showConfirmModal = signal(false);
+  modalConfig = signal({
+    title: '',
+    message: '',
+    confirmText: '',
+    icon: 'help_outline',
+    variant: 'primary' as 'primary' | 'danger',
+    action: () => {}
+  });
+
+  openConfirmModal(title: string, message: string, confirmText: string, action: () => void, icon = 'help_outline', variant: 'primary' | 'danger' = 'primary') {
+    this.modalConfig.set({ title, message, confirmText, icon, variant, action });
+    this.showConfirmModal.set(true);
+  }
+
+  onConfirmModal() {
+    this.showConfirmModal.set(false);
+    this.modalConfig().action();
+  }
 
   verificationStatusEnum = VerificationStatus;
 
   isCurrentUser = computed(() => {
     return this.authService.getCurrentUserId() === this.userId();
+  });
+
+  isInternalRole = computed(() => {
+    const role = this.user()?.role;
+    return role === 'Admin' || role === 'Moderator';
   });
 
   canManageUser = computed(() => {
@@ -118,6 +153,17 @@ export class UserDetails implements OnInit {
     this.location.back();
   }
 
+  openImageZoom(imagePath: string | undefined) {
+    if (!imagePath) return;
+    this.selectedZoomImage.set(this.getImageUrl(imagePath));
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeImageZoom() {
+    this.selectedZoomImage.set(null);
+    document.body.style.overflow = '';
+  }
+
   loadRoles() {
     this.roleService.getAllRoles().subscribe({
       next: (res) => {
@@ -135,6 +181,7 @@ export class UserDetails implements OnInit {
       next: (res) => {
         if (res.success) {
           this.user.set(res.data);
+          this.selectedRole.set(res.data?.role || '');
           this.loadUserPermissions();
         }
       },
@@ -159,90 +206,71 @@ export class UserDetails implements OnInit {
   }
 
   onChangeRole(newRole: string) {
-    if (!newRole || newRole === this.user()?.role) return;
+    if (this.selectedRole() === this.user()?.role) return;
 
-    Swal.fire({
-      title: 'تغيير دور المستخدم',
-      text: `هل أنت متأكد من تغيير دور هذا المستخدم إلى "${this.getRoleName(newRole)}"؟ قد يؤثر ذلك على حالة توثيق الحساب.`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'نعم، تغيير',
-      cancelButtonText: 'إلغاء',
-      confirmButtonColor: '#0058be',
-      customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.executeAction(this.userService.changeUserRole({ userId: this.userId(), newRole: newRole }), 'تم تغيير دور المستخدم بنجاح.');
-      }
-    });
+    this.openConfirmModal(
+      'تأكيد تغيير الدور',
+      `هل أنت متأكد من رغبتك في تغيير دور المستخدم إلى ${this.getRoleName(newRole)}؟`,
+      'تغيير',
+      () => {
+        this.executeAction(this.userService.changeUserRole({ userId: this.userId(), newRole: newRole }), 'تم تغيير دور المستخدم بنجاح.', 'changeRole');
+      },
+      'manage_accounts',
+      'primary'
+    );
   }
 
   onApprove() {
-    Swal.fire({
-      title: 'قبول التوثيق',
-      text: 'هل أنت متأكد من قبول هوية هذا المستخدم؟ سيحصل على صلاحيات "مستخدم موثق".',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'نعم، قبول',
-      cancelButtonText: 'إلغاء',
-      confirmButtonColor: '#00a292',
-      customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.executeAction(this.userService.approveUser(this.userId()), 'تم توثيق حساب المستخدم بنجاح.');
-      }
-    });
+    this.openConfirmModal(
+      'تأكيد توثيق الحساب',
+      'هل أنت متأكد من الموافقة على توثيق هذا الحساب؟',
+      'موافقة وتوثيق',
+      () => {
+        this.executeAction(this.userService.approveUser(this.userId()), 'تم توثيق حساب المستخدم بنجاح.', 'approve');
+      },
+      'verified_user',
+      'primary'
+    );
   }
 
   onReject() {
-    Swal.fire({
-      title: 'رفض التوثيق',
-      text: 'هل أنت متأكد من رفض هوية هذا المستخدم؟',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'نعم، رفض',
-      cancelButtonText: 'إلغاء',
-      confirmButtonColor: '#ba1a1a',
-      customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.executeAction(this.userService.rejectUser(this.userId()), 'تم رفض طلب التوثيق.');
-      }
-    });
+    this.openConfirmModal(
+      'تأكيد رفض الحساب',
+      'هل أنت متأكد من رفض توثيق هذا الحساب؟',
+      'رفض',
+      () => {
+        this.executeAction(this.userService.rejectUser(this.userId()), 'تم رفض طلب التوثيق.', 'reject');
+      },
+      'cancel',
+      'danger'
+    );
   }
 
   onToggleBlock() {
-    const isCurrentlyBlocked = this.user()?.isBlocked;
-    const actionText = isCurrentlyBlocked ? 'فك الحظر عن' : 'حظر';
-    const color = isCurrentlyBlocked ? '#00a292' : '#ba1a1a';
-
-    Swal.fire({
-      title: `${actionText} المستخدم`,
-      text: `هل أنت متأكد من رغبتك في ${actionText} هذا المستخدم؟`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: `نعم، ${actionText}`,
-      cancelButtonText: 'إلغاء',
-      confirmButtonColor: color,
-      customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.executeAction(this.userService.toggleBlockStatus(this.userId()), `تم ${actionText} المستخدم بنجاح.`);
-      }
-    });
+    const actionText = this.user()?.isBlocked ? 'فك حظر' : 'حظر';
+    this.openConfirmModal(
+      `تأكيد ${actionText} المستخدم`,
+      `هل أنت متأكد من ${actionText} هذا المستخدم؟`,
+      actionText,
+      () => {
+        this.executeAction(this.userService.toggleBlockStatus(this.userId()), `تم ${actionText} المستخدم بنجاح.`, 'block');
+      },
+      this.user()?.isBlocked ? 'lock_open' : 'block',
+      this.user()?.isBlocked ? 'primary' : 'danger'
+    );
   }
 
-  private executeAction(observable: any, successMessage: string) {
-    this.isActionLoading.set(true);
+  private executeAction(observable: any, successMessage: string, actionName: string) {
+    this.loadingAction.set(actionName);
 
     observable.subscribe({
       next: () => {
-        this.isActionLoading.set(false);
+        this.loadingAction.set(null);
         this.snackbar.success(successMessage);
         this.loadUserData();
       },
       error: (err: any) => {
-        this.isActionLoading.set(false);
+        this.loadingAction.set(null);
         this.snackbar.error(err.error?.detail || err.error?.message || 'حدث خطأ غير متوقع. قد لا تملك الصلاحية الكافية.');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -250,22 +278,16 @@ export class UserDetails implements OnInit {
   }
 
   savePermissions() {
-    if (!this.hasChanges() || !this.canManageUser()) return;
+    if (!this.hasChanges()) return;
 
-    Swal.fire({
-      title: 'حفظ الصلاحيات الاستثنائية',
-      text: 'هل أنت متأكد من تعديل الصلاحيات الفردية لهذا المستخدم؟',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'نعم، حفظ',
-      cancelButtonText: 'إلغاء',
-      confirmButtonColor: '#0058be',
-      customClass: { popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl' }
-    }).then((result) => {
-      if (result.isConfirmed) {
+    this.openConfirmModal(
+      'حفظ الصلاحيات',
+      'هل أنت متأكد من تحديث صلاحيات هذا المستخدم بشكل استثنائي؟',
+      'حفظ التعديلات',
+      () => {
         this.isSavingPerms.set(true);
         const selectedValues = this.permissionsList().filter(p => p.isSelected).map(p => p.permissionValue);
-        
+
         this.userService.assignUserPermissions({ userId: this.userId(), selectedPermissions: selectedValues }).subscribe({
           next: () => {
             this.isSavingPerms.set(false);
@@ -278,8 +300,10 @@ export class UserDetails implements OnInit {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }
         });
-      }
-    });
+      },
+      'admin_panel_settings',
+      'primary'
+    );
   }
 
   resetAll() {

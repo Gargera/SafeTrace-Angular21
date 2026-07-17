@@ -1,10 +1,8 @@
 import {
   Component,
   computed,
-  EventEmitter,
-  Input,
-  Output,
-  signal,
+  input,
+  output,
 } from '@angular/core';
 
 @Component({
@@ -16,14 +14,13 @@ import {
 })
 
 export class PaginationComponent {
-  @Input({ required: true }) currentPage = signal(1);
-  @Input({ required: true }) totalPages = signal(1);
+  currentPage = input.required<number>();
+  totalPages = input.required<number>();
 
-  /** Optional: pass both to show a "showing X-Y of Z" summary above the buttons. */
-  @Input() totalItems: number | null = null;
-  @Input() pageSize: number | null = null;
+  totalItems = input<number | null>(null);
+  pageSize = input<number | null>(null);
 
-  @Output() pageChange = new EventEmitter<number>();
+  pageChange = output<number>();
 
   readonly pageNumbers = computed(() => {
     const current = this.currentPage();
@@ -58,13 +55,17 @@ export class PaginationComponent {
   });
 
   readonly startItem = computed(() => {
-    if (!this.totalItems || !this.pageSize) return 0;
-    return (this.currentPage() - 1) * this.pageSize + 1;
+    const total = this.totalItems();
+    const size = this.pageSize();
+    if (!total || !size) return 0;
+    return (this.currentPage() - 1) * size + 1;
   });
 
   readonly endItem = computed(() => {
-    if (!this.totalItems || !this.pageSize) return 0;
-    return Math.min(this.currentPage() * this.pageSize, this.totalItems);
+    const total = this.totalItems();
+    const size = this.pageSize();
+    if (!total || !size) return 0;
+    return Math.min(this.currentPage() * size, total);
   });
 
   firstPage(): void {

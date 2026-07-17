@@ -24,10 +24,26 @@
     @else {
       <div class="grid grid-cols-1 md:grid-cols-14 gap-gutter">
         <!-- Sidebar -->
-        <app-profile-sidebar
-          class="md:col-span-4 self-start md:sticky md:top-6 h-fit"
-          [userInfo]="userInfo()"
-        />
+
+        <div class="md:block md:col-span-4">
+          <app-profile-sidebar
+            [userInfo]="userInfo()"
+            (imageClicked)="selectedZoomImage.set(avatarUrl)"
+          />
+
+          @if (selectedZoomImage()) {
+            <div
+              class="fixed inset-0 z-[999999] bg-black/70 flex items-center justify-center"
+              (click)="selectedZoomImage.set(null)"
+            >
+              <img
+                [src]="selectedZoomImage()"
+                class="max-w-[90vw] max-h-[90vh]"
+                (click)="$event.stopPropagation()"
+              />
+            </div>
+          }
+        </div>
 
         <!-- Main Content Area -->
         <div class="md:col-span-10">
@@ -67,7 +83,9 @@
               }
 
               @case ('cases') {
-                <app-my-cases-tab />
+                <div class="p-lg">
+                  <app-my-cases-tab />
+                </div>
               }
 
               @case ('chat') {
@@ -76,11 +94,13 @@
               @case ('notifications') {
                 <app-notifications-tab />
               }
+              @case ('donations') {
+                <app-donation-history />
+              }
             }
           </div>
         </div>
       </div>
     }
-
   </main>
 </div>
