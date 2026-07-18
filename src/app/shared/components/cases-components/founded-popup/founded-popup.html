@@ -1,0 +1,111 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+  (click)="onBackdropClick($event)"
+>
+  <div
+    class="w-full max-w-3xl overflow-hidden rounded-3xl border border-outline-variant/20 bg-surface-container-lowest shadow-2xl"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="founded-title"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-outline-variant/20 px-6 py-5">
+      <h2 id="founded-title" class="text-lg font-semibold text-on-surface">
+        تسجيل الحالة كـ "تم العثور عليه"
+      </h2>
+
+      <button
+        type="button"
+        class="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-surface-container"
+        (click)="cancel.emit()"
+        aria-label="إغلاق"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5 px-6 py-6">
+      <app-form-field
+        formControlName="description"
+        label="وصف الحالة"
+        placeholder="اكتب وصفًا مختصرًا..."
+        type="textarea"
+        [rows]="3"
+        [extraClass]="isInvalid('description') ? 'border-error' : ''"
+      />
+
+      @if (isInvalid('description')) {
+        <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+      }
+
+      <app-form-field
+        formControlName="government"
+        label="المحافظة"
+        placeholder="مثال: القاهرة"
+        type="text"
+        [extraClass]="isInvalid('government') ? 'border-error' : ''"
+      />
+
+      @if (isInvalid('government')) {
+        <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+      }
+
+      <app-form-field
+        formControlName="city"
+        label="المدينة"
+        placeholder="مثال: مدينة نصر"
+        type="text"
+        [extraClass]="isInvalid('city') ? 'border-error' : ''"
+      />
+
+      @if (isInvalid('city')) {
+        <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+      }
+
+      <app-form-field
+        formControlName="street"
+        label="الشارع"
+        placeholder="اسم الشارع أو أقرب معلم"
+        type="text"
+        [extraClass]="isInvalid('street') ? 'border-error' : ''"
+      />
+
+      @if (isInvalid('street')) {
+        <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+      }
+
+      <app-form-field
+        formControlName="foundedAt"
+        label="تاريخ العثور"
+        type="date"
+        [extraClass]="isInvalid('foundedAt') ? 'border-error' : ''"
+      />
+
+      @if (isInvalid('foundedAt')) {
+        <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+      }
+
+      @if (errorMsg()) {
+        <div class="rounded-xl bg-error-container px-4 py-3 text-sm text-on-error-container">
+          {{ errorMsg() }}
+        </div>
+      }
+    </form>
+
+    <!-- Footer -->
+    <div class="flex items-center justify-end gap-3 border-t border-outline-variant/20 px-6 py-5">
+      <app-button variant="secondary" (onClick)="cancel.emit()"> إلغاء </app-button>
+
+      <app-button
+        variant="success"
+        [loading]="isSubmitting()"
+        [disabled]="isSubmitting()"
+        (onClick)="onSubmit()"
+      >
+        {{ isSubmitting() ? 'جاري الحفظ...' : 'تأكيد' }}
+      </app-button>
+    </div>
+  </div>
+</div>

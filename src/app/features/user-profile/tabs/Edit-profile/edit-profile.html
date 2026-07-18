@@ -489,7 +489,7 @@
       class="text-label-sm text-on-surface-variant mt-sm flex flex-wrap items-center gap-x-xs gap-y-1"
     >
       <span class="material-symbols-outlined text-[16px]" aria-hidden="true">info</span>
-      يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل، وحرف كبير، وحرف صغير، ورقم، ورمز خاص.
+      يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل، وحرف كبير، وحرف صغير، ورقم، ورمز خاص، ولا يسمح بالمسافات.
     </p>
   </form>
 </ng-template>
@@ -651,6 +651,8 @@
               الاسم الأول مطلوب
             } @else if (personalForm.get('firstName')?.hasError('maxlength')) {
               لا يتجاوز 100 حرف
+            } @else if (personalForm.get('firstName')?.hasError('pattern')) {
+              الاسم الأول يجب أن يكون كلمة واحدة فقط من الحروف العربية أو الإنجليزية
             }
           </p>
         }
@@ -678,6 +680,8 @@
               اسم العائلة مطلوب
             } @else if (personalForm.get('lastName')?.hasError('maxlength')) {
               لا يتجاوز 100 حرف
+            } @else if (personalForm.get('lastName')?.hasError('pattern')) {
+              اسم العائلة يجب أن يحتوي على حروف عربية أو إنجليزية ومسافة واحدة بين الكلمات
             }
           </p>
         }

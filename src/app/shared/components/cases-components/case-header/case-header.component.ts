@@ -5,7 +5,6 @@ import { ButtonComponent } from '../../button/button';
 import { CaseType } from '../../../enums/case-type';
 import { getCaseTypeTranslationAr } from '../../../../core/constants/case.type.dictionary';
 
-
 @Component({
   selector: 'app-case-header',
   standalone: true,
@@ -43,6 +42,7 @@ export class CaseHeaderComponent {
   // Primary Button
   showPrimary = input(true);
   primaryActionLabel = input('');
+  primaryActionIcon = input('');
   primaryDisabled = input(false);
 
   primaryButtonClass = input('bg-primary hover:opacity-90 text-on-primary shadow-sm');
@@ -50,10 +50,11 @@ export class CaseHeaderComponent {
   // Secondary Button
   showSecondary = input(true);
   secondaryActionLabel = input('');
+  secondaryActionIcon = input('');
   secondaryDisabled = input(false);
 
   secondaryButtonClass = input(
-    'border border-outline-variant text-on-surface-variant hover:bg-surface-container-highest'
+    'border border-outline-variant text-on-surface-variant hover:bg-surface-container-highest',
   );
 
   // Layout
@@ -61,9 +62,6 @@ export class CaseHeaderComponent {
 
   // Events
   primaryAction = output<void>();
-
   secondaryAction = output<void>();
-
   backAction = output<void>();
 }
-

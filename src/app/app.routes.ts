@@ -89,6 +89,12 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/donations/donations.routes').then((m) => m.DONATIONS_ROUTES),
       },
+      {
+        path: 'chat',
+        title: "المحادثات | لقاء",
+        canActivate: [authGuard],
+        loadChildren: () => import('./features/chat/chat.routes').then(m => m.CHAT_ROUTES) 
+      }
     ],
   },
 

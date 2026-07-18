@@ -1,7 +1,7 @@
 // case-card.component.ts
-import { ChangeDetectionStrategy, Component, input, output, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input,inject, output, signal, computed } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule,Router } from '@angular/router';
 
 import { CaseListItemResponse } from '../../../../core/models/Cases.model';
 import { getAgeCategory } from '../../../helper/age-category.helper';
@@ -32,12 +32,15 @@ import { CaseType } from '../../../enums/case-type';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CaseCardComponent {
+  router = inject(Router);
   // Inputs and outputs
   readonly caseItem = input.required<CaseListItemResponse>();
   readonly showUrgentTag = input(false);
   readonly detailRoute = input<Array<string | number> | null>(null);
   readonly similarity = input<number>();
   readonly onContact = output<number>();
+  showCaseType = input(true);
+  showContactButton = input(true);
 
   // Enums for template
   protected readonly CaseTypeEnum = CaseType;
@@ -85,10 +88,6 @@ export class CaseCardComponent {
 
   readonly hasUrgentEndDate = computed(() => !!this.urgentEndDate());
 
-  readonly showUrgentBadge = computed(
-    () => this.caseItem().caseType === CaseType.Urgent || this.showUrgentTag(),
-  );
-
   readonly detailRouteArray = computed(() => {
     const custom = this.detailRoute();
     if (custom) return custom;
@@ -109,5 +108,9 @@ export class CaseCardComponent {
   // Event handler
   onImageError(): void {
     this.imageError.set(true);
+  }
+
+  startChat(id: number): void {
+    this.router.navigate(['/chat/start', id]);
   }
 }
