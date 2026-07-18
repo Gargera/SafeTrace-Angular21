@@ -281,29 +281,44 @@
 
             </div>
 
-            @if(isOwner()){
+           @if(isOwner()){
 
-              <div class="flex gap-3 pt-2">
+  <div class="flex flex-wrap gap-3 pt-2">
 
-                <button
-                  class="rounded-lg bg-primary px-6 py-3 text-on-primary transition hover:opacity-90"
-                  (click)="editCase()">
 
-                  تعديل الحالة
+    <!-- Found Button -->
+    <app-button
+      variant="success"
+      (onClick)="openFoundedPopup()">
 
-                </button>
+      تم العثور عليه
 
-                <button
-                  class="rounded-lg bg-error px-6 py-3 text-white transition hover:opacity-90"
-                  (click)="deleteCase()">
+    </app-button>
 
-                  حذف الحالة
 
-                </button>
+    <!-- Edit Button -->
+    <app-button
+      variant="primary"
+      (onClick)="editCase()">
 
-              </div>
+      تعديل الحالة
 
-            }
+    </app-button>
+
+
+    <!-- Delete Button -->
+    <app-button
+      variant="danger"
+      (onClick)="deleteCase()">
+
+      حذف الحالة
+
+    </app-button>
+
+
+  </div>
+
+}
 
           </div>
 
@@ -411,6 +426,14 @@
     (cancel)="cancelDelete()">
 
 </app-confirmation-modal>
+
+}
+@if(showFoundedPopup()){
+
+  <app-founded-popup
+    (confirmed)="confirmFounded($event)"
+    (cancel)="cancelFounded()">
+  </app-founded-popup>
 
 }
 </div>

@@ -21,6 +21,11 @@ import { FileType } from '../../../../shared/enums/file-type';
 import { ConfirmationModalComponent } from
 '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { SnackbarService } from '../../../../core/services/toast.service';
+import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup';
+import { FoundPersonInfoRequest } from '../../../../core/models/Cases.model';
+import { CaseStatus } from '../../../../shared/enums/case-status';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+
 
 @Component({
   selector: 'app-long-term-details',
@@ -33,6 +38,8 @@ import { SnackbarService } from '../../../../core/services/toast.service';
     CaseTypeBadgeDirective,
     AgeBadgeDirective,
     ConfirmationModalComponent,
+     FoundedPopupComponent,
+     ButtonComponent,
   ],
   templateUrl: './long-term-details.html',
   styleUrls: ['./long-term-details.css'],
@@ -49,6 +56,8 @@ export class LongTermDetails implements OnInit {
   readonly FileType = FileType;
 showDeleteConfirmation = signal(false);
 deleting = signal(false);
+showFoundedPopup = signal(false);
+isFounding = signal(false);
   caseDetails = signal<LongTermCaseDetailResponse | null>(null);
 
   loading = signal(true);
@@ -205,7 +214,70 @@ deleting = signal(false);
     this.selectedMedia.set(photos[index]);
 
   }
+openFoundedPopup(): void {
+  if (!this.caseDetails()?.id) return;
 
+  this.showFoundedPopup.set(true);
+}
+cancelFounded(): void {
+  this.showFoundedPopup.set(false);
+}
+confirmFounded(data: FoundPersonInfoRequest): void {
+
+  const id = this.caseDetails()?.id;
+
+  if (!id) return;
+
+  this.isFounding.set(true);
+
+
+  this.longTermCaseService.markAsFound(id, data)
+    .subscribe({
+
+      next: (res) => {
+
+        this.isFounding.set(false);
+        this.showFoundedPopup.set(false);
+
+
+        if(res.success){
+
+          this.snackbar.success(
+            'تم تحديث الحالة إلى تم العثور عليه'
+          );
+
+
+          // تحديث الـ UI بدون reload
+         this.caseDetails.update(current => {
+
+  if(!current)
+    return current;
+
+  return {
+    ...current,
+    status: CaseStatus.Found
+  };
+
+});
+
+        }
+
+      },
+
+
+      error: () => {
+
+        this.isFounding.set(false);
+
+        this.snackbar.error(
+          'حدث خطأ أثناء تحديث الحالة'
+        );
+
+      }
+
+    });
+
+}
   editCase(): void {
 
     const id = this.caseDetails()?.id;
@@ -259,23 +331,33 @@ next: (res) => {
   });
 
 }
-  getAgeCategoryEnum(): AgeCategories {
+getAgeCategoryEnum(): AgeCategories {
 
-    const age = this.caseDetails()?.age ?? 0;
+  switch (this.caseDetails()?.ageCategory?.name) {
 
-    if (age <= 12) {
+    case 'Toddler':
+      return AgeCategories.Toddler;
+
+    case 'Child':
       return AgeCategories.Child;
-    }
 
-    if (age <= 24) {
+    case 'Teenager':
+      return AgeCategories.Teenager;
+
+    case 'Young':
       return AgeCategories.Young;
-    }
 
-    if (age <= 60) {
+    case 'Adult':
       return AgeCategories.Adult;
-    }
 
-    return AgeCategories.LateAdult;
+    case 'Mid Adult':
+      return AgeCategories.MidAdult;
 
+    case 'Late Adult':
+      return AgeCategories.LateAdult;
+
+    default:
+      return AgeCategories.Child;
   }
+}
 }
