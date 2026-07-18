@@ -5,5 +5,4 @@ export interface UserStatisticsDto {
   verifiedUsers: number;
   pendingVerificationUsers: number;
   unverifiedUsers: number;
-  usersPerRole: { [key: string]: number };
 }
