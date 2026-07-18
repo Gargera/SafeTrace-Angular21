@@ -16,7 +16,7 @@ type Step = 1 | 2 | 3;
 @Component({
   selector: 'app-long-term-create',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, ForceCreatePopupComponent],
+  imports: [ReactiveFormsModule, ForceCreatePopupComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../../../../shared/styles/case-form.css', './long-term-create.css'],
   templateUrl: './long-term-create.html',

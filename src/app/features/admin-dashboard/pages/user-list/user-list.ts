@@ -18,6 +18,7 @@ import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-user-list',
@@ -32,6 +33,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
     ButtonComponent,
     CardComponent,
     EmptyStateComponent,
+    LoadingSpinnerComponent,
   ],
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',

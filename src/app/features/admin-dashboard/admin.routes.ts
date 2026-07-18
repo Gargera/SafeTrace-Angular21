@@ -29,10 +29,7 @@ export const ADMIN_ROUTES: Routes = [
         canActivate: [roleGuard],
         data: { roles: [UserRole.Admin, UserRole.Moderator] },
         title: 'المستخدمون | لقاء',
-        loadComponent: () =>
-          import('./pages/user-list/user-list').then(
-            (m) => m.UserList,
-          ),
+        loadComponent: () => import('./pages/user-list/user-list').then((m) => m.UserList),
       },
       {
         path: 'users/registerByAdmin',
@@ -40,9 +37,7 @@ export const ADMIN_ROUTES: Routes = [
         data: { roles: [UserRole.Admin] },
         title: 'تسجيل مستخدم جديد | لقاء',
         loadComponent: () =>
-          import('./pages/register-by-admin/register-by-admin').then(
-            (m) => m.RegisterByAdmin,
-          ),
+          import('./pages/register-by-admin/register-by-admin').then((m) => m.RegisterByAdmin),
       },
       {
         path: 'rolesManagement',
@@ -50,19 +45,14 @@ export const ADMIN_ROUTES: Routes = [
         data: { roles: [UserRole.Admin] },
         title: 'إدارة الأدوار | لقاء',
         loadComponent: () =>
-          import('./pages/role-management/role-management').then(
-            (m) => m.RoleManagement,
-          ),
+          import('./pages/role-management/role-management').then((m) => m.RoleManagement),
       },
       {
         path: 'users/:id',
         canActivate: [roleGuard],
         data: { roles: [UserRole.Admin, UserRole.Moderator] },
         title: 'تفاصيل المستخدم | لقاء',
-        loadComponent: () =>
-          import('./pages/user-details/user-details').then(
-            (m) => m.UserDetails,
-          ), 
+        loadComponent: () => import('./pages/user-details/user-details').then((m) => m.UserDetails),
       },
       {
         path: 'donations',
@@ -70,10 +60,18 @@ export const ADMIN_ROUTES: Routes = [
         data: { roles: [UserRole.Admin] },
         title: 'إدارة التبرعات | لقاء',
         loadComponent: () =>
-          import('../donations/pages/donations-list/donations-list').then(
-            (m) => m.DonationsList,
+          import('./pages/donations/pages/donation-list/donation-admin-list.component').then(
+            (m) => m.DonationAdminListComponent,
           ),
       },
+      {
+        path:'chats',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin, UserRole.Moderator] },
+        title: 'إدارة المحادثات | لقاء',
+        loadComponent: () => 
+        import('../chat/pages/admin-chats/admin-chats').then((m) => m.AdminChats),
+  }
     ],
   },
 ];

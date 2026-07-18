@@ -13,7 +13,7 @@
 
   @if (isLoading()) {
     <div class="flex justify-center items-center h-64">
-      <span class="material-symbols-outlined animate-spin text-secondary text-[40px]">progress_activity</span>
+      <app-loading-spinner title="جارِ تحميل بيانات المستخدم..."></app-loading-spinner>
     </div>
   } @else if (user()) {
     
@@ -66,7 +66,7 @@
                   }
                   <span prefix><span class="material-symbols-outlined text-on-surface-variant">chevron</span></span>
                 </app-form-field>
-                <app-button (onClick)="onChangeRole(selectedRole())" [disabled]="isActionLoading() || selectedRole() === user()?.role" variant="primary" extraClass="w-full py-2.5 rounded-lg text-label-md font-bold justify-center">
+                <app-button (onClick)="onChangeRole(selectedRole())" [disabled]="loadingAction() !== null || selectedRole() === user()?.role" [loading]="loadingAction() === 'changeRole'" variant="primary" extraClass="w-full py-2.5 rounded-lg text-label-md font-bold justify-center">
                   تغيير
                 </app-button>
               </div>
@@ -136,18 +136,18 @@
               @if (canManageUser()) {
                 <div class="flex flex-wrap gap-3 mt-6 pt-6 border-t border-outline-variant/50">
                   @if (!isInternalRole()) {
-                    <app-button (onClick)="onApprove()" [disabled]="isActionLoading() || user()?.verificationStatus === verificationStatusEnum.Verified || !user()?.identificationImage" variant="primary" extraClass="flex-1 px-4 py-2.5 rounded-xl text-label-md font-bold !bg-[#006b5f] !text-white hover:!bg-[#008f81] border-none justify-center gap-2 transition-all">
+                    <app-button (onClick)="onApprove()" [disabled]="loadingAction() !== null || user()?.verificationStatus === verificationStatusEnum.Verified || !user()?.identificationImage" [loading]="loadingAction() === 'approve'" variant="primary" extraClass="flex-1 px-4 py-2.5 rounded-xl text-label-md font-bold !bg-[#006b5f] !text-white hover:!bg-[#008f81] border-none justify-center gap-2 transition-all">
                       <span class="material-symbols-outlined text-[20px]">check_circle</span>
                       قبول
                     </app-button>
                     
-                    <app-button (onClick)="onReject()" [disabled]="isActionLoading() || user()?.verificationStatus === verificationStatusEnum.Verified || !user()?.identificationImage" variant="primary" extraClass="flex-1 px-4 py-2.5 rounded-xl text-label-md font-bold !bg-error !text-white hover:!bg-error/90 border-none justify-center gap-2 transition-all">
+                    <app-button (onClick)="onReject()" [disabled]="loadingAction() !== null || user()?.verificationStatus === verificationStatusEnum.Verified || !user()?.identificationImage" [loading]="loadingAction() === 'reject'" variant="primary" extraClass="flex-1 px-4 py-2.5 rounded-xl text-label-md font-bold !bg-error !text-white hover:!bg-error/90 border-none justify-center gap-2 transition-all">
                       <span class="material-symbols-outlined text-[20px]">cancel</span>
                       رفض
                     </app-button>
                   }
 
-                  <app-button (onClick)="onToggleBlock()" [disabled]="isActionLoading()" variant="primary" 
+                  <app-button (onClick)="onToggleBlock()" [disabled]="loadingAction() !== null" [loading]="loadingAction() === 'block'" variant="primary" 
                           [extraClass]="'w-full px-4 py-2.5 rounded-xl text-label-md font-bold border-none justify-center gap-2 transition-all ' + (user()?.isBlocked ? '!bg-[#006b5f] !text-white hover:!bg-[#008f81]' : '!bg-error !text-white hover:!bg-error/90')">
                     <span class="material-symbols-outlined text-[20px]">{{ user()?.isBlocked ? 'lock_open_right' : 'block' }}</span>
                     {{ user()?.isBlocked ? 'فك الحظر عن المستخدم' : 'حظر المستخدم' }}
@@ -295,10 +295,24 @@
 </main>
 
 @if (selectedZoomImage()) {
-  <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 md:p-8 animate-fade-in" (click)="closeImageZoom()">
-    <button class="absolute top-6 right-6 text-white hover:text-error bg-black/20 hover:bg-black/50 w-12 h-12 rounded-full flex items-center justify-center transition-all z-[101]" (click)="closeImageZoom()">
-      <span class="material-symbols-outlined text-[28px]">close</span>
-    </button>
-    <img [src]="selectedZoomImage()" class="max-w-full max-h-full rounded-2xl shadow-2xl ring-1 ring-white/20 object-contain cursor-zoom-out" (click)="$event.stopPropagation(); closeImageZoom()">
+  <div class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" (click)="selectedZoomImage.set(null)">
+    <div class="relative max-w-4xl max-h-[90vh] w-full rounded-2xl overflow-hidden shadow-2xl animate-scale-in" (click)="$event.stopPropagation()">
+      <img [src]="selectedZoomImage()" alt="صورة مكبرة" class="w-full h-full object-contain bg-surface-container-low" />
+      <button (click)="selectedZoomImage.set(null)" class="absolute top-4 right-4 bg-black/50 hover:bg-error text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors backdrop-blur-md">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
   </div>
+}
+
+@if (showConfirmModal()) {
+  <app-confirmation-modal
+    [title]="modalConfig().title"
+    [message]="modalConfig().message"
+    [confirmText]="modalConfig().confirmText"
+    [icon]="modalConfig().icon"
+    [variant]="modalConfig().variant"
+    (confirm)="onConfirmModal()"
+    (cancel)="showConfirmModal.set(false)"
+  ></app-confirmation-modal>
 }

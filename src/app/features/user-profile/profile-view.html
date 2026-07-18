@@ -83,14 +83,19 @@
               }
 
               @case ('cases') {
-                <app-my-cases-tab />
+                <div class="p-lg">
+                  <app-my-cases-tab />
+                </div>
               }
 
               @case ('chat') {
-                <app-chat-tab />
+                <app-my-chats />
               }
               @case ('notifications') {
                 <app-notifications-tab />
+              }
+              @case ('donations') {
+                <app-donation-history />
               }
             }
           </div>
