@@ -1,82 +1,102 @@
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 
-declare const google: any;
-
-interface GeocodeAddressComponent {
-  long_name: string;
-  short_name: string;
-  types: string[];
+// ── Nominatim response shape (only the fields we use) ─────────────────────
+interface NominatimReverseResponse {
+  display_name: string;
+  address: {
+    road?: string;
+    suburb?: string;
+    city?: string;
+    town?: string;
+    village?: string;
+    state?: string;
+    country?: string;
+  };
+  error?: string;
 }
+
+// ── Cache entry ────────────────────────────────────────────────────────────
+interface CacheEntry {
+  address: string;
+}
+
+// ── Coordinate precision for cache key (4 decimal places ≈ 11 m accuracy) ─
+const PRECISION = 4;
 
 @Injectable({ providedIn: 'root' })
 export class GeocodingService {
+  readonly #http = inject(HttpClient);
+
+  /**
+   * Nominatim requires a descriptive User-Agent per usage policy:
+   * https://operations.osmfoundation.org/policies/nominatim/
+   */
+  readonly #headers = new HttpHeaders({
+    'Accept-Language': 'ar', // Arabic results
+    'User-Agent': 'SafeTrace-App/1.0', // Required by Nominatim policy
+  });
+
+  /** In-memory cache: "lat,lng" → resolved address */
+  readonly #cache = new Map<string, CacheEntry>();
+
+  // ── Public API ────────────────────────────────────────────────────────────
+
+  /**
+   * Reverse geocode lat/lng → human-readable Arabic address via Nominatim.
+   *
+   * - Returns cached result immediately if the same coordinates were resolved before.
+   * - Falls back to raw coordinate string on any error — never throws.
+   * - Caller is responsible for cancellation via switchMap (see edit-profile component).
+   */
   reverseGeocode(lat: number, lng: number): Observable<string> {
-    return new Observable((observer) => {
-      const geocoder = new google.maps.Geocoder();
-      geocoder.geocode({ location: { lat, lng } }, (results: any, status: string) => {
-        if (status === 'OK' && results && results.length > 0) {
-          const short = this.buildShortAddress(results[0].address_components);
-          observer.next(short ?? results[0].formatted_address);
-        } else {
-          observer.next(this.coordsFallback(lat, lng));
+    const key = this.#cacheKey(lat, lng);
+
+    // ── Cache hit ──────────────────────────────────────────────────────────
+    const cached = this.#cache.get(key);
+    if (cached) {
+      return of(cached.address);
+    }
+
+    // ── Cache miss → HTTP call ─────────────────────────────────────────────
+    const url =
+      `https://nominatim.openstreetmap.org/reverse` +
+      `?format=jsonv2` +
+      `&lat=${lat}` +
+      `&lon=${lng}`;
+
+    return this.#http.get<NominatimReverseResponse>(url, { headers: this.#headers }).pipe(
+      map((response) => {
+        if (response.error) {
+          return this.#fallback(lat, lng);
         }
-        observer.complete();
-      });
-    });
+
+        // Build a concise address from parts (city + state + country)
+        const a = response.address;
+        const parts = [a.suburb, a.city ?? a.town ?? a.village, a.state, a.country].filter(Boolean);
+
+        const address =
+          parts.length > 0
+            ? parts.join('، ') // Arabic comma separator
+            : response.display_name; // Full string as fallback
+
+        // Store in cache
+        this.#cache.set(key, { address });
+        return address;
+      }),
+      catchError(() => of(this.#fallback(lat, lng))),
+    );
   }
 
-  forwardGeocode(address: string): Observable<{ lat: number; lng: number } | null> {
-    return new Observable((observer) => {
-      const geocoder = new google.maps.Geocoder();
-      geocoder.geocode({ address, region: 'EG' }, (results: any, status: string) => {
-        if (status === 'OK' && results && results.length > 0) {
-          const location = results[0].geometry.location;
-          observer.next({ lat: location.lat(), lng: location.lng() });
-        } else {
-          observer.next(null);
-        }
-        observer.complete();
-      });
-    });
+  // ── Private helpers ───────────────────────────────────────────────────────
+
+  #cacheKey(lat: number, lng: number): string {
+    return `${lat.toFixed(PRECISION)},${lng.toFixed(PRECISION)}`;
   }
 
-  /** يربط Places Autocomplete بحقل input، وينده onPlace لما اليوزر يختار مكان */
-  attachAutocomplete(
-    input: HTMLInputElement,
-    onPlace: (result: { lat: number; lng: number; address: string }) => void,
-  ): void {
-    const autocomplete = new google.maps.places.Autocomplete(input, {
-      componentRestrictions: { country: 'eg' },
-      fields: ['geometry', 'formatted_address'],
-    });
-
-    autocomplete.addListener('place_changed', () => {
-      const place = autocomplete.getPlace();
-      if (!place.geometry?.location) return;
-
-      onPlace({
-        lat: place.geometry.location.lat(),
-        lng: place.geometry.location.lng(),
-        address: place.formatted_address ?? '',
-      });
-    });
-  }
-
-  private buildShortAddress(components: GeocodeAddressComponent[]): string | null {
-    const find = (...types: string[]): string | undefined =>
-      components.find((c) => types.some((t) => c.types.includes(t)))?.long_name;
-
-    const district = find('sublocality_level_1', 'sublocality', 'neighborhood', 'locality');
-    const governorate = find('administrative_area_level_1');
-    const country = find('country');
-
-    const parts = [district, governorate, country].filter((p): p is string => !!p);
-    const unique = parts.filter((p, i) => parts.indexOf(p) === i);
-    return unique.length ? unique.join('، ') : null;
-  }
-
-  private coordsFallback(lat: number, lng: number): string {
-    return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  #fallback(lat: number, lng: number): string {
+    return `${lat.toFixed(PRECISION)}, ${lng.toFixed(PRECISION)}`;
   }
 }

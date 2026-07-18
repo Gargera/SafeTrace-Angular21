@@ -87,7 +87,7 @@ export class MapLocationPickerComponent implements AfterViewInit, OnDestroy {
 
   constructor(
     private mapsLoader: GoogleMapsLoaderService,
-    // private geocoding: GeocodingService,
+    private geocoding: GeocodingService,
   ) {}
 
   async ngAfterViewInit(): Promise<void> {
