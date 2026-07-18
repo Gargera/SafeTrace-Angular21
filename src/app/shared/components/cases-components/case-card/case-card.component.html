@@ -12,25 +12,6 @@
       (error)="onImageError()"
       loading="lazy"
     />
-    <!-- Urgent Badge -->
-    @if (showUrgentBadge()) {
-      <div
-        class="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-error/95 px-3 py-1 text-xs font-semibold text-on-error shadow-sm backdrop-blur-sm"
-      >
-        <span class="material-symbols-outlined text-[16px]">{{
-          hasUrgentEndDate() ? 'schedule' : 'error'
-        }}</span>
-
-        <span dir="ltr">
-          {{
-            hasUrgentEndDate()
-              ? (urgentEndDate() | date: 'dd MMM yyyy, h:mm a' : '' : 'ar')
-              : 'حالة عاجلة'
-          }}
-        </span>
-      </div>
-    }
-
     <!-- Similarity Badge -->
     @if (similarity()) {
       <div
@@ -128,7 +109,7 @@
       @if (showContactButton()) {
         <app-button
           variant="secondary"
-          (onClick)="onContact.emit(caseItem().id)"
+          (onClick)="startChat(caseItem().id)"
           extraClass="w-full justify-center gap-2 hover:border-primary hover:bg-primary/5 hover:text-primary"
         >
           <span class="material-symbols-outlined material-icon-sm">chat</span>

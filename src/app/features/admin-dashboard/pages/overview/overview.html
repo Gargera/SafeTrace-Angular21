@@ -46,61 +46,26 @@
         >
       </a>
 
-      <div class="space-y-1">
-        <button
-          class="w-full flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group outline-none"
-          [ngClass]="isSidebarExpanded() ? 'px-4 justify-between' : 'justify-center px-0'"
-          (click)="handleDropdownClick()"
-          [title]="!isSidebarExpanded() ? 'إدارة البلاغات (اضغط للتوسيع)' : ''"
+      <a
+        routerLink="/admin/cases-management"
+        routerLinkActive="bg-white/10 opacity-100"
+        class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
+        [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"
+        [title]="!isSidebarExpanded() ? 'إدارة الحالات' : ''"
+      >
+        <span
+          class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform"
+          >manage_search</span
         >
-          <div
-            class="flex items-center"
-            [ngClass]="isSidebarExpanded() ? 'gap-3' : 'justify-center'"
-          >
-            <span
-              class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform"
-              >manage_search</span
-            >
-            <span
-              class="text-body-md font-semibold whitespace-nowrap"
-              [class.hidden]="!isSidebarExpanded()"
-              >إدارة البلاغات</span
-            >
-          </div>
-          <span
-            class="material-symbols-outlined text-sm shrink-0"
-            [class.hidden]="!isSidebarExpanded()"
-          >
-            {{ isCasesDropdownOpen() ? 'expand_less' : 'expand_more' }}
-          </span>
-        </button>
-
-        @if (isCasesDropdownOpen() && isSidebarExpanded()) {
-          <div class="pr-12 space-y-1 animate-fade-in">
-            <a
-              routerLink="/admin/urgent-cases"
-              routerLinkActive="text-secondary-fixed-dim"
-              class="block py-2 text-body-sm opacity-60 hover:opacity-100 transition-colors"
-              >بلاغات عاجلة</a
-            >
-            <a
-              routerLink="/admin/long-term-cases"
-              routerLinkActive="text-secondary-fixed-dim"
-              class="block py-2 text-body-sm opacity-60 hover:opacity-100 transition-colors"
-              >بلاغات طويلة المدى</a
-            >
-            <a
-              routerLink="/admin/unknown-cases"
-              routerLinkActive="text-secondary-fixed-dim"
-              class="block py-2 text-body-sm opacity-60 hover:opacity-100 transition-colors"
-              >بلاغات غير معروفة</a
-            >
-          </div>
-        }
-      </div>
+        <span
+          class="text-body-md font-semibold whitespace-nowrap"
+          [class.hidden]="!isSidebarExpanded()"
+          >إدارة الحالات</span
+        >
+      </a>
 
       <a
-        routerLink="/admin/complaints"
+        routerLink="/admin/complaints-management"
         routerLinkActive="bg-white/10 opacity-100"
         class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
         [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"

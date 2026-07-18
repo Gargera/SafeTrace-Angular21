@@ -9,6 +9,7 @@ import { ChangeUserRoleDto } from '../models/User/ChangeUserRoleDto';
 import { UserPermissionsResponseDto } from '../models/User/UserPermissionsResponseDto';
 import { AssignUserPermissionsDto } from '../models/User/AssignUserPermissionsDto';
 import { RegisterByAdminDto } from '../models/User/RegisterByAdminDto';
+import { UserStatisticsDto } from '../models/User/UserStatisticsDto';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { ApiService } from '../../../shared/services/api.service';
 
@@ -52,5 +53,9 @@ export class UserService extends ApiService {
 
   assignUserPermissions(dto: AssignUserPermissionsDto): Observable<ApiResponse<string>> {
     return this.post<ApiResponse<string>>(`${this.baseUrl}/AssignPermissions`, dto);
+  }
+
+  getUsersStatistics(): Observable<ApiResponse<UserStatisticsDto>> {
+    return this.get<ApiResponse<UserStatisticsDto>>(`${this.baseUrl}/statistics`);
   }
 }

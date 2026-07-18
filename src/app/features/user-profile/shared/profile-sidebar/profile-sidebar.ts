@@ -1,13 +1,10 @@
 import { Component, effect, inject, input, signal } from '@angular/core';
-import { GeocodingService } from '../../../../core/services/gecoding.service';
 import { GetUserInfoDTO } from '../../model/profile.model';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';
 import { UserRole } from '../../../../shared/enums/user-role';
-import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
-import { getVerificationStatusTranslationAr } from '../../../../core/constants/verification.status.dictionary';
-import { environment } from '../../../../../environments/environment.development';
 import { RoleBadgeDirective } from '../../../../shared/directives/role-badge-directive';
 import { VerificationBadgeDirective } from '../../../../shared/directives/verification-badge-directive';
+import { GeocodingService } from '../../../../core/services/geocoding.service';
 
 @Component({
   selector: 'app-profile-sidebar',
