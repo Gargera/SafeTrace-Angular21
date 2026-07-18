@@ -130,7 +130,7 @@ export class Navbar implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         this.authService.clearSession();
-        this.router.navigate(['/auth']);
+        this.router.navigate(['/auth/login']);
         this.authService.revokeToken().subscribe({
           next: () => {},
           error: () => {},
