@@ -87,10 +87,6 @@ export class CaseCardComponent {
 
   readonly hasUrgentEndDate = computed(() => !!this.urgentEndDate());
 
-  readonly showUrgentBadge = computed(
-    () => this.caseItem().caseType === CaseType.Urgent || this.showUrgentTag(),
-  );
-
   readonly detailRouteArray = computed(() => {
     const custom = this.detailRoute();
     if (custom) return custom;
