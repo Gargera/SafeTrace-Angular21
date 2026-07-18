@@ -65,13 +65,13 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
-        path:'chats',
+        path: 'chats',
         canActivate: [roleGuard],
         data: { roles: [UserRole.Admin, UserRole.Moderator] },
         title: 'إدارة المحادثات | لقاء',
-        loadComponent: () => 
-        import('../chat/pages/admin-chats/admin-chats').then((m) => m.AdminChats),
-  }
+        loadComponent: () =>
+          import('../chat/pages/admin-chats/admin-chats').then((m) => m.AdminChats),
+      },
       {
         path: 'cases-management',
         canActivate: [roleGuard],
