@@ -9,7 +9,7 @@ import { RoleBadgeDirective } from '../../../../shared/directives/role-badge-dir
 import { BlockBadgeDirective } from '../../../../shared/directives/block-badge-directive';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 import { RoleService } from '../../services/role.service';
@@ -19,6 +19,7 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 
 @Component({
   selector: 'app-user-list',
@@ -34,15 +35,17 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
     CardComponent,
     EmptyStateComponent,
     LoadingSpinnerComponent,
+    CaseHeaderComponent,
   ],
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserList {
   public authService = inject(AuthService);
   private userService = inject(UserService);
   private roleService = inject(RoleService);
+  private readonly router = inject(Router);
 
   users = signal<GetUserDto[]>([]);
   roles = signal<RoleDto[]>([]);
@@ -98,12 +101,15 @@ export class UserList {
     });
   }
 
+  navigateToCreateUser(): void {
+    this.router.navigate(['/admin/users/registerByAdmin']);
+  }
+
   onSearchChange(value: string) {
     this.searchSubject.next(value);
   }
 
   updateFilter(partialFilter: Partial<UserFilterDto>) {
-
     this.filter.update((f) => ({
       ...f,
       ...partialFilter,
