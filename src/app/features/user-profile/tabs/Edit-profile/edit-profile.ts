@@ -203,9 +203,6 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   ngOnChanges(changes: SimpleChanges): void {
-    console.log(this.passwordForm.get('newPassword')?.errors);
-    console.log(this.passwordForm.errors);
-    console.log(this.passwordForm.valid);
     if (changes['userInfo'] && this.userInfo()) {
       const info = this.userInfo()!;
       const nameParts = info.fullName.trim().split(' ');
@@ -828,7 +825,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
       },
     });
   }
-
+ 
   /**
 
 -    Profile photo — uploads the pending cropped file (if any) via the
