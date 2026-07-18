@@ -34,9 +34,8 @@ deleteChatForMe(chatId: number): Observable<ApiResponse<ChatDetailsDto>> {
     return this.http.delete<ApiResponse<ChatDetailsDto>>(`${this.baseUrl}/${chatId}`);
   }
 
-getMessages(chatId: number, page: number, pageSize: number = 50): Observable<ApiResponse<PaginationResponse<MessageDto>>> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<PaginationResponse<MessageDto>>>(`${this.baseUrl}/${chatId}/messages`, { params });
+getMessages(chatId: number): Observable<ApiResponse<MessageDto[]>> {
+    return this.http.get<ApiResponse<MessageDto[]>>(`${this.baseUrl}/${chatId}/messages`);
   }
 hardDeleteChat(chatId: number): Observable<ApiResponse<ChatDetailsDto>> {
     return this.http.delete<ApiResponse<ChatDetailsDto>>(`${this.baseUrl}/${chatId}/hard-delete`);

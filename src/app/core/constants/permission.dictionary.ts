@@ -38,6 +38,9 @@ export const PERMISSION_ACTIONS_AR: Record<string, string> = {
   'UpdatePhoneNumber': 'تحديث رقم الهاتف',
   'GetVisitedUserInfo': 'عرض بيانات مستخدم آخر',
   'GetStatistics': 'عرض إحصائيات النظام',
+  'GetCasesStatistics': 'عرض إحصائيات الحالات',
+  'GetUsersStatistics': 'عرض إحصائيات المستخدمين',
+  'GetComplaintsStatistics': 'عرض إحصائيات الشكاوى',
   'Search': 'إجراء عملية مطابقة ذكية بالصور',
   'MarkAsSolved': 'إغلاق الشكوى (محلولة)',
   'ChangePassword': 'تغيير كلمة المرور',
@@ -65,9 +68,9 @@ export const ALL_SYSTEM_PERMISSIONS = [
   "UnknownCases.GetAll", "UnknownCases.GetById", "UnknownCases.Create", "UnknownCases.Update", "UnknownCases.SoftDelete", "UnknownCases.HardDelete", "UnknownCases.Reject", "UnknownCases.Approve", "UnknownCases.MarkAsFounded",
   "Notifications.GetMyNotifications", "Notifications.DeleteNotification", "Notifications.MarkAsRead", "Notifications.MarkAllAsRead",
   "Profile.GetUserInfo", "Profile.GetMyCases", "Profile.GetVisitedUserInfo", "Profile.UpdateName", "Profile.UpdateHomeLocation", "Profile.UpdateProfileImage", "Profile.UpdateIdImage", "Profile.UpdateUserInfo", "Profile.UpdatePhoneNumber",
-  "Dashboard.GetStatistics", "AiMatching.Search", "Complaints.GetAll", "Complaints.GetById", "Complaints.Create", "Complaints.HardDelete", "Complaints.MarkAsSolved", "Account.ChangePassword",
+  "Dashboard.GetStatistics", "Dashboard.GetCasesStatistics", "AiMatching.Search", "Complaints.GetAll", "Complaints.GetById", "Complaints.Create", "Complaints.HardDelete", "Complaints.MarkAsSolved", "Complaints.GetComplaintsStatistics", "Account.ChangePassword",
   "Donations.GetDonations", "Donations.GetMyDonations",
   "Roles.GetAll", "Roles.Create", "Roles.Delete", "Roles.GetPermissionsByRoleId", "Roles.UpdateRolePermissions",
-  "Users.GetAll", "Users.GetById", "Users.RegisterByAdmin", "Users.ChangeRole", "Users.GetPermissions", "Users.AssignPermissions", "Users.Approve", "Users.Reject", "Users.ToggleBlock",
+  "Users.GetAll", "Users.GetById", "Users.RegisterByAdmin", "Users.ChangeRole", "Users.GetPermissions", "Users.AssignPermissions", "Users.Approve", "Users.Reject", "Users.ToggleBlock", "Users.GetUsersStatistics",
   "Chat.GetAll", "Chat.GetMyChats", "Chat.GetById", "Chat.GetMessages", "Chat.SendMessage", "Chat.StartContext", "Chat.Create", "Chat.MarkAsRead", "Chat.HardDelete", "Chat.SoftDelete", "Chat.DeleteMessage", "Chat.DeleteMessageForEveryone"
 ];

@@ -18,8 +18,6 @@ export class Overview implements OnInit {
   private router = inject(Router);
   currentUser = this.authService.currentUser;
   
-  isCasesDropdownOpen = signal<boolean>(false);
-  
   isSidebarExpanded = signal<boolean>(true);
 
   ngOnInit() {
@@ -38,21 +36,8 @@ export class Overview implements OnInit {
       this.isSidebarExpanded.set(true);
     }
   }
-  
-  handleDropdownClick() {
-    if (!this.isSidebarExpanded()) {
-      this.isSidebarExpanded.set(true);
-      this.isCasesDropdownOpen.set(true);
-    } else {
-      this.isCasesDropdownOpen.update(v => !v);
-    }
-  }
-
   toggleSidebar() {
     this.isSidebarExpanded.update(v => !v);
-    if (!this.isSidebarExpanded()) {
-      this.isCasesDropdownOpen.set(false);
-    }
   }
 
   getProfileImageUrl(): string {
