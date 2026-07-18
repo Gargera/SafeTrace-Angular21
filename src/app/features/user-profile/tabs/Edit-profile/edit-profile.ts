@@ -30,7 +30,6 @@ import {
   UpdateHomeLocationDTO,
   UpdateNameDTO,
 } from '../../model/profile.model';
-import { GeocodingService } from '../../../../core/services/gecoding.service';
 import { ProfileService } from '../../service/profile.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { UserRole } from '../../../../shared/enums/user-role';
@@ -41,7 +40,10 @@ import { ImageCropDialog } from '../../shared/image-crop-dialog/image-crop-dialo
 import { Toast } from '../../../../shared/components/toast/toast';
 import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 import { getVerificationStatusTranslationAr } from '../../../../core/constants/verification.status.dictionary';
+import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
 import { mustMatch } from '../../../../shared/validators/must-match.validator';
+import { GeocodingService } from '../../../../core/services/geocoding.service';
+
 // ── Egypt center coordinates (default) ────────────────────────────────────
 const EGYPT_LAT = 26.8206;
 const EGYPT_LNG = 30.8025;
@@ -61,7 +63,6 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
   return null;
 }
 
-
 @Component({
   selector: 'app-edit-profile',
   standalone: true,
@@ -72,6 +73,7 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
     Toast,
     ConfirmDialog,
     ImageCropDialog,
+    ViewProfilePopup,
   ],
   templateUrl: './edit-profile.html',
   styleUrl: './edit-profile.css',
@@ -154,8 +156,22 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
 
   // ── Forms ──────────────────────────────────────────────────────────────────
   readonly personalForm: FormGroup = this.#fb.group({
-    firstName: ['', [Validators.required, Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+$')]],
-    lastName: ['', [Validators.required, Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+( [a-zA-Z\u0600-\u06FF]+)*$')]],
+    firstName: [
+      '',
+      [
+        Validators.required,
+        Validators.maxLength(100),
+        Validators.pattern('^[a-zA-Z\u0600-\u06FF]+$'),
+      ],
+    ],
+    lastName: [
+      '',
+      [
+        Validators.required,
+        Validators.maxLength(100),
+        Validators.pattern('^[a-zA-Z\u0600-\u06FF]+( [a-zA-Z\u0600-\u06FF]+)*$'),
+      ],
+    ],
   });
 
   readonly passwordForm: FormGroup = this.#fb.group(
@@ -192,9 +208,6 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   ngOnChanges(changes: SimpleChanges): void {
-    console.log(this.passwordForm.get('newPassword')?.errors);
-    console.log(this.passwordForm.errors);
-    console.log(this.passwordForm.valid);
     if (changes['userInfo'] && this.userInfo()) {
       const info = this.userInfo()!;
       const nameParts = info.fullName.trim().split(' ');
@@ -627,7 +640,7 @@ export class EditProfile implements OnChanges, AfterViewInit, OnDestroy {
     const ctrl = this.passwordForm.get('newPassword');
     if (!ctrl?.touched || !ctrl?.invalid) return null;
     if (ctrl.hasError('required')) return 'كلمة المرور الجديدة مطلوبة';
-    if (ctrl.hasError('minlength') || ctrl.hasError('maxlength') || ctrl.hasError('pattern')) 
+    if (ctrl.hasError('minlength') || ctrl.hasError('maxlength') || ctrl.hasError('pattern'))
       return 'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل ولا تزيد عن 50، وأن تتضمن حرفًا كبيرًا، وحرفًا صغيرًا، ورقمًا، ورمزًا خاصًا، وبدون مسافات.';
     return null;
   }
