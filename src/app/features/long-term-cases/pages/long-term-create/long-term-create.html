@@ -237,9 +237,11 @@
       }
     </div>
 
+    <!-- تم إضافة [isBlocked] للتحكم في عرض زر الـ Confirm داخل الـ Popup -->
     @if (showForceCreatePopup()) {
       <app-force-create-popup
         [matches]="matchedCases()"
+        [isBlocked]="isBlockedDuplicate()"
         (cancel)="onForceCreateCancel()"
         (forceCreate)="onForceCreateConfirm()">
       </app-force-create-popup>

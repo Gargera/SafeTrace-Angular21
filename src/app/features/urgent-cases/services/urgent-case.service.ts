@@ -122,4 +122,5 @@ export class UrgentCaseService extends ApiService {
   permanentDelete(id: number): Observable<ApiResponse<string>> {
     return this.delete<ApiResponse<string>>(`${this.baseUrl}/${id}/permanent`);
   }
+
 }

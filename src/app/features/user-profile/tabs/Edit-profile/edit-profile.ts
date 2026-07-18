@@ -30,7 +30,7 @@ import {
   UpdateHomeLocationDTO,
   UpdateNameDTO,
 } from '../../model/profile.model';
-import { GeocodingService } from '../../../../core/services/gecoding.service';
+import { GeocodingService } from '../../../../core/services/geocoding.service';
 import { ProfileService } from '../../service/profile.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { UserRole } from '../../../../shared/enums/user-role';

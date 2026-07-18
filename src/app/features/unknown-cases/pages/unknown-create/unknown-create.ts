@@ -159,6 +159,20 @@ export class UnknownCreate {
         const data = res.data;
 
         if (data && data.isCreated === false) {
+          const rawData = data as any;
+
+          // لو نفس نوع الحالة (Unknown ↔ Unknown): مفيش داعي نوقف اليوزر أو نوريه
+          // popup الـ force-create، لأن الباك اند بيعمل merge للحالتين في حالة
+          // واحدة تلقائياً. فبنعتبرها نجحت عادي زي أي إنشاء طبيعي.
+          if (rawData.isSameTypeDuplicate) {
+            this.showForceCreatePopup.set(false);
+            this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
+            this.router.navigate(['/unknown']);
+            return;
+          }
+
+          // لو التطابق مع نوع حالة مختلف (long-term / urgent): نوري اليوزر
+          // الحالات المشابهة ويقرر يتواصل مع صاحب البلاغ أو يعمل force create.
           this.matchedCases.set((data.matchedCases ?? []).map(mapMatchedCaseResponseToDto));
           this.showForceCreatePopup.set(true);
           return;
@@ -166,7 +180,7 @@ export class UnknownCreate {
 
         this.showForceCreatePopup.set(false);
         this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
-        this.router.navigate(['/unknown-cases']);
+        this.router.navigate(['/unknown']);
       },
       error: (err) => {
         this.isSubmitting.set(false);

@@ -59,7 +59,8 @@ export interface MatchedCaseResponse {
 }
 
 export interface CreateCaseResponse {
-  isCreated: boolean;
+  IsCreated: boolean;
+  IsSameTypeDuplicate?: boolean;
   caseId: number | null;
   matchedCases: MatchedCaseResponse[];
 }

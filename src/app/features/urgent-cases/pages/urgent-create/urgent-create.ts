@@ -1,6 +1,7 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { UrgentCaseService } from '../../services/urgent-case.service';
 import { UrgentCaseCreateRequest } from '../../models/request/UrgentCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
@@ -11,13 +12,21 @@ import { MapLocationPickerComponent } from '../../../../shared/components/map-lo
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
+// ⚠️ عدّل هذا المسار لو الـ GeocodingService عندك مش موجود في core/services
+import { GeocodingService } from '../../../../core/services/geocoding.service';
 
 type Step = 1 | 2 | 3;
 
 @Component({
   selector: 'app-urgent-create',
   standalone: true,
-  imports: [ReactiveFormsModule, MapLocationPickerComponent, ForceCreatePopupComponent],
+  imports: [
+    CommonModule,                 // تم إضافته لضمان تشغيل الـ Directives الأساسية مثل *ngIf و *ngFor بشكل سليم
+    ReactiveFormsModule, 
+    RouterLink, 
+    MapLocationPickerComponent, 
+    ForceCreatePopupComponent
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../../../../shared/styles/case-form.css', './urgent-create.css'],
   templateUrl: './urgent-create.html',
@@ -27,6 +36,7 @@ export class UrgentCreate {
   private service = inject(UrgentCaseService);
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
+  private geocoding = inject(GeocodingService);
 
   currentStep: Step = 1;
   isSubmitting = signal(false);
@@ -40,7 +50,12 @@ export class UrgentCreate {
   selectedLng = signal<number | null>(null);
   selectedAddress = signal<string>('');
 
+  // حالة زرار "استخدام موقعي الحالي"
+  isLocating = signal(false);
+  locationError = signal<string | null>(null);
+
   showForceCreatePopup = signal(false);
+  isBlockedDuplicate = signal(false); // لتحديد إذا كان التطابق يمنع التسجيل تماماً
   matchedCases = signal<MatchedCaseDto[]>([]);
   private pendingRequest: UrgentCaseCreateRequest | null = null;
 
@@ -56,7 +71,7 @@ export class UrgentCreate {
   ];
 
   get stepTitle(): string {
-    return ['بيانات الشخص', 'موقع الحادث على الخريطة', 'صور'][this.currentStep - 1];
+    return ['بيانات الشخص المفقود', 'موقع الحادث على الخريطة', 'صور'][this.currentStep - 1];
   }
 
   form = this.fb.group({
@@ -86,23 +101,81 @@ export class UrgentCreate {
     this.selectedAddress.set(loc.address);
   }
 
-  nextStep(): void {
-    if (this.currentStep === 1) {
-      const fields = ['fName', 'lName', 'age', 'gender', 'relation', 'communicationPhone'];
-      fields.forEach((f) => this.form.get(f)?.markAsTouched());
-      if (fields.some((f) => this.form.get(f)?.invalid)) return;
+  /**
+   * يستخدم Geolocation API بتاع المتصفح عشان يجيب موقع اليوزر الحالي،
+   * وبعدين يعمل reverse geocode للعنوان النصي، ويحدّث نفس الـ signals
+   * اللي بتتغذى من الخريطة (selectedLat / selectedLng / selectedAddress).
+   *
+   * ملحوظة مهمة: عشان الماركر يتحرك فعلياً جوه <app-map-location-picker>،
+   * لازم الكومبوننت ده يكون عنده @Input بيستقبل إحداثيات خارجية (مثلاً
+   * externalLocation أو setLocation()) عشان يعمل pan/marker للمكان ده.
+   * لو مفيش عندك حاجة زي كده حالياً، ابعتلي كود MapLocationPickerComponent
+   * وهظبطها بالظبط.
+   */
+  useCurrentLocation(): void {
+    if (!navigator.geolocation) {
+      this.locationError.set('المتصفح لا يدعم تحديد الموقع الجغرافي.');
+      return;
     }
+
+    this.isLocating.set(true);
+    this.locationError.set(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        this.geocoding.reverseGeocode(lat, lng).subscribe({
+          next: (address) => {
+            this.onLocationChange({ lat, lng, address });
+            this.isLocating.set(false);
+          },
+          error: () => {
+            // حتى لو فشل جلب العنوان النصي، نكمّل بالإحداثيات بس
+            this.onLocationChange({ lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
+            this.isLocating.set(false);
+          },
+        });
+      },
+      (error: GeolocationPositionError) => {
+        this.isLocating.set(false);
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            this.locationError.set('تم رفض إذن الوصول لموقعك. من فضلك فعّل صلاحية الموقع من إعدادات المتصفح.');
+            break;
+          case error.POSITION_UNAVAILABLE:
+            this.locationError.set('تعذر تحديد موقعك الحالي.');
+            break;
+          case error.TIMEOUT:
+            this.locationError.set('انتهت مهلة تحديد الموقع، حاول مرة أخرى.');
+            break;
+          default:
+            this.locationError.set('حدث خطأ أثناء تحديد الموقع.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+    );
+  }
+
+  nextStep(): void {
+    const stepFields: Record<number, string[]> = {
+      1: ['fName', 'lName', 'age', 'gender', 'relation', 'communicationPhone'],
+      2: ['government', 'city', 'street', 'eventDate'],
+    };
+    const fields = stepFields[this.currentStep] ?? [];
+    fields.forEach((f) => this.form.get(f)?.markAsTouched());
+    if (fields.some((f) => this.form.get(f)?.invalid)) return;
+
     if (this.currentStep === 2) {
-      const fields = ['government', 'city', 'street', 'eventDate'];
-      fields.forEach((f) => this.form.get(f)?.markAsTouched());
-      if (fields.some((f) => this.form.get(f)?.invalid)) return;
       if (this.selectedLat() === null || this.selectedLng() === null) {
         this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
         return;
       }
     }
-    this.errorMsg.set(null);
+
     this.currentStep = (this.currentStep + 1) as Step;
+    this.errorMsg.set(null);
   }
 
   prevStep(): void {
@@ -112,7 +185,7 @@ export class UrgentCreate {
   onPrimaryPhotoSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     if (!file) return;
-    this.selectedPhotos.update((p) => [file, ...p.slice(1)].slice(0, 5));
+    this.selectedPhotos.update((p) => [file, ...p.filter((_, i) => i !== 0)].slice(0, 5));
     this.refreshPreviews();
   }
 
@@ -138,8 +211,11 @@ export class UrgentCreate {
   onSubmit(forceCreate = false): void {
     if (!forceCreate && (this.form.invalid || this.selectedPhotos().length === 0 || this.selectedLat() === null)) {
       this.form.markAllAsTouched();
-      if (this.selectedPhotos().length === 0) this.errorMsg.set('برجاء إضافة صورة واحدة على الأقل.');
-      else if (this.selectedLat() === null) this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
+      if (this.selectedPhotos().length === 0) {
+        this.errorMsg.set('برجاء إضافة صورة واحدة على الأقل للشخص (الصورة الأساسية).');
+      } else if (this.selectedLat() === null) {
+        this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
+      }
       return;
     }
 
@@ -182,19 +258,30 @@ export class UrgentCreate {
         this.isSubmitting.set(false);
         const data = res.data;
 
+        // نفس منطق long-term بالظبط:
+        // IsCreated === false + IsSameTypeDuplicate === true  -> ممنوع الإنشاء (Blocked)
+        // IsCreated === false + IsSameTypeDuplicate === false -> حالات مشابهة، اليوزر يختار يتواصل أو يعمل force create
         if (data && data.isCreated === false) {
-          this.matchedCases.set((data.matchedCases ?? []).map(mapMatchedCaseResponseToDto));
+          if (data.matchedCases) {
+            this.matchedCases.set(data.matchedCases.map(mapMatchedCaseResponseToDto));
+          } else {
+            this.matchedCases.set([]);
+          }
+
+          const rawData = data as any;
+          this.isBlockedDuplicate.set(!!rawData.isSameTypeDuplicate);
+
           this.showForceCreatePopup.set(true);
           return;
         }
 
         this.showForceCreatePopup.set(false);
-        this.snackbar.success('تم إرسال البلاغ العاجل بنجاح.');
-        this.router.navigate(['/urgent-cases']);
+        this.snackbar.success('تم إرسال بلاغ الحالة بنجاح، هيتم مراجعته من الإدارة قريبًا.');
+        this.router.navigate(['/urgent']);
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        const msg = err?.error?.message ?? 'حدث خطأ أثناء إرسال البلاغ. حاول مرة أخرى.';
+        const msg = err?.error?.message ?? 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.';
         this.errorMsg.set(msg);
         this.snackbar.error(msg);
       },
