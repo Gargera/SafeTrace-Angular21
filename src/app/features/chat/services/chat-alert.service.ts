@@ -62,7 +62,22 @@ export class ChatAlertsService {
    * Three-way confirmation used specifically for deleting a message,
    * matching DELETE /api/Messages/{messageId} vs /{messageId}/everyone.
    */
-  async confirmDeleteMessage(): Promise<'me' | 'everyone' | 'cancel'> {
+  async confirmDeleteMessage(isMine:boolean): Promise<'me' | 'everyone' | 'cancel'> {
+    if(!isMine){
+      const result = await this.fire({
+        icon : 'question',
+        title: 'حذف الرسالة',
+      text: 'هل تريد حذف هذه الرسالة لديك فقط؟',
+      showCancelButton: true,
+      confirmButtonText: 'حذف لي فقط',
+      cancelButtonText: 'إلغاء',
+      confirmButtonColor: this.errorColor,
+      cancelButtonColor: this.outlineColor,
+      reverseButtons: true,
+      });
+
+      return result.isConfirmed? 'me' : 'cancel';
+    }
     const result = await this.fire({
       icon: 'question',
       title: 'حذف الرسالة',

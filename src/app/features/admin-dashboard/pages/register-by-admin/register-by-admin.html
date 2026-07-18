@@ -33,7 +33,7 @@
       </div>
 
       <div class="flex flex-col gap-1.5">
-        <app-form-field formControlName="lName" label="الاسم الأخير" placeholder="محمد"></app-form-field>
+        <app-form-field formControlName="lName" label="اسم العائلة" placeholder="محمد"></app-form-field>
         @if (registerForm.get('lName')?.touched && registerForm.get('lName')?.invalid) {
           <span class="text-error text-xs font-medium">
             @if (registerForm.get('lName')?.errors?.['serverError']) { {{ registerForm.get('lName')?.errors?.['serverError'] }} } @else if (registerForm.get('lName')?.errors?.['pattern']) { اسم العائلة يجب أن يحتوي على حروف عربية أو إنجليزية ومسافة واحدة بين الكلمات. } @else { اسم العائلة مطلوب ويجب ألا يزيد عن 100 حرف. }
