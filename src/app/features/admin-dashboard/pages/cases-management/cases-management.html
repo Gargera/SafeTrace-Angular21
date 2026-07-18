@@ -1,12 +1,7 @@
 <!-- Header -->
-<header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-xl">
-  <div>
-    <h1 class="text-headline-lg font-bold text-primary">لوحة التحكم</h1>
-    <p class="text-body-md text-on-surface-variant mt-1">
-      نظرة عامة على جميع حالات النظام وإحصائياتها
-    </p>
-  </div>
-</header>
+<div class="mb-xl">
+  <app-case-header title="لوحة التحكم" subtitle="نظرة عامة على جميع حالات النظام وإحصائياتها" />
+</div>
 
 <!-- Statistics Cards -->
 @if (loadingStats()) {

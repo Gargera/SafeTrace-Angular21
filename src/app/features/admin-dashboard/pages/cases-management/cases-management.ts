@@ -37,6 +37,7 @@ import { LongTermCaseListItemResponse } from '../../../long-term-cases/models/re
 import { UnknownCaseListItemResponse } from '../../../unknown-cases/models/response/UnknownCaseListItemResponse';
 import { getAgeCategory } from '../../../../shared/helper/age-category.helper';
 import { MyCaseListItemResponse } from '../../../user-profile/model/profile.model';
+import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 
 // Statistics interface
 interface DashboardStatistics {
@@ -69,6 +70,7 @@ type CaseListItemUnion =
     ConfirmationModalComponent,
     CaseTypeBadgeDirective,
     CaseStatusBadgeDirective,
+    CaseHeaderComponent,
   ],
   templateUrl: './cases-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
