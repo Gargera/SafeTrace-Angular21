@@ -1,28 +1,34 @@
-<header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-xl">
-  <div>
-    <h1 class="text-headline-lg font-bold text-primary">إدارة المستخدمين</h1>
-    <p class="text-body-md text-on-surface-variant mt-1">متابعة حسابات المستخدمين، التحقق من التوثيق، وإدارة الصلاحيات.</p>
-  </div>
-  <app-button routerLink="/admin/users/registerByAdmin" variant="primary" extraClass="gap-sm px-8 h-12 rounded-full font-bold shadow-md hover:bg-secondary-container transition-all duration-200">
-    <span class="material-symbols-outlined">person_add</span>
-    إنشاء حساب جديد
-  </app-button>
-</header>
+<div class="mb-xl">
+  <app-case-header
+    title="إدارة المستخدمين"
+    subtitle="متابعة حسابات المستخدمين، التحقق من التوثيق، وإدارة الصلاحيات."
+    primaryActionLabel="إنشاء حساب جديد"
+    primaryActionIcon="person_add"
+    (primaryAction)="navigateToCreateUser()"
+    primaryButtonClass="gap-sm px-8 h-12 rounded-full font-bold shadow-md hover:bg-secondary-container transition-all duration-200"
+  />
+</div>
 
 <app-card extraClass="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg">
   <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-md items-end">
-    
     <div class="flex flex-col gap-xs md:col-span-2">
       <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">بحث</label>
-      <app-form-field type="search" 
+      <app-form-field
+        type="search"
         [ngModel]="filter().searchTerm"
         (ngModelChange)="onSearchChange($event)"
-        placeholder="ابحث بالاسم، الإيميل، أو رقم الهاتف..." >
+        placeholder="ابحث بالاسم، الإيميل، أو رقم الهاتف..."
+      >
       </app-form-field>
     </div>
 
     <div class="flex flex-col gap-xs">
-      <app-form-field type="select" [ngModel]="filter().verificationStatus" (ngModelChange)="updateFilter({ verificationStatus: $event })" label="حالة التوثيق">
+      <app-form-field
+        type="select"
+        [ngModel]="filter().verificationStatus"
+        (ngModelChange)="updateFilter({ verificationStatus: $event })"
+        label="حالة التوثيق"
+      >
         <option value="">الكل</option>
         <option [value]="VerificationStatusEnum.Verified">موثق</option>
         <option [value]="VerificationStatusEnum.Pending">قيد المراجعة</option>
@@ -31,7 +37,12 @@
     </div>
 
     <div class="flex flex-col gap-xs">
-      <app-form-field type="select" [ngModel]="filter().roleId" (ngModelChange)="updateFilter({ roleId: $event })" label="الدور (Role)">
+      <app-form-field
+        type="select"
+        [ngModel]="filter().roleId"
+        (ngModelChange)="updateFilter({ roleId: $event })"
+        label="الدور (Role)"
+      >
         <option value="">الكل</option>
         @for (role of roles(); track role.id) {
           <option [value]="role.id">{{ getRoleName(role.name) }}</option>
@@ -40,7 +51,12 @@
     </div>
 
     <div class="flex flex-col gap-xs">
-      <app-form-field type="select" [ngModel]="filter().isBlocked === undefined ? '' : filter().isBlocked" (ngModelChange)="updateFilter({ isBlocked: $event === '' ? undefined : $event === 'true' })" label="حالة الحظر">
+      <app-form-field
+        type="select"
+        [ngModel]="filter().isBlocked === undefined ? '' : filter().isBlocked"
+        (ngModelChange)="updateFilter({ isBlocked: $event === '' ? undefined : $event === 'true' })"
+        label="حالة الحظر"
+      >
         <option value="">الكل</option>
         <option value="true">محظور</option>
         <option value="false">نشط</option>
@@ -49,23 +65,37 @@
   </div>
 
   <div class="flex flex-wrap justify-end gap-3 pt-2">
-    <app-button variant="text" (onClick)="resetFilters()" extraClass="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary">
-      <span class="material-symbols-outlined transition-transform duration-200 group-hover:-rotate-90">refresh</span>
+    <app-button
+      variant="text"
+      (onClick)="resetFilters()"
+      extraClass="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary"
+    >
+      <span
+        class="material-symbols-outlined transition-transform duration-200 group-hover:-rotate-90"
+        >refresh</span
+      >
       <span>إعادة تعيين</span>
     </app-button>
   </div>
 </app-card>
 
-<section class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75">
-  
+<section
+  class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75"
+>
   @if (isLoading()) {
-    <app-loading-spinner title="جارِ تحميل المستخدمين..." [fullscreen]="false" containerClass="absolute inset-0 bg-white/60 flex items-center justify-center z-10"></app-loading-spinner>
+    <app-loading-spinner
+      title="جارِ تحميل المستخدمين..."
+      [fullscreen]="false"
+      containerClass="absolute inset-0 bg-white/60 flex items-center justify-center z-10"
+    ></app-loading-spinner>
   }
 
   <div class="overflow-x-auto">
     <table class="w-full text-right border-collapse whitespace-nowrap">
       <thead>
-        <tr class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant">
+        <tr
+          class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant"
+        >
           <th class="px-lg py-md">المستخدم</th>
           <th class="px-lg py-md">البريد الإلكتروني</th>
           <th class="px-lg py-md">رقم الهاتف</th>
@@ -76,12 +106,10 @@
         </tr>
       </thead>
       <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
-        
         @for (user of users(); track user.id) {
           <tr class="hover:bg-surface-container-low transition-colors group">
             <td class="px-lg py-md">
               <div class="flex items-center gap-md">
-                
                 <span class="font-semibold text-primary">{{ user.fName }} {{ user.lName }}</span>
               </div>
             </td>
@@ -97,7 +125,11 @@
               <span [appBlockBadgeDirective]="user.isBlocked"></span>
             </td>
             <td class="px-lg py-md text-center">
-              <app-button routerLink="/admin/users/{{ user.id }}" variant="primary" extraClass="px-6 py-2 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200">
+              <app-button
+                routerLink="/admin/users/{{ user.id }}"
+                variant="primary"
+                extraClass="px-6 py-2 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
+              >
                 التفاصيل
               </app-button>
             </td>
@@ -106,41 +138,53 @@
           @if (!isLoading()) {
             <tr>
               <td colspan="7" class="py-xl">
-                <app-empty-state title="لا يوجد مستخدمين" message="لا يوجد مستخدمين يطابقون شروط البحث."></app-empty-state>
+                <app-empty-state
+                  title="لا يوجد مستخدمين"
+                  message="لا يوجد مستخدمين يطابقون شروط البحث."
+                ></app-empty-state>
               </td>
             </tr>
           }
         }
-
       </tbody>
     </table>
   </div>
 
   @if (totalPages() > 1) {
-    <div class="p-md md:p-lg bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div
+      class="p-md md:p-lg bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-4"
+    >
       <span class="text-label-sm text-on-surface-variant font-medium">
         إجمالي عدد المستخدمين: <span class="font-bold">{{ totalCount() }}</span>
       </span>
-      
+
       <div class="flex gap-xs" dir="ltr">
-        <button [disabled]="filter().pageNumber === 1" (click)="changePage(filter().pageNumber - 1)" 
-                class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+        <button
+          [disabled]="filter().pageNumber === 1"
+          (click)="changePage(filter().pageNumber - 1)"
+          class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <span class="material-symbols-outlined text-md">chevron_left</span>
         </button>
 
         @for (page of pagesArray(); track page) {
-          <button (click)="changePage(page)" 
-                  [class.bg-secondary]="page === filter().pageNumber"
-                  [class.text-white]="page === filter().pageNumber"
-                  [class.bg-white]="page !== filter().pageNumber"
-                  [class.text-primary]="page !== filter().pageNumber"
-                  class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant font-bold text-label-sm hover:bg-secondary-fixed-dim transition-all">
+          <button
+            (click)="changePage(page)"
+            [class.bg-secondary]="page === filter().pageNumber"
+            [class.text-white]="page === filter().pageNumber"
+            [class.bg-white]="page !== filter().pageNumber"
+            [class.text-primary]="page !== filter().pageNumber"
+            class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant font-bold text-label-sm hover:bg-secondary-fixed-dim transition-all"
+          >
             {{ page }}
           </button>
         }
 
-        <button [disabled]="filter().pageNumber === totalPages()" (click)="changePage(filter().pageNumber + 1)"
-                class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+        <button
+          [disabled]="filter().pageNumber === totalPages()"
+          (click)="changePage(filter().pageNumber + 1)"
+          class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <span class="material-symbols-outlined text-md">chevron_right</span>
         </button>
       </div>
