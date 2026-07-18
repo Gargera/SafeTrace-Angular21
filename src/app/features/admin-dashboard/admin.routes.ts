@@ -75,7 +75,7 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: 'cases-management',
         canActivate: [roleGuard],
-        data: { roles: [UserRole.Admin] },
+        data: { roles: [UserRole.Admin, UserRole.Moderator] },
         title: 'إدارة الحالات | لقاء',
         loadComponent: () =>
           import('./pages/cases-management/cases-management').then((m) => m.CasesManagement),
