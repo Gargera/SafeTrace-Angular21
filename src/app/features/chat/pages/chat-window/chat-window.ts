@@ -13,15 +13,14 @@ import { MessageDto } from '../../models/message.model';
 import { FileType } from '../../../../shared/enums/file-type';
 import { environment } from '../../../../../environments/environment';
 import { Location } from '@angular/common';
+import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
 
-
-const PAGE_SIZE = 30;
 
 
 @Component({
   selector: 'app-chat-window',
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, ViewProfilePopup],
   templateUrl: './chat-window.html',
 })
 export class ChatWindow implements OnInit, AfterViewInit {
@@ -35,6 +34,7 @@ export class ChatWindow implements OnInit, AfterViewInit {
   private chatHubService = inject(ChatHubService);
   private authService = inject(AuthService);
 
+  readonly selectedUserId = signal<string | null>(null);
 
   private currentUserId = this.authService.getCurrentUserId();
   readonly FileType = FileType;
@@ -65,6 +65,7 @@ export class ChatWindow implements OnInit, AfterViewInit {
     this.isLoading.set(true);
     this.chatService.getChatDetails(this.chatId).subscribe({
       next: (res) => {
+        console.log(res.data);
         this.chat.set(res.data);
         this.checkLoadingStatus();
       },
@@ -184,11 +185,10 @@ private handleMessageDeletedForEveryone = (
   );
 };
   loadMessages(): void {
-    this.chatService.getMessages(this.chatId, this.page(), PAGE_SIZE).subscribe({
+    this.chatService.getMessages(this.chatId).subscribe({
       next: (res) => {
-        this.messages.set(res.data!.items.map((m) => this.normalizeMessage(m)));
-        const loadedSoFar = res.data!.pageNumber * res.data!.pageSize;
-        this.hasMoreMessages.set(loadedSoFar < res.data!.totalCount);
+        this.messages.set(res.data!.map((m) => this.normalizeMessage(m)));
+        this.hasMoreMessages.set(false);
         this.checkLoadingStatus();
         setTimeout(() => {
         this.scrollToBottom();
@@ -271,16 +271,16 @@ private handleMessageDeletedForEveryone = (
     this.clearSelectedFile();
   }
 
- async onDeleteMessage(messageId: number): Promise<void> {
-  const choice = await this.chatAlertsService.confirmDeleteMessage();
+ async onDeleteMessage(message: MessageDto): Promise<void> {
+  const choice = await this.chatAlertsService.confirmDeleteMessage(message.isMine);
 
   if (choice === 'cancel') {
     return;
   }
 
   const request$ = choice === 'everyone'
-    ? this.messageService.deleteMessageForEveryone(messageId)
-    : this.messageService.deleteMessageForMe(messageId);
+    ? this.messageService.deleteMessageForEveryone(message.id)
+    : this.messageService.deleteMessageForMe(message.id);
 
   request$.subscribe({
     next: (res) => {
@@ -288,7 +288,7 @@ private handleMessageDeletedForEveryone = (
       if (choice === 'me') {
         // حذف الرسالة عندي فقط
         this.messages.update((msgs) =>
-          msgs.filter((msg) => msg.id !== messageId)
+          msgs.filter((msg) => msg.id !== message.id)
         );
       }
 
@@ -342,5 +342,53 @@ private handleMessageDeletedForEveryone = (
       this.isLoading.set(false);
     }
   }
+
+  isNewDay(index: number): boolean{
+    const msgs = this.messages();
+
+    if(index === 0){
+      return true;
+    }
+
+    const current = new Date (msgs[index].sendAt);
+    const previous = new Date (msgs[index-1].sendAt);
+
+    return(current.getFullYear() !== previous.getFullYear()||
+    current.getMonth() !== previous.getMonth() ||
+    current.getDate() !== previous.getDate()
+  );
+  }
+  formatDay(date: string | Date): string {
+
+  const d = new Date(date);
+
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (d.toDateString() === today.toDateString()) {
+    return 'اليوم';
+  }
+
+  if (d.toDateString() === yesterday.toDateString()) {
+    return 'أمس';
+  }
+
+  return d.toLocaleDateString('ar-EG', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+}
+openProfile(): void {
+    console.log(this.chat());
+
+  const userId = this.chat()?.otherUserId;
+    console.log(userId);
+
+  if (!userId) return;
+
+  this.selectedUserId.set(userId);
+}
 
 }
