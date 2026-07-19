@@ -10,7 +10,10 @@ import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/map-location-picker';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
-import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
+import {
+  MatchedCaseDto,
+  mapMatchedCaseResponseToDto,
+} from '../../../../shared/models/responses/matched-case.model';
 
 type Step = 1 | 2 | 3;
 
@@ -136,10 +139,15 @@ export class UrgentCreate {
   }
 
   onSubmit(forceCreate = false): void {
-    if (!forceCreate && (this.form.invalid || this.selectedPhotos().length === 0 || this.selectedLat() === null)) {
+    if (
+      !forceCreate &&
+      (this.form.invalid || this.selectedPhotos().length === 0 || this.selectedLat() === null)
+    ) {
       this.form.markAllAsTouched();
-      if (this.selectedPhotos().length === 0) this.errorMsg.set('برجاء إضافة صورة واحدة على الأقل.');
-      else if (this.selectedLat() === null) this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
+      if (this.selectedPhotos().length === 0)
+        this.errorMsg.set('برجاء إضافة صورة واحدة على الأقل.');
+      else if (this.selectedLat() === null)
+        this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
       return;
     }
 

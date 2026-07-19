@@ -42,7 +42,7 @@ export class CaseHeaderComponent {
   // Primary Button
   showPrimary = input(true);
   primaryActionLabel = input('');
-  primaryActionIcon = input(''); // ✅ جديد
+  primaryActionIcon = input('');
   primaryDisabled = input(false);
 
   primaryButtonClass = input('bg-primary hover:opacity-90 text-on-primary shadow-sm');
@@ -50,7 +50,7 @@ export class CaseHeaderComponent {
   // Secondary Button
   showSecondary = input(true);
   secondaryActionLabel = input('');
-  secondaryActionIcon = input(''); // ✅ جديد
+  secondaryActionIcon = input('');
   secondaryDisabled = input(false);
 
   secondaryButtonClass = input(
