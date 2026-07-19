@@ -222,7 +222,6 @@
     </ng-container>
     <app-personal-info [userInfo]="userInfo()" (personalUpdated)="onProfileUpdated()" />
     <app-password [adminOnlyLabel]="false" (passwordSaved)="onProfileUpdated()" />
-
     <app-phone [userInfo]="userInfo()" (phoneUpdated)="onProfileUpdated()" />
     <app-location-picker [userInfo]="userInfo()" (locationUpdated)="onProfileUpdated()" />
   }

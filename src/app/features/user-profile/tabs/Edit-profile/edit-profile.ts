@@ -25,7 +25,6 @@ import { LocationPicker } from './innerComponents/location-picker/location-picke
   imports: [
     NgTemplateOutlet,
     Toast,
-    ConfirmDialog,
     ImageCropDialog,
     ViewProfilePopup,
     ProfileImage,
@@ -36,7 +35,6 @@ import { LocationPicker } from './innerComponents/location-picker/location-picke
     LocationPicker,
   ],
   templateUrl: './edit-profile.html',
-  styleUrl: './edit-profile.css',
 })
 export class EditProfile {
   readonly userInfo = input<GetUserInfoDTO | null>(null);
