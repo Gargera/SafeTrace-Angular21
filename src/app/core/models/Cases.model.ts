@@ -146,7 +146,7 @@ export interface CaseUpsertBaseRequest {
 
   video: File | null;
 }
-export interface CaseCreateBaseRequest extends CaseUpsertBaseRequest {}
+export interface CaseCreateBaseRequest extends CaseUpsertBaseRequest { }
 
 export interface CaseUpdateBaseRequest extends CaseUpsertBaseRequest {
   newPhotos: File[] | null;
@@ -156,9 +156,11 @@ export interface CaseUpdateBaseRequest extends CaseUpsertBaseRequest {
 
 export interface CasesFilterRequest {
   status: CaseStatus | null;
+  caseType: CaseType | null;
   gender: Gender | null;
   ageCategory: AgeCategories | null;
   fullName: string | null;
+  caseCode: string | null;
   government: string | null;
   city: string | null;
   minAge: number | null;
