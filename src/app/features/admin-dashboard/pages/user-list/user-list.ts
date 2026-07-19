@@ -19,7 +19,9 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { UserStatisticsDto } from '../../models/User/UserStatisticsDto';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { SnackbarService } from '../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-user-list',
@@ -46,12 +48,15 @@ export class UserList {
   private userService = inject(UserService);
   private roleService = inject(RoleService);
   private readonly router = inject(Router);
+  private toast = inject(SnackbarService);
 
   users = signal<GetUserDto[]>([]);
   roles = signal<RoleDto[]>([]);
   totalCount = signal<number>(0);
   totalPages = signal<number>(0);
   isLoading = signal<boolean>(false);
+  loadingStats = signal<boolean>(true);
+  statistics = signal<UserStatisticsDto | null>(null);
 
   filter = signal<UserFilterDto>({
     pageNumber: 1,
@@ -70,6 +75,7 @@ export class UserList {
   ngOnInit() {
     this.loadRoles();
     this.loadUsers();
+    this.loadStatistics();
 
     this.searchSubject.pipe(debounceTime(500), distinctUntilChanged()).subscribe((term) => {
       this.updateFilter({ searchTerm: term, pageNumber: 1 });
@@ -139,5 +145,27 @@ export class UserList {
 
   getRoleName(roleName: string): string {
     return getRoleTranslationAr(roleName);
+  }
+
+  loadStatistics() {
+    this.loadingStats.set(true);
+    this.userService.getUsersStatistics().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.statistics.set(res.data);
+        } else {
+          this.toast.error(res.message || 'فشل تحميل الإحصائيات');
+        }
+        this.loadingStats.set(false);
+      },
+      error: () => {
+        this.toast.error('تعذر الاتصال بالخادم لتحميل الإحصائيات');
+        this.loadingStats.set(false);
+      }
+    });
+  }
+
+  navigateToRegister() {
+    this.router.navigate(['/admin/users/registerByAdmin']);
   }
 }

@@ -21,7 +21,9 @@
 
       @if (loading()) {
         <div class="flex flex-col items-center pt-1" aria-live="polite" aria-busy="true">
-          <div class="mb-4 h-24 w-24 animate-pulse rounded-[9999px] bg-surface-container-high"></div>
+          <div
+            class="mb-4 h-24 w-24 animate-pulse rounded-[9999px] bg-surface-container-high"
+          ></div>
           <div class="mb-2.5 h-4 w-2/3 animate-pulse rounded-full bg-surface-container-high"></div>
           <div class="mb-4 h-3 w-1/3 animate-pulse rounded-full bg-surface-container-high"></div>
           <div class="mb-4 h-px w-full bg-outline-variant/50"></div>
@@ -76,7 +78,7 @@
           </span>
 
           <div class="my-4.5 h-px w-full bg-outline-variant/50"></div>
-
+          <!-- phone nuumber -->
           <dl class="w-full">
             <div class="flex items-center justify-between gap-3">
               <dt class="flex items-center gap-1.5 text-[13px] font-medium text-on-surface-variant">
@@ -94,6 +96,45 @@
               </dd>
             </div>
           </dl>
+          <!-- Email -->
+          <dl class="w-full">
+            <div class="flex items-center justify-between gap-3">
+              <dt class="flex items-center gap-1.5 text-[13px] font-medium text-on-surface-variant">
+                <span class="material-symbols-outlined material-icon-sm">mail</span>
+                <span>البريد الالكتروني</span>
+              </dt>
+              <dd class="text-sm font-semibold text-on-surface" dir="ltr">
+                @if (p.email) {
+                  <a class="text-secondary hover:underline" [href]="'email:' + p.email">
+                    {{ p.email }}
+                  </a>
+                } @else {
+                  <span class="font-medium text-on-surface-variant">غير متوفر</span>
+                }
+              </dd>
+            </div>
+          </dl>
+          <!-- Home -->
+          <!-- Home -->
+          <div class="flex items-center justify-between gap-3 mt-3">
+            <dt class="flex items-center gap-1.5 text-[13px] font-medium text-on-surface-variant">
+              <span class="material-symbols-outlined material-icon-sm">home</span>
+              <span>العنوان</span>
+            </dt>
+            <dd class="text-sm font-semibold text-on-surface">
+              @if (p.homeLatitude && p.homeLongitude) {
+                @if (isResolvingAddress()) {
+                  <span
+                    class="inline-block h-3 w-24 animate-pulse rounded-full bg-surface-container-high"
+                  ></span>
+                } @else {
+                  <span>{{ resolvedAddress() || 'تعذر تحميل العنوان' }}</span>
+                }
+              } @else {
+                <span class="font-medium text-on-surface-variant">غير متوفر</span>
+              }
+            </dd>
+          </div>
         </div>
       }
     </div>
