@@ -13,13 +13,14 @@ import { MessageDto } from '../../models/message.model';
 import { FileType } from '../../../../shared/enums/file-type';
 import { environment } from '../../../../../environments/environment';
 import { Location } from '@angular/common';
+import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
 
 
 
 @Component({
   selector: 'app-chat-window',
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, ViewProfilePopup],
   templateUrl: './chat-window.html',
 })
 export class ChatWindow implements OnInit, AfterViewInit {
@@ -33,6 +34,7 @@ export class ChatWindow implements OnInit, AfterViewInit {
   private chatHubService = inject(ChatHubService);
   private authService = inject(AuthService);
 
+  readonly selectedUserId = signal<string | null>(null);
 
   private currentUserId = this.authService.getCurrentUserId();
   readonly FileType = FileType;
@@ -377,6 +379,16 @@ private handleMessageDeletedForEveryone = (
     month: 'long',
     year: 'numeric'
   });
+}
+openProfile(): void {
+    console.log(this.chat());
+
+  const userId = this.chat()?.otherUserId;
+    console.log(userId);
+
+  if (!userId) return;
+
+  this.selectedUserId.set(userId);
 }
 
 }

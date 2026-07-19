@@ -47,7 +47,7 @@
             @if (p.profileImage) {
               <img
                 class="h-24 w-24 rounded-[9999px] border-4 border-surface-container-lowest bg-surface-container object-cover shadow-sm"
-                [src]="p.profileImage"
+                [src]="chatService.getImageUrl(p.profileImage)"
                 [alt]="p.fullName"
                 (error)="onImageError($event)"
                 loading="lazy"

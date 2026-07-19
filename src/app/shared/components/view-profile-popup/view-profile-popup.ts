@@ -17,6 +17,8 @@ import { environment } from '../../../../environments/environment.development';
 import { UserRole } from '../../enums/user-role';
 import { ApiResponse } from '../../models/responses/api-response.model';
 import { GeocodingService } from '../../../core/services/geocoding.service';
+import { ChatService } from '../../../features/chat/services/chat.service';
+
 
 export interface VisitUserDTO {
   fullName: string;
@@ -70,6 +72,7 @@ const ROLE_STYLES: Record<UserRole, { badge: string; dot: string }> = {
 export class ViewProfilePopup {
   private readonly http = inject(HttpClient);
   private readonly destroyRef = inject(DestroyRef);
+  protected chatService = inject(ChatService);
 
   /**
    * Id of the user to show. The popup is considered "open" whenever this is
@@ -172,7 +175,7 @@ export class ViewProfilePopup {
     this.profile.set(null);
 
     this.http
-      .get<ApiResponse<VisitUserDTO>>(`${environment.apiBaseUrl}/User/GetVisitedUserInfo/${id}`)
+      .get<ApiResponse<VisitUserDTO>>(`${environment.apiBaseUrl}/UserProfile/GetVisitedUserInfo/${id}`)
       .pipe(
         catchError(() => {
           this.error.set('تعذر تحميل الملف الشخصي، حاول مرة أخرى');
