@@ -8,13 +8,15 @@ import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { FormField } from '../../../../shared/components/form-field/form-field';
 
 type Step = 1 | 2 | 3;
 
 @Component({
   selector: 'app-unknown-create',
   standalone: true,
-  imports: [ReactiveFormsModule, ForceCreatePopupComponent],
+  imports: [ReactiveFormsModule, ForceCreatePopupComponent, ButtonComponent, FormField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../../../../shared/styles/case-form.css', './unknown-create.css'],
   templateUrl: './unknown-create.html',

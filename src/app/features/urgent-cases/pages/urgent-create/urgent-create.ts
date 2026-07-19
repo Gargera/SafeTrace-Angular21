@@ -14,6 +14,8 @@ import { ForceCreatePopupComponent } from '../../../../shared/components/cases-c
 import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
 // ⚠️ عدّل هذا المسار لو الـ GeocodingService عندك مش موجود في core/services
 import { GeocodingService } from '../../../../core/services/geocoding.service';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { FormField } from '../../../../shared/components/form-field/form-field';
 
 type Step = 1 | 2 | 3;
 
@@ -25,7 +27,9 @@ type Step = 1 | 2 | 3;
     ReactiveFormsModule, 
     RouterLink, 
     MapLocationPickerComponent, 
-    ForceCreatePopupComponent
+    ForceCreatePopupComponent,
+    ButtonComponent,
+    FormField
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../../../../shared/styles/case-form.css', './urgent-create.css'],

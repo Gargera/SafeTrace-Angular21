@@ -1,139 +1,200 @@
-<div class="page-wrap">
-  <div class="page-card">
+<div class="flex min-h-screen justify-center bg-surface-container-lowest p-4 sm:items-center sm:p-6">
+  <div class="flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-surface shadow-sm sm:max-h-[92vh]">
 
     @if (isLoading()) {
-      <div class="page-body" style="display:flex; align-items:center; justify-content:center; min-height:300px;">
-        <span class="material-symbols-outlined spin" style="font-size:32px; color:#ba1a1a;">progress_activity</span>
+      <div class="flex min-h-[300px] items-center justify-center p-4">
+        <span class="material-symbols-outlined animate-spin text-error text-[32px]">progress_activity</span>
       </div>
     } @else {
 
-      <div class="page-header">
-        <button class="back-btn" (click)="goBack()">
+      <div class="flex items-center gap-3 border-b border-outline-variant p-4 sm:p-5">
+        <app-button
+          variant="icon"
+          ariaLabel="رجوع"
+          extraClass="h-10 w-10 border-outline-variant text-on-surface-variant hover:bg-surface-container-high"
+          (onClick)="goBack()"
+        >
           <span class="material-symbols-outlined">arrow_forward</span>
-        </button>
+        </app-button>
         <div>
-          <h2 class="page-title" style="color:#ba1a1a;">تعديل بلاغ عاجل</h2>
-          <p class="page-subtitle">{{ stepTitle }}</p>
+          <h2 class="text-lg font-semibold text-error">تعديل بلاغ عاجل</h2>
+          <p class="text-sm text-on-surface-variant">{{ stepTitle }}</p>
         </div>
       </div>
 
-      <div class="page-body">
-        <div class="stepper">
+      <div class="flex flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6">
+
+        <!-- Stepper -->
+        <div class="flex items-center justify-center">
           @for (s of steps; track s.num; let i = $index) {
-            <div style="display:flex; flex-direction:column; align-items:center;">
-              <div class="step-circle" [class.done]="currentStep > s.num" [class.active]="currentStep === s.num" [class.idle]="currentStep < s.num">
-                @if (currentStep > s.num) { <span class="material-symbols-outlined" style="font-size:16px;">check</span> } @else { {{ s.num }} }
+            <div class="flex flex-col items-center">
+              <div
+                class="flex h-8 w-8 items-center justify-center rounded-full border text-sm font-semibold"
+                [class]="currentStep > s.num
+                  ? 'border-secondary bg-secondary text-on-secondary'
+                  : currentStep === s.num
+                    ? 'border-secondary bg-surface text-secondary'
+                    : 'border-outline-variant bg-surface text-on-surface-variant'"
+              >
+                @if (currentStep > s.num) {
+                  <span class="material-symbols-outlined text-base">check</span>
+                } @else { {{ s.num }} }
               </div>
-              <div class="step-label" [class.active-lbl]="currentStep === s.num" [class.idle-lbl]="currentStep !== s.num">{{ s.label }}</div>
+              <div
+                class="mt-1 text-xs"
+                [class]="currentStep === s.num ? 'font-medium text-secondary' : 'text-on-surface-variant'"
+              >
+                {{ s.label }}
+              </div>
             </div>
             @if (i < steps.length - 1) {
-              <div class="step-connector" [style.background]="currentStep > s.num ? '#0058be' : '#dde1ee'"></div>
+              <div
+                class="mx-2 h-0.5 w-10 sm:w-16"
+                [class]="currentStep > s.num ? 'bg-secondary' : 'bg-outline-variant'"
+              ></div>
             }
           }
         </div>
 
         <form [formGroup]="form">
           @if (currentStep === 1) {
-            <div class="step-content" style="display:flex; flex-direction:column; gap:20px;">
-              <div class="form-section-title">
-                <span class="material-symbols-outlined" style="font-size:18px;">person</span>
+            <div class="flex flex-col gap-5">
+              <div class="flex items-center gap-2 border-b border-outline-variant pb-2 text-sm font-semibold text-on-surface">
+                <span class="material-symbols-outlined text-lg">person</span>
                 بيانات الشخص
               </div>
 
-              <div class="row-4">
-                <div class="field-group">
-                  <input formControlName="fName" type="text" placeholder="الاسم الأول" class="field" [class.error]="isInvalid('fName')" />
-                  @if (isInvalid('fName')) { <p class="err-msg">مطلوب</p> }
+              <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div>
+                  <app-form-field
+                    placeholder="الاسم الأول"
+                    formControlName="fName"
+                    [extraClass]="isInvalid('fName') ? 'block rounded-lg ring-1 ring-error' : 'block'"
+                  ></app-form-field>
+                  @if (isInvalid('fName')) { <p class="mt-1 text-xs text-error">مطلوب</p> }
                 </div>
-                <div class="field-group">
-                  <input formControlName="sName" type="text" placeholder="اسم الأب" class="field" />
-                </div>
-                <div class="field-group">
-                  <input formControlName="tName" type="text" placeholder="اسم الجد" class="field" />
-                </div>
-                <div class="field-group">
-                  <input formControlName="lName" type="text" placeholder="اسم العائلة" class="field" [class.error]="isInvalid('lName')" />
-                  @if (isInvalid('lName')) { <p class="err-msg">مطلوب</p> }
+                <app-form-field extraClass="block" placeholder="اسم الأب" formControlName="sName"></app-form-field>
+                <app-form-field extraClass="block" placeholder="اسم الجد" formControlName="tName"></app-form-field>
+                <div>
+                  <app-form-field
+                    placeholder="اسم العائلة"
+                    formControlName="lName"
+                    [extraClass]="isInvalid('lName') ? 'block rounded-lg ring-1 ring-error' : 'block'"
+                  ></app-form-field>
+                  @if (isInvalid('lName')) { <p class="mt-1 text-xs text-error">مطلوب</p> }
                 </div>
               </div>
 
-              <div class="row-2">
-                <div class="field-group">
-                  <label class="field-label">العمر <span class="req">*</span></label>
-                  <input formControlName="age" type="number" min="0" max="150" class="field" [class.error]="isInvalid('age')" />
-                  @if (isInvalid('age')) { <p class="err-msg">مطلوب بين 0 و150</p> }
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <app-form-field
+                    label="العمر *"
+                    type="number"
+                    formControlName="age"
+                    [extraClass]="isInvalid('age') ? 'block rounded-lg ring-1 ring-error' : 'block'"
+                  ></app-form-field>
+                  @if (isInvalid('age')) { <p class="mt-1 text-xs text-error">مطلوب بين 0 و150</p> }
                 </div>
-                <div class="field-group">
-                  <label class="field-label">الجنس <span class="req">*</span></label>
-                  <select formControlName="gender" class="field" [class.error]="isInvalid('gender')">
+                <div>
+                  <app-form-field
+                    label="الجنس *"
+                    type="select"
+                    formControlName="gender"
+                    [extraClass]="isInvalid('gender') ? 'block rounded-lg ring-1 ring-error' : 'block'"
+                  >
                     <option value="" disabled>اختر الجنس</option>
                     <option [value]="genders.Male">ذكر</option>
                     <option [value]="genders.Female">أنثى</option>
-                  </select>
-                  @if (isInvalid('gender')) { <p class="err-msg">مطلوب</p> }
+                  </app-form-field>
+                  @if (isInvalid('gender')) { <p class="mt-1 text-xs text-error">مطلوب</p> }
                 </div>
               </div>
 
-              <div class="field-group">
-                <label class="field-label">صلة القرابة بك <span class="req">*</span></label>
-                <select formControlName="relation" class="field" [class.error]="isInvalid('relation')">
+              <div>
+                <app-form-field
+                  label="صلة القرابة بك *"
+                  type="select"
+                  formControlName="relation"
+                  [extraClass]="isInvalid('relation') ? 'block rounded-lg ring-1 ring-error' : 'block'"
+                >
                   <option [value]="null" disabled>اختر الصلة</option>
                   @for (opt of relationOptions; track opt.value) { <option [value]="opt.value">{{ opt.label }}</option> }
-                </select>
-                @if (isInvalid('relation')) { <p class="err-msg">مطلوب</p> }
+                </app-form-field>
+                @if (isInvalid('relation')) { <p class="mt-1 text-xs text-error">مطلوب</p> }
               </div>
 
-              <div class="field-group">
-                <label class="field-label">رقم تواصل عاجل <span class="req">*</span></label>
-                <input formControlName="communicationPhone" type="tel" class="field" [class.error]="isInvalid('communicationPhone')" />
-                @if (isInvalid('communicationPhone')) { <p class="err-msg">مطلوب — دي حالة عاجلة</p> }
+              <div>
+                <app-form-field
+                  label="رقم تواصل عاجل *"
+                  type="tel"
+                  formControlName="communicationPhone"
+                  [extraClass]="isInvalid('communicationPhone') ? 'block rounded-lg ring-1 ring-error' : 'block'"
+                ></app-form-field>
+                @if (isInvalid('communicationPhone')) { <p class="mt-1 text-xs text-error">مطلوب — دي حالة عاجلة</p> }
               </div>
 
-              <div class="field-group">
-                <label class="field-label">وصف الحالة</label>
-                <textarea formControlName="description" rows="3" class="field"></textarea>
-                <div class="char-count">{{ form.get('description')?.value?.length ?? 0 }} / 2000</div>
+              <div>
+                <app-form-field extraClass="block" label="وصف الحالة" type="textarea" [rows]="3" formControlName="description"></app-form-field>
+                <div class="mt-1 text-left text-xs text-on-surface-variant">
+                  {{ form.get('description')?.value?.length ?? 0 }} / 2000
+                </div>
               </div>
             </div>
           }
 
           @if (currentStep === 2) {
-            <div class="step-content" style="display:flex; flex-direction:column; gap:20px;">
-              <div class="form-section-title">
-                <span class="material-symbols-outlined" style="font-size:18px;">location_on</span>
+            <div class="flex flex-col gap-5">
+              <div class="flex items-center gap-2 border-b border-outline-variant pb-2 text-sm font-semibold text-on-surface">
+                <span class="material-symbols-outlined text-lg">location_on</span>
                 موقع الحادث
               </div>
 
-              <div class="row-2">
-                <div class="field-group">
-                  <label class="field-label">المحافظة <span class="req">*</span></label>
-                  <select formControlName="government" class="field" [class.error]="isInvalid('government')">
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <app-form-field
+                    label="المحافظة *"
+                    type="select"
+                    formControlName="government"
+                    [extraClass]="isInvalid('government') ? 'block rounded-lg ring-1 ring-error' : 'block'"
+                  >
                     <option value="" disabled>اختر المحافظة</option>
                     @for (g of governorates; track g) { <option [value]="g">{{ g }}</option> }
-                  </select>
-                  @if (isInvalid('government')) { <p class="err-msg">مطلوب</p> }
+                  </app-form-field>
+                  @if (isInvalid('government')) { <p class="mt-1 text-xs text-error">مطلوب</p> }
                 </div>
-                <div class="field-group">
-                  <label class="field-label">المدينة / المركز <span class="req">*</span></label>
-                  <input formControlName="city" type="text" class="field" [class.error]="isInvalid('city')" />
-                  @if (isInvalid('city')) { <p class="err-msg">مطلوب</p> }
+                <div>
+                  <app-form-field
+                    label="المدينة / المركز *"
+                    formControlName="city"
+                    [extraClass]="isInvalid('city') ? 'block rounded-lg ring-1 ring-error' : 'block'"
+                  ></app-form-field>
+                  @if (isInvalid('city')) { <p class="mt-1 text-xs text-error">مطلوب</p> }
                 </div>
               </div>
 
-              <div class="field-group">
-                <label class="field-label">الشارع / المنطقة <span class="req">*</span></label>
-                <input formControlName="street" type="text" class="field" [class.error]="isInvalid('street')" />
-                @if (isInvalid('street')) { <p class="err-msg">مطلوب</p> }
+              <div>
+                <app-form-field
+                  label="الشارع / المنطقة *"
+                  formControlName="street"
+                  [extraClass]="isInvalid('street') ? 'block rounded-lg ring-1 ring-error' : 'block'"
+                ></app-form-field>
+                @if (isInvalid('street')) { <p class="mt-1 text-xs text-error">مطلوب</p> }
               </div>
 
-              <div class="field-group">
-                <label class="field-label">تاريخ ووقت الحادث <span class="req">*</span></label>
-                <input formControlName="eventDate" type="date" [max]="today" class="field" [class.error]="isInvalid('eventDate')" />
-                @if (isInvalid('eventDate')) { <p class="err-msg">مطلوب ولا يمكن أن يكون في المستقبل</p> }
+              <div>
+                <app-form-field
+                  label="تاريخ ووقت الحادث *"
+                  type="date"
+                  formControlName="eventDate"
+                  [extraClass]="isInvalid('eventDate') ? 'block rounded-lg ring-1 ring-error' : 'block'"
+                ></app-form-field>
+                @if (isInvalid('eventDate')) { <p class="mt-1 text-xs text-error">مطلوب ولا يمكن أن يكون في المستقبل</p> }
               </div>
 
-              <div class="field-group">
-                <label class="field-label">حدد موقع الحادث بالضبط على الخريطة <span class="req">*</span></label>
+              <div>
+                <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
+                  حدد موقع الحادث بالضبط على الخريطة <span class="text-error">*</span>
+                </label>
                 <!--
                   NOTE: pass initialMapCenter() into your map-location-picker's inputs so it
                   centers on the existing lat/lng instead of the default location, e.g.:
@@ -142,7 +203,7 @@
                 -->
                 <app-map-location-picker (locationChange)="onLocationChange($event)"></app-map-location-picker>
                 @if (selectedLat() !== null) {
-                  <p style="font-size:12px; color:#75777d; margin-top:6px;" dir="ltr">
+                  <p class="mt-1.5 text-xs text-on-surface-variant" dir="ltr">
                     {{ selectedLat() }}, {{ selectedLng() }}
                   </p>
                 }
@@ -151,29 +212,36 @@
           }
 
           @if (currentStep === 3) {
-            <div class="step-content" style="display:flex; flex-direction:column; gap:24px;">
-              <div class="form-section-title">
-                <span class="material-symbols-outlined" style="font-size:18px;">photo_library</span>
+            <div class="flex flex-col gap-6">
+              <div class="flex items-center gap-2 border-b border-outline-variant pb-2 text-sm font-semibold text-on-surface">
+                <span class="material-symbols-outlined text-lg">photo_library</span>
                 صور
               </div>
 
               @if (existingPhotos().length > 0) {
                 <div>
-                  <div class="field-label" style="margin-bottom:10px;">الصور الحالية</div>
-                  <div class="photo-grid">
+                  <div class="mb-2.5 block text-sm font-medium text-on-surface-variant">الصور الحالية</div>
+                  <div class="grid grid-cols-3 gap-2 sm:grid-cols-4">
                     @for (photo of existingPhotos(); track photo.id) {
-                      <div class="photo-thumb" style="position:relative;">
-                        <img [src]="photo.imagePath" alt="صورة" />
+                      <div class="relative aspect-square overflow-hidden rounded-lg border border-outline-variant">
+                        <img [src]="photo.imagePath" alt="صورة" class="h-full w-full object-cover" />
                         @if (primaryPhotoId() === photo.id) {
-                          <span style="position:absolute; top:4px; right:4px; background:#ba1a1a; color:#fff; font-size:10px; padding:2px 6px; border-radius:8px;">أساسية</span>
+                          <span class="absolute top-1 right-1 rounded-lg bg-error px-1.5 py-0.5 text-[10px] text-on-error">أساسية</span>
                         } @else {
-                          <button type="button" (click)="setExistingAsPrimary(photo)"
-                                  style="position:absolute; top:4px; right:4px; background:#fff; border:1px solid #dde1ee; font-size:10px; padding:2px 6px; border-radius:8px; cursor:pointer;">
+                          <button
+                            type="button"
+                            (click)="setExistingAsPrimary(photo)"
+                            class="absolute top-1 right-1 cursor-pointer rounded-lg border border-outline-variant bg-surface px-1.5 py-0.5 text-[10px] text-on-surface"
+                          >
                             اجعلها أساسية
                           </button>
                         }
-                        <button type="button" (click)="removeExistingPhoto(photo)" style="position:absolute; bottom:4px; left:4px;">
-                          <span class="material-symbols-outlined" style="font-size:12px;">close</span>
+                        <button
+                          type="button"
+                          (click)="removeExistingPhoto(photo)"
+                          class="absolute bottom-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white"
+                        >
+                          <span class="material-symbols-outlined text-xs">close</span>
                         </button>
                       </div>
                     }
@@ -182,36 +250,58 @@
               }
 
               <div>
-                <div class="field-label" style="margin-bottom:10px;">استبدال الصورة الأساسية <span style="font-size:12px; color:#999; font-weight:400;">(اختياري)</span></div>
-                <div class="upload-zone" [class.has-files]="!!newPrimaryImage()" (click)="newPrimaryInput.click()">
-                  <input #newPrimaryInput type="file" accept="image/jpeg,image/png,image/webp" style="display:none" (change)="onNewPrimarySelected($event)" />
-                  <span class="material-symbols-outlined" style="font-size:36px;" [style.color]="newPrimaryImage() ? '#ba1a1a' : '#adb5c9'">add_photo_alternate</span>
-                  <p style="font-size:14px; font-weight:600;">{{ newPrimaryImage() ? 'تم اختيار صورة أساسية جديدة' : 'اضغط لاختيار صورة أساسية جديدة' }}</p>
+                <div class="mb-2.5 block text-sm font-medium text-on-surface-variant">
+                  استبدال الصورة الأساسية <span class="text-xs font-normal text-on-surface-variant/70">(اختياري)</span>
+                </div>
+                <div
+                  class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 text-center transition-colors"
+                  [class]="newPrimaryImage() ? 'border-error bg-error/5' : 'border-outline-variant hover:border-error/50'"
+                  (click)="newPrimaryInput.click()"
+                >
+                  <input #newPrimaryInput type="file" accept="image/jpeg,image/png,image/webp" class="hidden" (change)="onNewPrimarySelected($event)" />
+                  <span
+                    class="material-symbols-outlined text-[36px]"
+                    [class]="newPrimaryImage() ? 'text-error' : 'text-on-surface-variant/60'"
+                  >add_photo_alternate</span>
+                  <p class="text-sm font-semibold text-on-surface">
+                    {{ newPrimaryImage() ? 'تم اختيار صورة أساسية جديدة' : 'اضغط لاختيار صورة أساسية جديدة' }}
+                  </p>
                 </div>
                 @if (newPrimaryPreview()) {
-                  <div class="photo-thumb" style="margin-top:8px; width:80px;">
-                    <img [src]="newPrimaryPreview()" alt="صورة أساسية جديدة" />
-                    <button type="button" (click)="clearNewPrimary()">
-                      <span class="material-symbols-outlined" style="font-size:12px;">close</span>
+                  <div class="relative mt-2 aspect-square w-20 overflow-hidden rounded-lg border border-outline-variant">
+                    <img [src]="newPrimaryPreview()" alt="صورة أساسية جديدة" class="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      (click)="clearNewPrimary()"
+                      class="absolute bottom-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white"
+                    >
+                      <span class="material-symbols-outlined text-xs">close</span>
                     </button>
                   </div>
                 }
               </div>
 
               <div>
-                <div class="field-label" style="margin-bottom:10px;">إضافة صور جديدة</div>
-                <div class="upload-zone" (click)="newPhotosInput.click()">
-                  <input #newPhotosInput type="file" accept="image/jpeg,image/png,image/webp" multiple style="display:none" (change)="onNewPhotosSelected($event)" />
-                  <span class="material-symbols-outlined" style="font-size:32px; color:#adb5c9;">add_photo_alternate</span>
-                  <p style="font-size:13px; color:#75777d;">JPG / PNG / WebP — حتى 5MB لكل صورة</p>
+                <div class="mb-2.5 block text-sm font-medium text-on-surface-variant">إضافة صور جديدة</div>
+                <div
+                  class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-outline-variant p-6 text-center transition-colors hover:border-error/50"
+                  (click)="newPhotosInput.click()"
+                >
+                  <input #newPhotosInput type="file" accept="image/jpeg,image/png,image/webp" multiple class="hidden" (change)="onNewPhotosSelected($event)" />
+                  <span class="material-symbols-outlined text-on-surface-variant/60 text-[32px]">add_photo_alternate</span>
+                  <p class="text-xs text-on-surface-variant">JPG / PNG / WebP — حتى 5MB لكل صورة</p>
                 </div>
                 @if (newPhotoPreviews().length > 0) {
-                  <div class="photo-grid">
+                  <div class="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
                     @for (preview of newPhotoPreviews(); track preview; let i = $index) {
-                      <div class="photo-thumb">
-                        <img [src]="preview" alt="صورة جديدة" />
-                        <button type="button" (click)="removeNewPhoto(i)">
-                          <span class="material-symbols-outlined" style="font-size:12px;">close</span>
+                      <div class="relative aspect-square overflow-hidden rounded-lg border border-outline-variant">
+                        <img [src]="preview" alt="صورة جديدة" class="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          (click)="removeNewPhoto(i)"
+                          class="absolute bottom-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white"
+                        >
+                          <span class="material-symbols-outlined text-xs">close</span>
                         </button>
                       </div>
                     }
@@ -220,54 +310,60 @@
               </div>
 
               <div>
-                <div class="field-label" style="margin-bottom:10px;">فيديو <span style="font-size:12px; color:#999; font-weight:400;">(اختياري)</span></div>
+                <div class="mb-2.5 block text-sm font-medium text-on-surface-variant">
+                  فيديو <span class="text-xs font-normal text-on-surface-variant/70">(اختياري)</span>
+                </div>
                 @if (existingVideoUrl() && !videoFile()) {
-                  <div class="info-box" style="margin-bottom:8px;">
-                    <span class="material-symbols-outlined" style="color:#0058be;">videocam</span>
+                  <div class="mb-2 flex items-start gap-2 rounded-lg border border-secondary/30 bg-secondary/10 p-3 text-sm text-on-surface">
+                    <span class="material-symbols-outlined text-secondary">videocam</span>
                     <span>يوجد فيديو مرفوع بالفعل. اختر ملف جديد لاستبداله.</span>
                   </div>
                 }
-                <div class="upload-zone" [class.has-files]="!!videoFile()" (click)="videoInput.click()">
-                  <input #videoInput type="file" accept="video/*" style="display:none" (change)="onVideoSelected($event)" />
-                  <span class="material-symbols-outlined" style="font-size:36px;" [style.color]="videoFile() ? '#ba1a1a' : '#adb5c9'">videocam</span>
-                  <p style="font-size:14px; font-weight:600;">{{ videoFile()?.name ?? 'رفع فيديو' }}</p>
+                <div
+                  class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 text-center transition-colors"
+                  [class]="videoFile() ? 'border-error bg-error/5' : 'border-outline-variant hover:border-error/50'"
+                  (click)="videoInput.click()"
+                >
+                  <input #videoInput type="file" accept="video/*" class="hidden" (change)="onVideoSelected($event)" />
+                  <span
+                    class="material-symbols-outlined text-[36px]"
+                    [class]="videoFile() ? 'text-error' : 'text-on-surface-variant/60'"
+                  >videocam</span>
+                  <p class="text-sm font-semibold text-on-surface">{{ videoFile()?.name ?? 'رفع فيديو' }}</p>
                 </div>
               </div>
             </div>
           }
 
           @if (errorMsg()) {
-            <div class="alert-error">
-              <span class="material-symbols-outlined" style="font-size:18px;">error</span>
+            <div class="flex items-center gap-2 rounded-lg border border-error/30 bg-error/10 p-3 text-sm text-error">
+              <span class="material-symbols-outlined text-lg">error</span>
               {{ errorMsg() }}
             </div>
           }
         </form>
       </div>
 
-      <div class="page-footer">
-        <button type="button" class="btn-secondary" [class.invisible]="currentStep === 1" (click)="prevStep()">
-          <span class="material-symbols-outlined" style="font-size:18px;">arrow_forward</span> السابق
-        </button>
+      <div class="flex items-center justify-between border-t border-outline-variant p-4">
+        <app-button variant="secondary" [extraClass]="currentStep === 1 ? 'invisible' : ''" (onClick)="prevStep()">
+          <span class="material-symbols-outlined text-lg">arrow_forward</span> السابق
+        </app-button>
 
-        <div style="display:flex; gap:8px;">
+        <div class="flex gap-2">
           @for (s of steps; track s.num) {
-            <div style="width:8px; height:8px; border-radius:50%;" [style.background]="currentStep === s.num ? '#0058be' : '#dde1ee'"></div>
+            <div class="h-2 w-2 rounded-full" [class]="currentStep === s.num ? 'bg-secondary' : 'bg-outline-variant'"></div>
           }
         </div>
 
         @if (currentStep < 3) {
-          <button type="button" class="btn-primary" style="background:#ba1a1a;" (click)="nextStep()">
-            التالي <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
-          </button>
+          <app-button variant="danger" (onClick)="nextStep()">
+            التالي <span class="material-symbols-outlined text-lg">arrow_back</span>
+          </app-button>
         } @else {
-          <button type="button" class="btn-primary" style="background:#ba1a1a;" [disabled]="isSubmitting()" (click)="onSubmit()">
-            @if (isSubmitting()) {
-              <span class="material-symbols-outlined spin" style="font-size:18px;">progress_activity</span> جاري الحفظ...
-            } @else {
-              <span class="material-symbols-outlined" style="font-size:18px;">check_circle</span> حفظ التعديلات
-            }
-          </button>
+          <app-button variant="danger" [loading]="isSubmitting()" [disabled]="isSubmitting()" (onClick)="onSubmit()">
+            @if (!isSubmitting()) { <span class="material-symbols-outlined text-lg">check_circle</span> }
+            {{ isSubmitting() ? 'جاري الحفظ...' : 'حفظ التعديلات' }}
+          </app-button>
         }
       </div>
 
