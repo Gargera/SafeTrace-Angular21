@@ -14,20 +14,18 @@ import { HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, finalize, of } from 'rxjs';
 import { environment } from '../../../../environments/environment.development';
-
-export type UserRole = 'Admin' | 'Moderator' | 'VerifiedUser' | 'User';
+import { UserRole } from '../../enums/user-role';
+import { ApiResponse } from '../../models/responses/api-response.model';
+import { GeocodingService } from '../../../core/services/geocoding.service';
 
 export interface VisitUserDTO {
   fullName: string;
   profileImage: string | null;
   role: UserRole;
   phoneNumber: string;
-}
-
-interface ApiResponse<T> {
-  data: T;
-  message: string;
-  succeeded: boolean;
+  email: string;
+  homeLatitude: number | null;
+  homeLongitude: number | null;
 }
 
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -117,10 +115,13 @@ export class ViewProfilePopup {
 
   private lastRequestedId: string | null = null;
 
+  readonly #geocodingService = inject(GeocodingService);
+
+  /** Human-readable Arabic address resolved from lat/lng */
+  readonly resolvedAddress = signal<string | null>(null);
+  readonly isResolvingAddress = signal(false);
   constructor() {
-    // Refetch automatically whenever a new userId flows in. Using an effect
-    // (rather than ngOnChanges) keeps this reactive to signal-based inputs
-    // and avoids redundant calls if the same id is set twice in a row.
+    // Refetch whenever a new userId flows in.
     effect(() => {
       const id = this.userId();
 
@@ -129,12 +130,39 @@ export class ViewProfilePopup {
         this.profile.set(null);
         this.error.set(null);
         this.loading.set(false);
+        this.resolvedAddress.set(null);
         return;
       }
 
       if (id === this.lastRequestedId) return;
       this.lastRequestedId = id;
       this.fetchProfile(id);
+    });
+
+    // Reverse-geocode whenever the profile (with coordinates) changes.
+    effect(() => {
+      const info = this.profile();
+
+      if (!info?.homeLatitude || !info?.homeLongitude) {
+        this.resolvedAddress.set(null);
+        this.isResolvingAddress.set(false);
+        return;
+      }
+
+      this.isResolvingAddress.set(true);
+      this.#geocodingService
+        .reverseGeocode(info.homeLatitude, info.homeLongitude)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (address) => {
+            this.resolvedAddress.set(address);
+            this.isResolvingAddress.set(false);
+          },
+          error: () => {
+            this.resolvedAddress.set('تعذر تحميل العنوان');
+            this.isResolvingAddress.set(false);
+          },
+        });
     });
   }
 
