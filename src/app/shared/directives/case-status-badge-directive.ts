@@ -48,7 +48,7 @@ export class CaseStatusBadgeDirective {
           this.renderer.addClass(el, 'text-on-surface-variant');
           break;
       }
-      el.innerText = getCaseStatusTranslationAr();
+      el.innerText = getCaseStatusTranslationAr(this.status());
     });
   }
 }
