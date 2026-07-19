@@ -19,7 +19,6 @@ import { ApiResponse } from '../../models/responses/api-response.model';
 import { GeocodingService } from '../../../core/services/geocoding.service';
 import { ChatService } from '../../../features/chat/services/chat.service';
 
-export type UserRole = 'Admin' | 'Moderator' | 'VerifiedUser' | 'User';
 
 export interface VisitUserDTO {
   fullName: string;
