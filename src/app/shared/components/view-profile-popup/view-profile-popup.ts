@@ -14,6 +14,7 @@ import { HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, finalize, of } from 'rxjs';
 import { environment } from '../../../../environments/environment.development';
+import { ChatService } from '../../../features/chat/services/chat.service';
 
 export type UserRole = 'Admin' | 'Moderator' | 'VerifiedUser' | 'User';
 
@@ -72,6 +73,7 @@ const ROLE_STYLES: Record<UserRole, { badge: string; dot: string }> = {
 export class ViewProfilePopup {
   private readonly http = inject(HttpClient);
   private readonly destroyRef = inject(DestroyRef);
+  protected chatService = inject(ChatService);
 
   /**
    * Id of the user to show. The popup is considered "open" whenever this is
@@ -144,7 +146,7 @@ export class ViewProfilePopup {
     this.profile.set(null);
 
     this.http
-      .get<ApiResponse<VisitUserDTO>>(`${environment.apiBaseUrl}/User/GetVisitedUserInfo/${id}`)
+      .get<ApiResponse<VisitUserDTO>>(`${environment.apiBaseUrl}/UserProfile/GetVisitedUserInfo/${id}`)
       .pipe(
         catchError(() => {
           this.error.set('تعذر تحميل الملف الشخصي، حاول مرة أخرى');
