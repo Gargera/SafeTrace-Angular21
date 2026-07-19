@@ -1,1 +1,44 @@
-<p>complaints-list works!</p>
+<div class="mb-xl">
+  <app-case-header 
+    title="إدارة الشكاوى" 
+    subtitle="متابعة جميع الشكاوى والاقتراحات المقدمة من المستخدمين والرد عليها." 
+  />
+</div>
+
+<!-- Statistics Cards -->
+@if (loadingStats()) {
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+    @for (i of [1, 2, 3]; track i) {
+      <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse">
+        <div class="h-4 bg-surface-container-high rounded w-3/4 mb-2"></div>
+        <div class="h-6 bg-surface-container-high rounded w-1/2"></div>
+      </app-card>
+    }
+  </div>
+} @else {
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+    <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-on-surface-variant">إجمالي الشكاوى</span>
+        <span class="material-symbols-outlined text-secondary">forum</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.total ?? 0 }}</p>
+    </app-card>
+
+    <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-on-surface-variant">الشكاوى المحلولة</span>
+        <span class="material-symbols-outlined text-green-500">check_circle</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.solved ?? 0 }}</p>
+    </app-card>
+
+    <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-on-surface-variant">الشكاوى المعلقة</span>
+        <span class="material-symbols-outlined text-orange-500">pending</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.unSolved ?? 0 }}</p>
+    </app-card>
+  </div>
+}

@@ -20,61 +20,87 @@
 
     <!-- ===== Header - Fixed name truncation and layout ===== -->
     @if (chat(); as c) {
-      <div class="flex items-center justify-between gap-sm bg-surface-container-low border-b border-outline-variant px-sm py-sm sm:px-md shrink-0 min-w-0">
-        
-        <!-- Case badge: small icon + case title -->
-        <div class="flex items-center gap-xs bg-surface-container-high rounded-lg px-xs py-xs sm:px-sm min-w-0 max-w-[45%]">
-          @if (c.caseImage) {
-            <img [src]="chatService.getImageUrl(c.caseImage)" alt="Case Image" class="w-6 h-6 rounded object-cover shrink-0" />
-          } @else {
-            <span class="w-6 h-6 rounded flex items-center justify-center bg-primary text-on-primary shrink-0">
-              <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 7a1 1 0 0 1 1-1h4l2 2h10a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7Z" />
-              </svg>
-            </span>
-          }
-          <div class="text-[10px] sm:text-xs leading-tight min-w-0">
-            <p class="text-on-surface-variant hidden sm:block">شأن الحالة</p>
-            <p class="font-medium text-on-surface truncate">{{ c.caseTitle }}</p>
-          </div>
-        </div>
+      <div class="flex items-center justify-between gap-sm bg-surface-container-low border-b border-outline-variant px-sm py-sm sm:px-md shrink-0 min-w-0" dir="rtl">
+  
+  <!-- الجزء الأيمن: زر الرجوع + الصورة + الاسم -->
+  <div class="flex items-center gap-xs sm:gap-sm shrink-0 min-w-0 flex-1 justify-start">
+    
+    <!-- زر الرجوع (أصبح أول عنصر في اليمين) -->
+    <button
+  type="button"
+  class="text-on-surface-variant hover:text-on-surface shrink-0 cursor-pointer"
+  (click)="goBack()"
+  aria-label="رجوع"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 640 640"
+    class="w-5 h-5 fill-current "
+  >
+    <path d="M566.6 342.6C579.1 330.1 579.1 309.8 566.6 297.3L406.6 137.3C394.1 124.8 373.8 124.8 361.3 137.3C348.8 149.8 348.8 170.1 361.3 182.6L466.7 288L96 288C78.3 288 64 302.3 64 320C64 337.7 78.3 352 96 352L466.7 352L361.3 457.4C348.8 469.9 348.8 490.2 361.3 502.7C373.8 515.2 394.1 515.2 406.6 502.7L566.6 342.7z"/>
+  </svg>
+</button>
 
-        <!-- Other participant's name + actions (Fixed Name Truncation) -->
-        <div class="flex items-center gap-xs sm:gap-sm shrink-0 min-w-0 flex-1 justify-end">
-          <!-- تم إزالة max-w-[22vw] ليعود الاسم للظهور كاملاً بشكل مرن -->
-          <p class="font-medium text-on-surface text-sm sm:text-base truncate max-w-[40vw] sm:max-w-none" dir="auto">{{ displayName }}</p>
+    <!-- صورة المستخدم أو الأيقونة البديلة -->
+    @if (c.otherUserImage) {
+      <img [src]="chatService.getImageUrl(c.otherUserImage)" alt="User Image" 
+      class="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover shrink-0 cursor-pointer" 
+       (click)="openProfile()"
+      />
+    } @else {
+      <span   (click)="openProfile()"
+       class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center shrink-0 cursor-pointer">
+        <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="3.5" />
+          <path d="M5 20a7 7 0 0 1 14 0" />
+        </svg>
+      </span>
+    }
 
-          <!-- التحقق من وجود صورة المستخدم -->
-          @if (c.otherUserImage) {
-            <img [src]="chatService.getImageUrl(c.otherUserImage)" alt="User Image" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover shrink-0" />
-          } @else {
-            <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center shrink-0">
-              <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="8" r="3.5" />
-                <path d="M5 20a7 7 0 0 1 14 0" />
-              </svg>
-            </span>
-          }
+    <!-- اسم المستخدم -->
+    <p class="font-medium text-on-surface text-sm sm:text-base truncate max-w-[40vw] sm:max-w-none cursor-pointer" 
+      (click)="openProfile()"
+       dir="auto">
+      {{ displayName }}
+    </p>
+  </div>
 
-          <!-- Back -->
-          <button
-            type="button"
-            class="text-on-surface-variant hover:text-on-surface shrink-0"
-            (click)="goBack()"
-            aria-label="رجوع"
-          >
-            <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-      </div>
+  <!-- الجزء الأيسر: بادج الحالة (ينجذب لليسار تلقائياً بسبب justify-between) -->
+  <div class="flex items-center gap-xs bg-surface-container-high rounded-lg px-xs py-xs sm:px-sm min-w-0 max-w-[45%] shrink-0">
+    @if (c.caseImage) {
+      <img [src]="chatService.getImageUrl(c.caseImage)" alt="Case Image" class="w-6 h-6 rounded object-cover shrink-0" />
+    } @else {
+      <span class="w-6 h-6 rounded flex items-center justify-center bg-primary text-on-primary shrink-0">
+        <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 7a1 1 0 0 1 1-1h4l2 2h10a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7Z" />
+        </svg>
+      </span>
+    }
+    <div class="text-[10px] sm:text-xs leading-tight min-w-0">
+      <p class="text-on-surface-variant hidden sm:block">شأن الحالة</p>
+      <p class="font-medium text-on-surface truncate">{{ c.caseTitle }}</p>
+    </div>
+  </div>
+  
+</div>
     }
 
     <!-- ===== Messages list (Fixed Image/Video responsiveness & alignment) ===== -->
     <div #messagesContainer dir="ltr" class="flex-1 overflow-y-auto px-sm py-md sm:px-md">
       @if (!isLoading()) {
-      @for (message of messages(); track message.id) {
+      @for (message of messages(); track message.id; let i = $index) {
+        @if (isNewDay(i)) {
+
+  <div class="flex justify-center my-4">
+  <span
+    class="px-3 py-1 rounded-full
+           bg-surface-container-high
+           text-xs text-on-surface-variant shadow-sm">
+    {{ formatDay(message.sendAt) }}
+  </span>
+</div>
+
+}
       <div
   class="flex w-full mb-4"
   [class.justify-end]="message.isMine"
@@ -126,12 +152,12 @@
       [class.justify-end]="message.isMine"
       [class.justify-start]="!message.isMine">
 
-      @if (message.isMine) {
+      
 
         <button
           type="button"
-          class="text-on-surface-variant hover:text-error transition-opacity"
-          (click)="onDeleteMessage(message.id)"
+          class="text-on-surface-variant hover:text-error transition-opacity cursor-pointer"
+          (click)="onDeleteMessage(message)"
           aria-label="حذف الرسالة">
 
           <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -139,7 +165,7 @@
           </svg>
 
         </button>
-
+        @if (message.isMine) {
         <svg
           viewBox="0 0 24 24"
           class="w-3.5 h-3.5"
@@ -156,8 +182,9 @@
         </svg>
       }
 
-      {{ message.sendAt | date:'shortTime' }}
-
+      <span dir="rtl">
+  {{ message.sendAt | date:'shortTime':'':'ar-EG' }}
+</span>
     </div>
 
   </div>
@@ -171,46 +198,59 @@
     </div>
 
     <!-- ===== Message input ===== -->
-    <div class="flex flex-col bg-surface-container-low border-t border-outline-variant shrink-0 pb-[env(safe-area-inset-bottom)]">
-      @if (selectedFile(); as file) {
-        <div class="flex items-center justify-between px-sm sm:px-md py-xs text-xs text-on-surface-variant bg-surface-container-high">
-          <span class="truncate">📎 {{ file.name }}</span>
-          <button type="button" class="text-error shrink-0" (click)="clearSelectedFile()" aria-label="إزالة الملف">✕</button>
-        </div>
-      }
-
-      <div class="flex items-center gap-xs sm:gap-sm px-sm py-sm sm:px-md">
-        <button
-          type="button"
-          class="w-9 h-9 rounded-full bg-secondary text-on-secondary flex items-center justify-center shrink-0 disabled:opacity-50"
-          [disabled]="(!draft().trim() && !selectedFile()) || sending()"
-          (click)="onSend()"
-          aria-label="إرسال"
-        >
-          <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 12 21 3l-5 9 5 9L3 12Zm0 0h9" />
-          </svg>
-        </button>
-
-        <div class="flex-1 flex items-center gap-xs bg-surface-container-lowest rounded-full px-sm sm:px-md py-2xs border border-outline-variant min-w-0">
-          <input
-            type="text"
-            class="flex-1 my-3 min-w-0 bg-transparent outline-none text-sm text-on-surface placeholder:text-on-surface-variant"
-            placeholder="اكتب رسالتك هنا..."
-            [ngModel]="draft()"
-            (ngModelChange)="draft.set($event)"
-            (keyup.enter)="onSend()"
-          />
-
-          <input #fileInput type="file" class="hidden" (change)="onFileSelected($event)" />
-
-          <button type="button" class="text-on-surface-variant shrink-0" (click)="openFilePicker()" aria-label="إرفاق ملف">
-            <svg viewBox="0 0 24 24" class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8 12l6.5-6.5a3.5 3.5 0 0 1 5 5L11 19a5 5 0 0 1-7-7l7.5-7.5" />
-            </svg>
-          </button>
-        </div>
-      </div>
+    <div class="flex flex-col bg-surface-container-low border-t border-outline-variant shrink-0 pb-[env(safe-area-inset-bottom)]" dir="rtl">
+  @if (selectedFile(); as file) {
+    <div class="flex items-center justify-between px-sm sm:px-md py-xs text-xs text-on-surface-variant bg-surface-container-high">
+      <span class="truncate">📎 {{ file.name }}</span>
+      <button type="button" class="text-error shrink-0 cursor-pointer" (click)="clearSelectedFile()" aria-label="إزالة الملف">✕</button>
     </div>
+  }
+
+  <div class="flex items-center gap-xs sm:gap-sm px-sm py-sm sm:px-md">
+    
+    <!-- أولاً: حقل الكتابة وزر الارفاق (هيكونوا في اليمين تلقائياً) -->
+    <div class="flex-1 flex items-center gap-xs bg-surface-container-lowest rounded-full px-sm sm:px-md py-2xs border border-outline-variant min-w-0">
+      <input
+        type="text"
+        class="flex-1 my-3 min-w-0 bg-transparent outline-none text-sm text-on-surface placeholder:text-on-surface-variant"
+        placeholder="اكتب رسالتك هنا..."
+        [ngModel]="draft()"
+        (ngModelChange)="draft.set($event)"
+        (keyup.enter)="onSend()"
+      />
+
+      <input #fileInput type="file" class="hidden" (change)="onFileSelected($event)" />
+
+      <!-- زر إرفاق الملف -->
+      <button type="button" class="text-on-surface-variant shrink-0 cursor-pointer" (click)="openFilePicker()" aria-label="إرفاق ملف">
+        <svg viewBox="0 0 24 24" class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 12l6.5-6.5a3.5 3.5 0 0 1 5 5L11 19a5 5 0 0 1-7-7l7.5-7.5" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- ثانياً: زرار الإرسال (هينتقل أوتوماتيك للشمال) -->
+    <button
+      type="button"
+      class="w-9 h-9 rounded-full bg-secondary text-on-secondary flex items-center justify-center shrink-0 disabled:opacity-50 cursor-pointer"
+      [disabled]="(!draft().trim() && !selectedFile()) || sending()"
+      (click)="onSend()"
+      aria-label="إرسال"
+    >
+      <!-- قمنا بإضافة كلاس scale-X-[-1] ليعكس اتجاه سهم الإرسال إلى اليسار -->
+      <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+
+            <path d="M3 12 21 3l-5 9 5 9L3 12Zm0 0h9" />
+
+          </svg>
+    </button>
+
   </div>
 </div>
+  </div>
+</div>
+
+<app-view-profile-popup
+  [userId]="selectedUserId()"
+  (closed)="selectedUserId.set(null)">
+</app-view-profile-popup>

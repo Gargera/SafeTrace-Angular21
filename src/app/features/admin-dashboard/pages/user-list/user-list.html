@@ -5,9 +5,66 @@
     primaryActionLabel="إنشاء حساب جديد"
     primaryActionIcon="person_add"
     (primaryAction)="navigateToCreateUser()"
-    primaryButtonClass="gap-sm px-8 h-12 rounded-full font-bold shadow-md hover:bg-secondary-container transition-all duration-200"
+    primaryButtonClass="gap-sm px-8 h-12 rounded-full font-bold shadow-md hover:bg-secondary-container transition-all duration-200 bg-primary text-on-primary"
   />
 </div>
+
+<!-- Statistics Cards -->
+@if (loadingStats()) {
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+    @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+      <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse">
+        <div class="h-4 bg-surface-container-high rounded w-3/4 mb-2"></div>
+        <div class="h-6 bg-surface-container-high rounded w-1/2"></div>
+      </app-card>
+    }
+  </div>
+} @else {
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+    <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-on-surface-variant">الإجمالي</span>
+        <span class="material-symbols-outlined text-secondary">group</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.totalUsers ?? 0 }}</p>
+    </app-card>
+    <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-on-surface-variant">نشط</span>
+        <span class="material-symbols-outlined text-green-500">check_circle</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.activeUsers ?? 0 }}</p>
+    </app-card>
+    <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-on-surface-variant">محظور</span>
+        <span class="material-symbols-outlined text-red-500">block</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.bannedUsers ?? 0 }}</p>
+    </app-card>
+    <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-on-surface-variant">موثق</span>
+        <span class="material-symbols-outlined text-blue-500">verified</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.verifiedUsers ?? 0 }}</p>
+    </app-card>
+    <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-on-surface-variant">قيد التوثيق</span>
+        <span class="material-symbols-outlined text-orange-500">pending_actions</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.pendingVerificationUsers ?? 0 }}</p>
+    </app-card>
+    <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-on-surface-variant">غير موثق</span>
+        <span class="material-symbols-outlined text-gray-500">help</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.unverifiedUsers ?? 0 }}</p>
+    </app-card>
+  </div>
+}
 
 <app-card extraClass="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg">
   <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-md items-end">
@@ -93,9 +150,8 @@
   <div class="overflow-x-auto">
     <table class="w-full text-right border-collapse whitespace-nowrap">
       <thead>
-        <tr
-          class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant"
-        >
+        <tr class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant">
+          <th class="px-lg py-md text-center">#</th>
           <th class="px-lg py-md">المستخدم</th>
           <th class="px-lg py-md">البريد الإلكتروني</th>
           <th class="px-lg py-md">رقم الهاتف</th>
@@ -106,8 +162,11 @@
         </tr>
       </thead>
       <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
-        @for (user of users(); track user.id) {
+        @for (user of users(); track user.id; let i = $index) {
           <tr class="hover:bg-surface-container-low transition-colors group">
+            <td class="px-lg py-md text-center font-bold text-on-surface-variant">
+              {{ (filter().pageNumber - 1) * filter().pageSize + i + 1 }}
+            </td>
             <td class="px-lg py-md">
               <div class="flex items-center gap-md">
                 <span class="font-semibold text-primary">{{ user.fName }} {{ user.lName }}</span>
@@ -137,7 +196,7 @@
         } @empty {
           @if (!isLoading()) {
             <tr>
-              <td colspan="7" class="py-xl">
+              <td colspan="8" class="py-xl">
                 <app-empty-state
                   title="لا يوجد مستخدمين"
                   message="لا يوجد مستخدمين يطابقون شروط البحث."
