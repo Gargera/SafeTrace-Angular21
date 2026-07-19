@@ -11,6 +11,8 @@ import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { FormField } from '../../../../shared/components/form-field/form-field'; // تم تعديل اسم الكلاس هنا ليطابق الملف الفعلي
 
 type Step = 1 | 2 | 3;
 
@@ -18,10 +20,12 @@ type Step = 1 | 2 | 3;
   selector: 'app-long-term-create',
   standalone: true,
   imports: [
-    CommonModule,         // تم إضافته لضمان تشغيل الـ Directives الأساسية مثل *ngIf و *ngFor بشكل سليم
+    CommonModule,
     ReactiveFormsModule, 
     RouterLink, 
-    ForceCreatePopupComponent
+    ForceCreatePopupComponent,
+    ButtonComponent,
+    FormField // تم تمرير الاسم الصحيح هنا
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../../../../shared/styles/case-form.css', './long-term-create.css'],
@@ -32,7 +36,7 @@ export class LongTermCreate {
   private service = inject(LongTermCaseService);
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
-
+  
   currentStep: Step = 1;
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
@@ -43,7 +47,7 @@ export class LongTermCreate {
   videoFile = signal<File | null>(null);
 
   showForceCreatePopup = signal(false);
-  isBlockedDuplicate = signal(false); // لتحديد إذا كان التطابق يمنع التسجيل تماماً
+  isBlockedDuplicate = signal(false);
   matchedCases = signal<MatchedCaseDto[]>([]);
   private pendingRequest: LongTermCaseCreateRequest | null = null;
 
@@ -129,7 +133,7 @@ export class LongTermCreate {
     this.videoFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
   }
 
-onSubmit(forceCreate = false): void {
+  onSubmit(forceCreate = false): void {
     if (!forceCreate && (this.form.invalid || this.selectedPhotos().length === 0)) {
       this.form.markAllAsTouched();
       if (this.selectedPhotos().length === 0) {
@@ -176,7 +180,6 @@ onSubmit(forceCreate = false): void {
         this.isSubmitting.set(false);
         const data = res.data;
 
-        // التحقق الآمن من استجابة الباك-إند وتفادي مشاكل الـ type safety
         if (data && data.isCreated === false) {
           if (data.matchedCases) {
             this.matchedCases.set(data.matchedCases.map(mapMatchedCaseResponseToDto));
@@ -184,8 +187,7 @@ onSubmit(forceCreate = false): void {
             this.matchedCases.set([]);
           }
           
-          // حل المشكلة هنا: نقوم بعمل cast لـ data كـ any لقراءة الخاصية بمرونة دون اعتراض TypeScript
-          const rawData = data  as any;
+          const rawData = data as any;
           this.isBlockedDuplicate.set(!!rawData.isSameTypeDuplicate);
           
           this.showForceCreatePopup.set(true);
