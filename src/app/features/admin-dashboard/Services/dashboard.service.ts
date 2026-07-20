@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { DashboardDto } from '../models/Dashboard/DashboardDto';
 import { CasesStatisticsDto } from '../models/Dashboard/CasesStatisticsDto';
-import { ApiResponse } from '../../founded/models/founded.models';
+import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
