@@ -3,36 +3,60 @@
   <app-case-header title="إدارة المحادثات" subtitle="نظرة عامة ومراقبة شاملة لجميع المحادثات النشطة في النظام" />
 </div>
 
-<!-- 2. Statistics Cards (إحصائيات المحادثات بتصميم كروت لوحة التحكم) -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+<!-- 2. Statistics Cards -->
+@if (isLoadingStats()) {
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+  @for (i of [1, 2, 3, 4, 5]; track i) {
+  <app-card
+    extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse">
+    <div class="h-4 bg-surface-container-high rounded w-3/4 mb-2"></div>
+    <div class="h-6 bg-surface-container-high rounded w-1/2"></div>
+  </app-card>
+  }
+</div>
+} @else {
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
   <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
     <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">إجمالي المحادثات</span>
+      <span class="text-sm font-medium text-on-surface-variant">الإجمالي</span>
       <span class="material-symbols-outlined text-secondary">forum</span>
     </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">{{ totalCount() }}</p>
-  </app-card>
-
-  <app-card extraClass="p-4 rounded-xl bg-error-container shadow-sm border border-outline-variant/20">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-error-container">رسائل غير مقروءة (هذه الصفحة)</span>
-      <span class="material-symbols-outlined text-error">mark_chat_unread</span>
-    </div>
-    <p class="text-2xl font-bold text-on-error-container mt-1">
-      {{ chats().reduce((sum, c) => sum + c.unreadMessagesCount, 0) }}
-    </p>
+    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.totalChats ?? 0 }}</p>
   </app-card>
 
   <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
     <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">رسائل هذه الصفحة</span>
-      <span class="material-symbols-outlined text-primary">chat_bubble</span>
+      <span class="text-sm font-medium text-on-surface-variant">نشطة</span>
+      <span class="material-symbols-outlined text-green-500">mark_chat_read</span>
     </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">
-      {{ chats().reduce((sum, c) => sum + c.messagesCount, 0) }}
-    </p>
+    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.activeChats ?? 0 }}</p>
+  </app-card>
+
+  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-medium text-on-surface-variant">حذف مرسل</span>
+      <span class="material-symbols-outlined text-orange-500">person_remove</span>
+    </div>
+    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.deletedBySenderOnly ?? 0 }}</p>
+  </app-card>
+
+  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-medium text-on-surface-variant">حذف مستقبل</span>
+      <span class="material-symbols-outlined text-indigo-500">person_off</span>
+    </div>
+    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.deletedByReceiverOnly ?? 0 }}</p>
+  </app-card>
+
+  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-medium text-on-surface-variant">حذف الطرفين</span>
+      <span class="material-symbols-outlined text-red-500">delete_forever</span>
+    </div>
+    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.deletedByBoth ?? 0 }}</p>
   </app-card>
 </div>
+}
 
 <!-- 3. Filters Card -->
 <app-card extraClass="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg relative overflow-visible">
