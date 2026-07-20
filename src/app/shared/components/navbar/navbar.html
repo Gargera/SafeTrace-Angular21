@@ -125,7 +125,7 @@
 
           @if (isNotificationDropdownOpen()) {
             <div
-              class="absolute -right-65 w-85 md:w-[calc(100vw-3rem)] lg:w-112.5 h-125 bg-surface/95 top-16 md:-right-66.75 backdrop-blur-xl border border-outline-variant rounded-3xl shadow-2xl overflow-hidden flex flex-col z-50 animate-fade-in"
+              class="absolute -right-65 w-85 md:w-[400px] lg:w-112.5 h-125 bg-surface/95 top-16 md:-right-66.75 backdrop-blur-xl border border-outline-variant rounded-3xl shadow-2xl overflow-hidden flex flex-col z-50 animate-fade-in"
             >
               <!-- Header -->
               <div
@@ -203,9 +203,7 @@
                           </h4>
 
                           @if (!n.isRead) {
-                            <span
-                              class="w-2 h-2 rounded-full bg-secondary mt-1 shrink-0"
-                            ></span>
+                            <span class="w-2 h-2 rounded-full bg-secondary mt-1 shrink-0"></span>
                           }
                         </div>
 
