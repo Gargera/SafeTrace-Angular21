@@ -12,7 +12,6 @@ import { MapLocationPickerComponent } from '../../../../shared/components/map-lo
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
-// ⚠️ عدّل هذا المسار لو الـ GeocodingService عندك مش موجود في core/services
 import { GeocodingService } from '../../../../core/services/geocoding.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
@@ -21,9 +20,9 @@ type Step = 1 | 2 | 3;
 
 @Component({
   selector: 'app-urgent-create',
-  standalone: true,
+  standalone: true, 
   imports: [
-    CommonModule,                 // تم إضافته لضمان تشغيل الـ Directives الأساسية مثل *ngIf و *ngFor بشكل سليم
+    CommonModule,
     ReactiveFormsModule, 
     RouterLink, 
     MapLocationPickerComponent, 
@@ -54,12 +53,11 @@ export class UrgentCreate {
   selectedLng = signal<number | null>(null);
   selectedAddress = signal<string>('');
 
-  // حالة زرار "استخدام موقعي الحالي"
   isLocating = signal(false);
   locationError = signal<string | null>(null);
 
   showForceCreatePopup = signal(false);
-  isBlockedDuplicate = signal(false); // لتحديد إذا كان التطابق يمنع التسجيل تماماً
+  isBlockedDuplicate = signal(false);
   matchedCases = signal<MatchedCaseDto[]>([]);
   private pendingRequest: UrgentCaseCreateRequest | null = null;
 
@@ -105,17 +103,6 @@ export class UrgentCreate {
     this.selectedAddress.set(loc.address);
   }
 
-  /**
-   * يستخدم Geolocation API بتاع المتصفح عشان يجيب موقع اليوزر الحالي،
-   * وبعدين يعمل reverse geocode للعنوان النصي، ويحدّث نفس الـ signals
-   * اللي بتتغذى من الخريطة (selectedLat / selectedLng / selectedAddress).
-   *
-   * ملحوظة مهمة: عشان الماركر يتحرك فعلياً جوه <app-map-location-picker>،
-   * لازم الكومبوننت ده يكون عنده @Input بيستقبل إحداثيات خارجية (مثلاً
-   * externalLocation أو setLocation()) عشان يعمل pan/marker للمكان ده.
-   * لو مفيش عندك حاجة زي كده حالياً، ابعتلي كود MapLocationPickerComponent
-   * وهظبطها بالظبط.
-   */
   useCurrentLocation(): void {
     if (!navigator.geolocation) {
       this.locationError.set('المتصفح لا يدعم تحديد الموقع الجغرافي.');
@@ -136,7 +123,6 @@ export class UrgentCreate {
             this.isLocating.set(false);
           },
           error: () => {
-            // حتى لو فشل جلب العنوان النصي، نكمّل بالإحداثيات بس
             this.onLocationChange({ lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
             this.isLocating.set(false);
           },
@@ -237,25 +223,28 @@ export class UrgentCreate {
       const photos = this.selectedPhotos();
       const [primaryImage, ...additionalImages] = photos;
 
+      // 💡 معالجة تاريخ البلاغ وتنسيقه ليكون ISO متوافق مع داتابيز الـ .NET
+      const formattedDate = v.eventDate ? new Date(v.eventDate).toISOString() : new Date().toISOString();
+
       request = {
         fName: v.fName!,
         lName: v.lName!,
-        sName: v.sName || null,
-        tName: v.tName || null,
+        sName: v.sName || '', // استبدال النصوص الفارغة بدل الـ null
+        tName: v.tName || '',
         gender: v.gender as Gender,
-        age: v.age!,
-        relation: v.relation!,
+        age: Number(v.age!), // تأكيد إرساله كـ number
+        relation: Number(v.relation) as unknown as RelationType, // تأكيد إرسال Enum كـ رقم صريح ليتطابق مع الـ backend
         communicationPhone: v.communicationPhone!,
-        description: v.description || null,
+        description: v.description || '',
         government: v.government!,
         city: v.city!,
         street: v.street!,
-        eventDate: v.eventDate!,
+        eventDate: formattedDate,
         primaryImage,
-        additionalImages: additionalImages.length ? additionalImages : null,
+        additionalImages: additionalImages.length ? additionalImages : [], // إرسال مصفوفة فارغة بدلاً من null لتجنب كسر الـ foreach في الباك إند
         video: this.videoFile(),
-        latitude: this.selectedLat()!,
-        longitude: this.selectedLng()!,
+        latitude: Number(this.selectedLat()!),
+        longitude: Number(this.selectedLng()!),
       };
       this.pendingRequest = request;
     }
@@ -265,9 +254,6 @@ export class UrgentCreate {
         this.isSubmitting.set(false);
         const data = res.data;
 
-        // نفس منطق long-term بالظبط:
-        // IsCreated === false + IsSameTypeDuplicate === true  -> ممنوع الإنشاء (Blocked)
-        // IsCreated === false + IsSameTypeDuplicate === false -> حالات مشابهة، اليوزر يختار يتواصل أو يعمل force create
         if (data && data.isCreated === false) {
           if (data.matchedCases) {
             this.matchedCases.set(data.matchedCases.map(mapMatchedCaseResponseToDto));
