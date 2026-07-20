@@ -173,7 +173,7 @@
               </div>
             </td>
             <td class="px-lg py-md font-sans opacity-70">{{ user.email }}</td>
-            <td class="px-lg py-md font-sans opacity-70" dir="ltr">{{ user.phoneNumber }}</td>
+            <td class="px-lg py-md font-sans opacity-70" dir="ltr">{{ user.phoneNumber || 'لا يوجد رقم' }}</td>
             <td class="px-lg py-md">
               <span [appVerificationBadgeDirective]="user.verificationStatus"></span>
             </td>
