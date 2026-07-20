@@ -41,6 +41,9 @@ export class CaseCardComponent {
   readonly onContact = output<number>();
   showCaseType = input(true);
   showContactButton = input(true);
+  showGender = input(true);
+  showAge = input(true);
+  createdAtLabel = input('تاريخ الإضافة');
 
   // Enums for template
   protected readonly CaseTypeEnum = CaseType;
