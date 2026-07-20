@@ -112,6 +112,8 @@ export class LongTermList implements OnInit {
   private emptyFilter(): CasesFilterRequest {
     return {
       status: null,
+      caseType: null,
+      caseCode: null,
       gender: null,
       ageCategory: null,
       fullName: null,
@@ -131,6 +133,8 @@ export class LongTermList implements OnInit {
   private sanitizeFilter(filter: CasesFilterRequest): CasesFilterRequest {
     return {
       ...filter,
+      caseType: this.normalizeEnum(filter.caseType),
+      caseCode: this.normalizeText(filter.caseCode),
       gender: this.normalizeEnum(filter.gender),
       ageCategory: this.normalizeEnum(filter.ageCategory),
       fullName: this.normalizeText(filter.fullName),

@@ -8,6 +8,7 @@
         [badge]="!loading() ? totalItems() + ' حالة' : ''"
         [loading]="loading()"
         primaryActionLabel="إنشاء حالة عاجلة"
+        primaryActionIcon="add"
         primaryButtonClass="bg-error hover:opacity-90 text-on-error shadow-sm"
         (primaryAction)="navigateToCreate()"
       >

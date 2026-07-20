@@ -17,7 +17,14 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./features/admin-dashboard/admin.routes').then((m) => m.ADMIN_ROUTES),
   },
-
+  {
+    path: 'chat/chat/:chatId',
+    title: "المحادثة | لقاء",
+    canActivate: [authGuard],
+    data: {mode: 'user'},
+    loadComponent: () =>
+      import('./features/chat/pages/chat-window/chat-window').then((m) => m.ChatWindow),
+  },
   {
     path: '',
     loadComponent: () =>
