@@ -20,6 +20,7 @@ export interface ChatSummaryDto {
   unreadCount: number;
   otherUserId: string;
   otherUserName: string;
+  otherUserImage?:string;
 }
 import {CaseType} from '../../../shared/enums/case-type';
 export interface StartChatContextDto{
@@ -53,6 +54,7 @@ export interface ChatDetailsDto {
   receiverId: string;
   receiverName?: string;
   receiverImage?:string;
+  otherUserId?:string;
   otherUserName?: string;
   otherUserImage?:string;
   createdAt: string; // ISO date string

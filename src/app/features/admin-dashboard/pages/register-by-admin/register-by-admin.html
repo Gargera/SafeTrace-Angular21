@@ -53,7 +53,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div class="flex flex-col gap-1.5">
-        <app-form-field type="tel" formControlName="phoneNumber" label="رقم الهاتف" placeholder="01234567890"></app-form-field>
+        <app-form-field type="tel" formControlName="phoneNumber" label="رقم الهاتف (اختياري)" placeholder="01234567890"></app-form-field>
         @if (registerForm.get('phoneNumber')?.touched && registerForm.get('phoneNumber')?.invalid) {
           <span class="text-error text-xs font-medium">
             @if (registerForm.get('phoneNumber')?.errors?.['serverError']) { {{ registerForm.get('phoneNumber')?.errors?.['serverError'] }} } @else { يرجى إدخال رقم هاتف مصري صحيح. }
