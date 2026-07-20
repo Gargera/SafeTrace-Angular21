@@ -260,22 +260,22 @@
               }
             </td>
             <td class="px-lg py-md text-center" (click)="$event.stopPropagation()">
-              <div class="flex items-center justify-center gap-2" dir="ltr">
-                <!-- زر العرض المخصص -->
+              <div class="flex items-center justify-center gap-2">
                 <app-button
-                  (onClick)="openChat(chat)"
                   variant="primary"
-                  extraClass="px-3 py-1.5 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
+                  (onClick)="openChat(chat)"
+                  extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
                 >
+                  <span class="material-symbols-outlined text-[16px]">visibility</span>
                   عرض
                 </app-button>
                 
-                <!-- زر الحذف المخصص بالستايل الجديد -->
                 <app-button
-                  (onClick)="openDeleteModal(chat, $event)"
                   variant="danger"
-                  extraClass="px-3 py-1.5 rounded-full text-label-sm font-bold shadow-sm hover:bg-red-100 transition-all duration-200"
+                  (onClick)="openDeleteModal(chat, $event)"
+                  extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200"
                 >
+                  <span class="material-symbols-outlined text-[16px]">delete</span>
                   حذف
                 </app-button>
               </div>
