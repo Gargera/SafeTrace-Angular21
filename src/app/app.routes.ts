@@ -21,6 +21,7 @@ export const routes: Routes = [
     path: 'chat/chat/:chatId',
     title: "المحادثة | لقاء",
     canActivate: [authGuard],
+    data: {mode: 'user'},
     loadComponent: () =>
       import('./features/chat/pages/chat-window/chat-window').then((m) => m.ChatWindow),
   },

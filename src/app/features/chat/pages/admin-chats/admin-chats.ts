@@ -137,7 +137,7 @@ export class AdminChats implements OnInit {
   }
 
   openChat(chat: AdminChatsDto): void {
-    this.router.navigate(['/chat/conversation', chat.chatId]);
+    this.router.navigate(['/admin/chats', chat.chatId]);
   }
 
   // async hardDeleteChat(chat: AdminChatsDto, event: Event): Promise<void> {
