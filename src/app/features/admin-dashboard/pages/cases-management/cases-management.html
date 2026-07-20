@@ -90,7 +90,7 @@
         @for (caseItem of cases(); track caseItem.id) {
         <tr class="hover:bg-surface-container-low transition-colors group">
           <td class="px-lg py-md font-mono text-on-surface-variant/70">
-            {{ caseItem.id }}
+            {{ (currentPage() - 1) * pageSize + $index + 1 }}
           </td>
           <td class="px-lg py-md font-semibold text-primary">
             {{ getFullName(caseItem) }}
