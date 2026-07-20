@@ -28,7 +28,7 @@ export const ADMIN_ROUTES: Routes = [
         path: 'users',
         canActivate: [roleGuard],
         data: { roles: [UserRole.Admin, UserRole.Moderator] },
-        title: 'المستخدمون | لقاء',
+        title: 'إدارة المستخدمين | لقاء',
         loadComponent: () => import('./pages/user-list/user-list').then((m) => m.UserList),
       },
       {
@@ -67,7 +67,7 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: 'chats',
         canActivate: [roleGuard],
-        data: { roles: [UserRole.Admin, UserRole.Moderator] },
+        data: { roles: [UserRole.Admin] },
         title: 'إدارة المحادثات | لقاء',
         loadComponent: () =>
           import('../chat/pages/admin-chats/admin-chats').then((m) => m.AdminChats),
@@ -79,6 +79,14 @@ export const ADMIN_ROUTES: Routes = [
         title: 'إدارة الحالات | لقاء',
         loadComponent: () =>
           import('./pages/cases-management/cases-management').then((m) => m.CasesManagement),
+      },
+      {
+        path: 'complaints-management',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin, UserRole.Moderator] },
+        title: 'إدارة الشكاوى | لقاء',
+        loadComponent: () =>
+          import('../complaints/pages/complaints-list/complaints-list').then((m) => m.ComplaintsList),
       },
     ],
   },

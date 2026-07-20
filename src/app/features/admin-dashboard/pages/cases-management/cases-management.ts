@@ -38,16 +38,8 @@ import { UnknownCaseListItemResponse } from '../../../unknown-cases/models/respo
 import { getAgeCategory } from '../../../../shared/helper/age-category.helper';
 import { MyCaseListItemResponse } from '../../../user-profile/model/profile.model';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
-
-// Statistics interface
-interface DashboardStatistics {
-  total: number;
-  urgent: number;
-  longTerm: number;
-  unknown: number;
-  active: number;
-  found: number;
-}
+import { DashboardService } from '../../services/dashboard.service';
+import { CasesStatisticsDto as DashboardStatistics } from '../../models/Dashboard/CasesStatisticsDto';
 
 const FILTER_DEBOUNCE_MS = 400;
 
@@ -82,6 +74,7 @@ export class CasesManagement implements OnInit, OnDestroy {
   private urgentService = inject(UrgentCaseService);
   private longTermService = inject(LongTermCaseService);
   private unknownService = inject(UnknownCaseService);
+  private dashboardService = inject(DashboardService);
   private toast = inject(SnackbarService);
 
   // Statistics
@@ -230,59 +223,19 @@ export class CasesManagement implements OnInit, OnDestroy {
   // -------------------- Statistics --------------------
   private loadStatistics(): void {
     this.loadingStats.set(true);
-
-    const fetchCounts = (
-      service: UrgentCaseService | LongTermCaseService | UnknownCaseService,
-      status: CaseStatus | null,
-    ): Promise<number> => {
-      return new Promise((resolve) => {
-        // Build a full filter with all required fields
-        const filter = this.getDefaultFilter();
-        filter.status = status;
-        filter.page = 1;
-        filter.pageSize = 1;
-        service.getAllCases(filter as any).subscribe({
-          next: (res) => resolve(res.data?.totalCount ?? 0),
-          error: () => resolve(0),
-        });
-      });
-    };
-
-    const types = [
-      { service: this.urgentService, type: 'urgent' },
-      { service: this.longTermService, type: 'longTerm' },
-      { service: this.unknownService, type: 'unknown' },
-    ];
-
-    const requests = types.map(({ service, type }) => {
-      return Promise.all([
-        fetchCounts(service, null),
-        fetchCounts(service, CaseStatus.Active),
-        fetchCounts(service, CaseStatus.Found),
-      ]).then(([total, active, found]) => ({ type, total, active, found }));
-    });
-
-    Promise.all(requests).then((results) => {
-      const stats: DashboardStatistics = {
-        total: 0,
-        urgent: 0,
-        longTerm: 0,
-        unknown: 0,
-        active: 0,
-        found: 0,
-      };
-
-      results.forEach((r) => {
-        if (r.type === 'urgent') stats.urgent = r.total;
-        else if (r.type === 'longTerm') stats.longTerm = r.total;
-        else if (r.type === 'unknown') stats.unknown = r.total;
-        stats.total += r.total;
-        stats.active += r.active;
-        stats.found += r.found;
-      });
-
-      this.statistics.set(stats);
-      this.loadingStats.set(false);
+    this.dashboardService.getCasesStatistics().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.statistics.set(res.data);
+        } else {
+          this.toast.error(res.message || 'فشل تحميل الإحصائيات');
+        }
+        this.loadingStats.set(false);
+      },
+      error: () => {
+        this.toast.error('تعذر الاتصال بالخادم لتحميل الإحصائيات');
+        this.loadingStats.set(false);
+      }
     });
   }
 

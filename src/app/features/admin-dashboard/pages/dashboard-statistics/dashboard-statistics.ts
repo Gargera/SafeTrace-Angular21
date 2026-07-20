@@ -7,7 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DashboardDto } from '../../models/DashboardDto';
+import { DashboardDto } from '../../models/Dashboard/DashboardDto';
 import { DashboardService } from '../../services/dashboard.service';
 
 interface ProblemDetails {

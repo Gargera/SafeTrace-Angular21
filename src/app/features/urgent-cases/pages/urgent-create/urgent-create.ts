@@ -213,7 +213,10 @@ export class UrgentCreate {
   }
 
   onSubmit(forceCreate = false): void {
-    if (!forceCreate && (this.form.invalid || this.selectedPhotos().length === 0 || this.selectedLat() === null)) {
+    if (
+      !forceCreate &&
+      (this.form.invalid || this.selectedPhotos().length === 0 || this.selectedLat() === null)
+    ) {
       this.form.markAllAsTouched();
       if (this.selectedPhotos().length === 0) {
         this.errorMsg.set('برجاء إضافة صورة واحدة على الأقل للشخص (الصورة الأساسية).');
