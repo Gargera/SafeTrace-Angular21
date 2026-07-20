@@ -1,6 +1,36 @@
-import { NgTemplateOutlet } from '@angular/common';
-import { Component, inject, input, output, signal } from '@angular/core';
-import { GetUserInfoDTO } from '../../model/profile.model';
+import { isPlatformBrowser, NgTemplateOutlet } from '@angular/common';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  inject,
+  input,
+  OnChanges,
+  OnDestroy,
+  output,
+  PLATFORM_ID,
+  signal,
+  SimpleChanges,
+  ViewChild,
+  effect,
+} from '@angular/core';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
+import { Subject, switchMap, takeUntil } from 'rxjs';
+import {
+  ChangePasswordDTO,
+  GetUserInfoDTO,
+  UpdateHomeLocationDTO,
+  UpdateNameDTO,
+} from '../../model/profile.model';
+// import { GeocodingService } from '../../../../core/services/geocoding.service';
 import { ProfileService } from '../../service/profile.service';
 
 import { UserRole } from '../../../../shared/enums/user-role';

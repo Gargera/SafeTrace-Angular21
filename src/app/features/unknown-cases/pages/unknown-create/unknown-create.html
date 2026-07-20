@@ -213,6 +213,7 @@
     @if (showForceCreatePopup()) {
       <app-force-create-popup
         [matches]="matchedCases()"
+        [isBlocked]="false"
         (cancel)="onForceCreateCancel()"
         (forceCreate)="onForceCreateConfirm()">
       </app-force-create-popup>

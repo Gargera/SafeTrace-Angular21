@@ -12,4 +12,5 @@ export interface UrgentCaseCreateRequest extends CaseUpsertBaseRequest {
 
   primaryImage: File;
   additionalImages: File[] | null;
+  isSameTypeDuplicate?: boolean;
 }

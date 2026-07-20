@@ -128,7 +128,37 @@
 
             <div class="field-group">
               <label class="field-label">حدد موقع الحادث بالضبط على الخريطة <span class="req">*</span></label>
-              <app-map-location-picker (locationChange)="onLocationChange($event)"></app-map-location-picker>
+
+              <button
+                type="button"
+                class="btn-secondary"
+                style="width:fit-content; margin-bottom:10px;"
+                (click)="useCurrentLocation()"
+                [disabled]="isLocating()"
+              >
+                @if (isLocating()) {
+                  <span class="material-symbols-outlined spin" style="font-size:18px;">progress_activity</span>
+                  جاري تحديد موقعك...
+                } @else {
+                  <span class="material-symbols-outlined" style="font-size:18px;">my_location</span>
+                  استخدام موقعي الحالي
+                }
+              </button>
+              @if (locationError()) {
+                <p class="err-msg">{{ locationError() }}</p>
+              }
+
+              <app-map-location-picker
+                [externalLocation]="{ lat: selectedLat()!, lng: selectedLng()! }"
+                (locationChange)="onLocationChange($event)">
+              </app-map-location-picker>
+
+              @if (selectedAddress()) {
+                <p style="font-size:13px; color:#555; margin-top:8px;">
+                  <span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">place</span>
+                  {{ selectedAddress() }}
+                </p>
+              }
             </div>
           </div>
         }
@@ -218,6 +248,7 @@
     @if (showForceCreatePopup()) {
       <app-force-create-popup
         [matches]="matchedCases()"
+        [isBlocked]="isBlockedDuplicate()"
         (cancel)="onForceCreateCancel()"
         (forceCreate)="onForceCreateConfirm()">
       </app-force-create-popup>

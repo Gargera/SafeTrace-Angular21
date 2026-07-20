@@ -10,6 +10,7 @@ export interface MatchedCaseDto {
   age: number;
   mainPhotoPath: string | null;
   similarity: number;
+
   /** ⚠️ لسه مش موجود في MatchedCaseResponse من الباك - لازم يتضاف عشان زرار "تواصل" يشتغل */
   userId?: string;
 }

@@ -8,13 +8,15 @@ import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { FormField } from '../../../../shared/components/form-field/form-field';
 
 type Step = 1 | 2 | 3;
 
 @Component({
   selector: 'app-unknown-create',
   standalone: true,
-  imports: [ReactiveFormsModule, ForceCreatePopupComponent],
+  imports: [ReactiveFormsModule, ForceCreatePopupComponent, ButtonComponent, FormField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../../../../shared/styles/case-form.css', './unknown-create.css'],
   templateUrl: './unknown-create.html',
@@ -159,6 +161,20 @@ export class UnknownCreate {
         const data = res.data;
 
         if (data && data.isCreated === false) {
+          const rawData = data as any;
+
+          // لو نفس نوع الحالة (Unknown ↔ Unknown): مفيش داعي نوقف اليوزر أو نوريه
+          // popup الـ force-create، لأن الباك اند بيعمل merge للحالتين في حالة
+          // واحدة تلقائياً. فبنعتبرها نجحت عادي زي أي إنشاء طبيعي.
+          if (rawData.isSameTypeDuplicate) {
+            this.showForceCreatePopup.set(false);
+            this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
+            this.router.navigate(['/unknown']);
+            return;
+          }
+
+          // لو التطابق مع نوع حالة مختلف (long-term / urgent): نوري اليوزر
+          // الحالات المشابهة ويقرر يتواصل مع صاحب البلاغ أو يعمل force create.
           this.matchedCases.set((data.matchedCases ?? []).map(mapMatchedCaseResponseToDto));
           this.showForceCreatePopup.set(true);
           return;
@@ -166,7 +182,7 @@ export class UnknownCreate {
 
         this.showForceCreatePopup.set(false);
         this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
-        this.router.navigate(['/unknown-cases']);
+        this.router.navigate(['/unknown']);
       },
       error: (err) => {
         this.isSubmitting.set(false);
