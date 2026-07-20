@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms'; // 1. قمنا باستيراد ا
 import { ChatService } from '../../services/chat.service';
 import { ChatAlertsService } from '../../services/chat-alert.service';
 import { AdminChatsDto, ChatFilterDto } from '../../models/chat.model';
+import { AdminChatStatisticsDto } from '../../models/admin-chat-statistics-dto';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -75,8 +76,25 @@ export class AdminChats implements OnInit {
     return Array.from({ length: total }, (_, i) => i + 1);
   });
 
+  statistics = signal<AdminChatStatisticsDto | null>(null);
+  isLoadingStats = signal(true);
+
   ngOnInit(): void {
+    this.loadStatistics();
     this.loadChats();
+  }
+
+  private loadStatistics(): void {
+    this.isLoadingStats.set(true);
+    this.chatService.getAdminStatistics().subscribe({
+      next: (response) => {
+        this.statistics.set(response.data!);
+        this.isLoadingStats.set(false);
+      },
+      error: () => {
+        this.isLoadingStats.set(false);
+      }
+    });
   }
 
   private loadChats(): void {
@@ -137,7 +155,7 @@ export class AdminChats implements OnInit {
   }
 
   openChat(chat: AdminChatsDto): void {
-    this.router.navigate(['/chat/conversation', chat.chatId]);
+    this.router.navigate(['/admin/chats', chat.chatId]);
   }
 
   // async hardDeleteChat(chat: AdminChatsDto, event: Event): Promise<void> {

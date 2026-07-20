@@ -8,9 +8,8 @@ import {
   FoundedApiListItemDto,
   PostDetailsResponseDTO,
 } from '../models/founded.models';
-import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
-import { getAgeCategory } from '../../../shared/helper/age-category.helper';
+import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 
 @Injectable({ providedIn: 'root' })
 export class FoundedService {

@@ -10,6 +10,7 @@ export interface FoundedHeaderQueryDTO {
   pageSize: number;
 }
 
+
 export interface FoundedApiListItemDto {
   id: number;
   caseId: number;

@@ -1,123 +1,67 @@
 <div class="min-h-screen bg-background">
   <div class="mx-auto max-w-7xl space-y-6 px-4 py-6">
+
     <!-- Page Header -->
     <section class="space-y-3 pb-2">
       <app-case-header title="تم العثور عليهم"
         subtitle="نحن نحتفل بكل لقاء جديد. هنا تجد قائمة بالأشخاص الذين تم العثور عليهم."
-        [badge]="!isLoading() ? totalCount() + ' حالة' : ''" [loading]="isLoading()" [showPrimary]="false">
+        [badge]="!isLoading() && !hasError() ? totalCount() + ' نتيجة' : ''" [loading]="isLoading()"
+        [showPrimary]="false" [showSecondary]="false">
       </app-case-header>
     </section>
 
     <!-- Filters Card -->
     <section class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
-      <app-case-filters [showSearch]="true" [showGender]="true" [showAgeCategory]="true" [showCaseType]="true"
-        [showCaseStatus]="false" [showGovernment]="false" [showCity]="false" [showFromDate]="false" [showToDate]="false"
-        [showAgeSort]="false" [showDateSort]="false" (filterChange)="
-          onSearchChange($event.fullName || '');
-          onGenderChange($event.gender === null || $event.gender === undefined ? '' : $event.gender.toString());
-          onAgeCategoryChange($event.ageCategory === null || $event.ageCategory === undefined ? '' : $event.ageCategory.toString());
-          onCaseTypeChange($event.caseType === null || $event.caseType === undefined ? '' : $event.caseType.toString())
-        " (reset)="
-          onSearchChange('');
-          onGenderChange('');
-          onAgeCategoryChange('');
-          onCaseTypeChange('')
-        ">
+      <app-case-filters [showCaseType]="true" [showGovernment]="false" [showCity]="false" [showFromDate]="false"
+        [showToDate]="false" [showAgeSort]="false" [showDateSort]="false" (filterChange)="onFilterChange($event)"
+        (reset)="onFilterReset()">
       </app-case-filters>
     </section>
 
     <!-- Main Content -->
     <div class="space-y-4">
+
       <!-- Loading Skeleton -->
       @if (isLoading()) {
       <app-case-skeleton-grid></app-case-skeleton-grid>
       }
-      <!-- Main Content -->
-      <div class="space-y-4">
-        <!-- Loading Skeleton -->
-        @if (isLoading()) {
-        <app-case-skeleton-grid></app-case-skeleton-grid>
-        }
 
-        <!-- Error State -->
-        @if (hasError() && !isLoading()) {
-        <div class="flex flex-col items-center justify-center py-24 text-center">
-          <span class="material-symbols-outlined text-6xl text-outline mb-4">wifi_off</span>
-          <h3 class="text-xl font-bold text-primary mb-2">تعذر تحميل البيانات</h3>
-          <p class="text-on-surface-variant mb-6">تحقق من اتصالك بالإنترنت وحاول مرة أخرى</p>
-          <app-button variant="secondary" (onClick)="goToPage(1)">إعادة المحاولة</app-button>
-        </div>
-        }
+      <!-- Error State -->
+      @if (hasError() && !isLoading()) {
+      <div class="flex flex-col items-center justify-center py-24 text-center">
+        <span class="material-symbols-outlined text-6xl text-outline mb-4">wifi_off</span>
+        <h3 class="text-xl font-bold text-on-surface mb-2">تعذر تحميل البيانات</h3>
+        <p class="text-on-surface-variant mb-6">تحقق من اتصالك بالإنترنت وحاول مرة أخرى</p>
+        <button (click)="retry()"
+          class="inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold bg-secondary text-on-secondary shadow-sm hover:opacity-90 hover:shadow transition-all duration-200 active:scale-95">
+          <span class="material-symbols-outlined text-[20px]">refresh</span>
+          <span>إعادة المحاولة</span>
+        </button>
+      </div>
+      }
 
-        <!-- Empty State -->
-        @if (!isLoading() && !hasError() && items().length === 0) {
-        <app-empty-state title="لا توجد نتائج" message="جرّب تغيير معايير البحث أو الفلاتر">
-        </app-empty-state>
-        }
+      <!-- Empty State -->
+      @if (!isLoading() && !hasError() && items().length === 0) {
+      <app-empty-state title="لا توجد نتائج" message="جرّب تغيير معايير البحث أو الفلاتر للعثور على من تبحث عنه.">
+      </app-empty-state>
+      }
 
-        @if (!isLoading() && !hasError() && items().length > 0) {
-        <!-- Cases Grid -->
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          @for (person of items(); track person.id) {
-          <app-card
-            extraClass="group flex h-full flex-col overflow-hidden rounded-2xl border border-outline-variant/70 bg-surface-container-lowest shadow-sm transition-all duration-300 hover:shadow-xl block"
-            dir="rtl">
-            <!-- Image Section -->
-            <div class="relative aspect-4/3 overflow-hidden rounded-t-2xl bg-surface-container-high">
-              <img [src]="environment.baseUrl + person.mainImage" [alt]="person.fullName"
-                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                loading="lazy" />
-            </div>
-
-            <!-- Content -->
-            <div class="flex flex-1 flex-col p-5">
-              <!-- Name -->
-              <h3 class="mb-4 line-clamp-1 text-xl font-bold leading-7 text-on-surface">
-                {{ person.fullName }}
-              </h3>
-
-              <!-- Information -->
-              <div class="space-y-3 text-sm">
-                <!-- Age Category -->
-                <div class="flex items-center justify-between">
-                  <span class="text-on-surface-variant"> الفئة العمرية </span>
-                  <span [appAgeBadgeDirective]="$any(person.ageCategory)"></span>
-                </div>
-
-                <!-- Date -->
-                <div class="flex items-center justify-between">
-                  <span class="text-on-surface-variant"> تاريخ العثور </span>
-                  <span class="font-medium text-on-surface">
-                    {{ person.foundDate | date: 'd MMM yyyy' : '' : 'ar' }}
-                  </span>
-                </div>
-              </div>
-
-              <!-- Divider -->
-              <div class="mt-5 border-t border-outline-variant"></div>
-
-              <div class="flex-1"></div>
-
-              <!-- Actions -->
-              <div class="mt-5 flex flex-col gap-3">
-                <app-button variant="primary" extraClass="w-full justify-center gap-2"
-                  (onClick)="goToDetail(person.id)">
-                  <span class="material-symbols-outlined material-icon-sm"> visibility </span>
-                  عرض التفاصيل
-                </app-button>
-              </div>
-            </div>
-          </app-card>
-          }
-        </div>
-
-        <!-- Pagination -->
-        @if (totalPages() > 1) {
-        <app-pagination [currentPage]="currentPage()" [totalPages]="totalPages()" [totalItems]="totalCount()"
-          [pageSize]="pageSize()" (pageChange)="goToPage($event)">
-        </app-pagination>
-        }
+      @if (!isLoading() && !hasError() && items().length > 0) {
+      <!-- Cards Grid -->
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        @for (person of items(); track person.id) {
+        <app-case-card [caseItem]="mapToCaseItem(person)" [showCaseType]="false" [showGender]="false" [showAge]="false"
+          createdAtLabel="تاريخ العثور" [detailRoute]="['/founded', person.id]" [showContactButton]="false">
+        </app-case-card>
         }
       </div>
+
+      <!-- Pagination -->
+      <app-pagination [currentPage]="currentPage()" [totalPages]="totalPages()" [totalItems]="totalCount()"
+        [pageSize]="pageSize()" (pageChange)="onPageChange($event)">
+      </app-pagination>
+      }
+
     </div>
   </div>
+</div>

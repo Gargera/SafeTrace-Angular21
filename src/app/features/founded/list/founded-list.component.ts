@@ -1,22 +1,20 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { Subject, takeUntil, finalize } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { FoundedService } from '../services/founded.service';
 import { CaseType } from '../../../shared/enums/case-type';
 import { Gender } from '../../../shared/enums/gender';
-import { FoundPersonListItemDto, FoundedHeaderQueryDTO } from '../models/founded.models';
 import { environment } from '../../../../environments/environment';
-import { getGenderTranslationAr } from '../../../core/constants/gender.dictionary';
-
 import { CaseHeaderComponent } from '../../../shared/components/cases-components/case-header/case-header.component';
-import { CaseFiltersComponent } from '../../../shared/components/cases-components/case-filters/case-filters.component';
-import { PaginationComponent } from '../../../shared/components/cases-components/case-pagination/case-pagination.component';
-import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { CaseSkeletonGridComponent } from '../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
-import { CardComponent } from '../../../shared/components/card/card';
-import { ButtonComponent } from '../../../shared/components/button/button';
-import { AgeBadgeDirective } from '../../../shared/directives/age-badge-directive';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { PaginationComponent } from '../../../shared/components/cases-components/case-pagination/case-pagination.component';
+import { CaseFiltersComponent } from '../../../shared/components/cases-components/case-filters/case-filters.component';
+import { CasesFilterRequest, CaseListItemResponse } from '../../../core/models/Cases.model';
+import { CaseStatus } from '../../../shared/enums/case-status';
+import { CaseCardComponent } from '../../../shared/components/cases-components/case-card/case-card.component';
+import { FoundedHeaderQueryDTO, FoundPersonListItemDto } from '../models/founded.models';
 
 @Component({
   selector: 'app-founded-list',
@@ -24,15 +22,12 @@ import { AgeBadgeDirective } from '../../../shared/directives/age-badge-directiv
   imports: [
     CommonModule,
     RouterModule,
-    FormsModule,
     CaseHeaderComponent,
-    CaseFiltersComponent,
-    PaginationComponent,
-    EmptyStateComponent,
     CaseSkeletonGridComponent,
-    CardComponent,
-    ButtonComponent,
-    AgeBadgeDirective
+    EmptyStateComponent,
+    PaginationComponent,
+    CaseFiltersComponent,
+    CaseCardComponent,
   ],
   templateUrl: './founded-list.component.html',
 })
@@ -41,8 +36,6 @@ export class FoundedListComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly destroy$ = new Subject<void>();
   public readonly environment = environment;
-  public readonly getAgeCategoryTranslationAr = getAgeCategoryTranslationAr;
-
 
   // State signals
   items = signal<FoundPersonListItemDto[]>([]);
@@ -52,16 +45,16 @@ export class FoundedListComponent implements OnInit, OnDestroy {
   isLoading = signal(false);
   hasError = signal(false);
 
-  // Filter state
-  searchValue = '';
-  selectedGender: Gender | null = null;
-  selectedAgeCategory = 0;
-  selectedCaseType: CaseType | null = null;
+  // Filter state — updated from app-case-filters output
+  private searchValue = '';
+  private selectedGender: Gender | null = null;
+  private selectedAgeCategory = 0;
+  private selectedCaseType: CaseType | null = null;
 
   totalPages = computed(() => Math.ceil(this.totalCount() / this.pageSize()));
 
   ngOnInit(): void {
-    this.load();
+    // Initial load is driven by app-case-filters emitting on init
   }
 
   ngOnDestroy(): void {
@@ -69,13 +62,13 @@ export class FoundedListComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  onFilterChange(newFilter: CasesFilterRequest): void {
-    this.searchValue = newFilter.fullName || newFilter.caseCode || '';
-    this.selectedGender = newFilter.gender !== null && newFilter.gender !== undefined ? newFilter.gender : null;
-    const ageCategoryNum = newFilter.ageCategory ? Number(newFilter.ageCategory) : 0;
-    this.selectedAgeCategory = isNaN(ageCategoryNum) ? 0 : ageCategoryNum;
-    this.selectedCaseType = newFilter.caseType !== null && newFilter.caseType !== undefined ? newFilter.caseType : null;
+  // ----- Filter handlers -----
 
+  onFilterChange(filter: CasesFilterRequest): void {
+    this.searchValue = filter.fullName ?? '';
+    this.selectedGender = filter.gender !== null ? (filter.gender as unknown as Gender) : null;
+    this.selectedAgeCategory = filter.ageCategory !== null ? Number(filter.ageCategory) : 0;
+    this.selectedCaseType = filter.caseType;
     this.currentPage.set(1);
     this.load();
   }
@@ -85,15 +78,49 @@ export class FoundedListComponent implements OnInit, OnDestroy {
     this.selectedGender = null;
     this.selectedAgeCategory = 0;
     this.selectedCaseType = null;
-
     this.currentPage.set(1);
     this.load();
   }
 
+  // ----- Pagination handlers -----
+
   onPageChange(page: number): void {
+    if (page === this.currentPage()) return;
     this.currentPage.set(page);
     this.load();
   }
+
+  retry(): void {
+    this.currentPage.set(1);
+    this.load();
+  }
+
+  // ----- Navigation -----
+
+  goToDetail(id: number): void {
+    this.router.navigate(['/founded', id]);
+  }
+
+  mapToCaseItem(person: FoundPersonListItemDto): CaseListItemResponse {
+    return {
+      id: person.id,
+      caseCode: '',
+      caseType: CaseType.Unknown,
+      status: CaseStatus.Found,
+      fName: person.fullName,
+      sName: null,
+      tName: null,
+      lName: null,
+      gender: Gender.Male,
+      age: parseInt(person.age) || 0,
+      city: '',
+      government: '',
+      createdAt: person.foundDate,
+      mainPhoto: person.mainImage
+    };
+  }
+
+  // ----- Data loading — unchanged -----
 
   private load(): void {
     this.isLoading.set(true);

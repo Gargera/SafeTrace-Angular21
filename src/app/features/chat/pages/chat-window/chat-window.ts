@@ -1,7 +1,7 @@
 import { Component,ElementRef,ViewChild, inject , OnInit, signal, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { DatePipe,CommonModule } from '@angular/common';
 import { ChatService } from '../../services/chat.service';
 import { MessageService } from '../../services/message.service';
 import { ChatAlertsService } from '../../services/chat-alert.service';
@@ -15,12 +15,14 @@ import { environment } from '../../../../../environments/environment';
 import { Location } from '@angular/common';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
-
+import { ButtonComponent } from '../../../../shared/components/button/button';
 
 @Component({
   selector: 'app-chat-window',
   standalone: true,
-  imports: [FormsModule, DatePipe, ViewProfilePopup,LoadingSpinnerComponent],
+  imports: [FormsModule, DatePipe, ViewProfilePopup,LoadingSpinnerComponent,
+    ButtonComponent,CommonModule
+  ],
   templateUrl: './chat-window.html',
 })
 export class ChatWindow implements OnInit, AfterViewInit {
@@ -39,6 +41,8 @@ export class ChatWindow implements OnInit, AfterViewInit {
   private currentUserId = this.authService.getCurrentUserId();
   readonly FileType = FileType;
 
+  isAdmin = false;
+
   isLoading = signal<boolean>(true);
   messagesLoaded = signal(false);
   chat = signal<ChatDetailsDto | null>(null);
@@ -55,7 +59,13 @@ export class ChatWindow implements OnInit, AfterViewInit {
 
 
   async ngOnInit(): Promise<void> {
-      console.log("CURRENT USER ID:", this.currentUserId);
+    this.route.data.subscribe(data => {
+      console.log(data);
+      this.isAdmin = data['mode'] === 'admin';
+      console.log('isAdmin =', this.isAdmin);
+    });
+
+    console.log("CURRENT USER ID:", this.currentUserId);
 
     this.chatId = Number(this.route.snapshot.paramMap.get('chatId'));
     if(!this.chatId) {
@@ -168,21 +178,27 @@ private handleMessageDeletedForEveryone = (
   event: MessageDeletedEvent
 ): void => {
 
-  if(event.chatId !== this.chatId) {
+  if(event.chatId !== this.chatId){
     return;
   }
 
-  this.messages.update((msgs) =>
-    msgs.map((msg) =>
+  this.messages.update((msgs)=>
+    msgs.map(msg =>
       msg.id === event.messageId
-        ? {
-            ...msg,
-            isDeletedForEveryone: true,
-            content: 'تم حذف هذه الرسالة'
-          }
-        : msg
+      ?
+      {
+        ...msg,
+        isDeletedForEveryone:true,
+        content: this.isAdmin 
+          ? msg.content 
+          : "تم حذف هذه الرسالة",
+        forEveryoneDeletedAt:event.deletedAt
+      }
+      :
+      msg
     )
   );
+
 };
   loadMessages(): void {
     this.chatService.getMessages(this.chatId).subscribe({
@@ -216,6 +232,22 @@ private handleMessageDeletedForEveryone = (
       return '';
     }
     return c.otherUserName ?? c.receiverName ?? c.senderName ?? c.receiverId;
+  }
+
+  get adminSenderName(): string {
+  return this.chat()?.senderName ?? '';
+  }
+
+  get adminReceiverName(): string {
+    return this.chat()?.receiverName ?? '';
+  }
+
+  get adminSenderImage(): string | undefined {
+    return this.chat()?.senderImage;
+  }
+
+  get adminReceiverImage(): string | undefined {
+    return this.chat()?.receiverImage;
   }
 
   openFilePicker(): void {
@@ -381,15 +413,68 @@ private handleMessageDeletedForEveryone = (
     year: 'numeric'
   });
 }
-openProfile(): void {
-    console.log(this.chat());
+openProfile(userId?: string): void {
 
-  const userId = this.chat()?.otherUserId;
-    console.log(userId);
+  const id = userId ?? this.chat()?.otherUserId;
 
-  if (!userId) return;
+  if (!id) {
+    return;
+  }
 
-  this.selectedUserId.set(userId);
+  if (this.isAdmin) {
+    this.router.navigate(['/admin/users', id]);
+    return;
+  }
+
+  this.selectedUserId.set(id);
+}
+
+goToCaseDetails(caseId: number, caseType: string): void {
+
+  switch(caseType) {
+
+    case 'Urgent':
+      this.router.navigate(['/urgent', caseId]);
+      break;
+
+    case 'LongTerm':
+      this.router.navigate(['/long-term', caseId]);
+      break;
+
+    case 'Unknown':
+      this.router.navigate(['/unknown', caseId]);
+      break;
+  }
+}
+
+getRelativeTime(date?: string): string {
+  if (!date) return '';
+
+  const deletedDate = new Date(date);
+  const now = new Date();
+
+  const diffMs = now.getTime() - deletedDate.getTime();
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMinutes < 1) return 'منذ لحظات';
+  if (diffMinutes < 60) return `منذ ${diffMinutes} دقيقة`;
+  if (diffHours < 24) return `منذ ${diffHours} ساعة`;
+  if (diffDays < 30) return `منذ ${diffDays} يوم`;
+
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMonths < 12) return `منذ ${diffMonths} شهر`;
+
+  const diffYears = Math.floor(diffMonths / 12);
+  return `منذ ${diffYears} سنة`;
+}
+
+isMessageOnRightSide(message: MessageDto): boolean {
+  if (this.isAdmin) {
+    return message.senderId === this.chat()?.senderId;
+  }
+  return message.isMine;
 }
 
 }

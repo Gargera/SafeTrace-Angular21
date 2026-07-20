@@ -105,13 +105,14 @@
             {{ getLocation(caseItem) }}
           </td>
           <td class="px-lg py-md text-center">
-            <div class="flex items-center justify-center gap-2" dir="ltr">
+            <div class="flex items-center justify-center gap-2">
               <app-button [routerLink]="['/admin/cases/details/', caseItem.id]" variant="primary"
-                extraClass="h-8 px-3 text-xs gap-1">
+                extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-secondary-container transition-all duration-200">
                 <span class="material-symbols-outlined text-[16px]">visibility</span>
-                التفاصيل
+                عرض
               </app-button>
-              <app-button variant="danger" extraClass="h-8 px-3 text-xs gap-1" (onClick)="requestDelete(caseItem.id)">
+              <app-button variant="danger" (onClick)="requestDelete(caseItem.id)"
+                extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200">
                 <span class="material-symbols-outlined text-[16px]">delete</span>
                 حذف
               </app-button>
