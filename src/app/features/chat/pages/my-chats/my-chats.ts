@@ -5,51 +5,24 @@ import { ChatService } from '../../services/chat.service';
 import { ChatAlertsService } from '../../services/chat-alert.service';
 import { ChatSummaryDto } from '../../models/chat.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
+import { SnackbarService } from '../../../../core/services/toast.service';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 
-
-/**
- * A view-only filter for this page. Not a backend concept - GetUserChatsAsync
- * has no filter parameter at all, it just returns every non-deleted chat for
- * the current user. 'active' and 'archived' from the first version are gone
- * because ChatSummaryDto has no isArchived field to filter on; only 'all'
- * and 'unread' are backed by real data (unreadCount).
- */
 type ConversationFilter = 'all' | 'unread';
  
-/**
- * MyConversationsComponent
- * --------------------------
- * The "الرسائل والمحادثات" list page. Loads all of the current user's chats
- * once (GET /api/Chats -> ApiResponse<ChatSummaryDto[]>) and filters
- * client-side, since the endpoint returns everything in one call.
- *
- * NOTE: the conversation-card was previously a separate
- * `app-conversation-card` component (ConversationCardComponent). It has been
- * merged/inlined directly into this component's template, so it no longer
- * exists as its own file/component - DatePipe is imported here instead since
- * the inlined markup uses the `date` pipe directly.
- *
- * IMPORTANT (carried over from the old card component): ChatSummaryDto only
- * has `otherUserId` (a raw user id string), `caseId` (a raw number),
- * `lastMessage`, `lastMessageDate`, and `unreadCount` - there's no display
- * name, avatar, or case title on this DTO. The render stays plain until one
- * of the following is added:
- *   - the backend adds those fields to ChatSummaryDto, or
- *   - the frontend does a separate lookup (e.g. a users/{id} endpoint)
- *     and joins it in this page.
- */
 
 
 @Component({
   selector: 'app-my-chats',
-  imports: [DatePipe, ButtonComponent],
+  imports: [DatePipe, ButtonComponent,LoadingSpinnerComponent],
   templateUrl: './my-chats.html',
 })
 export class MyChats implements OnInit {
   protected chatService = inject(ChatService);
   private chatAlerts = inject(ChatAlertsService);
   private router = inject(Router);
- 
+  private snackbarService = inject(SnackbarService);
+  loading = signal(true);
   chats = signal<ChatSummaryDto[]>([]);
   activeFilter = signal<ConversationFilter>('all');
  
@@ -64,12 +37,16 @@ export class MyChats implements OnInit {
   });
  
   ngOnInit(): void {
+    this.loading.set(true);
     this.chatService.getMyChats().subscribe({
       next: (response) => {
         console.log(response.data!);
         this.chats.set(response.data!);
+        this.loading.set(false);
       },
-      error: () => this.chatAlerts.error('تعذر تحميل المحادثات'),
+      error: () =>{ 
+        this.loading.set(false);
+        this.snackbarService.error('تعذر تحميل المحادثات');},
     });
   }
  
@@ -97,9 +74,9 @@ export class MyChats implements OnInit {
     this.chatService.deleteChatForMe(chat.chatId).subscribe({
       next: () => {
         this.chats.update((current) => current.filter((c) => c.chatId !== chat.chatId));
-        this.chatAlerts.success('تم حذف المحادثة');
+        this.snackbarService.success('تم حذف المحادثة');
       },
-      error: () => this.chatAlerts.error('تعذر حذف المحادثة، حاول مرة أخرى'),
+      error: () => this.snackbarService.error('تعذر حذف المحادثة، حاول مرة أخرى'),
     });
   }
 
