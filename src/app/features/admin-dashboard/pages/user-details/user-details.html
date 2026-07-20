@@ -169,7 +169,8 @@
       </div>
     </div>
 
-    <section class="mt-xl space-y-md">
+    @if (!authService.isModerator()) {
+      <section class="mt-xl space-y-md">
       <div class="flex justify-between items-end flex-wrap gap-4">
         <div class="flex flex-col gap-2">
           <h2 class="text-headline-sm font-bold text-primary flex items-center gap-sm">
@@ -289,7 +290,8 @@
           </app-button>
         </div>
       }
-    </section>
+      </section>
+    }
 
   }
 </main>
