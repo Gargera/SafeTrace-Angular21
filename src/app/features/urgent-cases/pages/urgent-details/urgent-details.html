@@ -78,6 +78,31 @@
               <app-button variant="danger" (onClick)="deleteCase()">حذف الحالة</app-button>
             </div>
           }
+
+
+     @if(isAdmin() && caseDetails()?.status === CaseStatus.Active){
+
+<div class="flex flex-wrap gap-3 mt-6 pt-4 border-t border-outline-variant">
+
+  <app-button
+    variant="success"
+    (onClick)="openFoundedPopup()">
+
+    تم العثور عليه
+
+  </app-button>
+
+  <app-button
+    variant="danger"
+    (onClick)="permanentDeleteCase()">
+
+    حذف نهائي
+
+  </app-button>
+
+</div>
+
+}
         </div>
 
         <!-- ================= اليسار: تفاصيل الحالة والخرائط والبيانات ================= -->

@@ -181,14 +181,14 @@
             </td>
             <td class="px-lg py-md text-center">
               <div class="flex items-center justify-center gap-2" dir="ltr">
-                <app-button
-                  [routerLink]="['/cases', caseItem.id]"
-                  [queryParams]="{ type: caseItem.caseType }"
-                  variant="primary"
-                  extraClass="px-3 py-1.5 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
-                >
-                  عرض
-                </app-button>
+               <app-button
+  [routerLink]="getDetailsRoute(caseItem)"
+  variant="primary"
+  extraClass="px-3 py-1.5 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200">
+
+  عرض
+
+</app-button>
                 <app-button
                   (onClick)="requestDelete(caseItem.id)"
                   variant="danger"

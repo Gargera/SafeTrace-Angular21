@@ -87,57 +87,59 @@ isFounding = signal(false);
 
   private fetchCase(id: number): void {
 
-    this.loading.set(true);
+  this.loading.set(true);
 
-    this.UnknownCaseService.getCaseById(id).subscribe({
+  const request = this.authService.isAdmin()
+    ? this.UnknownCaseService.adminGetCaseById(id)
+    : this.UnknownCaseService.getCaseById(id);
 
-      next: (apiRes) => {
+  request.subscribe({
 
-        if (apiRes.success && apiRes.data) {
+    next: (apiRes) => {
 
-          this.caseDetails.set(apiRes.data);
+      if (apiRes.success && apiRes.data) {
 
-          const currentUserEmail =
-            this.authService.currentUser()?.email?.toLowerCase();
+        this.caseDetails.set(apiRes.data);
 
-          const caseOwnerEmail =
-            apiRes.data.user?.email?.toLowerCase();
+        const currentUserEmail =
+          this.authService.currentUser()?.email?.toLowerCase();
 
-          this.isOwner.set(
-            !!currentUserEmail &&
-            currentUserEmail === caseOwnerEmail
+        const caseOwnerEmail =
+          apiRes.data.user?.email?.toLowerCase();
+
+        this.isOwner.set(
+          !!currentUserEmail &&
+          currentUserEmail === caseOwnerEmail
+        );
+
+        if (apiRes.data.photos?.length) {
+
+          const primary =
+            apiRes.data.photos.find(x => x.isPrimary)
+            ?? apiRes.data.photos[0];
+
+          this.selectedMedia.set(primary);
+
+          this.currentIndex.set(
+            apiRes.data.photos.findIndex(x => x.id === primary.id)
           );
-
-          if (apiRes.data.photos?.length) {
-
-            const primary =
-              apiRes.data.photos.find(x => x.isPrimary)
-              ?? apiRes.data.photos[0];
-
-            this.selectedMedia.set(primary);
-            this.currentIndex.set(
-              apiRes.data.photos.findIndex(x => x.id === primary.id)
-            );
-          }
-
         }
-
-        this.loading.set(false);
-
-      },
-
-      error: err => {
-
-        console.error(err);
-
-        this.loading.set(false);
-
       }
 
-    });
+      this.loading.set(false);
 
-  }
+    },
 
+    error: err => {
+
+      console.error(err);
+      this.loading.set(false);
+
+    }
+
+  });
+
+}
   getImageUrl(path?: string): string {
 
     if (!path) {
@@ -340,6 +342,12 @@ goToCase(id: number): void {
   this.router.navigate(['/unknown', id]);
 
 }
+
+readonly CaseStatus = CaseStatus;
+
+isAdmin(): boolean {
+  return this.authService.isAdmin();
+}
 getAgeCategoryEnum(): AgeCategories {
 
   switch (this.caseDetails()?.ageCategory?.name) {
@@ -369,4 +377,46 @@ getAgeCategoryEnum(): AgeCategories {
       return AgeCategories.Child;
   }
 }
+approveCase(): void {
+  const id = this.caseDetails()?.id;
+  if (!id) return;
+
+  this.UnknownCaseService.approveCase(id).subscribe({
+    next: (res) => {
+      if (res.success) {
+        this.snackbar.success('تم قبول الحالة');
+        this.fetchCase(id);
+      }
+    }
+  });
+}
+
+rejectCase(): void {
+  const id = this.caseDetails()?.id;
+  if (!id) return;
+
+  this.UnknownCaseService.rejectCase(id).subscribe({
+    next: (res) => {
+      if (res.success) {
+        this.snackbar.success('تم رفض الحالة');
+        this.fetchCase(id);
+      }
+    }
+  });
+}
+
+permanentDeleteCase(): void {
+  const id = this.caseDetails()?.id;
+  if (!id) return;
+
+  this.UnknownCaseService.permanentDelete(id).subscribe({
+    next: (res) => {
+      if (res.success) {
+        this.snackbar.success('تم حذف الحالة نهائياً');
+        this.router.navigate(['/unknown']);
+      }
+    }
+  });
+}
+
 }

@@ -482,4 +482,22 @@ export class CasesManagement implements OnInit, OnDestroy {
   goToPage(page: number): void {
     this.changePage(page);
   }
+  getDetailsRoute(caseItem: any): string[] {
+
+  switch (caseItem.caseType) {
+
+    case CaseType.Unknown:
+      return ['/unknown', caseItem.id];
+
+    case CaseType.LongTerm:
+      return ['/long-term', caseItem.id];
+
+    case CaseType.Urgent:
+      return ['/urgent', caseItem.id];
+
+    default:
+      return ['/'];
+  }
+
+}
 }

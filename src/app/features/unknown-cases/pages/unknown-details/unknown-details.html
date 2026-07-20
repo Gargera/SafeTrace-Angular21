@@ -306,36 +306,106 @@
 
 }
 
-                    @if(isOwner()){
+                   <!-- ================= Owner Buttons ================= -->
 
-                    <div class="flex flex-wrap gap-3 pt-2">
+@if(isOwner()){
 
+<div class="flex flex-wrap gap-3 pt-2">
+ @if(caseDetails()?.status !== CaseStatus.Rejected){
+      <app-button
+        variant="success"
+        (onClick)="openFoundedPopup()">
+        تم العثور عليه
+      </app-button>
+    }
 
-                        <!-- Found Button -->
-                        <app-button variant="success" (onClick)="openFoundedPopup()">
+    <app-button
+        variant="primary"
+        (onClick)="editCase()">
 
-                            تم العثور عليه
+        تعديل الحالة
 
-                        </app-button>
+    </app-button>
 
+    <app-button
+        variant="danger"
+        (onClick)="deleteCase()">
 
-                        <!-- Edit Button -->
-                        <app-button variant="primary" (onClick)="editCase()">
+        حذف الحالة
 
-                            تعديل الحالة
+    </app-button>
 
-                        </app-button>
+</div>
 
+}
 
-                        <!-- Delete Button -->
-                        <app-button variant="danger" (onClick)="deleteCase()">
+<!-- ================= Admin Buttons ================= -->
 
-                            حذف الحالة
+@if(isAdmin()){
 
-                        </app-button>
+    @if(caseDetails()?.status === CaseStatus.Pending){
 
+    <div class="flex flex-wrap gap-3 pt-2">
 
-                    </div>
+        <app-button
+            variant="success"
+            (onClick)="approveCase()">
+
+            قبول
+
+        </app-button>
+
+        <app-button
+            variant="danger"
+            (onClick)="rejectCase()">
+
+            رفض
+
+        </app-button>
+
+        <app-button
+            variant="success"
+            (onClick)="openFoundedPopup()">
+
+            تم العثور عليه
+
+        </app-button>
+
+        <app-button
+            variant="danger"
+            (onClick)="permanentDeleteCase()">
+
+            حذف نهائي
+
+        </app-button>
+
+    </div>
+
+    }
+
+    @else if(caseDetails()?.status === CaseStatus.Active){
+
+    <div class="flex flex-wrap gap-3 pt-2">
+
+        <app-button
+            variant="success"
+            (onClick)="openFoundedPopup()">
+
+            تم العثور عليه
+
+        </app-button>
+
+        <app-button
+            variant="danger"
+            (onClick)="permanentDeleteCase()">
+
+            حذف نهائي
+
+        </app-button>
+
+    </div>
+
+    }
 
                     }
 
@@ -425,4 +495,4 @@
     </app-founded-popup>
 
     }
-</div>
+

@@ -56,6 +56,7 @@ export class UrgentDetails implements OnInit {
 
   readonly apiUrl = environment.baseUrl;
   readonly FileType = FileType;
+  readonly CaseStatus = CaseStatus;
 showDeleteConfirmation = signal(false);
 deleting = signal(false);
 showFoundedPopup = signal(false);
@@ -66,6 +67,9 @@ isFounding = signal(false);
   isOwner = signal(false);
 
   selectedMedia = signal<any | null>(null);
+  isAdmin(): boolean {
+  return this.authService.isAdmin();
+}
 
   // Lightbox
   lightboxVisible = signal(false);
@@ -85,56 +89,59 @@ isFounding = signal(false);
 
   private fetchCase(id: number): void {
 
-    this.loading.set(true);
+  this.loading.set(true);
 
-    this.UrgentDetailsService.getCaseById(id).subscribe({
+  const request = this.authService.isAdmin()
+    ? this.UrgentDetailsService.adminGetCaseById(id)
+    : this.UrgentDetailsService.getCaseById(id);
 
-      next: (apiRes) => {
+  request.subscribe({
 
-        if (apiRes.success && apiRes.data) {
+    next: (apiRes) => {
 
-          this.caseDetails.set(apiRes.data);
+      if (apiRes.success && apiRes.data) {
 
-          const currentUserEmail =
-            this.authService.currentUser()?.email?.toLowerCase();
+        this.caseDetails.set(apiRes.data);
 
-          const caseOwnerEmail =
-            apiRes.data.user?.email?.toLowerCase();
+        const currentUserEmail =
+          this.authService.currentUser()?.email?.toLowerCase();
 
-          this.isOwner.set(
-            !!currentUserEmail &&
-            currentUserEmail === caseOwnerEmail
+        const caseOwnerEmail =
+          apiRes.data.user?.email?.toLowerCase();
+
+        this.isOwner.set(
+          !!currentUserEmail &&
+          currentUserEmail === caseOwnerEmail
+        );
+
+        if (apiRes.data.photos?.length) {
+
+          const primary =
+            apiRes.data.photos.find(x => x.isPrimary)
+            ?? apiRes.data.photos[0];
+
+          this.selectedMedia.set(primary);
+
+          this.currentIndex.set(
+            apiRes.data.photos.findIndex(x => x.id === primary.id)
           );
-
-          if (apiRes.data.photos?.length) {
-
-            const primary =
-              apiRes.data.photos.find(x => x.isPrimary)
-              ?? apiRes.data.photos[0];
-
-            this.selectedMedia.set(primary);
-            this.currentIndex.set(
-              apiRes.data.photos.findIndex(x => x.id === primary.id)
-            );
-          }
-
         }
-
-        this.loading.set(false);
-
-      },
-
-      error: err => {
-
-        console.error(err);
-
-        this.loading.set(false);
-
       }
 
-    });
+      this.loading.set(false);
 
-  }
+    },
+
+    error: err => {
+
+      console.error(err);
+      this.loading.set(false);
+
+    }
+
+  });
+
+}
 
   getImageUrl(path?: string): string {
 
@@ -283,7 +290,6 @@ confirmFounded(data: FoundPersonInfoRequest): void {
 
 }
   editCase(): void {
-
     const id = this.caseDetails()?.id;
 
     if (!id) return;
@@ -365,5 +371,28 @@ getAgeCategoryEnum(): AgeCategories {
     default:
       return AgeCategories.Child;
   }
+}
+permanentDeleteCase(): void {
+
+  const id = this.caseDetails()?.id;
+
+  if (!id) return;
+
+  this.UrgentDetailsService.permanentDelete(id).subscribe({
+
+    next: (res) => {
+
+      if (res.success) {
+
+        this.snackbar.success('تم حذف الحالة نهائياً');
+
+        this.router.navigate(['/urgent']);
+
+      }
+
+    }
+
+  });
+
 }
 }
