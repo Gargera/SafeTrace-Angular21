@@ -7,30 +7,32 @@ import { CaseType } from '../../../shared/enums/case-type';
 import { Gender } from '../../../shared/enums/gender';
 import { FoundPersonListItemDto, FoundedHeaderQueryDTO } from '../models/founded.models';
 import { environment } from '../../../../environments/environment';
-import { getAgeCategoryTranslationAr } from '../../../core/constants/age.categories.dictionary';
+import { getGenderTranslationAr } from '../../../core/constants/gender.dictionary';
 
 import { CaseHeaderComponent } from '../../../shared/components/cases-components/case-header/case-header.component';
 import { CaseFiltersComponent } from '../../../shared/components/cases-components/case-filters/case-filters.component';
 import { PaginationComponent } from '../../../shared/components/cases-components/case-pagination/case-pagination.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { CaseSkeletonGridComponent } from '../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
-import { ButtonComponent } from '../../../shared/components/button/button';
 import { CardComponent } from '../../../shared/components/card/card';
-import { CasesFilterRequest } from '../../../core/models/Cases.model';
+import { ButtonComponent } from '../../../shared/components/button/button';
+import { AgeBadgeDirective } from '../../../shared/directives/age-badge-directive';
 
 @Component({
   selector: 'app-founded-list',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     RouterModule,
+    FormsModule,
     CaseHeaderComponent,
     CaseFiltersComponent,
     PaginationComponent,
     EmptyStateComponent,
     CaseSkeletonGridComponent,
+    CardComponent,
     ButtonComponent,
-    CardComponent
+    AgeBadgeDirective
   ],
   templateUrl: './founded-list.component.html',
 })
@@ -73,7 +75,7 @@ export class FoundedListComponent implements OnInit, OnDestroy {
     const ageCategoryNum = newFilter.ageCategory ? Number(newFilter.ageCategory) : 0;
     this.selectedAgeCategory = isNaN(ageCategoryNum) ? 0 : ageCategoryNum;
     this.selectedCaseType = newFilter.caseType !== null && newFilter.caseType !== undefined ? newFilter.caseType : null;
-    
+
     this.currentPage.set(1);
     this.load();
   }
@@ -83,7 +85,7 @@ export class FoundedListComponent implements OnInit, OnDestroy {
     this.selectedGender = null;
     this.selectedAgeCategory = 0;
     this.selectedCaseType = null;
-    
+
     this.currentPage.set(1);
     this.load();
   }

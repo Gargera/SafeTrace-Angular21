@@ -2,36 +2,27 @@
   <div class="mx-auto max-w-7xl space-y-6 px-4 py-6">
     <!-- Page Header -->
     <section class="space-y-3 pb-2">
-      <app-case-header
-        title="تم العثور عليهم"
-        subtitle="إدارة وعرض جميع الأشخاص الذين تم العثور عليهم"
-        [badge]="!isLoading() ? totalCount() + ' حالة' : ''"
-        [loading]="isLoading()"
-        [showPrimary]="false"
-        [showSecondary]="false"
-      >
+      <app-case-header title="تم العثور عليهم"
+        subtitle="نحن نحتفل بكل لقاء جديد. هنا تجد قائمة بالأشخاص الذين تم العثور عليهم."
+        [badge]="!isLoading() ? totalCount() + ' حالة' : ''" [loading]="isLoading()" [showPrimary]="false">
       </app-case-header>
     </section>
 
     <!-- Filters Card -->
     <section class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
-      <app-case-filters
-        (filterChange)="onFilterChange($event)"
-        (reset)="onFilterReset()"
-        [showGovernment]="false"
-        [showCity]="false"
-        [showFromDate]="false"
-        [showToDate]="false"
-        [showAgeSort]="false"
-        [showDateSort]="false"
-        [showCaseStatus]="false"
-        [showCaseType]="true"
-        [caseTypeInAdvanced]="false"
-        [searchInAdvanced]="false"
-        [genderInAdvanced]="false"
-        [ageCategoryInAdvanced]="false"
-        gridTemplate="1fr 1fr 1fr 1fr"
-      >
+      <app-case-filters [showSearch]="true" [showGender]="true" [showAgeCategory]="true" [showCaseType]="true"
+        [showCaseStatus]="false" [showGovernment]="false" [showCity]="false" [showFromDate]="false" [showToDate]="false"
+        [showAgeSort]="false" [showDateSort]="false" (filterChange)="
+          onSearchChange($event.fullName || '');
+          onGenderChange($event.gender === null || $event.gender === undefined ? '' : $event.gender.toString());
+          onAgeCategoryChange($event.ageCategory === null || $event.ageCategory === undefined ? '' : $event.ageCategory.toString());
+          onCaseTypeChange($event.caseType === null || $event.caseType === undefined ? '' : $event.caseType.toString())
+        " (reset)="
+          onSearchChange('');
+          onGenderChange('');
+          onAgeCategoryChange('');
+          onCaseTypeChange('')
+        ">
       </app-case-filters>
     </section>
 
@@ -39,107 +30,94 @@
     <div class="space-y-4">
       <!-- Loading Skeleton -->
       @if (isLoading()) {
+      <app-case-skeleton-grid></app-case-skeleton-grid>
+      }
+      <!-- Main Content -->
+      <div class="space-y-4">
+        <!-- Loading Skeleton -->
+        @if (isLoading()) {
         <app-case-skeleton-grid></app-case-skeleton-grid>
-      }
+        }
 
-      <!-- Error State -->
-      @if (hasError() && !isLoading()) {
-        <app-empty-state
-          title="تعذر تحميل البيانات"
-          message="تحقق من اتصالك بالإنترنت وحاول مرة أخرى"
-        >
+        <!-- Error State -->
+        @if (hasError() && !isLoading()) {
+        <div class="flex flex-col items-center justify-center py-24 text-center">
+          <span class="material-symbols-outlined text-6xl text-outline mb-4">wifi_off</span>
+          <h3 class="text-xl font-bold text-primary mb-2">تعذر تحميل البيانات</h3>
+          <p class="text-on-surface-variant mb-6">تحقق من اتصالك بالإنترنت وحاول مرة أخرى</p>
+          <app-button variant="secondary" (onClick)="goToPage(1)">إعادة المحاولة</app-button>
+        </div>
+        }
+
+        <!-- Empty State -->
+        @if (!isLoading() && !hasError() && items().length === 0) {
+        <app-empty-state title="لا توجد نتائج" message="جرّب تغيير معايير البحث أو الفلاتر">
         </app-empty-state>
-      }
+        }
 
-      <!-- Empty State -->
-      @if (!isLoading() && !hasError() && items().length === 0) {
-        <app-empty-state
-          title="لا توجد نتائج"
-          message="لم يتم العثور على أي حالات تطابق معايير البحث الحالية."
-        >
-        </app-empty-state>
-      }
-
-      @if (!isLoading() && !hasError() && items().length > 0) {
+        @if (!isLoading() && !hasError() && items().length > 0) {
         <!-- Cases Grid -->
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           @for (person of items(); track person.id) {
-            <app-card
-              extraClass="group flex h-full flex-col overflow-hidden rounded-2xl border border-outline-variant/70 bg-surface-container-lowest shadow-sm transition-all duration-300 hover:shadow-xl"
-              dir="rtl"
-            >
-              <!-- Image Section -->
-              <div class="relative aspect-4/3 overflow-hidden rounded-t-2xl bg-surface-container-high">
-                <img
-                  [src]="person.mainImage ? (environment.baseUrl + person.mainImage) : '/images/logo.jpg'"
-                  [alt]="person.fullName"
-                  class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
-              </div>
+          <app-card
+            extraClass="group flex h-full flex-col overflow-hidden rounded-2xl border border-outline-variant/70 bg-surface-container-lowest shadow-sm transition-all duration-300 hover:shadow-xl block"
+            dir="rtl">
+            <!-- Image Section -->
+            <div class="relative aspect-4/3 overflow-hidden rounded-t-2xl bg-surface-container-high">
+              <img [src]="environment.baseUrl + person.mainImage" [alt]="person.fullName"
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy" />
+            </div>
 
-              <!-- Content -->
-              <div class="flex flex-1 flex-col p-5">
-                <!-- Name -->
-                <h3 class="mb-4 line-clamp-1 text-xl font-bold leading-7 text-on-surface">
-                  {{ person.fullName }}
-                </h3>
+            <!-- Content -->
+            <div class="flex flex-1 flex-col p-5">
+              <!-- Name -->
+              <h3 class="mb-4 line-clamp-1 text-xl font-bold leading-7 text-on-surface">
+                {{ person.fullName }}
+              </h3>
 
-                <!-- Information -->
-                <div class="space-y-3 text-sm">
-                  <!-- Age -->
-                  @if (person.age != null) {
-                    <div class="flex items-center justify-between">
-                      <span class="text-on-surface-variant"> العمر </span>
-                      <span class="font-medium text-on-surface"> {{ person.age }} سنة </span>
-                    </div>
-                  }
-
-                  <!-- Age Category -->
-                  <div class="flex items-center justify-between">
-                    <span class="text-on-surface-variant"> الفئة العمرية </span>
-                    <span class="bg-surface-container-high text-on-surface px-2 py-0.5 rounded text-xs font-medium">
-                      {{ getAgeCategoryTranslationAr(person.ageCategory) }}
-                    </span>
-                  </div>
-
-                  <!-- Created At -->
-                  <div class="flex items-center justify-between">
-                    <span class="text-on-surface-variant"> تاريخ العثور </span>
-                    <span class="font-medium text-on-surface">
-                      {{ person.foundDate | date: 'dd MMM yyyy' : '' : 'ar' }}
-                    </span>
-                  </div>
+              <!-- Information -->
+              <div class="space-y-3 text-sm">
+                <!-- Age Category -->
+                <div class="flex items-center justify-between">
+                  <span class="text-on-surface-variant"> الفئة العمرية </span>
+                  <span [appAgeBadgeDirective]="$any(person.ageCategory)"></span>
                 </div>
 
-                <!-- Divider -->
-                <div class="mt-5 border-t border-outline-variant"></div>
-                <div class="flex-1"></div>
-
-                <!-- Actions -->
-                <div class="mt-5 flex flex-col gap-3">
-                  <a [routerLink]="['/founded', person.id]" class="block w-full">
-                    <app-button variant="primary" extraClass="w-full justify-center gap-2">
-                      <span class="material-symbols-outlined material-icon-sm"> visibility </span>
-                      عرض التفاصيل
-                    </app-button>
-                  </a>
+                <!-- Date -->
+                <div class="flex items-center justify-between">
+                  <span class="text-on-surface-variant"> تاريخ العثور </span>
+                  <span class="font-medium text-on-surface">
+                    {{ person.foundDate | date: 'd MMM yyyy' : '' : 'ar' }}
+                  </span>
                 </div>
               </div>
-            </app-card>
+
+              <!-- Divider -->
+              <div class="mt-5 border-t border-outline-variant"></div>
+
+              <div class="flex-1"></div>
+
+              <!-- Actions -->
+              <div class="mt-5 flex flex-col gap-3">
+                <app-button variant="primary" extraClass="w-full justify-center gap-2"
+                  (onClick)="goToDetail(person.id)">
+                  <span class="material-symbols-outlined material-icon-sm"> visibility </span>
+                  عرض التفاصيل
+                </app-button>
+              </div>
+            </div>
+          </app-card>
           }
         </div>
 
         <!-- Pagination -->
-        <app-pagination
-          [currentPage]="currentPage()"
-          [totalPages]="totalPages()"
-          [totalItems]="totalCount()"
-          [pageSize]="pageSize()"
-          (pageChange)="onPageChange($event)"
-        >
+        @if (totalPages() > 1) {
+        <app-pagination [currentPage]="currentPage()" [totalPages]="totalPages()" [totalItems]="totalCount()"
+          [pageSize]="pageSize()" (pageChange)="goToPage($event)">
         </app-pagination>
-      }
+        }
+        }
+      </div>
     </div>
   </div>
-</div>
