@@ -11,41 +11,27 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { CasesFilterRequest } from '../../../../core/models/Cases.model';
+import { CaseListItemResponse, CasesFilterRequest } from '../../../../core/models/Cases.model';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
-import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { SnackbarService } from '../../../../core/services/toast.service';
 
-// Badge directives for the table
+// Badge directives
 import { CaseTypeBadgeDirective } from '../../../../shared/directives/case-type-badge-directive';
 import { CaseStatusBadgeDirective } from '../../../../shared/directives/case-status-badge-directive';
 
-// Services
-import { UrgentCaseService } from '../../../urgent-cases/services/urgent-case.service';
-import { LongTermCaseService } from '../../../long-term-cases/services/long-term-case.service';
-import { UnknownCaseService } from '../../../unknown-cases/services/unknown-case.service';
-
-// Models for mapping
-import { UrgentCaseListItemResponse } from '../../../urgent-cases/models/response/UrgentCaseListItemResponse';
-import { LongTermCaseListItemResponse } from '../../../long-term-cases/models/response/LongTermCaseListItemResponse';
-import { UnknownCaseListItemResponse } from '../../../unknown-cases/models/response/UnknownCaseListItemResponse';
-import { getAgeCategory } from '../../../../shared/helper/age-category.helper';
-import { MyCaseListItemResponse } from '../../../user-profile/model/profile.model';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import { DashboardService } from '../../services/dashboard.service';
 import { CasesStatisticsDto as DashboardStatistics } from '../../models/Dashboard/CasesStatisticsDto';
+import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
+import { CasesManagementService } from '../../services/cases-management.service';
 
 const FILTER_DEBOUNCE_MS = 400;
-
-// Type union for service response items
-type CaseListItemUnion =
-  UrgentCaseListItemResponse | LongTermCaseListItemResponse | UnknownCaseListItemResponse;
 
 @Component({
   selector: 'app-cases-management',
@@ -57,12 +43,12 @@ type CaseListItemUnion =
     CardComponent,
     LoadingSpinnerComponent,
     EmptyStateComponent,
-    FormField,
     ButtonComponent,
     ConfirmationModalComponent,
     CaseTypeBadgeDirective,
     CaseStatusBadgeDirective,
     CaseHeaderComponent,
+    CaseFiltersComponent,
   ],
   templateUrl: './cases-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -71,27 +57,22 @@ export class CasesManagement implements OnInit, OnDestroy {
   protected readonly CaseType = CaseType;
   protected readonly CaseStatus = CaseStatus;
 
-  private urgentService = inject(UrgentCaseService);
-  private longTermService = inject(LongTermCaseService);
-  private unknownService = inject(UnknownCaseService);
-  private dashboardService = inject(DashboardService);
-  private toast = inject(SnackbarService);
+  private readonly casesService = inject(CasesManagementService);
+  private readonly dashboardService = inject(DashboardService);
+  private readonly toast = inject(SnackbarService);
 
   // Statistics
   statistics = signal<DashboardStatistics | null>(null);
   loadingStats = signal(true);
 
-  // Filters
-  caseTypeFilter = signal<CaseType | ''>('');
+  // Data & pagination
   currentPage = signal(1);
   totalPages = signal(0);
   totalCount = signal(0);
   readonly pageSize = 12;
 
-  // Data
-  cases = signal<MyCaseListItemResponse[]>([]);
+  cases = signal<CaseListItemResponse[]>([]);
   loading = signal(true);
-  loadingMore = signal(false);
 
   // Modal
   showConfirmModal = signal(false);
@@ -102,6 +83,7 @@ export class CasesManagement implements OnInit, OnDestroy {
     cancelText: string;
     action: 'delete';
     caseId?: number;
+    caseType?: CaseType;
   } | null>(null);
 
   private searchDebounceTimer: ReturnType<typeof setTimeout> | undefined;
@@ -111,10 +93,10 @@ export class CasesManagement implements OnInit, OnDestroy {
   hasNextPage = computed(() => this.currentPage() < this.totalPages());
   hasAnyCases = computed(() => this.totalCount() > 0);
 
-  // -------- PUBLIC FILTER (never null) --------
+  // -------- UNIFIED FILTER --------
   public baseFilter = signal<CasesFilterRequest>(this.getDefaultFilter());
 
-  // Pagination array (matches user-list)
+  // Pagination array
   pagesArray = computed(() => {
     const total = this.totalPages();
     const current = this.currentPage();
@@ -131,7 +113,6 @@ export class CasesManagement implements OnInit, OnDestroy {
     return pages;
   });
 
-  // Helper to create a complete default filter
   private getDefaultFilter(): CasesFilterRequest {
     return {
       status: null,
@@ -146,16 +127,16 @@ export class CasesManagement implements OnInit, OnDestroy {
       toDate: null,
       ageSort: null,
       dateSort: null,
+      caseType: null,
+      caseCode: null,
       page: 1,
       pageSize: this.pageSize,
     };
   }
 
   constructor() {
-    // Effect to reload when caseType or baseFilter changes (with debounce)
     effect(() => {
-      this.baseFilter(); // trigger on change
-      this.caseTypeFilter();
+      this.baseFilter();
 
       if (this.searchDebounceTimer) {
         clearTimeout(this.searchDebounceTimer);
@@ -178,49 +159,36 @@ export class CasesManagement implements OnInit, OnDestroy {
     }
   }
 
-  // Called when CaseFiltersComponent emits a change
+  // ---------- Event handlers ----------
   onFilterChange(filter: CasesFilterRequest): void {
     this.baseFilter.set(filter);
   }
 
-  // Called when caseType dropdown changes
-  onCaseTypeChange(type: CaseType | ''): void {
-    this.caseTypeFilter.set(type);
-  }
-
-  // Search handler – uses fullName (no undefined)
-  onSearchChange(value: string): void {
-    const currentFilter = this.baseFilter();
-    this.baseFilter.set({ ...currentFilter, fullName: value || null });
-  }
-
-  // Status change handler – uses null not undefined
-  onStatusChange(value: CaseStatus | ''): void {
-    const currentFilter = this.baseFilter();
-    this.baseFilter.set({ ...currentFilter, status: value || null });
-  }
-
-  // Reset all filters
   resetFilters(): void {
     this.baseFilter.set(this.getDefaultFilter());
-    this.caseTypeFilter.set('');
     this.currentPage.set(1);
-    // effect triggers reload
   }
 
-  // Change page (used in pagination)
   changePage(page: number): void {
     if (page < 1 || page > this.totalPages() || page === this.currentPage()) return;
     this.currentPage.set(page);
     this.loadCases();
   }
 
-  // Helper to get location string for table
-  getLocation(item: MyCaseListItemResponse): string {
+  getFullName(item: CaseListItemResponse): string {
+    const parts = [item.fName, item.sName, item.tName, item.lName].filter(Boolean);
+    return parts.length ? parts.join(' ') : 'غير معروف';
+  }
+
+  getLocation(item: CaseListItemResponse): string {
     return [item.city, item.government].filter(Boolean).join(' ، ') || 'غير محدد';
   }
 
-  // -------------------- Statistics --------------------
+  goToPage(page: number): void {
+    this.changePage(page);
+  }
+
+  // ---------- Statistics ----------
   private loadStatistics(): void {
     this.loadingStats.set(true);
     this.dashboardService.getCasesStatistics().subscribe({
@@ -235,206 +203,39 @@ export class CasesManagement implements OnInit, OnDestroy {
       error: () => {
         this.toast.error('تعذر الاتصال بالخادم لتحميل الإحصائيات');
         this.loadingStats.set(false);
-      }
+      },
     });
   }
 
-  // -------------------- Cases loading --------------------
+  // ---------- Cases loading ----------
   private loadCases(): void {
-    const base = this.baseFilter();
     this.loading.set(true);
-    const typeFilter = this.caseTypeFilter();
 
-    if (typeFilter) {
-      this.loadCasesByType(typeFilter, base);
-    } else {
-      this.loadAllCasesCombined(base);
-    }
-  }
-
-  private loadCasesByType(type: CaseType, baseFilter: CasesFilterRequest): void {
-    const service = this.getService(type);
-    const filter: any = {
-      ...baseFilter,
-      page: this.currentPage(),
-      pageSize: this.pageSize,
-    };
-
-    service.getAllCases(filter).subscribe({
-      next: (res) => {
-        if (!res.success) {
-          this.toast.error(res.message || 'فشل تحميل الحالات');
-          this.cases.set([]);
-          this.totalPages.set(0);
-          this.totalCount.set(0);
-          this.loading.set(false);
-          return;
-        }
-        const pagination = res.data;
-        if (pagination) {
-          const mappedItems =
-            pagination.items?.map((item: CaseListItemUnion) => this.mapToMyCaseItem(item, type)) ??
-            [];
-          this.cases.set(mappedItems);
-          this.totalPages.set(pagination.totalPages);
-          this.totalCount.set(pagination.totalCount ?? 0);
-        } else {
-          this.cases.set([]);
-          this.totalPages.set(0);
-          this.totalCount.set(0);
-        }
+    this.casesService.getCases(this.baseFilter(), this.currentPage(), this.pageSize).subscribe({
+      next: (result) => {
+        this.cases.set(result.items);
+        this.totalCount.set(result.totalCount);
+        this.totalPages.set(result.totalPages);
         this.loading.set(false);
       },
       error: () => {
         this.toast.error('تعذر الاتصال بالخادم');
         this.cases.set([]);
-        this.totalPages.set(0);
         this.totalCount.set(0);
+        this.totalPages.set(0);
         this.loading.set(false);
       },
     });
   }
 
-  private loadAllCasesCombined(baseFilter: CasesFilterRequest): void {
-    const pageSize = this.pageSize * 3;
-    const fetchPromises = [
-      this.urgentService.getAllCases({
-        ...baseFilter,
-        page: 1,
-        pageSize,
-        latitude: null,
-        longitude: null,
-        radiusInMeters: null,
-      }),
-      this.longTermService.getAllCases({ ...baseFilter, page: 1, pageSize }),
-      this.unknownService.getAllCases({ ...baseFilter, page: 1, pageSize }),
-    ];
-
-    Promise.all(fetchPromises.map((p) => p.toPromise()))
-      .then((responses) => {
-        let allItems: MyCaseListItemResponse[] = [];
-        let totalCount = 0;
-
-        responses.forEach((res, index) => {
-          if (res?.success && res.data) {
-            const type = [CaseType.Urgent, CaseType.LongTerm, CaseType.Unknown][index];
-            const items =
-              res.data.items?.map((item: CaseListItemUnion) => this.mapToMyCaseItem(item, type)) ??
-              [];
-            allItems = allItems.concat(items);
-            totalCount += res.data.totalCount ?? 0;
-          }
-        });
-
-        allItems.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-        const start = (this.currentPage() - 1) * this.pageSize;
-        const end = start + this.pageSize;
-        const paginatedItems = allItems.slice(start, end);
-
-        this.cases.set(paginatedItems);
-        this.totalCount.set(totalCount);
-        this.totalPages.set(Math.ceil(totalCount / this.pageSize));
-        this.loading.set(false);
-      })
-      .catch(() => {
-        this.toast.error('فشل تحميل الحالات');
-        this.cases.set([]);
-        this.totalPages.set(0);
-        this.totalCount.set(0);
-        this.loading.set(false);
-      });
-  }
-
-  private getService(type: CaseType): UrgentCaseService | LongTermCaseService | UnknownCaseService {
-    switch (type) {
-      case CaseType.Urgent:
-        return this.urgentService;
-      case CaseType.LongTerm:
-        return this.longTermService;
-      case CaseType.Unknown:
-        return this.unknownService;
-      default:
-        throw new Error('Invalid case type');
-    }
-  }
-
-  // -------------------- Mapping helper --------------------
-  private mapToMyCaseItem(item: CaseListItemUnion, caseType: CaseType): MyCaseListItemResponse {
-    const fullName =
-      item.fName || item.sName || item.tName || item.lName
-        ? [item.fName, item.sName, item.tName, item.lName].filter(Boolean).join(' ')
-        : 'غير معروف';
-
-    const ageCategory = item.age != null ? getAgeCategory(item.age) : null;
-    const mainImageUrl = (item as any).mainPhoto || (item as any).mainImageUrl || '';
-
-    return {
-      id: item.id,
-      caseCode: item.caseCode,
-      caseType: caseType,
-      status: item.status,
-      fullName: fullName,
-      gender: item.gender,
-      age: item.age,
-      ageCategory: ageCategory,
-      city: item.city,
-      government: item.government,
-      createdAt: item.createdAt,
-      mainImageUrl: mainImageUrl,
-      sName: null,
-      tName: null,
-      lName: null,
-      communicationPhone: null,
-      description: null,
-    } as MyCaseListItemResponse;
-  }
-
-  // -------------------- Load More (append) --------------------
-  loadMore(): void {
-    if (!this.hasNextPage() || this.loadingMore()) return;
-
-    this.loadingMore.set(true);
-    const nextPage = this.currentPage() + 1;
-    const typeFilter = this.caseTypeFilter();
-    const base = this.baseFilter();
-
-    if (typeFilter) {
-      const service = this.getService(typeFilter);
-      const filter: any = { ...base, page: nextPage, pageSize: this.pageSize };
-      service.getAllCases(filter).subscribe({
-        next: (res) => {
-          if (!res.success) {
-            this.toast.error(res.message || 'فشل تحميل المزيد');
-            this.loadingMore.set(false);
-            return;
-          }
-          const pagination = res.data;
-          if (pagination) {
-            const newItems =
-              pagination.items?.map((item: CaseListItemUnion) =>
-                this.mapToMyCaseItem(item, typeFilter),
-              ) ?? [];
-            this.cases.update((items) => [...items, ...newItems]);
-            this.currentPage.set(pagination.pageNumber);
-            this.totalPages.set(pagination.totalPages);
-            this.totalCount.set(pagination.totalCount ?? 0);
-          }
-          this.loadingMore.set(false);
-        },
-        error: () => {
-          this.toast.error('تعذر الاتصال بالخادم');
-          this.loadingMore.set(false);
-        },
-      });
-    } else {
-      this.toast.info('تحميل المزيد غير متاح عند عرض جميع الأنواع');
-      this.loadingMore.set(false);
-    }
-  }
-
-  // -------------------- Delete --------------------
+  // ---------- Delete ----------
   requestDelete(caseId: number): void {
+    const caseItem = this.cases().find((c) => c.id === caseId);
+    if (!caseItem) {
+      this.toast.error('الحالة غير موجودة');
+      return;
+    }
+
     this.modalConfig.set({
       title: 'حذف الحالة',
       message: 'هل أنت متأكد من حذف هذه الحالة؟ لا يمكن التراجع عن هذا الإجراء.',
@@ -442,24 +243,17 @@ export class CasesManagement implements OnInit, OnDestroy {
       cancelText: 'إلغاء',
       action: 'delete',
       caseId,
+      caseType: caseItem.caseType,
     });
     this.showConfirmModal.set(true);
   }
 
   confirmAction(): void {
     const config = this.modalConfig();
-    if (!config || !config.caseId) return;
+    if (!config || !config.caseId || !config.caseType) return;
     this.showConfirmModal.set(false);
 
-    const caseItem = this.cases().find((c) => c.id === config.caseId);
-    if (!caseItem) {
-      this.toast.error('الحالة غير موجودة');
-      this.modalConfig.set(null);
-      return;
-    }
-
-    const service = this.getService(caseItem.caseType);
-    service.deleteCase(config.caseId).subscribe({
+    this.casesService.deleteCase(config.caseId, config.caseType).subscribe({
       next: () => {
         this.cases.update((items) => items.filter((item) => item.id !== config.caseId));
         this.totalCount.update((c) => Math.max(0, c - 1));
@@ -477,9 +271,5 @@ export class CasesManagement implements OnInit, OnDestroy {
   closeModal(): void {
     this.showConfirmModal.set(false);
     this.modalConfig.set(null);
-  }
-
-  goToPage(page: number): void {
-    this.changePage(page);
   }
 }

@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { ApiService } from '../../../shared/services/api.service';
-import { ComplaintStatisticsDto } from '../models/ComplaintStatisticsDto';
+import { ComplaintStatisticsDto } from '../models/complaint-statistics-dto';
 import { ComplaintResponseDto, PaginationResponse } from '../models/complaint.model';
 import { ComplaintFilterDto } from '../models/complaint-filter.model';
 import { ResolveComplaintDto } from '../models/resolve-complaint.model';
