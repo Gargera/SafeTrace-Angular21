@@ -47,18 +47,22 @@
           <span [appCaseTypeBadgeDirective]="caseItem().caseType"></span>
         </div>
       }
+      @if (showGender()) {
       <div class="flex items-center justify-between">
         <span class="text-on-surface-variant"> الجنس </span>
 
         <span [appGenderBadgeDirective]="caseItem().gender"></span>
       </div>
+      }
 
       <!-- Age -->
+      @if (showAge()) {
       <div class="flex items-center justify-between">
         <span class="text-on-surface-variant"> العمر </span>
 
         <span class="font-medium text-on-surface"> {{ caseItem().age }} سنة </span>
       </div>
+      }
 
       <!-- Age Category -->
       <div class="flex items-center justify-between">
@@ -70,7 +74,7 @@
       <!-- Created At -->
       @if (hasCreatedAt()) {
         <div class="flex items-center justify-between">
-          <span class="text-on-surface-variant"> تاريخ الإضافة </span>
+          <span class="text-on-surface-variant"> {{ createdAtLabel() }} </span>
 
           <span class="font-medium text-on-surface">
             {{ caseItem().createdAt | date: 'dd MMM yyyy, h:mm a' : '' : 'ar' }}

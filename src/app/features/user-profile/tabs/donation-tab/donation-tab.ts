@@ -5,11 +5,22 @@ import { DonationService } from './donations.service';
 import { DonationUserListDto } from './models/donation-user-list.dto';
 
 import { TruncatePipe } from '../../../../shared/pipes/truncate-pipe';
+import { PaymentStatusBadgeDirective } from '../../../../shared/directives/payment-status-badge.directive';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-donation-history',
   standalone: true,
-  imports: [CommonModule, TruncatePipe],
+  imports: [
+    CommonModule, 
+    TruncatePipe,
+    PaymentStatusBadgeDirective,
+    ButtonComponent,
+    LoadingSpinnerComponent,
+    EmptyStateComponent
+  ],
   templateUrl: './donation-tab.html',
 })
 export class DonationHistoryComponent implements OnInit {
