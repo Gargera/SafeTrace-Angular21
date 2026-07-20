@@ -137,15 +137,17 @@
                   [routerLink]="['/cases', caseItem.id]"
                   [queryParams]="{ type: caseItem.caseType }"
                   variant="primary"
-                  extraClass="px-3 py-1.5 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
+                  extraClass="px-3 py-1.5 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200 gap-1"
                 >
+                  <span class="material-symbols-outlined text-[16px]">visibility</span>
                   عرض
                 </app-button>
                 <app-button
                   (onClick)="requestDelete(caseItem.id)"
                   variant="danger"
-                  extraClass="px-3 py-1.5 rounded-full text-label-sm font-bold shadow-sm hover:bg-red-100 transition-all duration-200"
+                  extraClass="px-3 py-1.5 rounded-full text-label-sm font-bold shadow-sm hover:bg-red-100 transition-all duration-200 gap-1"
                 >
+                  <span class="material-symbols-outlined text-[16px]">delete</span>
                   حذف
                 </app-button>
               </div>
