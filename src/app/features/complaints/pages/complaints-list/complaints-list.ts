@@ -1,193 +1,218 @@
- import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { ComplaintsService } from '../../services/complaints.service';
 import { ComplaintResponseDto } from '../../models/complaint.model';
 import { ComplaintFilterDto } from '../../models/complaint-filter.model';
 import { ResolveComplaintDto } from '../../models/resolve-complaint.model';
 import { ComplaintStatus } from '../../../../shared/enums/complaint-status';
-import { ComplaintStatisticsDto } from '../../models/ComplaintStatisticsDto';
+import { ComplaintStatisticsDto } from '../../models/complaint-statistics-dto';
 import { ComplaintStatusBadgeDirective } from '../../../../shared/directives/complaint-status-badge-directive';
-
-declare const Swal: any;
+import { TruncatePipe } from '../../../../shared/pipes/truncate-pipe';
+import { FormField } from '../../../../shared/components/form-field/form-field';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { CardComponent } from '../../../../shared/components/card/card';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { SnackbarService } from '../../../../core/services/toast.service';
+import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 
 @Component({
   selector: 'app-complaints-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, ComplaintStatusBadgeDirective],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    ComplaintStatusBadgeDirective, 
+    TruncatePipe,
+    FormField,
+    ButtonComponent,
+    CardComponent,
+    EmptyStateComponent,
+    LoadingSpinnerComponent,
+    CaseHeaderComponent,
+    ConfirmationModalComponent
+  ],
   templateUrl: './complaints-list.html',
-  styleUrl: './complaints-list.css'
+  styleUrl: './complaints-list.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ComplaintsList implements OnInit {
   private svc = inject(ComplaintsService);
+  private toast = inject(SnackbarService);
 
   complaints = signal<ComplaintResponseDto[]>([]);
-  allLoadedItems: ComplaintResponseDto[] = [];
-  totalCount = signal(0);
-  totalPages = signal(0);
-  isLoading = signal(false);
+  totalCount = signal<number>(0);
+  totalPages = signal<number>(0);
+  isLoading = signal<boolean>(false);
+  loadingStats = signal<boolean>(true);
   statistics = signal<ComplaintStatisticsDto | null>(null);
 
   selectedComplaint = signal<ComplaintResponseDto | null>(null);
-  showModal = signal(false);
-  solutionMessage = '';
-  isResolving = signal(false);
+  showDetailsModal = signal<boolean>(false);
+  solutionMessage = signal<string>('');
+  isResolving = signal<boolean>(false);
 
-  filter: ComplaintFilterDto = { pageNumber: 1, pageSize: 10 };
-  searchEmail = '';
-  searchCaseCode = '';
-  selectedStatus = '';
+  showDeleteModal = signal<boolean>(false);
+  complaintToDelete = signal<ComplaintResponseDto | null>(null);
 
-  ComplaintStatus = ComplaintStatus;
+  filter = signal<ComplaintFilterDto>({
+    pageNumber: 1,
+    pageSize: 10,
+    search: '',
+    status: '' as any,
+  });
 
-  private emailSubject = new Subject<string>();
-  private codeSubject = new Subject<string>();
+  pagesArray = computed(() => Array.from({ length: this.totalPages() }, (_, i) => i + 1));
+
+  ComplaintStatusEnum = ComplaintStatus;
+  private searchSubject = new Subject<string>();
 
   ngOnInit() {
-    this.loadComplaints();
     this.loadStatistics();
+    this.loadComplaints();
 
-    this.emailSubject
-      .pipe(debounceTime(350), distinctUntilChanged())
-      .subscribe(() => this.applyFilters());
-
-    this.codeSubject
-      .pipe(debounceTime(350), distinctUntilChanged())
-      .subscribe(() => this.applyFilters());
+    this.searchSubject.pipe(debounceTime(500), distinctUntilChanged()).subscribe((term) => {
+      this.updateFilter({ search: term, pageNumber: 1 });
+    });
   }
 
   loadStatistics() {
+    this.loadingStats.set(true);
     this.svc.getStatistics().subscribe({
-      next: (res) => { if (res.success && res.data) this.statistics.set(res.data); }
+      next: (res) => {
+        if (res.success && res.data) {
+          this.statistics.set(res.data);
+        } else {
+          this.toast.error(res.message || 'فشل تحميل الإحصائيات');
+        }
+        this.loadingStats.set(false);
+      },
+      error: (err) => {
+        this.toast.error(err.error?.detail || err.error?.title || 'تعذر الاتصال بالخادم لتحميل الإحصائيات');
+        this.loadingStats.set(false);
+      }
     });
   }
 
   loadComplaints() {
     this.isLoading.set(true);
-    this.svc.getAll(this.filter).subscribe({
+    this.svc.getAll(this.filter()).subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          this.allLoadedItems = res.data.items;
-          this.applyClientFilter();
+          this.complaints.set(res.data.items);
           this.totalCount.set(res.data.totalCount);
-          this.totalPages.set(
-            res.data.totalPages ?? Math.ceil(res.data.totalCount / this.filter.pageSize)
-          );
+          this.totalPages.set(res.data.totalPages ?? Math.ceil(res.data.totalCount / this.filter().pageSize));
         }
         this.isLoading.set(false);
       },
-      error: () => { this.isLoading.set(false); }
+      error: (err) => {
+        this.toast.error(err.error?.detail || err.error?.title || 'تعذر الاتصال بالخادم لتحميل الشكاوى');
+        this.isLoading.set(false);
+      }
     });
   }
 
-  private applyClientFilter() {
-    let items = [...this.allLoadedItems];
-    if (this.searchEmail.trim()) {
-      items = items.filter(c =>
-        c.userEmail.toLowerCase().includes(this.searchEmail.trim().toLowerCase())
-      );
-    }
-    if (items.length === 0 && (this.searchEmail.trim() || this.searchCaseCode.trim())) {
-      this.complaints.set([]);
-    } else {
-      this.complaints.set(items);
-    }
+  onSearchChange(value: string) {
+    this.searchSubject.next(value);
   }
 
-  private applyFilters() {
-    this.filter.pageNumber = 1;
-    this.filter.caseCode = this.searchCaseCode.trim() || undefined;
-    this.filter.status = this.selectedStatus !== ''
-      ? this.selectedStatus as ComplaintStatus
-      : undefined;
+  updateFilter(partialFilter: Partial<ComplaintFilterDto>) {
+    this.filter.update((f) => ({
+      ...f,
+      ...partialFilter,
+      pageNumber: partialFilter.pageNumber ?? 1,
+    }));
     this.loadComplaints();
   }
 
-  onEmailInput() {
-    this.emailSubject.next(this.searchEmail);
+  resetFilters() {
+    this.filter.set({
+      pageNumber: 1,
+      pageSize: 10,
+      search: '',
+      status: '' as any,
+    });
+    this.loadComplaints();
   }
 
-  onCodeInput() {
-    this.codeSubject.next(this.searchCaseCode);
-  }
-
-  onStatusChange() {
-    this.applyFilters();
+  changePage(page: number) {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.filter.update((f) => ({ ...f, pageNumber: page }));
+      this.loadComplaints();
+    }
   }
 
   openDetails(complaint: ComplaintResponseDto) {
     this.selectedComplaint.set(complaint);
-    this.solutionMessage = '';
-    this.showModal.set(true);
+    this.solutionMessage.set('');
+    this.showDetailsModal.set(true);
   }
 
-  closeModal() {
-    this.showModal.set(false);
+  closeDetailsModal() {
+    this.showDetailsModal.set(false);
     this.selectedComplaint.set(null);
   }
 
   resolveComplaint() {
     const complaint = this.selectedComplaint();
-    if (!complaint || !this.solutionMessage.trim()) {
-      Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'يرجى كتابة رسالة الحل', confirmButtonText: 'حسناً' });
+    const msg = this.solutionMessage().trim();
+    if (!complaint || !msg) {
+      this.toast.error('يرجى كتابة رسالة الحل');
       return;
     }
+    
     this.isResolving.set(true);
-    const dto: ResolveComplaintDto = { solutionMessage: this.solutionMessage };
+    const dto: ResolveComplaintDto = { solutionMessage: msg };
     this.svc.resolve(complaint.id, dto).subscribe({
       next: (res) => {
         if (res.success) {
-          Swal.fire({ icon: 'success', title: 'تم!', text: 'تم حل الشكوى وإشعار المستخدم بنجاح', confirmButtonText: 'حسناً' });
-          this.closeModal();
+          this.toast.success('تم حل الشكوى وإشعار المستخدم بنجاح');
+          this.closeDetailsModal();
           this.loadComplaints();
           this.loadStatistics();
+        } else {
+           this.toast.error(res.message || 'حدث خطأ أثناء حل الشكوى');
         }
         this.isResolving.set(false);
       },
-      error: () => {
-        Swal.fire({ icon: 'error', title: 'خطأ', text: 'حدث خطأ أثناء حل الشكوى', confirmButtonText: 'حسناً' });
+      error: (err) => {
+        this.toast.error(err.error?.detail || err.error?.title || 'حدث خطأ أثناء حل الشكوى');
         this.isResolving.set(false);
       }
     });
   }
 
-  deleteComplaint(complaint: ComplaintResponseDto) {
-    Swal.fire({
-      title: 'هل أنت متأكد؟',
-      text: 'سيتم حذف الشكوى نهائياً ولا يمكن التراجع!',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#dc2626',
-      cancelButtonColor: '#64748b',
-      confirmButtonText: 'نعم، احذفها!',
-      cancelButtonText: 'إلغاء'
-    }).then((result: any) => {
-      if (result.isConfirmed) {
-        this.svc.deleteComplaint(complaint.id).subscribe({
-          next: (res) => {
-            if (res.success) {
-              Swal.fire({ icon: 'success', title: 'تم الحذف!', text: 'تم حذف الشكوى بنجاح', confirmButtonText: 'حسناً' });
-              this.loadComplaints();
-              this.loadStatistics();
-            }
-          },
-          error: () => {
-            Swal.fire({ icon: 'error', title: 'خطأ', text: 'حدث خطأ أثناء الحذف', confirmButtonText: 'حسناً' });
-          }
-        });
+  openDeleteModal(complaint: ComplaintResponseDto) {
+    this.complaintToDelete.set(complaint);
+    this.showDeleteModal.set(true);
+  }
+
+  closeDeleteModal() {
+    this.showDeleteModal.set(false);
+    this.complaintToDelete.set(null);
+  }
+
+  confirmDelete() {
+    const complaint = this.complaintToDelete();
+    if (!complaint) return;
+    
+    this.svc.deleteComplaint(complaint.id).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.toast.success('تم حذف الشكوى بنجاح');
+          this.closeDeleteModal();
+          this.loadComplaints();
+          this.loadStatistics();
+        } else {
+          this.toast.error(res.message || 'حدث خطأ أثناء החذف');
+        }
+      },
+      error: (err) => {
+        this.toast.error(err.error?.detail || err.error?.title || 'حدث خطأ أثناء الحذف');
       }
     });
-  }
-
-  changePage(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.filter.pageNumber = page;
-    this.loadComplaints();
-  }
-
-  getPages(): number[] {
-    return Array.from({ length: this.totalPages() }, (_, i) => i + 1);
   }
 }
