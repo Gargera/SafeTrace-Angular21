@@ -8,10 +8,17 @@ import { CaseType } from '../../../shared/enums/case-type';
 import { FoundPersonListItemDto, Gender, FoundedHeaderQueryDTO } from '../models/founded.models';
 import { environment } from '../../../../environments/environment';
 import { getGenderTranslationAr } from '../../../core/constants/gender.dictionary';
+import { CaseHeaderComponent } from '../../../shared/components/cases-components/case-header/case-header.component';
+import { CaseSkeletonGridComponent } from '../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { PaginationComponent } from '../../../shared/components/cases-components/case-pagination/case-pagination.component';
+import { FormField } from '../../../shared/components/form-field/form-field';
+import { CardComponent } from '../../../shared/components/card/card';
+import { ButtonComponent } from '../../../shared/components/button/button';
 @Component({
   selector: 'app-founded-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, CaseHeaderComponent, CaseSkeletonGridComponent, EmptyStateComponent, PaginationComponent, FormField, CardComponent, ButtonComponent],
   templateUrl: './founded-list.component.html',
 })
 export class FoundedListComponent implements OnInit, OnDestroy {
@@ -111,6 +118,19 @@ export class FoundedListComponent implements OnInit, OnDestroy {
 
   goToDetail(id: number): void {
     this.router.navigate(['/founded', id]);
+  }
+
+  onPageChange(page: number): void {
+    this.goToPage(page);
+  }
+
+  resetFilters(): void {
+    this.searchValue = '';
+    this.selectedGender = null;
+    this.selectedAgeCategory = 0;
+    this.selectedCaseType = null;
+    this.currentPage.set(1);
+    this.load();
   }
 
   private load(): void {
