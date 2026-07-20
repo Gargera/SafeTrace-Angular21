@@ -129,7 +129,7 @@
                 </div>
                 <div class="space-y-1">
                   <span class="text-label-sm text-outline">رقم الهاتف</span>
-                  <p class="text-body-md font-bold text-on-surface" dir="ltr">{{ user()?.phoneNumber || 'غير متوفر' }}</p>
+                  <p class="text-body-md font-bold text-on-surface" dir="ltr">{{ user()?.phoneNumber || 'لا يوجد رقم' }}</p>
                 </div>
               </div>
 
@@ -169,7 +169,8 @@
       </div>
     </div>
 
-    <section class="mt-xl space-y-md">
+    @if (!authService.isModerator()) {
+      <section class="mt-xl space-y-md">
       <div class="flex justify-between items-end flex-wrap gap-4">
         <div class="flex flex-col gap-2">
           <h2 class="text-headline-sm font-bold text-primary flex items-center gap-sm">
@@ -289,7 +290,8 @@
           </app-button>
         </div>
       }
-    </section>
+      </section>
+    }
 
   }
 </main>
