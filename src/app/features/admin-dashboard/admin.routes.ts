@@ -73,6 +73,17 @@ export const ADMIN_ROUTES: Routes = [
           import('../chat/pages/admin-chats/admin-chats').then((m) => m.AdminChats),
       },
       {
+        path: 'chats/:chatId',
+        canActivate: [roleGuard],
+        data: {
+          roles: [UserRole.Admin],
+          mode : 'admin',
+        },
+        title:'المحادثة | لقاء',
+        loadComponent: () =>
+          import('../chat/pages/chat-window/chat-window').then((m) => m.ChatWindow),
+      },
+      {
         path: 'cases-management',
         canActivate: [roleGuard],
         data: { roles: [UserRole.Admin, UserRole.Moderator] },

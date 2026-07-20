@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AdminChatsDto, ChatDetailsDto, ChatFilterDto, ChatSummaryDto, StartChatRequest, StartChatContextDto } from '../models/chat.model';
 import { MessageDto } from '../models/message.model';
+import { AdminChatStatisticsDto } from '../models/admin-chat-statistics-dto';
 import { environment } from '../../../../environments/environment';
 import {ApiResponse} from '../../../shared/models/responses/api-response.model';
 import {PaginationResponse} from '../../../shared/models/responses/pagination-response.model';
@@ -54,6 +55,10 @@ getAllChatsForAdmin(
     if (filter?.search) params = params.set('search', filter.search);
     
     return this.http.get<ApiResponse<PaginationResponse<AdminChatsDto>>>(`${this.baseUrl}/admin/chats`, { params });
+  }
+
+  getAdminStatistics(): Observable<ApiResponse<AdminChatStatisticsDto>> {
+    return this.http.get<ApiResponse<AdminChatStatisticsDto>>(`${this.baseUrl}/admin/statistics`);
   }
 
   getImageUrl(path: string | null | undefined): string {
