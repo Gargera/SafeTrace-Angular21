@@ -1,225 +1,145 @@
-<!-- Hero / Header Section -->
-<section
-  class="bg-surface-container py-12 px-margin-mobile md:px-margin-desktop border-b border-outline-variant/30"
->
-  <div class="max-w-max-width mx-auto">
-    <div class="space-y-2">
-      <h1 class="text-3xl font-bold text-primary">تم العثور عليهم</h1>
-      <p class="text-base text-on-surface-variant">
-        نحن نحتفل بكل لقاء جديد. هنا تجد قائمة بالأشخاص الذين تم العثور عليهم.
-      </p>
-    </div>
-  </div>
-</section>
+<div class="min-h-screen bg-background">
+  <div class="mx-auto max-w-7xl space-y-6 px-4 py-6">
+    <!-- Page Header -->
+    <section class="space-y-3 pb-2">
+      <app-case-header
+        title="تم العثور عليهم"
+        subtitle="إدارة وعرض جميع الأشخاص الذين تم العثور عليهم"
+        [badge]="!isLoading() ? totalCount() + ' حالة' : ''"
+        [loading]="isLoading()"
+        [showPrimary]="false"
+        [showSecondary]="false"
+      >
+      </app-case-header>
+    </section>
 
-<!-- Sticky Filter Bar -->
-<div
-  class="sticky top-16 z-40 bg-white/95 backdrop-blur-md border-b border-outline-variant/30 py-4 shadow-sm"
->
-  <div class="max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop">
-    <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4">
-      <!-- Search -->
-      <div class="relative">
-        <span
-          class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline select-none"
+    <!-- Filters Card -->
+    <section class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+      <app-case-filters
+        (filterChange)="onFilterChange($event)"
+        (reset)="onFilterReset()"
+        [showGovernment]="false"
+        [showCity]="false"
+        [showFromDate]="false"
+        [showToDate]="false"
+        [showAgeSort]="false"
+        [showDateSort]="false"
+        [showCaseStatus]="false"
+        [showCaseType]="true"
+        [caseTypeInAdvanced]="false"
+        [searchInAdvanced]="false"
+        [genderInAdvanced]="false"
+        [ageCategoryInAdvanced]="false"
+        gridTemplate="1fr 1fr 1fr 1fr"
+      >
+      </app-case-filters>
+    </section>
+
+    <!-- Main Content -->
+    <div class="space-y-4">
+      <!-- Loading Skeleton -->
+      @if (isLoading()) {
+        <app-case-skeleton-grid></app-case-skeleton-grid>
+      }
+
+      <!-- Error State -->
+      @if (hasError() && !isLoading()) {
+        <app-empty-state
+          title="تعذر تحميل البيانات"
+          message="تحقق من اتصالك بالإنترنت وحاول مرة أخرى"
         >
-          search
-        </span>
-        <input
-          type="text"
-          [value]="searchValue"
-          (input)="onSearchChange($any($event.target).value)"
-          placeholder="البحث بالاسم..."
-          class="w-full pr-10 pl-4 py-3 rounded-lg border border-outline-variant bg-surface focus:ring-2 focus:ring-secondary focus:border-transparent outline-none transition-all"
-        />
-      </div>
+        </app-empty-state>
+      }
 
-      <!-- Gender -->
-      <select
-        (change)="onGenderChange($any($event.target).value)"
-        class="bg-surface border border-outline-variant rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-secondary cursor-pointer"
-      >
-        <option value="">الجنس</option>
-        <option value="0">ذكر</option>
-        <option value="1">أنثى</option>
-      </select>
+      <!-- Empty State -->
+      @if (!isLoading() && !hasError() && items().length === 0) {
+        <app-empty-state
+          title="لا توجد نتائج"
+          message="لم يتم العثور على أي حالات تطابق معايير البحث الحالية."
+        >
+        </app-empty-state>
+      }
 
-      <!-- Age Category -->
-      <select
-        (change)="onAgeCategoryChange($any($event.target).value)"
-        class="bg-surface border border-outline-variant rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-secondary cursor-pointer"
-      >
-        <option value="0">الفئة العمرية</option>
+      @if (!isLoading() && !hasError() && items().length > 0) {
+        <!-- Cases Grid -->
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          @for (person of items(); track person.id) {
+            <app-card
+              extraClass="group flex h-full flex-col overflow-hidden rounded-2xl border border-outline-variant/70 bg-surface-container-lowest shadow-sm transition-all duration-300 hover:shadow-xl"
+              dir="rtl"
+            >
+              <!-- Image Section -->
+              <div class="relative aspect-4/3 overflow-hidden rounded-t-2xl bg-surface-container-high">
+                <img
+                  [src]="person.mainImage ? (environment.baseUrl + person.mainImage) : '/images/logo.jpg'"
+                  [alt]="person.fullName"
+                  class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                />
+              </div>
 
-        <option value="1">رضيع (0-2)</option>
-        <option value="2">طفل (3-12)</option>
-        <option value="3">مراهق (13-17)</option>
-        <option value="4">شاب (18-35)</option>
-        <option value="5">بالغ (36-59)</option>
-        <option value="6">مسن (60+)</option>
-      </select>
+              <!-- Content -->
+              <div class="flex flex-1 flex-col p-5">
+                <!-- Name -->
+                <h3 class="mb-4 line-clamp-1 text-xl font-bold leading-7 text-on-surface">
+                  {{ person.fullName }}
+                </h3>
 
-      <!-- Case Type -->
-      <select
-        (change)="onCaseTypeChange($any($event.target).value)"
-        class="bg-surface border border-outline-variant rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-secondary cursor-pointer"
-      >
-        <option value="">نوع الحالة</option>
-        <option value="Urgent">عاجل</option>
-        <option value="LongTerm">على المدى الطويل</option>
-        <option value="Unknown">غير معروف</option>
-      </select>
+                <!-- Information -->
+                <div class="space-y-3 text-sm">
+                  <!-- Age -->
+                  @if (person.age != null) {
+                    <div class="flex items-center justify-between">
+                      <span class="text-on-surface-variant"> العمر </span>
+                      <span class="font-medium text-on-surface"> {{ person.age }} سنة </span>
+                    </div>
+                  }
 
-      <!-- Results count -->
-      @if (!isLoading() && !hasError()) {
-        <div class="flex items-center text-sm text-on-surface-variant">
-          <span class="font-medium text-primary">{{ totalCount() }}</span
-          >&nbsp;نتيجة
+                  <!-- Age Category -->
+                  <div class="flex items-center justify-between">
+                    <span class="text-on-surface-variant"> الفئة العمرية </span>
+                    <span class="bg-surface-container-high text-on-surface px-2 py-0.5 rounded text-xs font-medium">
+                      {{ getAgeCategoryTranslationAr(person.ageCategory) }}
+                    </span>
+                  </div>
+
+                  <!-- Created At -->
+                  <div class="flex items-center justify-between">
+                    <span class="text-on-surface-variant"> تاريخ العثور </span>
+                    <span class="font-medium text-on-surface">
+                      {{ person.foundDate | date: 'dd MMM yyyy' : '' : 'ar' }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="mt-5 border-t border-outline-variant"></div>
+                <div class="flex-1"></div>
+
+                <!-- Actions -->
+                <div class="mt-5 flex flex-col gap-3">
+                  <a [routerLink]="['/founded', person.id]" class="block w-full">
+                    <app-button variant="primary" extraClass="w-full justify-center gap-2">
+                      <span class="material-symbols-outlined material-icon-sm"> visibility </span>
+                      عرض التفاصيل
+                    </app-button>
+                  </a>
+                </div>
+              </div>
+            </app-card>
+          }
         </div>
+
+        <!-- Pagination -->
+        <app-pagination
+          [currentPage]="currentPage()"
+          [totalPages]="totalPages()"
+          [totalItems]="totalCount()"
+          [pageSize]="pageSize()"
+          (pageChange)="onPageChange($event)"
+        >
+        </app-pagination>
       }
     </div>
   </div>
 </div>
-
-<!-- Main Content -->
-<section class="max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop py-12 mb-16 md:mb-0">
-  <!-- Loading Skeleton -->
-  @if (isLoading()) {
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-      @for (item of [1, 2, 3, 4, 5, 6, 7, 8]; track item) {
-        <div
-          class="bg-white rounded-xl overflow-hidden border border-outline-variant/20 animate-pulse"
-        >
-          <div class="h-64 bg-surface-container-high"></div>
-          <div class="p-6 space-y-3">
-            <div class="h-5 bg-surface-container-high rounded w-3/4"></div>
-            <div class="h-4 bg-surface-container rounded w-1/2"></div>
-            <div class="h-4 bg-surface-container rounded w-2/3"></div>
-            <div class="h-10 bg-surface-container-high rounded-lg mt-4"></div>
-          </div>
-        </div>
-      }
-    </div>
-  }
-
-  <!-- Error State -->
-  @if (hasError() && !isLoading()) {
-    <div class="flex flex-col items-center justify-center py-24 text-center">
-      <span class="material-symbols-outlined text-6xl text-outline mb-4">wifi_off</span>
-      <h3 class="text-xl font-bold text-primary mb-2">تعذر تحميل البيانات</h3>
-      <p class="text-on-surface-variant mb-6">تحقق من اتصالك بالإنترنت وحاول مرة أخرى</p>
-      <button
-        (click)="goToPage(1)"
-        class="bg-secondary text-on-secondary px-6 py-3 rounded-lg font-bold hover:bg-secondary-container transition-colors"
-      >
-        إعادة المحاولة
-      </button>
-    </div>
-  }
-
-  <!-- Empty State -->
-  @if (!isLoading() && !hasError() && items().length === 0) {
-    <div class="flex flex-col items-center justify-center py-24 text-center">
-      <span class="material-symbols-outlined text-6xl text-outline mb-4">search_off</span>
-      <h3 class="text-xl font-bold text-primary mb-2">لا توجد نتائج</h3>
-      <p class="text-on-surface-variant">جرّب تغيير معايير البحث أو الفلاتر</p>
-    </div>
-  }
-
-  <!-- Cards Grid -->
-  @if (!isLoading() && !hasError() && items().length > 0) {
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-      @for (person of items(); track person.id) {
-        <div
-          class="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-outline-variant/20 flex flex-col"
-        >
-          <!-- Image -->
-          <div class="relative h-64 overflow-hidden bg-surface-container">
-            <img
-              [src]="environment.baseUrl + person.mainImage"
-              [alt]="person.fullName"
-              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              loading="lazy"
-            />
-          </div>
-
-          <!-- Card Body -->
-          <div class="p-6 flex flex-col flex-grow">
-            <h3 class="text-lg font-bold text-primary mb-4">{{ person.fullName }}</h3>
-
-            <div class="space-y-2 mb-6 flex-grow">
-              <div class="flex justify-between items-center text-sm text-on-surface-variant">
-                <span>الفئة العمرية:</span>
-                <span
-                  class="bg-surface-container-high text-on-surface px-2 py-0.5 rounded text-xs font-medium"
-                >
-                  {{ person.ageCategory }}
-                </span>
-              </div>
-              <div class="flex justify-between items-center text-sm text-on-surface-variant">
-                <span>تاريخ العثور:</span>
-                <span class="font-medium text-on-surface">
-                  {{ person.foundDate | date: 'd MMM yyyy' : '' : 'ar' }}
-                </span>
-              </div>
-            </div>
-
-            <button
-              (click)="goToDetail(person.id)"
-              class="w-full bg-secondary text-on-secondary py-3 rounded-lg font-bold hover:bg-secondary-container hover:text-on-secondary transition-colors duration-200 flex items-center justify-center gap-2"
-            >
-              <span>عرض التفاصيل</span>
-              <span class="material-symbols-outlined text-base">arrow_back</span>
-            </button>
-          </div>
-        </div>
-      }
-    </div>
-
-    <!-- Pagination -->
-    @if (totalPages() > 1) {
-      <div class="mt-16 flex justify-center items-center gap-2">
-        <!-- Prev -->
-        <button
-          (click)="nextPage()"
-          [disabled]="currentPage() >= totalPages()"
-          class="w-10 h-10 rounded-full flex items-center justify-center border border-outline-variant hover:bg-surface-container transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <span class="material-symbols-outlined text-lg">chevron_right</span>
-        </button>
-
-        <!-- Page Numbers -->
-        <div class="flex gap-1">
-          @for (page of pageNumbers(); track $index) {
-            @if (page === '...') {
-              <span
-                class="w-10 h-10 flex items-center justify-center text-on-surface-variant select-none"
-              >
-                ...
-              </span>
-            } @else {
-              <button
-                (click)="goToPage(page)"
-                [class.bg-secondary]="page === currentPage()"
-                [class.text-on-secondary]="page === currentPage()"
-                [class.font-bold]="page === currentPage()"
-                class="w-10 h-10 rounded-full flex items-center justify-center border border-outline-variant hover:bg-surface-container transition-all text-sm"
-              >
-                {{ page }}
-              </button>
-            }
-          }
-        </div>
-
-        <!-- Next -->
-        <button
-          (click)="prevPage()"
-          [disabled]="currentPage() <= 1"
-          class="w-10 h-10 rounded-full flex items-center justify-center border border-outline-variant hover:bg-surface-container transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <span class="material-symbols-outlined text-lg">chevron_left</span>
-        </button>
-      </div>
-    }
-  }
-</section>

@@ -1,27 +1,46 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { Subject, takeUntil, finalize } from 'rxjs';
 import { FoundedService } from '../services/founded.service';
 import { CaseType } from '../../../shared/enums/case-type';
-import { FoundPersonListItemDto, Gender, FoundedHeaderQueryDTO } from '../models/founded.models';
+import { Gender } from '../../../shared/enums/gender';
+import { FoundPersonListItemDto, FoundedHeaderQueryDTO } from '../models/founded.models';
 import { environment } from '../../../../environments/environment';
-import { getGenderTranslationAr } from '../../../core/constants/gender.dictionary';
+import { getAgeCategoryTranslationAr } from '../../../core/constants/age.categories.dictionary';
+
+import { CaseHeaderComponent } from '../../../shared/components/cases-components/case-header/case-header.component';
+import { CaseFiltersComponent } from '../../../shared/components/cases-components/case-filters/case-filters.component';
+import { PaginationComponent } from '../../../shared/components/cases-components/case-pagination/case-pagination.component';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { CaseSkeletonGridComponent } from '../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
+import { ButtonComponent } from '../../../shared/components/button/button';
+import { CardComponent } from '../../../shared/components/card/card';
+import { CasesFilterRequest } from '../../../core/models/Cases.model';
+
 @Component({
   selector: 'app-founded-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [
+    CommonModule, 
+    RouterModule,
+    CaseHeaderComponent,
+    CaseFiltersComponent,
+    PaginationComponent,
+    EmptyStateComponent,
+    CaseSkeletonGridComponent,
+    ButtonComponent,
+    CardComponent
+  ],
   templateUrl: './founded-list.component.html',
 })
 export class FoundedListComponent implements OnInit, OnDestroy {
   private readonly foundedService = inject(FoundedService);
   private readonly router = inject(Router);
   private readonly destroy$ = new Subject<void>();
-  private readonly searchSubject = new Subject<string>();
   public readonly environment = environment;
+  public readonly getAgeCategoryTranslationAr = getAgeCategoryTranslationAr;
 
-  public getGenderTranslationAr = getGenderTranslationAr;
 
   // State signals
   items = signal<FoundPersonListItemDto[]>([]);
@@ -38,26 +57,8 @@ export class FoundedListComponent implements OnInit, OnDestroy {
   selectedCaseType: CaseType | null = null;
 
   totalPages = computed(() => Math.ceil(this.totalCount() / this.pageSize()));
-  pageNumbers = computed(() => {
-    const total = this.totalPages();
-    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-    const current = this.currentPage();
-    const pages: (number | '...')[] = [1];
-    if (current > 3) pages.push('...');
-    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++)
-      pages.push(i);
-    if (current < total - 2) pages.push('...');
-    pages.push(total);
-    return pages;
-  });
 
   ngOnInit(): void {
-    this.searchSubject
-      .pipe(debounceTime(400), distinctUntilChanged(), takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.currentPage.set(1);
-        this.load();
-      });
     this.load();
   }
 
@@ -66,51 +67,30 @@ export class FoundedListComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  onSearchChange(value: string): void {
-    this.searchValue = value;
-    this.searchSubject.next(value);
-  }
-
-  onGenderChange(value: string): void {
-    this.selectedGender = value === '' ? null : (parseInt(value) as Gender);
+  onFilterChange(newFilter: CasesFilterRequest): void {
+    this.searchValue = newFilter.fullName || newFilter.caseCode || '';
+    this.selectedGender = newFilter.gender !== null && newFilter.gender !== undefined ? newFilter.gender : null;
+    const ageCategoryNum = newFilter.ageCategory ? Number(newFilter.ageCategory) : 0;
+    this.selectedAgeCategory = isNaN(ageCategoryNum) ? 0 : ageCategoryNum;
+    this.selectedCaseType = newFilter.caseType !== null && newFilter.caseType !== undefined ? newFilter.caseType : null;
+    
     this.currentPage.set(1);
     this.load();
   }
 
-  onAgeCategoryChange(value: string): void {
-    this.selectedAgeCategory = parseInt(value) || 0;
+  onFilterReset(): void {
+    this.searchValue = '';
+    this.selectedGender = null;
+    this.selectedAgeCategory = 0;
+    this.selectedCaseType = null;
+    
     this.currentPage.set(1);
     this.load();
   }
 
-  onCaseTypeChange(value: string): void {
-    this.selectedCaseType = value === '' ? null : (value as CaseType);
-    this.currentPage.set(1);
+  onPageChange(page: number): void {
+    this.currentPage.set(page);
     this.load();
-  }
-
-  goToPage(page: number | '...'): void {
-    if (page === '...' || page === this.currentPage()) return;
-    this.currentPage.set(page as number);
-    this.load();
-  }
-
-  prevPage(): void {
-    if (this.currentPage() > 1) {
-      this.currentPage.update((p) => p - 1);
-      this.load();
-    }
-  }
-
-  nextPage(): void {
-    if (this.currentPage() < this.totalPages()) {
-      this.currentPage.update((p) => p + 1);
-      this.load();
-    }
-  }
-
-  goToDetail(id: number): void {
-    this.router.navigate(['/founded', id]);
   }
 
   private load(): void {
@@ -120,7 +100,7 @@ export class FoundedListComponent implements OnInit, OnDestroy {
     const query: FoundedHeaderQueryDTO = {
       search: this.searchValue || undefined,
       gender: this.selectedGender,
-      ageCategory: this.selectedAgeCategory,
+      ageCategory: this.selectedAgeCategory || undefined,
       caseType: this.selectedCaseType,
       page: this.currentPage(),
       pageSize: this.pageSize(),
@@ -128,17 +108,17 @@ export class FoundedListComponent implements OnInit, OnDestroy {
 
     this.foundedService
       .getAll(query)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.isLoading.set(false))
+      )
       .subscribe({
         next: (res) => {
           this.items.set(res.items);
-          console.log('Total Count:', res); // Debugging line
           this.totalCount.set(res.totalCount);
-          this.isLoading.set(false);
         },
         error: () => {
           this.hasError.set(true);
-          this.isLoading.set(false);
         },
       });
   }
