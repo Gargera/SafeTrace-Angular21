@@ -68,7 +68,7 @@ isFounding = signal(false);
   // Lightbox
   lightboxVisible = signal(false);
   currentIndex = signal(0);
-
+isAdminPage = signal(false);
  ngOnInit(): void {
 
   this.route.paramMap.subscribe(params => {
@@ -82,6 +82,9 @@ isFounding = signal(false);
     }
 
   });
+
+  
+  this.isAdminPage.set(this.router.url.startsWith('/admin'));
 
 }
 

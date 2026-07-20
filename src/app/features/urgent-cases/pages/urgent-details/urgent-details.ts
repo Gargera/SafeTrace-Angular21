@@ -70,7 +70,7 @@ isFounding = signal(false);
   isAdmin(): boolean {
   return this.authService.isAdmin();
 }
-
+isAdminPage = signal(false);
   // Lightbox
   lightboxVisible = signal(false);
   currentIndex = signal(0);
@@ -85,6 +85,8 @@ isFounding = signal(false);
     }
 
     this.fetchCase(id);
+    
+      this.isAdminPage.set(this.router.url.startsWith('/admin'));
   }
 
   private fetchCase(id: number): void {

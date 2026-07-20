@@ -73,6 +73,7 @@ isFounding = signal(false);
 isAdmin(): boolean {
   return this.authService.isAdmin();
 }
+isAdminPage = signal(false);
 
   ngOnInit(): void {
 
@@ -84,6 +85,8 @@ isAdmin(): boolean {
     }
 
     this.fetchCase(id);
+
+      this.isAdminPage.set(this.router.url.startsWith('/admin'));
   }
 
   private fetchCase(id: number): void {

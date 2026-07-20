@@ -281,7 +281,7 @@
 
             </div>
 
-          @if(isOwner()){
+          @if(isOwner() && !isAdminPage()){
 
 <div class="flex flex-wrap gap-3 pt-2">
 
@@ -316,7 +316,7 @@
 </div>
 
 }
-@if(isAdmin()){
+@if(isAdmin() && isAdminPage()){
 
   @if(caseDetails()?.status === CaseStatus.Pending){
 
