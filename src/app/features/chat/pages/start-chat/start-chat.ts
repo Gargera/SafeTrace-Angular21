@@ -5,11 +5,12 @@ import {ChatAlertsService} from '../../services/chat-alert.service';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { StartChatContextDto } from '../../models/chat.model';
 import { Location } from '@angular/common';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-start-chat',
   standalone: true,
-  imports: [],
+  imports: [LoadingSpinnerComponent],
   templateUrl: './start-chat.html',
 })
 export class StartChat implements OnInit {

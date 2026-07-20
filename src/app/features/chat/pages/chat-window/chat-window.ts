@@ -14,13 +14,13 @@ import { FileType } from '../../../../shared/enums/file-type';
 import { environment } from '../../../../../environments/environment';
 import { Location } from '@angular/common';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
-
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 
 
 @Component({
   selector: 'app-chat-window',
   standalone: true,
-  imports: [FormsModule, DatePipe, ViewProfilePopup],
+  imports: [FormsModule, DatePipe, ViewProfilePopup,LoadingSpinnerComponent],
   templateUrl: './chat-window.html',
 })
 export class ChatWindow implements OnInit, AfterViewInit {
@@ -40,7 +40,7 @@ export class ChatWindow implements OnInit, AfterViewInit {
   readonly FileType = FileType;
 
   isLoading = signal<boolean>(true);
-
+  messagesLoaded = signal(false);
   chat = signal<ChatDetailsDto | null>(null);
   messages = signal<MessageDto[]>([]);
   page = signal<number>(1);
@@ -189,6 +189,7 @@ private handleMessageDeletedForEveryone = (
       next: (res) => {
         this.messages.set(res.data!.map((m) => this.normalizeMessage(m)));
         this.hasMoreMessages.set(false);
+        this.messagesLoaded.set(true);
         this.checkLoadingStatus();
         setTimeout(() => {
         this.scrollToBottom();
@@ -338,7 +339,7 @@ private handleMessageDeletedForEveryone = (
 }
 
   private checkLoadingStatus(): void{
-    if(this.chat() && this.messages()){
+    if(this.chat() && this.messagesLoaded()){
       this.isLoading.set(false);
     }
   }
