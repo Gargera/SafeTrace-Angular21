@@ -173,7 +173,7 @@
               </div>
             </td>
             <td class="px-lg py-md font-sans opacity-70">{{ user.email }}</td>
-            <td class="px-lg py-md font-sans opacity-70" dir="ltr">{{ user.phoneNumber }}</td>
+            <td class="px-lg py-md font-sans opacity-70" dir="ltr">{{ user.phoneNumber || 'لا يوجد رقم' }}</td>
             <td class="px-lg py-md">
               <span [appVerificationBadgeDirective]="user.verificationStatus"></span>
             </td>
@@ -187,9 +187,10 @@
               <app-button
                 routerLink="/admin/users/{{ user.id }}"
                 variant="primary"
-                extraClass="px-6 py-2 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
+                extraClass="flex items-center justify-center gap-1.5 px-6 py-2 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
               >
-                التفاصيل
+                <span class="material-symbols-outlined text-[18px]">visibility</span>
+                عرض
               </app-button>
             </td>
           </tr>
