@@ -71,7 +71,7 @@
           }
 
           <!-- ================= أزرار التحكم تحت الصور ================= -->
-          @if(isOwner()){
+          @if(isOwner() && !isAdminPage()){
             <div class="flex flex-wrap gap-3 mt-6 pt-4 border-t border-outline-variant">
               <app-button variant="success" (onClick)="openFoundedPopup()">تم العثور عليه</app-button>
               <app-button variant="primary" (onClick)="editCase()">تعديل الحالة</app-button>
@@ -80,7 +80,7 @@
           }
 
 
-     @if(isAdmin() && caseDetails()?.status === CaseStatus.Active){
+     @if(isAdmin() && caseDetails()?.status === CaseStatus.Active &&!isAdminPage()){
 
 <div class="flex flex-wrap gap-3 mt-6 pt-4 border-t border-outline-variant">
 

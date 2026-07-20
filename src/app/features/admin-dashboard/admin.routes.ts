@@ -91,6 +91,24 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./pages/cases-management/cases-management').then((m) => m.CasesManagement),
       },
+{
+  path: 'long-term/:id',
+  loadComponent: () =>
+    import('../long-term-cases/pages/long-term-details/long-term-details')
+      .then(c => c.LongTermDetails),
+},
+{
+  path: 'unknown/:id',
+  loadComponent: () =>
+    import('../unknown-cases/pages/unknown-details/unknown-details')
+      .then(c => c.UnknownDetails),
+},
+{
+  path: 'urgent/:id',
+  loadComponent: () =>
+    import('../urgent-cases/pages/urgent-details/urgent-details')
+      .then(c => c.UrgentDetails),
+},
       {
         path: 'complaints-management',
         canActivate: [roleGuard],
