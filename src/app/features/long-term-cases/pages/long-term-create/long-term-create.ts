@@ -1,6 +1,7 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common'; 
 import { LongTermCaseService } from '../../services/long-term-case.service';
 import { LongTermCaseCreateRequest } from '../../models/request/LongTermCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
@@ -10,13 +11,22 @@ import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { FormField } from '../../../../shared/components/form-field/form-field'; // تم تعديل اسم الكلاس هنا ليطابق الملف الفعلي
 
 type Step = 1 | 2 | 3;
 
 @Component({
   selector: 'app-long-term-create',
   standalone: true,
-  imports: [ReactiveFormsModule, ForceCreatePopupComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule, 
+    RouterLink, 
+    ForceCreatePopupComponent,
+    ButtonComponent,
+    FormField // تم تمرير الاسم الصحيح هنا
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../../../../shared/styles/case-form.css', './long-term-create.css'],
   templateUrl: './long-term-create.html',
@@ -26,7 +36,7 @@ export class LongTermCreate {
   private service = inject(LongTermCaseService);
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
-
+  
   currentStep: Step = 1;
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
@@ -37,6 +47,7 @@ export class LongTermCreate {
   videoFile = signal<File | null>(null);
 
   showForceCreatePopup = signal(false);
+  isBlockedDuplicate = signal(false);
   matchedCases = signal<MatchedCaseDto[]>([]);
   private pendingRequest: LongTermCaseCreateRequest | null = null;
 
@@ -170,7 +181,15 @@ export class LongTermCreate {
         const data = res.data;
 
         if (data && data.isCreated === false) {
-          this.matchedCases.set((data.matchedCases ?? []).map(mapMatchedCaseResponseToDto));
+          if (data.matchedCases) {
+            this.matchedCases.set(data.matchedCases.map(mapMatchedCaseResponseToDto));
+          } else {
+            this.matchedCases.set([]);
+          }
+          
+          const rawData = data as any;
+          this.isBlockedDuplicate.set(!!rawData.isSameTypeDuplicate);
+          
           this.showForceCreatePopup.set(true);
           return;
         }

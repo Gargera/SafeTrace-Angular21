@@ -1,12 +1,12 @@
 import { Directive, ElementRef, Input, OnChanges, Renderer2 } from '@angular/core';
-import { ComplaintStatus } from '../enums/complaint-status';
+import { PaymentStatus } from '../enums/payment-status.enum';
 
 @Directive({
-  selector: '[appComplaintStatusBadge]',
+  selector: '[appPaymentStatusBadge]',
   standalone: true
 })
-export class ComplaintStatusBadgeDirective implements OnChanges {
-  @Input('appComplaintStatusBadge') status!: ComplaintStatus | string | null;
+export class PaymentStatusBadgeDirective implements OnChanges {
+  @Input('appPaymentStatusBadge') status!: PaymentStatus | string | null;
 
   constructor(private el: ElementRef, private renderer: Renderer2) {
     this.renderer.addClass(this.el.nativeElement, 'px-sm');
@@ -17,30 +17,40 @@ export class ComplaintStatusBadgeDirective implements OnChanges {
     this.renderer.addClass(this.el.nativeElement, 'whitespace-nowrap');
   }
 
-  ngOnChanges() {
-    this.updateBadge();
-  }
+  ngOnChanges(): void {
+    if (!this.status) return;
 
-  private updateBadge() {
     const el = this.el.nativeElement;
     
     el.className = el.className.replace(/\bbg-\S+|text-\S+/g, '');
 
     let label = 'غير معروف';
 
-    if (this.status === ComplaintStatus.Solved) {
+    if (this.status === PaymentStatus.Succeeded) {
       this.renderer.addClass(el, 'bg-tertiary-fixed');
       this.renderer.addClass(el, 'text-on-tertiary-fixed');
-      label = 'تم الحل';
-    } else if (this.status === ComplaintStatus.UnSolved) {
+      label = 'ناجح';
+    } else if (this.status === PaymentStatus.Pending) {
+      this.renderer.addClass(el, 'bg-secondary-container');
+      this.renderer.addClass(el, 'text-on-secondary-container');
+      label = 'قيد الانتظار';
+    } else if (this.status === PaymentStatus.Failed) {
       this.renderer.addClass(el, 'bg-error-container');
       this.renderer.addClass(el, 'text-error');
-      label = 'لم يتم الحل';
+      label = 'فشل';
+    } else if (this.status === PaymentStatus.Cancelled) {
+      this.renderer.addClass(el, 'bg-surface-container-highest');
+      this.renderer.addClass(el, 'text-on-surface-variant');
+      label = 'ملغي';
+    } else if (this.status === PaymentStatus.Refunded) {
+      this.renderer.addClass(el, 'bg-secondary-fixed');
+      this.renderer.addClass(el, 'text-on-secondary-fixed');
+      label = 'مسترد';
     } else {
       this.renderer.addClass(el, 'bg-surface-container-highest');
       this.renderer.addClass(el, 'text-on-surface-variant');
     }
-    
+
     el.innerText = label;
   }
 }

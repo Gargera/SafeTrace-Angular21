@@ -11,4 +11,6 @@ export interface LongTermCaseCreateRequest extends CaseUpsertBaseRequest {
   additionalImages: File[] | null;
 
   policeReportImage: File | null;
+  isSameTypeDuplicate?: boolean;
+
 }

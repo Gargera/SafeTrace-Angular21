@@ -272,4 +272,19 @@ export class CasesManagement implements OnInit, OnDestroy {
     this.showConfirmModal.set(false);
     this.modalConfig.set(null);
   }
+  getDetailsRoute(caseItem: CaseListItemResponse) {
+  switch (caseItem.caseType) {
+    case CaseType.LongTerm:
+      return ['/admin/long-term', caseItem.id];
+
+    case CaseType.Unknown:
+      return ['/admin/unknown', caseItem.id];
+
+    case CaseType.Urgent:
+      return ['/admin/urgent', caseItem.id];
+
+    default:
+      return ['/admin/cases-management'];
+  }
+}
 }
