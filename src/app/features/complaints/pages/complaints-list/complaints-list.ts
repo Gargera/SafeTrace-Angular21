@@ -65,7 +65,25 @@ export class ComplaintsList implements OnInit {
     status: '' as any,
   });
 
-  pagesArray = computed(() => Array.from({ length: this.totalPages() }, (_, i) => i + 1));
+  pagesArray = computed(() => {
+    const current = this.filter().pageNumber;
+    const total = this.totalPages();
+    const pages: number[] = [];
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, current + 2);
+
+    if (current <= 3) {
+      end = Math.min(total, 5);
+    }
+    if (current >= total - 2) {
+      start = Math.max(1, total - 4);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  });
 
   ComplaintStatusEnum = ComplaintStatus;
   private searchSubject = new Subject<string>();

@@ -5,6 +5,8 @@ import { environment } from '../../../../environments/environment';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
 import { DonationAdminListDto } from '../pages/donations/models/donation-admin-list.dto';
 import { DonationAdminFilterDto } from '../pages/donations/models/donation-admin-filter.dto';
+import { AdminDonationStatisticsDto } from '../pages/donations/models/admin-donation-statistics.dto';
+import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 
 @Injectable({
   providedIn: 'root',
@@ -30,5 +32,9 @@ export class DonationService {
     return this.http.get<PaginationResponse<DonationAdminListDto>>(`${this.api}/get-donations`, {
       params,
     });
+  }
+
+  getDonationStatistics(): Observable<ApiResponse<AdminDonationStatisticsDto>> {
+    return this.http.get<ApiResponse<AdminDonationStatisticsDto>>(`${this.api}/admin/statistics`);
   }
 }
