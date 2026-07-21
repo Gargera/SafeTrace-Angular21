@@ -1,7 +1,7 @@
 // case-card.component.ts
-import { ChangeDetectionStrategy, Component, input,inject, output, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, inject, output, signal, computed } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { RouterModule,Router } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 
 import { CaseListItemResponse } from '../../../../core/models/Cases.model';
 import { getAgeCategory } from '../../../helper/age-category.helper';
@@ -41,6 +41,9 @@ export class CaseCardComponent {
   readonly onContact = output<number>();
   showCaseType = input(true);
   showContactButton = input(true);
+  showGender = input(true);
+  showAge = input(true);
+  createdAtLabel = input('تاريخ الإضافة');
 
   // Enums for template
   protected readonly CaseTypeEnum = CaseType;

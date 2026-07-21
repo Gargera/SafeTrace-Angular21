@@ -3,7 +3,7 @@
 
     <div class="page-header">
       <button class="back-btn" (click)="goBack()">
-        <span class="material-symbols-outlined">arrow_forward</span>
+        <span class="material-symbols-outlined rtl:rotate-180">arrow_back</span>
       </button>
       <div>
         <h2 class="page-title">الإبلاغ عن شخص مجهول الهوية تم العثور عليه</h2>
@@ -213,6 +213,7 @@
     @if (showForceCreatePopup()) {
       <app-force-create-popup
         [matches]="matchedCases()"
+        [isBlocked]="false"
         (cancel)="onForceCreateCancel()"
         (forceCreate)="onForceCreateConfirm()">
       </app-force-create-popup>

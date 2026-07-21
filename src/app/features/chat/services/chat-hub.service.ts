@@ -12,6 +12,7 @@ export interface MessagesReadEvent{
 export interface MessageDeletedEvent {
   chatId: number;
   messageId: number;
+  deletedAt: string;
 }
 @Injectable({
   providedIn: 'root',

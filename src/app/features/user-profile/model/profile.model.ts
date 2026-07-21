@@ -61,8 +61,9 @@ export interface UpdateProfileImageDTO {
 }
 
 export interface MyCasesFilterRequest {
-  fullName?: string;
-  caseCode?: string;
+  fullName?: string | null;
+  caseCode?: string | null;
+  status?: CaseStatus | null;
   caseType?: CaseType | null;
   page?: number;
   pageSize?: number;
@@ -71,6 +72,7 @@ export interface MyCasesFilterRequest {
 export interface MyCaseListItemResponse {
   id: number;
   fullName: string;
+  caseCode?: string;
   age: number;
   ageCategory: AgeCategoryResponse | null;
   gender: Gender;

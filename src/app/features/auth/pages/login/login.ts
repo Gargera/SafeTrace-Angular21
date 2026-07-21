@@ -1,7 +1,7 @@
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import Swal from 'sweetalert2';
 import {
@@ -31,13 +31,16 @@ export class Login implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private socialAuthService = inject(SocialAuthService);
 
   isLoading = signal<boolean>(false);
   apiErrorMessage = signal<string>('');
   showPassword = signal<boolean>(false);
 
+
   private authSubscription!: Subscription;
+  private returnUrl = '/home';
 
   loginForm: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email, Validators.pattern('^\\S+$')]],
@@ -50,16 +53,20 @@ export class Login implements OnInit, OnDestroy {
       return;
     }
 
+    this.returnUrl =
+      this.route.snapshot.queryParamMap.get('returnUrl') || '/home';
+
     this.authSubscription = this.socialAuthService.authState.subscribe((user) => {
       if (user) {
         this.isLoading.set(true);
         this.apiErrorMessage.set('');
 
+
         if (user.provider === GoogleLoginProvider.PROVIDER_ID) {
           this.authService.googleLogin({ providerToken: user.idToken! }).subscribe({
-            next: (res) => {
+            next: () => {
               this.isLoading.set(false);
-              this.router.navigate(['/home']);
+              this.router.navigateByUrl(this.returnUrl, { replaceUrl: true });
             },
             error: (err) => {
               this.isLoading.set(false);
@@ -72,9 +79,7 @@ export class Login implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (this.authSubscription) {
-      this.authSubscription.unsubscribe();
-    }
+    this.authSubscription?.unsubscribe();
   }
 
   togglePassword() {
@@ -92,7 +97,7 @@ export class Login implements OnInit, OnDestroy {
     this.authService.login(this.loginForm.value).subscribe({
       next: () => {
         this.isLoading.set(false);
-        this.router.navigate(['/home'], { replaceUrl: true });
+        this.router.navigateByUrl(this.returnUrl, { replaceUrl: true });
       },
       error: (err) => {
         this.isLoading.set(false);
@@ -104,6 +109,12 @@ export class Login implements OnInit, OnDestroy {
   private handleAuthError(err: any) {
     const errorMessage = err.error?.detail || err.error?.message || '';
 
+    if (
+      errorMessage.includes('تأكيد') ||
+      errorMessage.includes('مفعل') ||
+      errorMessage.includes('confirm') ||
+      errorMessage.includes('verified')
+    ) {
     if (
       errorMessage.includes('تأكيد') ||
       errorMessage.includes('مفعل') ||
@@ -126,14 +137,17 @@ export class Login implements OnInit, OnDestroy {
           this.router.navigate(['/auth/confirm-email'], { state: { email: emailForConfirm } });
         }
       });
+
       return;
     }
 
     if (err.error?.errors) {
       const serverErrors = err.error.errors;
+
       for (const key in serverErrors) {
         const controlName = key.charAt(0).toLowerCase() + key.slice(1);
         const control = this.loginForm.get(controlName);
+
         if (control) {
           control.setErrors({ serverError: serverErrors[key][0] });
         } else {
@@ -141,7 +155,9 @@ export class Login implements OnInit, OnDestroy {
         }
       }
     } else {
-      this.apiErrorMessage.set(errorMessage || 'حدث خطأ أثناء تسجيل الدخول.');
+      this.apiErrorMessage.set(
+        errorMessage || 'حدث خطأ أثناء تسجيل الدخول.'
+      );
     }
   }
 }

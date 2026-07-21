@@ -65,6 +65,7 @@ export class ProfileService {
 
     return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdatePhoneNumber`, formData);
   }
+
   getMyCases(
     filter: MyCasesFilterRequest,
   ): Observable<ApiResponse<PaginationResponse<MyCaseListItemResponse>>> {
@@ -80,6 +81,10 @@ export class ProfileService {
 
     if (filter.caseType !== null && filter.caseType !== undefined) {
       params = params.set('caseType', filter.caseType.toString());
+    }
+
+    if (filter.status !== null && filter.status !== undefined) {
+      params = params.set('status', filter.status.toString());
     }
 
     params = params.set('page', (filter.page ?? 1).toString());

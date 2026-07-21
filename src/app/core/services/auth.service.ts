@@ -56,6 +56,7 @@ export class AuthService {
     const token = this.getToken();
     if (!token) return null;
 
+
     try {
       const payload = token.split('.')[1];
       const decodedPayload = atob(payload);
@@ -106,6 +107,11 @@ export class AuthService {
     return this.hasRole(UserRole.VerifiedUser);
   }
 
+  getVerificationStatus(): VerificationStatus | undefined {
+    const userData = this.currentUser();
+    return userData ? userData.verificationStatus : undefined;
+  }
+
   getToken(): string | null {
     return this.accessToken;
   }
@@ -123,6 +129,7 @@ export class AuthService {
       fullName: response.fullName,
       profileImage: response.profileImage || null,
       isVerified: response.verificationStatus === VerificationStatus.Verified,
+      verificationStatus: response.verificationStatus,
     };
 
     localStorage.setItem(this.userDataKey, JSON.stringify(userData));
@@ -136,7 +143,9 @@ export class AuthService {
   handleSessionExpiration(): void {
     if (!this.isLoggedIn()) return; // Already cleared
 
+
     this.clearSession();
+
 
     import('sweetalert2').then((SwalModule) => {
       const Swal = SwalModule.default;
