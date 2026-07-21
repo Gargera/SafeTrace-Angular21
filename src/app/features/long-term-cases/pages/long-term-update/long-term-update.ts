@@ -10,8 +10,13 @@ import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
-import { FormField } from '../../../../shared/components/form-field/form-field';  
-
+import { FormField } from '../../../../shared/components/form-field/form-field';
+import { pastDateValidator } from '../../../../shared/validators/past-date.validator';
+import { egyptianPhoneValidator } from '../../../../shared/validators/egyptian-phone.validator';
+import { fileTypeValidator } from '../../../../shared/validators/file-type.validator';
+import { maxFileSizeValidator } from '../../../../shared/validators/max-file-size.validator';
+import { maxFileCountValidator } from '../../../../shared/validators/max-file-count.validator';
+import { arabicTextValidator } from '../../../../shared/validators/arabic-text.validator';
 type Step = 1 | 2 | 3;
 
 @Component({
@@ -71,19 +76,22 @@ export class LongTermUpdate implements OnInit {
   }
 
   form = this.fb.group({
-    fName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    sName: ['', [Validators.maxLength(100)]],
-    tName: ['', [Validators.maxLength(100)]],
-    lName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(150)]],
+    fName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(60), arabicTextValidator()]],
+    sName: ['', [Validators.maxLength(60), arabicTextValidator()]],
+    tName: ['', [Validators.maxLength(60), arabicTextValidator()]],
+    lName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(60), arabicTextValidator()]],
+    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(120)]],
     gender: ['' as Gender | '', Validators.required],
     relation: [null as RelationType | null, Validators.required],
-    communicationPhone: ['', [Validators.maxLength(20)]],
+    communicationPhone: ['', [Validators.maxLength(15), egyptianPhoneValidator()]],
     description: ['', [Validators.maxLength(2000)]],
-    government: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
-    city: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
-    street: ['', [Validators.required, Validators.maxLength(500)]],
-    eventDate: ['', Validators.required],
+    government: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), arabicTextValidator()]],
+    city: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), arabicTextValidator()]],
+    street: ['', [Validators.required, Validators.maxLength(200)]],
+    eventDate: ['', [Validators.required, pastDateValidator()]],
+    primaryImage: [null as File | null, [fileTypeValidator(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']), maxFileSizeValidator(5)]],
+    additionalImages: [[] as File[], [fileTypeValidator(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']), maxFileSizeValidator(5), maxFileCountValidator(4)]],
+    policeReportImage: [null as File | null, [fileTypeValidator(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']), maxFileSizeValidator(10)]]
   });
 
   ngOnInit(): void {
@@ -173,11 +181,14 @@ export class LongTermUpdate implements OnInit {
     this.newPrimaryImage.set(file);
     this.newPrimaryPreview.set(URL.createObjectURL(file));
     this.primaryPhotoId.set(null); // uploaded file takes priority over existing selection
+    this.form.get('primaryImage')?.setValue(file);
+    this.form.get('primaryImage')?.markAsDirty();
   }
 
   clearNewPrimary(): void {
     this.newPrimaryImage.set(null);
     this.newPrimaryPreview.set(null);
+    this.form.get('primaryImage')?.setValue(null);
   }
 
   // ----- new additional photos -----
@@ -185,16 +196,22 @@ export class LongTermUpdate implements OnInit {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
     this.newPhotos.update((p) => [...p, ...files].slice(0, 5));
     this.newPhotoPreviews.set(this.newPhotos().map((f) => URL.createObjectURL(f)));
+    this.form.get('additionalImages')?.setValue(this.newPhotos());
+    this.form.get('additionalImages')?.markAsDirty();
   }
 
   removeNewPhoto(index: number): void {
     this.newPhotos.update((p) => p.filter((_, i) => i !== index));
     this.newPhotoPreviews.update((p) => p.filter((_, i) => i !== index));
+    this.form.get('additionalImages')?.setValue(this.newPhotos());
   }
 
   // ----- police report -----
   onPoliceReportSelected(event: Event): void {
-    this.policeReportFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
+    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
+    this.policeReportFile.set(file);
+    this.form.get('policeReportImage')?.setValue(file);
+    this.form.get('policeReportImage')?.markAsDirty();
   }
 
   // ----- video -----
@@ -207,6 +224,8 @@ export class LongTermUpdate implements OnInit {
       this.form.markAllAsTouched();
       if (this.existingPhotos().length === 0 && !this.newPrimaryImage() && this.newPhotos().length === 0) {
         this.errorMsg.set('لازم يفضل في صورة واحدة على الأقل للحالة.');
+      } else if (this.form.invalid) {
+        this.errorMsg.set('برجاء تصحيح الأخطاء في النموذج.');
       }
       return;
     }

@@ -15,6 +15,12 @@ import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/
 import { GeocodingService } from '../../../../core/services/geocoding.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
+import { pastDateValidator } from '../../../../shared/validators/past-date.validator';
+import { egyptianPhoneValidator } from '../../../../shared/validators/egyptian-phone.validator';
+import { fileTypeValidator } from '../../../../shared/validators/file-type.validator';
+import { maxFileSizeValidator } from '../../../../shared/validators/max-file-size.validator';
+import { maxFileCountValidator } from '../../../../shared/validators/max-file-count.validator';
+import { arabicTextValidator } from '../../../../shared/validators/arabic-text.validator';
 
 type Step = 1 | 2 | 3;
 
@@ -77,19 +83,21 @@ export class UrgentCreate {
   }
 
   form = this.fb.group({
-    fName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    sName: ['', [Validators.maxLength(100)]],
-    tName: ['', [Validators.maxLength(100)]],
-    lName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(150)]],
+    fName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(60), arabicTextValidator()]],
+    sName: ['', [Validators.maxLength(60), arabicTextValidator()]],
+    tName: ['', [Validators.maxLength(60), arabicTextValidator()]],
+    lName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(60), arabicTextValidator()]],
+    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(120)]],
     gender: ['' as Gender | '', Validators.required],
     relation: [null as RelationType | null, Validators.required],
-    communicationPhone: ['', [Validators.required, Validators.maxLength(20)]],
+    communicationPhone: ['', [Validators.required, Validators.maxLength(15), egyptianPhoneValidator()]],
     description: ['', [Validators.maxLength(2000)]],
-    government: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
-    city: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
-    street: ['', [Validators.required, Validators.maxLength(500)]],
-    eventDate: ['', Validators.required],
+    government: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), arabicTextValidator()]],
+    city: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), arabicTextValidator()]],
+    street: ['', [Validators.required, Validators.maxLength(200)]],
+    eventDate: ['', [Validators.required, pastDateValidator()]],
+    primaryImage: [null as File | null, [Validators.required, fileTypeValidator(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']), maxFileSizeValidator(5)]],
+    additionalImages: [[] as File[], [fileTypeValidator(['image/jpeg', 'image/png', 'image/webp', 'image/jpg']), maxFileSizeValidator(5), maxFileCountValidator(4)]]
   });
 
   isInvalid(field: string): boolean {
@@ -176,12 +184,17 @@ export class UrgentCreate {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     if (!file) return;
     this.selectedPhotos.update((p) => [file, ...p.filter((_, i) => i !== 0)].slice(0, 5));
+    this.form.get('primaryImage')?.setValue(file);
+    this.form.get('primaryImage')?.markAsDirty();
     this.refreshPreviews();
   }
 
   onAdditionalPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
     this.selectedPhotos.update((p) => [...p, ...files].slice(0, 5));
+    const additional = this.selectedPhotos().slice(1);
+    this.form.get('additionalImages')?.setValue(additional);
+    this.form.get('additionalImages')?.markAsDirty();
     this.refreshPreviews();
   }
 
@@ -192,6 +205,13 @@ export class UrgentCreate {
   removePhoto(index: number): void {
     this.selectedPhotos.update((p) => p.filter((_, i) => i !== index));
     this.photoPreviews.update((p) => p.filter((_, i) => i !== index));
+    const photos = this.selectedPhotos();
+    if (index === 0 && photos.length === 0) {
+      this.form.get('primaryImage')?.setValue(null);
+    } else {
+      this.form.get('primaryImage')?.setValue(photos[0] ?? null);
+    }
+    this.form.get('additionalImages')?.setValue(photos.slice(1));
   }
 
   onVideoSelected(event: Event): void {
@@ -201,13 +221,13 @@ export class UrgentCreate {
   onSubmit(forceCreate = false): void {
     if (
       !forceCreate &&
-      (this.form.invalid || this.selectedPhotos().length === 0 || this.selectedLat() === null)
+      (this.form.invalid || this.selectedLat() === null)
     ) {
       this.form.markAllAsTouched();
-      if (this.selectedPhotos().length === 0) {
-        this.errorMsg.set('برجاء إضافة صورة واحدة على الأقل للشخص (الصورة الأساسية).');
-      } else if (this.selectedLat() === null) {
+      if (this.selectedLat() === null) {
         this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
+      } else if (this.form.invalid) {
+        this.errorMsg.set('برجاء تصحيح الأخطاء في النموذج.');
       }
       return;
     }

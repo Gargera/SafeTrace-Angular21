@@ -26,6 +26,7 @@ import { CaseStatus } from '../../../../shared/enums/case-status';
 import { dateRangeValidator } from '../../../validators/date-range.validator';
 import { pastDateValidator } from '../../../validators/past-date.validator';
 import { ageRangeValidator } from '../../../validators/age-range.validator';
+import { arabicTextValidator } from '../../../validators/arabic-text.validator';
 import { AgeCategories } from '../../../../shared/enums/age-categories';
 import { getAgeRange } from '../../../../shared/helper/age-category.helper';
 import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.categories.dictionary';
@@ -164,8 +165,8 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
         fullName: [''],
         gender: [''],
         ageCategory: [''],
-        government: ['', [Validators.maxLength(100)]],
-        city: ['', [Validators.maxLength(100)]],
+        government: ['', [Validators.maxLength(100), arabicTextValidator()]],
+        city: ['', [Validators.maxLength(100), arabicTextValidator()]],
         fromDate: ['', [pastDateValidator()]],
         toDate: [''],
         ageSort: [''],

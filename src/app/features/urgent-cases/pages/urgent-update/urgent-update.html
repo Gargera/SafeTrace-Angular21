@@ -43,17 +43,27 @@
               <div class="row-4">
                 <div class="field-group">
                   <input formControlName="fName" type="text" placeholder="الاسم الأول" class="field" [class.error]="isInvalid('fName')" />
-                  @if (isInvalid('fName')) { <p class="err-msg">مطلوب</p> }
+                  @if (isInvalid('fName')) {
+                    @if (form.get('fName')?.hasError('required')) { <p class="err-msg">مطلوب</p> }
+                    @else if (form.get('fName')?.hasError('invalidArabicText')) { <p class="err-msg">حروف عربية فقط</p> }
+                    @else { <p class="err-msg">حرفين على الأقل</p> }
+                  }
                 </div>
                 <div class="field-group">
-                  <input formControlName="sName" type="text" placeholder="اسم الأب" class="field" />
+                  <input formControlName="sName" type="text" placeholder="اسم الأب" class="field" [class.error]="isInvalid('sName')" />
+                  @if (isInvalid('sName')) { <p class="err-msg">حروف عربية فقط</p> }
                 </div>
                 <div class="field-group">
-                  <input formControlName="tName" type="text" placeholder="اسم الجد" class="field" />
+                  <input formControlName="tName" type="text" placeholder="اسم الجد" class="field" [class.error]="isInvalid('tName')" />
+                  @if (isInvalid('tName')) { <p class="err-msg">حروف عربية فقط</p> }
                 </div>
                 <div class="field-group">
                   <input formControlName="lName" type="text" placeholder="اسم العائلة" class="field" [class.error]="isInvalid('lName')" />
-                  @if (isInvalid('lName')) { <p class="err-msg">مطلوب</p> }
+                  @if (isInvalid('lName')) {
+                    @if (form.get('lName')?.hasError('required')) { <p class="err-msg">مطلوب</p> }
+                    @else if (form.get('lName')?.hasError('invalidArabicText')) { <p class="err-msg">حروف عربية فقط</p> }
+                    @else { <p class="err-msg">حرفين على الأقل</p> }
+                  }
                 </div>
               </div>
 
@@ -86,7 +96,10 @@
               <div class="field-group">
                 <label class="field-label">رقم تواصل عاجل <span class="req">*</span></label>
                 <input formControlName="communicationPhone" type="tel" class="field" [class.error]="isInvalid('communicationPhone')" />
-                @if (isInvalid('communicationPhone')) { <p class="err-msg">مطلوب — دي حالة عاجلة</p> }
+                @if (isInvalid('communicationPhone')) {
+                  @if (form.get('communicationPhone')?.hasError('required')) { <p class="err-msg">مطلوب — دي حالة عاجلة</p> }
+                  @else { <p class="err-msg">رقم هاتف مصري غير صالح</p> }
+                }
               </div>
 
               <div class="field-group">
@@ -111,12 +124,18 @@
                     <option value="" disabled>اختر المحافظة</option>
                     @for (g of governorates; track g) { <option [value]="g">{{ g }}</option> }
                   </select>
-                  @if (isInvalid('government')) { <p class="err-msg">مطلوب</p> }
+                  @if (isInvalid('government')) {
+                    @if (form.get('government')?.hasError('invalidArabicText')) { <p class="err-msg">حروف عربية فقط</p> }
+                    @else { <p class="err-msg">مطلوب</p> }
+                  }
                 </div>
                 <div class="field-group">
                   <label class="field-label">المدينة / المركز <span class="req">*</span></label>
                   <input formControlName="city" type="text" class="field" [class.error]="isInvalid('city')" />
-                  @if (isInvalid('city')) { <p class="err-msg">مطلوب</p> }
+                  @if (isInvalid('city')) {
+                    @if (form.get('city')?.hasError('invalidArabicText')) { <p class="err-msg">حروف عربية فقط</p> }
+                    @else { <p class="err-msg">مطلوب</p> }
+                  }
                 </div>
               </div>
 
@@ -183,11 +202,14 @@
 
               <div>
                 <div class="field-label" style="margin-bottom:10px;">استبدال الصورة الأساسية <span style="font-size:12px; color:#999; font-weight:400;">(اختياري)</span></div>
-                <div class="upload-zone" [class.has-files]="!!newPrimaryImage()" (click)="newPrimaryInput.click()">
+                <div class="upload-zone" [class.has-files]="!!newPrimaryImage()" [class.error]="isInvalid('primaryImage')" (click)="newPrimaryInput.click()">
                   <input #newPrimaryInput type="file" accept="image/jpeg,image/png,image/webp" style="display:none" (change)="onNewPrimarySelected($event)" />
                   <span class="material-symbols-outlined" style="font-size:36px;" [style.color]="newPrimaryImage() ? '#ba1a1a' : '#adb5c9'">add_photo_alternate</span>
                   <p style="font-size:14px; font-weight:600;">{{ newPrimaryImage() ? 'تم اختيار صورة أساسية جديدة' : 'اضغط لاختيار صورة أساسية جديدة' }}</p>
                 </div>
+                @if (isInvalid('primaryImage')) {
+                  <p class="err-msg" style="margin-top:8px">مطلوب صورة صالحة (الحد الأقصى 5MB، والصيغ المدعومة فقط)</p>
+                }
                 @if (newPrimaryPreview()) {
                   <div class="photo-thumb" style="margin-top:8px; width:80px;">
                     <img [src]="newPrimaryPreview()" alt="صورة أساسية جديدة" />
@@ -200,11 +222,14 @@
 
               <div>
                 <div class="field-label" style="margin-bottom:10px;">إضافة صور جديدة</div>
-                <div class="upload-zone" (click)="newPhotosInput.click()">
+                <div class="upload-zone" [class.error]="isInvalid('additionalImages')" (click)="newPhotosInput.click()">
                   <input #newPhotosInput type="file" accept="image/jpeg,image/png,image/webp" multiple style="display:none" (change)="onNewPhotosSelected($event)" />
                   <span class="material-symbols-outlined" style="font-size:32px; color:#adb5c9;">add_photo_alternate</span>
                   <p style="font-size:13px; color:#75777d;">JPG / PNG / WebP — حتى 5MB لكل صورة</p>
                 </div>
+                @if (isInvalid('additionalImages')) {
+                  <p class="err-msg" style="margin-top:8px">الصور الإضافية غير صالحة (الحد الأقصى 4 صور، و 5MB لكل صورة)</p>
+                }
                 @if (newPhotoPreviews().length > 0) {
                   <div class="photo-grid">
                     @for (preview of newPhotoPreviews(); track preview; let i = $index) {
@@ -261,7 +286,7 @@
             التالي <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
           </button>
         } @else {
-          <button type="button" class="btn-primary" style="background:#ba1a1a;" [disabled]="isSubmitting()" (click)="onSubmit()">
+          <button type="button" class="btn-primary" style="background:#ba1a1a;" [disabled]="isSubmitting() || form.invalid" (click)="onSubmit()">
             @if (isSubmitting()) {
               <span class="material-symbols-outlined spin" style="font-size:18px;">progress_activity</span> جاري الحفظ...
             } @else {

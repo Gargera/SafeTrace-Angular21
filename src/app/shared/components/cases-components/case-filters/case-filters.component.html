@@ -70,6 +70,8 @@
         @if (filterForm.get('government')?.invalid && (filterForm.get('government')?.dirty || filterForm.get('government')?.touched)) {
           @if (filterForm.get('government')?.hasError('maxlength')) {
             <span class="text-xs text-error mt-1 block">الحد الأقصى 100 حرف</span>
+          } @else if (filterForm.get('government')?.hasError('invalidArabicText')) {
+            <span class="text-xs text-error mt-1 block">حروف عربية فقط</span>
           }
         }
       </div>
@@ -82,6 +84,8 @@
         @if (filterForm.get('city')?.invalid && (filterForm.get('city')?.dirty || filterForm.get('city')?.touched)) {
           @if (filterForm.get('city')?.hasError('maxlength')) {
             <span class="text-xs text-error mt-1 block">الحد الأقصى 100 حرف</span>
+          } @else if (filterForm.get('city')?.hasError('invalidArabicText')) {
+            <span class="text-xs text-error mt-1 block">حروف عربية فقط</span>
           }
         }
       </div>
