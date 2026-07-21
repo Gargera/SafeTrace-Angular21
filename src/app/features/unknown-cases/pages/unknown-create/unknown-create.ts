@@ -138,12 +138,6 @@ export class UnknownCreate {
     this.croppedPrimaryImagePreview.set(null);
     this.cropImageEvent.set(null);
     this.primaryFile.set(null);
-    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
-    if (!file) return;
-    this.selectedPhotos.update((p) => [file, ...p.slice(1)].slice(0, 5));
-    this.form.get('primaryImage')?.setValue(file);
-    this.form.get('primaryImage')?.markAsDirty();
-    this.refreshPreviews();
   }
 
   // --- معالجة الصور الإضافية ---
@@ -151,30 +145,15 @@ export class UnknownCreate {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
     this.additionalPhotos.update((p) => [...p, ...files].slice(0, 4));
     this.additionalPhotoPreviews.set(this.additionalPhotos().map((f) => URL.createObjectURL(f)));
-    this.selectedPhotos.update((p) => [...p, ...files].slice(0, 5));
-    const additional = this.selectedPhotos().slice(1);
-    this.form.get('additionalImages')?.setValue(additional);
+    this.form.get('additionalImages')?.setValue(this.additionalPhotos());
     this.form.get('additionalImages')?.markAsDirty();
-    this.refreshPreviews();
-  }
-
-  private refreshPreviews(): void {
-    this.photoPreviews.set(this.selectedPhotos().map((f) => URL.createObjectURL(f)));
   }
 
   removeAdditionalPhoto(index: number): void {
     this.additionalPhotos.update((p) => p.filter((_, i) => i !== index));
     this.additionalPhotoPreviews.update((p) => p.filter((_, i) => i !== index));
-    removePhoto(index: number): void {
-      this.selectedPhotos.update((p) => p.filter((_, i) => i !== index));
-      this.photoPreviews.update((p) => p.filter((_, i) => i !== index));
-      const photos = this.selectedPhotos();
-      if(index === 0 && photos.length === 0) {
-      this.form.get('primaryImage')?.setValue(null);
-    } else {
-      this.form.get('primaryImage')?.setValue(photos[0] ?? null);
-    }
-    this.form.get('additionalImages')?.setValue(photos.slice(1));
+    this.form.get('additionalImages')?.setValue(this.additionalPhotos());
+    this.form.get('additionalImages')?.markAsDirty();
   }
 
   onVideoSelected(event: Event): void {
@@ -256,15 +235,16 @@ export class UnknownCreate {
         },
       });
     }
+  }
 
-    onForceCreateCancel(): void {
-      this.showForceCreatePopup.set(false);
-    }
+  onForceCreateCancel(): void {
+    this.showForceCreatePopup.set(false);
+  }
 
-    onForceCreateConfirm(): void {
-      this.showForceCreatePopup.set(false);
-      this.onSubmit(true);
-    }
+  onForceCreateConfirm(): void {
+    this.showForceCreatePopup.set(false);
+    this.onSubmit(true);
+  }
 
     goBack(): void {
       this.router.navigate(['/unknown']);

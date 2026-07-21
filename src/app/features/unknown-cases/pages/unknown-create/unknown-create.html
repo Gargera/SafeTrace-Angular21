@@ -201,16 +201,18 @@
         <div>
           <div class="field-label" style="margin-bottom:10px;">
             الصورة الأساسية (يرجى تحديد الوجه بدقة) <span class="req">*</span>
-            <div class="field-label" style="margin-bottom:10px;">الصورة الأساسية <span class="req">*</span></div>
-            <div class="upload-zone" [class.has-files]="selectedPhotos().length > 0"
-              [class.error]="isInvalid('primaryImage')" (click)="primaryInput.click()">
+          </div>
+
+          <!-- 1. منطقة الإضافة إذا لم يتم اختيار/اعتماد صورة -->
+          @if (!cropImageEvent() && !croppedPrimaryImagePreview()) {
+            <div class="upload-zone" (click)="primaryInput.click()">
               <input #primaryInput type="file" accept="image/jpeg,image/png,image/webp" style="display:none"
                 (change)="onPrimaryPhotoSelected($event)" />
-              <span class="material-symbols-outlined" style="font-size:40px;"
-                [style.color]="selectedPhotos().length ? '#0058be' : '#adb5c9'">add_photo_alternate</span>
-              <p style="font-size:14px; font-weight:600;">{{ selectedPhotos().length ? 'تم اختيار الصورة الأساسية' :
-                'اضغط لإضافة الصورة الأساسية' }}</p>
+              <span class="material-symbols-outlined" style="font-size:40px; color:#adb5c9;">add_photo_alternate</span>
+              <p style="font-size:14px; font-weight:600;">اضغط لإضافة الصورة الأساسية وتحديد الوجه</p>
             </div>
+          }
+
             @if (isInvalid('primaryImage')) {
             @if (form.get('primaryImage')?.hasError('required')) { <p class="err-msg" style="margin-top:8px">مطلوب</p> }
             @else if (form.get('primaryImage')?.hasError('invalidFileType')) { <p class="err-msg"

@@ -78,7 +78,7 @@ export class UrgentListComponent implements OnInit, OnDestroy {
       ...this.sanitizeFilter(newFilter),
       latitude: this.normalizeNumber(this.latitude()),
       longitude: this.normalizeNumber(this.longitude()),
-      radiusInMeters: this.normalizeRadius(this.radiusInKm()) !== null ? this.normalizeRadius(this.radiusInKm())! * 1000 : null,
+      radiusInKm: this.normalizeRadius(this.radiusInKm()),
       page: 1,
       pageSize: this.pageSize(),
     }));
@@ -150,11 +150,11 @@ export class UrgentListComponent implements OnInit, OnDestroy {
       caseCode: null,
       gender: null,
       ageCategory: null,
+      maxAge: null,
+      minAge: null,
       fullName: null,
       government: null,
       city: null,
-      minAge: null,
-      maxAge: null,
       fromDate: null,
       toDate: null,
       ageSort: null,
@@ -163,7 +163,7 @@ export class UrgentListComponent implements OnInit, OnDestroy {
       pageSize: this.defaultPageSize,
       latitude: null,
       longitude: null,
-      radiusInMeters: null,
+      radiusInKm: null,
     };
   }
 
@@ -177,8 +177,6 @@ export class UrgentListComponent implements OnInit, OnDestroy {
       fullName: this.normalizeText(filter.fullName),
       government: this.normalizeText(filter.government),
       city: this.normalizeText(filter.city),
-      minAge: this.normalizeNumber(filter.minAge),
-      maxAge: this.normalizeNumber(filter.maxAge),
       fromDate: this.normalizeText(filter.fromDate),
       toDate: this.normalizeText(filter.toDate),
       ageSort: this.normalizeNumber(filter.ageSort),

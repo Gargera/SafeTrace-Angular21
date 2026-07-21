@@ -2,9 +2,8 @@ import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/cor
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper'; // 👈 استيراد مكتبة الـ Cropper
+import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 
-import { CommonModule } from '@angular/common';
 import { LongTermCaseService } from '../../services/long-term-case.service';
 import { LongTermCaseCreateRequest } from '../../models/request/LongTermCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
@@ -15,8 +14,6 @@ import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
-import { FormField } from '../../../../shared/components/form-field/form-field';
-
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { pastDateValidator } from '../../../../shared/validators/past-date.validator';
 import { egyptianPhoneValidator } from '../../../../shared/validators/egyptian-phone.validator';
@@ -162,12 +159,6 @@ export class LongTermCreate {
     this.croppedPrimaryImagePreview.set(null);
     this.cropImageEvent.set(null);
     this.primaryPhotoFile.set(null);
-    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
-    if (!file) return;
-    this.selectedPhotos.update((p) => [file, ...p.filter((_, i) => i !== 0)].slice(0, 5));
-    this.form.get('primaryImage')?.setValue(file);
-    this.form.get('primaryImage')?.markAsDirty();
-    this.refreshPreviews();
   }
 
   // ---- 2. إدارة الصور الإضافية ----
@@ -176,11 +167,8 @@ export class LongTermCreate {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
     this.additionalPhotos.update((p) => [...p, ...files].slice(0, 4)); // حد أقصى 4 صور إضافية
     this.refreshAdditionalPreviews();
-    this.selectedPhotos.update((p) => [...p, ...files].slice(0, 5));
-    const additional = this.selectedPhotos().slice(1);
-    this.form.get('additionalImages')?.setValue(additional);
+    this.form.get('additionalImages')?.setValue(this.additionalPhotos());
     this.form.get('additionalImages')?.markAsDirty();
-    this.refreshPreviews();
   }
 
   private refreshAdditionalPreviews(): void {
@@ -190,22 +178,11 @@ export class LongTermCreate {
   removeAdditionalPhoto(index: number): void {
     this.additionalPhotos.update((p) => p.filter((_, i) => i !== index));
     this.refreshAdditionalPreviews();
+    this.form.get('additionalImages')?.setValue(this.additionalPhotos());
+    this.form.get('additionalImages')?.markAsDirty();
   }
 
   // ---- 3. المرفقات الأخرى ----
-  removePhoto(index: number): void {
-    this.selectedPhotos.update((p) => p.filter((_, i) => i !== index));
-    this.photoPreviews.update((p) => p.filter((_, i) => i !== index));
-
-    const photos = this.selectedPhotos();
-    if (index === 0 && photos.length === 0) {
-      this.form.get('primaryImage')?.setValue(null);
-    } else {
-      this.form.get('primaryImage')?.setValue(photos[0] ?? null);
-    }
-    this.form.get('additionalImages')?.setValue(photos.slice(1));
-  }
-
   onPoliceReportSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     this.policeReportFile.set(file);
@@ -223,14 +200,14 @@ export class LongTermCreate {
     const primaryImg = this.primaryPhotoFile();
 
     if (!forceCreate && (this.form.invalid || !primaryImg)) {
-      if (!forceCreate && this.form.invalid) {
-        this.form.markAllAsTouched();
-        if (!primaryImg) {
-          this.errorMsg.set('برجاء إضافة الصورة الأساسية للشخص وتحديد الوجه.');
-        }
+      this.form.markAllAsTouched();
+      if (!primaryImg) {
+        this.errorMsg.set('برجاء إضافة الصورة الأساسية للشخص وتحديد الوجه.');
+      } else {
         this.errorMsg.set('برجاء تصحيح الأخطاء في النموذج.');
-        return;
       }
+      return;
+    }
 
       this.isSubmitting.set(true);
       this.errorMsg.set(null);
@@ -299,12 +276,12 @@ export class LongTermCreate {
       });
     }
 
-    onForceCreateCancel(): void {
-      this.showForceCreatePopup.set(false);
-    }
+  onForceCreateCancel(): void {
+    this.showForceCreatePopup.set(false);
+  }
 
-    onForceCreateConfirm(): void {
-      if(this.isBlockedDuplicate()) {
+  onForceCreateConfirm(): void {
+    if (this.isBlockedDuplicate()) {
       return;
     }
     this.showForceCreatePopup.set(false);
