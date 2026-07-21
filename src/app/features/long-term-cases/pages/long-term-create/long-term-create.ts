@@ -1,7 +1,7 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common'; 
+import { CommonModule } from '@angular/common';
 import { LongTermCaseService } from '../../services/long-term-case.service';
 import { LongTermCaseCreateRequest } from '../../models/request/LongTermCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
@@ -19,6 +19,7 @@ import { fileTypeValidator } from '../../../../shared/validators/file-type.valid
 import { maxFileSizeValidator } from '../../../../shared/validators/max-file-size.validator';
 import { maxFileCountValidator } from '../../../../shared/validators/max-file-count.validator';
 import { arabicTextValidator } from '../../../../shared/validators/arabic-text.validator';
+import { enumValidator } from '../../../../shared/validators/enum.validator';
 type Step = 1 | 2 | 3;
 
 @Component({
@@ -26,8 +27,8 @@ type Step = 1 | 2 | 3;
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule, 
-    RouterLink, 
+    ReactiveFormsModule,
+    RouterLink,
     ForceCreatePopupComponent,
     ButtonComponent,
     FormField // تم تمرير الاسم الصحيح هنا
@@ -41,7 +42,7 @@ export class LongTermCreate {
   private service = inject(LongTermCaseService);
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
-  
+
   currentStep: Step = 1;
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
@@ -73,12 +74,12 @@ export class LongTermCreate {
 
   form = this.fb.group({
     fName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(60), arabicTextValidator()]],
-    sName: ['', [Validators.maxLength(60), arabicTextValidator()]],
-    tName: ['', [Validators.maxLength(60), arabicTextValidator()]],
+    sName: ['', [Validators.minLength(2), Validators.maxLength(60), arabicTextValidator()]],
+    tName: ['', [Validators.minLength(2), Validators.maxLength(60), arabicTextValidator()]],
     lName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(60), arabicTextValidator()]],
     age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(120)]],
-    gender: ['' as Gender | '', Validators.required],
-    relation: [null as RelationType | null, Validators.required],
+    gender: ['' as Gender | '', [Validators.required, enumValidator(Gender)]],
+    relation: [null as RelationType | null, [Validators.required, enumValidator(RelationType)]],
     communicationPhone: ['', [Validators.maxLength(15), egyptianPhoneValidator()]],
     description: ['', [Validators.maxLength(2000)]],
     government: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), arabicTextValidator()]],
@@ -136,7 +137,7 @@ export class LongTermCreate {
   removePhoto(index: number): void {
     this.selectedPhotos.update((p) => p.filter((_, i) => i !== index));
     this.photoPreviews.update((p) => p.filter((_, i) => i !== index));
-    
+
     const photos = this.selectedPhotos();
     if (index === 0 && photos.length === 0) {
       this.form.get('primaryImage')?.setValue(null);
@@ -208,10 +209,10 @@ export class LongTermCreate {
           } else {
             this.matchedCases.set([]);
           }
-          
+
           const rawData = data as any;
           this.isBlockedDuplicate.set(!!rawData.isSameTypeDuplicate);
-          
+
           this.showForceCreatePopup.set(true);
           return;
         }

@@ -17,6 +17,8 @@ import { fileTypeValidator } from '../../../../shared/validators/file-type.valid
 import { maxFileSizeValidator } from '../../../../shared/validators/max-file-size.validator';
 import { maxFileCountValidator } from '../../../../shared/validators/max-file-count.validator';
 import { arabicTextValidator } from '../../../../shared/validators/arabic-text.validator';
+import { enumValidator } from '../../../../shared/validators/enum.validator';
+
 type Step = 1 | 2 | 3;
 
 @Component({
@@ -77,12 +79,12 @@ export class LongTermUpdate implements OnInit {
 
   form = this.fb.group({
     fName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(60), arabicTextValidator()]],
-    sName: ['', [Validators.maxLength(60), arabicTextValidator()]],
-    tName: ['', [Validators.maxLength(60), arabicTextValidator()]],
+    sName: ['', [Validators.minLength(2), Validators.maxLength(60), arabicTextValidator()]],
+    tName: ['', [Validators.minLength(2), Validators.maxLength(60), arabicTextValidator()]],
     lName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(60), arabicTextValidator()]],
     age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(120)]],
-    gender: ['' as Gender | '', Validators.required],
-    relation: [null as RelationType | null, Validators.required],
+    gender: ['' as Gender | '', [Validators.required, enumValidator(Gender)]],
+    relation: [null as RelationType | null, [Validators.required, enumValidator(RelationType)]],
     communicationPhone: ['', [Validators.maxLength(15), egyptianPhoneValidator()]],
     description: ['', [Validators.maxLength(2000)]],
     government: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), arabicTextValidator()]],
@@ -249,7 +251,7 @@ export class LongTermUpdate implements OnInit {
       city: v.city!,
       street: v.street!,
       eventDate: v.eventDate!,
-      primaryImage: this.newPrimaryImage()??undefined,
+      primaryImage: this.newPrimaryImage() ?? undefined,
       newPhotos: this.newPhotos().length ? this.newPhotos() : null,
       deletedPhotoIds: this.deletedPhotoIds().length ? this.deletedPhotoIds() : null,
       primaryPhotoId: this.primaryPhotoId(),

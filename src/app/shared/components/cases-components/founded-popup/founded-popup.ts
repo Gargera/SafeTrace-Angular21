@@ -37,7 +37,7 @@ export class FoundedPopupComponent {
   readonly errorMsg = signal<string | null>(null);
 
   readonly form = this.fb.nonNullable.group({
-    description: ['', [Validators.required, Validators.maxLength(2000)]],
+    description: ['', [Validators.required, Validators.maxLength(2000), arabicTextValidator()]],
     government: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), arabicTextValidator()]],
     city: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), arabicTextValidator()]],
     street: ['', [Validators.required, Validators.maxLength(200)]],

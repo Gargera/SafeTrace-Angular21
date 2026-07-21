@@ -25,10 +25,13 @@ import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { dateRangeValidator } from '../../../validators/date-range.validator';
 import { pastDateValidator } from '../../../validators/past-date.validator';
-import { ageRangeValidator } from '../../../validators/age-range.validator';
 import { arabicTextValidator } from '../../../validators/arabic-text.validator';
 import { AgeCategories } from '../../../../shared/enums/age-categories';
 import { getAgeRange } from '../../../../shared/helper/age-category.helper';
+import { enumValidator } from '../../../validators/enum.validator';
+import { Gender } from '../../../../shared/enums/gender';
+import { AgeSort } from '../../../../shared/enums/age-sort';
+import { DateSort } from '../../../../shared/enums/date-sort';
 import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.categories.dictionary';
 
 @Component({
@@ -162,17 +165,17 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   ngOnInit(): void {
     this.filterForm = this.fb.group(
       {
-        fullName: [''],
-        gender: [''],
-        ageCategory: [''],
+        fullName: ['', [Validators.maxLength(243), arabicTextValidator()]],
+        gender: ['', [enumValidator(Gender)]],
+        ageCategory: ['', [enumValidator(AgeCategories)]],
         government: ['', [Validators.maxLength(100), arabicTextValidator()]],
         city: ['', [Validators.maxLength(100), arabicTextValidator()]],
         fromDate: ['', [pastDateValidator()]],
-        toDate: [''],
-        ageSort: [''],
-        dateSort: [''],
-        caseType: [''],
-        status: [''],
+        toDate: ['', [pastDateValidator()]],
+        ageSort: ['', [enumValidator(AgeSort)]],
+        dateSort: ['', [enumValidator(DateSort)]],
+        caseType: ['', [enumValidator(CaseType)]],
+        status: ['', [enumValidator(CaseStatus)]],
       },
       { validators: [dateRangeValidator('fromDate', 'toDate')] },
     );
