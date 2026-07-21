@@ -1,6 +1,8 @@
 import { Component, signal, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Toast } from './shared/components/toast/toast';
+import { AuthService } from './core/services/auth.service';
+import { LocationTrackingService } from './core/services/LocationTracking.service';
 import { CaseCreationFlowComponent } from './shared/components/case-creation-flow/case-creation-flow.component';
 
 @Component({
@@ -12,5 +14,14 @@ import { CaseCreationFlowComponent } from './shared/components/case-creation-flo
 export class App implements OnInit {
   protected readonly title = signal('لقاء');
 
-  ngOnInit(): void {}
+  constructor(
+    private locationTrackingService: LocationTrackingService,
+    private authService: AuthService,
+  ) {}
+
+  ngOnInit() {
+    if (this.authService.isLoggedIn()) {
+      this.locationTrackingService.startTrackingLocation();
+    }
+  }
 }

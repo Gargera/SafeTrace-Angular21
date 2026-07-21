@@ -2,6 +2,9 @@ import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/cor
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper'; // 👈 استيراد مكتبة الـ Cropper
+
+import { CommonModule } from '@angular/common';
 import { LongTermCaseService } from '../../services/long-term-case.service';
 import { LongTermCaseCreateRequest } from '../../models/request/LongTermCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
@@ -12,6 +15,8 @@ import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
+import { FormField } from '../../../../shared/components/form-field/form-field';
+
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { pastDateValidator } from '../../../../shared/validators/past-date.validator';
 import { egyptianPhoneValidator } from '../../../../shared/validators/egyptian-phone.validator';
@@ -31,7 +36,8 @@ type Step = 1 | 2 | 3;
     RouterLink,
     ForceCreatePopupComponent,
     ButtonComponent,
-    FormField // تم تمرير الاسم الصحيح هنا
+    FormField,
+    ImageCropperComponent // 👈 تفعيل المكون هنا
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../../../../shared/styles/case-form.css', './long-term-create.css'],
@@ -47,8 +53,15 @@ export class LongTermCreate {
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
 
-  selectedPhotos = signal<File[]>([]);
-  photoPreviews = signal<string[]>([]);
+  // إشارات التحكّم بالـ Cropper والصورة الأساسية
+  cropImageEvent = signal<any>(null);
+  croppedPrimaryImagePreview = signal<string | null>(null);
+  tempCroppedBlob = signal<Blob | null>(null);
+  primaryPhotoFile = signal<File | null>(null);
+
+  // إشارات الصور الإضافية والمستندات
+  additionalPhotos = signal<File[]>([]);
+  additionalPhotoPreviews = signal<string[]>([]);
   policeReportFile = signal<File | null>(null);
   videoFile = signal<File | null>(null);
 
@@ -112,7 +125,43 @@ export class LongTermCreate {
     if (this.currentStep > 1) this.currentStep = (this.currentStep - 1) as Step;
   }
 
+  // ---- 1. إدارة الصورة الأساسية مع الـ Cropper ----
+
   onPrimaryPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.cropImageEvent.set(event); // فتح واجهة الـ Crop فور الاختيار
+    }
+  }
+
+  onImageCropped(event: ImageCroppedEvent): void {
+    if (event.blob) {
+      this.tempCroppedBlob.set(event.blob);
+    }
+  }
+
+  confirmCrop(): void {
+    const blob = this.tempCroppedBlob();
+    if (!blob) return;
+
+    // تحويل الـ Blob إلى ملف جاهز للـ Backend
+    const croppedFile = new File([blob], 'primary_image.jpg', { type: 'image/jpeg' });
+    this.primaryPhotoFile.set(croppedFile);
+
+    // إنشاء رابط للمعاينة وإغلاق الـ Cropper
+    this.croppedPrimaryImagePreview.set(URL.createObjectURL(croppedFile));
+    this.cropImageEvent.set(null);
+    this.errorMsg.set(null);
+  }
+
+  cancelCrop(): void {
+    this.cropImageEvent.set(null);
+  }
+
+  reCropPhoto(): void {
+    this.croppedPrimaryImagePreview.set(null);
+    this.cropImageEvent.set(null);
+    this.primaryPhotoFile.set(null);
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     if (!file) return;
     this.selectedPhotos.update((p) => [file, ...p.filter((_, i) => i !== 0)].slice(0, 5));
@@ -121,8 +170,12 @@ export class LongTermCreate {
     this.refreshPreviews();
   }
 
+  // ---- 2. إدارة الصور الإضافية ----
+
   onAdditionalPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
+    this.additionalPhotos.update((p) => [...p, ...files].slice(0, 4)); // حد أقصى 4 صور إضافية
+    this.refreshAdditionalPreviews();
     this.selectedPhotos.update((p) => [...p, ...files].slice(0, 5));
     const additional = this.selectedPhotos().slice(1);
     this.form.get('additionalImages')?.setValue(additional);
@@ -130,10 +183,16 @@ export class LongTermCreate {
     this.refreshPreviews();
   }
 
-  private refreshPreviews(): void {
-    this.photoPreviews.set(this.selectedPhotos().map((f) => URL.createObjectURL(f)));
+  private refreshAdditionalPreviews(): void {
+    this.additionalPhotoPreviews.set(this.additionalPhotos().map((f) => URL.createObjectURL(f)));
   }
 
+  removeAdditionalPhoto(index: number): void {
+    this.additionalPhotos.update((p) => p.filter((_, i) => i !== index));
+    this.refreshAdditionalPreviews();
+  }
+
+  // ---- 3. المرفقات الأخرى ----
   removePhoto(index: number): void {
     this.selectedPhotos.update((p) => p.filter((_, i) => i !== index));
     this.photoPreviews.update((p) => p.filter((_, i) => i !== index));
@@ -158,88 +217,101 @@ export class LongTermCreate {
     this.videoFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
   }
 
+  // ---- 4. الإرسال للباك إند ----
+
   onSubmit(forceCreate = false): void {
-    if (!forceCreate && this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.errorMsg.set('برجاء تصحيح الأخطاء في النموذج.');
-      return;
-    }
+    const primaryImg = this.primaryPhotoFile();
 
-    this.isSubmitting.set(true);
-    this.errorMsg.set(null);
+    if (!forceCreate && (this.form.invalid || !primaryImg)) {
+      if (!forceCreate && this.form.invalid) {
+        this.form.markAllAsTouched();
+        if (!primaryImg) {
+          this.errorMsg.set('برجاء إضافة الصورة الأساسية للشخص وتحديد الوجه.');
+        }
+        this.errorMsg.set('برجاء تصحيح الأخطاء في النموذج.');
+        return;
+      }
 
-    let request: LongTermCaseCreateRequest;
-    if (forceCreate && this.pendingRequest) {
-      request = this.pendingRequest;
-    } else {
-      const v = this.form.getRawValue();
-      const photos = this.selectedPhotos();
-      const [primaryImage, ...additionalImages] = photos;
+      this.isSubmitting.set(true);
+      this.errorMsg.set(null);
 
-      request = {
-        fName: v.fName!,
-        lName: v.lName!,
-        sName: v.sName || null,
-        tName: v.tName || null,
-        gender: v.gender as Gender,
-        age: v.age!,
-        relation: v.relation!,
-        communicationPhone: v.communicationPhone || null,
-        description: v.description || null,
-        government: v.government!,
-        city: v.city!,
-        street: v.street!,
-        eventDate: v.eventDate!,
-        primaryImage,
-        additionalImages: additionalImages.length ? additionalImages : null,
-        video: this.videoFile(),
-        policeReportImage: this.policeReportFile(),
-      };
-      this.pendingRequest = request;
-    }
+      let request: LongTermCaseCreateRequest;
+      if (forceCreate && this.pendingRequest) {
+        request = this.pendingRequest;
+      } else {
+        const v = this.form.getRawValue();
 
-    this.service.createCase(request, forceCreate).subscribe({
-      next: (res) => {
-        this.isSubmitting.set(false);
-        const data = res.data;
+        request = {
+          fName: v.fName!,
+          lName: v.lName!,
+          sName: v.sName || null,
+          tName: v.tName || null,
+          gender: v.gender as Gender,
+          age: v.age!,
+          relation: v.relation!,
+          communicationPhone: v.communicationPhone || null,
+          description: v.description || null,
+          government: v.government!,
+          city: v.city!,
+          street: v.street!,
+          eventDate: v.eventDate!,
+          primaryImage: primaryImg!,
+          additionalImages: this.additionalPhotos().length ? this.additionalPhotos() : null,
+          video: this.videoFile(),
+          policeReportImage: this.policeReportFile(),
+        };
+        this.pendingRequest = request;
+      }
 
-        if (data && data.isCreated === false) {
-          if (data.matchedCases) {
-            this.matchedCases.set(data.matchedCases.map(mapMatchedCaseResponseToDto));
-          } else {
-            this.matchedCases.set([]);
+      this.service.createCase(request, forceCreate).subscribe({
+        next: (res) => {
+          this.isSubmitting.set(false);
+          const data = res.data;
+
+          // في حالة وجود تكرار وعدم إتمام الإنشاء
+          if (data && (data.isCreated === false || data.isCreated === undefined)) {
+            if (data.matchedCases) {
+              this.matchedCases.set(data.matchedCases.map(mapMatchedCaseResponseToDto));
+            } else {
+              this.matchedCases.set([]);
+            }
+
+            const rawData = data as any;
+            const isSameType = rawData.isSameTypeDuplicate ?? rawData.IsSameTypeDuplicate ?? false;
+
+            this.isBlockedDuplicate.set(Boolean(isSameType));
+            this.isBlockedDuplicate.set(!!rawData.isSameTypeDuplicate);
+
+            this.showForceCreatePopup.set(true);
+            return;
           }
 
-          const rawData = data as any;
-          this.isBlockedDuplicate.set(!!rawData.isSameTypeDuplicate);
+          this.showForceCreatePopup.set(false);
+          this.snackbar.success('تم إرسال بلاغ الحالة بنجاح، هيتم مراجعته من الإدارة قريبًا.');
+          this.router.navigate(['/long-term']);
+        },
+        error: (err) => {
+          this.isSubmitting.set(false);
+          const msg = err?.error?.message ?? 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.';
+          this.errorMsg.set(msg);
+          this.snackbar.error(msg);
+        },
+      });
+    }
 
-          this.showForceCreatePopup.set(true);
-          return;
-        }
+    onForceCreateCancel(): void {
+      this.showForceCreatePopup.set(false);
+    }
 
-        this.showForceCreatePopup.set(false);
-        this.snackbar.success('تم إرسال بلاغ الحالة بنجاح، هيتم مراجعته من الإدارة قريبًا.');
-        this.router.navigate(['/long-term']);
-      },
-      error: (err) => {
-        this.isSubmitting.set(false);
-        const msg = err?.error?.message ?? 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.';
-        this.errorMsg.set(msg);
-        this.snackbar.error(msg);
-      },
-    });
-  }
-
-  onForceCreateCancel(): void {
-    this.showForceCreatePopup.set(false);
-  }
-
-  onForceCreateConfirm(): void {
+    onForceCreateConfirm(): void {
+      if(this.isBlockedDuplicate()) {
+      return;
+    }
     this.showForceCreatePopup.set(false);
     this.onSubmit(true);
   }
 
   goBack(): void {
-    this.router.navigate(['/long-term-cases']);
+    this.router.navigate(['/long-term']);
   }
 }

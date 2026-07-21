@@ -1,6 +1,7 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { UnknownCaseService } from '../../services/unknown-case.service';
 import { UnknownCaseCreateRequest } from '../../models/request/UnknownCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
@@ -23,7 +24,7 @@ type Step = 1 | 2 | 3;
 @Component({
   selector: 'app-unknown-create',
   standalone: true,
-  imports: [ReactiveFormsModule, ForceCreatePopupComponent, ButtonComponent, FormField],
+  imports: [ReactiveFormsModule, ForceCreatePopupComponent, ImageCropperComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../../../../shared/styles/case-form.css', './unknown-create.css'],
   templateUrl: './unknown-create.html',
@@ -38,8 +39,15 @@ export class UnknownCreate {
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
 
-  selectedPhotos = signal<File[]>([]);
-  photoPreviews = signal<string[]>([]);
+  // خاصيات الـ Cropper والصورة الأساسية
+  cropImageEvent = signal<any>(null);
+  croppedPrimaryImagePreview = signal<string | null>(null);
+  tempCroppedBlob = signal<Blob | null>(null);
+  primaryFile = signal<File | null>(null);
+
+  // الصور الإضافية والفيديو
+  additionalPhotos = signal<File[]>([]);
+  additionalPhotoPreviews = signal<string[]>([]);
   videoFile = signal<File | null>(null);
 
   showForceCreatePopup = signal(false);
@@ -98,7 +106,38 @@ export class UnknownCreate {
     if (this.currentStep > 1) this.currentStep = (this.currentStep - 1) as Step;
   }
 
+  // --- معالجة الصورة الأساسية والـ Cropper ---
   onPrimaryPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.cropImageEvent.set(event);
+    }
+  }
+
+  onImageCropped(event: ImageCroppedEvent): void {
+    if (event.blob) {
+      this.tempCroppedBlob.set(event.blob);
+    }
+  }
+
+  confirmCrop(): void {
+    const blob = this.tempCroppedBlob();
+    if (!blob) return;
+
+    const croppedFile = new File([blob], 'primary_image.jpg', { type: 'image/jpeg' });
+    this.primaryFile.set(croppedFile);
+    this.croppedPrimaryImagePreview.set(URL.createObjectURL(croppedFile));
+    this.cropImageEvent.set(null);
+  }
+
+  cancelCrop(): void {
+    this.cropImageEvent.set(null);
+  }
+
+  reCropPhoto(): void {
+    this.croppedPrimaryImagePreview.set(null);
+    this.cropImageEvent.set(null);
+    this.primaryFile.set(null);
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     if (!file) return;
     this.selectedPhotos.update((p) => [file, ...p.slice(1)].slice(0, 5));
@@ -107,8 +146,11 @@ export class UnknownCreate {
     this.refreshPreviews();
   }
 
+  // --- معالجة الصور الإضافية ---
   onAdditionalPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
+    this.additionalPhotos.update((p) => [...p, ...files].slice(0, 4));
+    this.additionalPhotoPreviews.set(this.additionalPhotos().map((f) => URL.createObjectURL(f)));
     this.selectedPhotos.update((p) => [...p, ...files].slice(0, 5));
     const additional = this.selectedPhotos().slice(1);
     this.form.get('additionalImages')?.setValue(additional);
@@ -120,11 +162,14 @@ export class UnknownCreate {
     this.photoPreviews.set(this.selectedPhotos().map((f) => URL.createObjectURL(f)));
   }
 
-  removePhoto(index: number): void {
-    this.selectedPhotos.update((p) => p.filter((_, i) => i !== index));
-    this.photoPreviews.update((p) => p.filter((_, i) => i !== index));
-    const photos = this.selectedPhotos();
-    if (index === 0 && photos.length === 0) {
+  removeAdditionalPhoto(index: number): void {
+    this.additionalPhotos.update((p) => p.filter((_, i) => i !== index));
+    this.additionalPhotoPreviews.update((p) => p.filter((_, i) => i !== index));
+    removePhoto(index: number): void {
+      this.selectedPhotos.update((p) => p.filter((_, i) => i !== index));
+      this.photoPreviews.update((p) => p.filter((_, i) => i !== index));
+      const photos = this.selectedPhotos();
+      if(index === 0 && photos.length === 0) {
       this.form.get('primaryImage')?.setValue(null);
     } else {
       this.form.get('primaryImage')?.setValue(photos[0] ?? null);
@@ -136,92 +181,92 @@ export class UnknownCreate {
     this.videoFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
   }
 
+  // --- إرسال النموذج ---
   onSubmit(forceCreate = false): void {
-    if (!forceCreate && this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.errorMsg.set('برجاء تصحيح الأخطاء في النموذج.');
-      return;
-    }
+    const primary = this.primaryFile();
 
-    this.isSubmitting.set(true);
-    this.errorMsg.set(null);
+    if (!forceCreate && (this.form.invalid || !primary)) {
+      if (!forceCreate && this.form.invalid) {
+        this.form.markAllAsTouched();
+        if (!primary) {
+          this.errorMsg.set('برجاء إضافة وتأطير الصورة الأساسية.');
+        }
+        this.errorMsg.set('برجاء تصحيح الأخطاء في النموذج.');
+        return;
+      }
 
-    let request: UnknownCaseCreateRequest;
-    if (forceCreate && this.pendingRequest) {
-      request = this.pendingRequest;
-    } else {
-      const v = this.form.getRawValue();
-      const photos = this.selectedPhotos();
-      const [primaryImage, ...additionalImages] = photos;
+      this.isSubmitting.set(true);
+      this.errorMsg.set(null);
 
-      request = {
-        fName: v.fName || null,
-        lName: v.lName || null,
-        sName: v.sName || null,
-        tName: v.tName || null,
-        gender: v.gender as Gender,
-        age: v.age!,
-        communicationPhone: v.communicationPhone || null,
-        description: v.description || null,
-        government: v.government!,
-        city: v.city!,
-        street: v.street!,
-        eventDate: v.eventDate!,
-        primaryImage,
-        additionalImages: additionalImages.length ? additionalImages : null,
-        video: this.videoFile(),
-      };
-      this.pendingRequest = request;
-    }
+      let request: UnknownCaseCreateRequest;
+      if (forceCreate && this.pendingRequest) {
+        request = this.pendingRequest;
+      } else {
+        const v = this.form.getRawValue();
 
-    this.service.createCase(request, forceCreate).subscribe({
-      next: (res) => {
-        this.isSubmitting.set(false);
-        const data = res.data;
+        request = {
+          fName: v.fName || null,
+          lName: v.lName || null,
+          sName: v.sName || null,
+          tName: v.tName || null,
+          gender: v.gender as Gender,
+          age: v.age!,
+          communicationPhone: v.communicationPhone || null,
+          description: v.description || null,
+          government: v.government!,
+          city: v.city!,
+          street: v.street!,
+          eventDate: v.eventDate!,
+          primaryImage: primary!,
+          additionalImages: this.additionalPhotos().length ? this.additionalPhotos() : null,
+          video: this.videoFile(),
+        };
+        this.pendingRequest = request;
+      }
 
-        if (data && data.isCreated === false) {
-          const rawData = data as any;
+      this.service.createCase(request, forceCreate).subscribe({
+        next: (res) => {
+          this.isSubmitting.set(false);
+          const data = res.data;
 
-          // لو نفس نوع الحالة (Unknown ↔ Unknown): مفيش داعي نوقف اليوزر أو نوريه
-          // popup الـ force-create، لأن الباك اند بيعمل merge للحالتين في حالة
-          // واحدة تلقائياً. فبنعتبرها نجحت عادي زي أي إنشاء طبيعي.
-          if (rawData.isSameTypeDuplicate) {
-            this.showForceCreatePopup.set(false);
-            this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
-            this.router.navigate(['/unknown']);
+          if (data && data.isCreated === false) {
+            const rawData = data as any;
+
+            if (rawData.isSameTypeDuplicate) {
+              this.showForceCreatePopup.set(false);
+              this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
+              this.router.navigate(['/unknown']);
+              return;
+            }
+
+            this.matchedCases.set((data.matchedCases ?? []).map(mapMatchedCaseResponseToDto));
+            this.showForceCreatePopup.set(true);
             return;
           }
 
-          // لو التطابق مع نوع حالة مختلف (long-term / urgent): نوري اليوزر
-          // الحالات المشابهة ويقرر يتواصل مع صاحب البلاغ أو يعمل force create.
-          this.matchedCases.set((data.matchedCases ?? []).map(mapMatchedCaseResponseToDto));
-          this.showForceCreatePopup.set(true);
-          return;
-        }
+          this.showForceCreatePopup.set(false);
+          this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
+          this.router.navigate(['/unknown']);
+        },
+        error: (err) => {
+          this.isSubmitting.set(false);
+          const msg = err?.error?.message ?? 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.';
+          this.errorMsg.set(msg);
+          this.snackbar.error(msg);
+        },
+      });
+    }
 
-        this.showForceCreatePopup.set(false);
-        this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
-        this.router.navigate(['/unknown']);
-      },
-      error: (err) => {
-        this.isSubmitting.set(false);
-        const msg = err?.error?.message ?? 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.';
-        this.errorMsg.set(msg);
-        this.snackbar.error(msg);
-      },
-    });
-  }
+    onForceCreateCancel(): void {
+      this.showForceCreatePopup.set(false);
+    }
 
-  onForceCreateCancel(): void {
-    this.showForceCreatePopup.set(false);
-  }
+    onForceCreateConfirm(): void {
+      this.showForceCreatePopup.set(false);
+      this.onSubmit(true);
+    }
 
-  onForceCreateConfirm(): void {
-    this.showForceCreatePopup.set(false);
-    this.onSubmit(true);
+    goBack(): void {
+      this.router.navigate(['/unknown']);
+    }
   }
-
-  goBack(): void {
-    this.router.navigate(['/unknown-cases']);
-  }
-}

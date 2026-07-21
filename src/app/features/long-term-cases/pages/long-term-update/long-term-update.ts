@@ -275,6 +275,6 @@ export class LongTermUpdate implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/long-term-cases', this.caseId]);
+    this.router.navigate(['/long-term', this.caseId]);
   }
 }
