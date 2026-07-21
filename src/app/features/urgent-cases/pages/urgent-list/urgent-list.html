@@ -21,26 +21,71 @@
     >
       <app-case-filters (filterChange)="onFilterChange($event)" (reset)="onFilterReset()">
         <!-- Urgent-only extra filter -->
-        <div extendedFilters>
-          <label class="text-sm font-medium text-on-surface-variant block mb-1"
-            >نطاق البحث (متر)</label
-          >
-
-          <app-form-field
-            type="number"
-            min="100"
-            step="100"
-            [ngModel]="radiusInMeters()"
-            (ngModelChange)="radiusInMeters.set($event)"
-            [ngModelOptions]="{ standalone: true }"
-            placeholder="بدون حد أقصى"
-            #radiusCtrl="ngModel"
-          ></app-form-field>
-          @if (radiusCtrl.invalid && (radiusCtrl.dirty || radiusCtrl.touched)) {
-            @if (radiusCtrl.hasError('min')) {
-              <span class="text-xs text-error mt-1 block">يجب أن يكون النطاق 100 متر على الأقل</span>
+        <div extendedFilters class="space-y-4">
+          <div>
+            <label class="text-sm font-medium text-on-surface-variant block mb-1"
+              >نطاق البحث (كم)</label
+            >
+              <app-form-field
+              type="number"
+              min="0.1"
+              step="0.1"
+              [ngModel]="radiusInKm()"
+              (ngModelChange)="radiusInKm.set($event)"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="بدون حد أقصى"
+              #radiusCtrl="ngModel"
+            ></app-form-field>
+            @if (radiusCtrl.invalid && (radiusCtrl.dirty || radiusCtrl.touched)) {
+              @if (radiusCtrl.hasError('min')) {
+                <span class="text-xs text-error mt-1 block">يجب أن يكون النطاق 0.1 كم على الأقل</span>
+              }
             }
-          }
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-on-surface-variant block mb-1"
+              >خط العرض (Latitude)</label
+            >
+            <app-form-field
+              type="number"
+              min="-90"
+              max="90"
+              step="0.000001"
+              [ngModel]="latitude()"
+              (ngModelChange)="latitude.set($event)"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="خط العرض..."
+              #latCtrl="ngModel"
+            ></app-form-field>
+            @if (latCtrl.invalid && (latCtrl.dirty || latCtrl.touched)) {
+              @if (latCtrl.hasError('min') || latCtrl.hasError('max')) {
+                <span class="text-xs text-error mt-1 block">يجب أن يكون بين -90 و 90</span>
+              }
+            }
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-on-surface-variant block mb-1"
+              >خط الطول (Longitude)</label
+            >
+            <app-form-field
+              type="number"
+              min="-180"
+              max="180"
+              step="0.000001"
+              [ngModel]="longitude()"
+              (ngModelChange)="longitude.set($event)"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="خط الطول..."
+              #lngCtrl="ngModel"
+            ></app-form-field>
+            @if (lngCtrl.invalid && (lngCtrl.dirty || lngCtrl.touched)) {
+              @if (lngCtrl.hasError('min') || lngCtrl.hasError('max')) {
+                <span class="text-xs text-error mt-1 block">يجب أن يكون بين -180 و 180</span>
+              }
+            }
+          </div>
         </div>
       </app-case-filters>
     </section>

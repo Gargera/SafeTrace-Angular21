@@ -67,7 +67,7 @@ export class FoundedListComponent implements OnInit, OnDestroy {
   onFilterChange(filter: CasesFilterRequest): void {
     this.searchValue = filter.fullName ?? '';
     this.selectedGender = filter.gender !== null ? (filter.gender as unknown as Gender) : null;
-    this.selectedAgeCategory = filter.ageCategory !== null ? Number(filter.ageCategory) : 0;
+    this.selectedAgeCategory = 0;
     this.selectedCaseType = filter.caseType;
     this.currentPage.set(1);
     this.load();

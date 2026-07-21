@@ -61,10 +61,9 @@
 </div>
 }
 
-<!-- Filters Card (styled exactly like user-list) -->
 <section class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm mb-lg">
   <app-case-filters [showCaseType]="true" [showCaseStatus]="true" [genderInAdvanced]="true"
-    [ageCategoryInAdvanced]="true" (filterChange)="onFilterChange($event)" />
+    (filterChange)="onFilterChange($event)" />
 </section>
 
 <!-- Cases Table -->

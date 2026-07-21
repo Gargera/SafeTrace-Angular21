@@ -54,7 +54,9 @@ export class UrgentListComponent implements OnInit, OnDestroy {
   readonly totalItems = signal(0);
   readonly pageSize = signal(this.defaultPageSize);
 
-  readonly radiusInMeters = signal<number | null>(null);
+  readonly radiusInKm = signal<number | null>(null);
+  readonly latitude = signal<number | null>(null);
+  readonly longitude = signal<number | null>(null);
 
   readonly filter = signal<UrgentCasesFilterRequest>(this.emptyFilter());
 
@@ -74,9 +76,9 @@ export class UrgentListComponent implements OnInit, OnDestroy {
   onFilterChange(newFilter: CasesFilterRequest): void {
     this.filter.update((f) => ({
       ...this.sanitizeFilter(newFilter),
-      latitude: f.latitude,
-      longitude: f.longitude,
-      radiusInMeters: this.normalizeRadius(this.radiusInMeters()),
+      latitude: this.normalizeNumber(this.latitude()),
+      longitude: this.normalizeNumber(this.longitude()),
+      radiusInMeters: this.normalizeRadius(this.radiusInKm()) !== null ? this.normalizeRadius(this.radiusInKm())! * 1000 : null,
       page: 1,
       pageSize: this.pageSize(),
     }));
@@ -85,7 +87,9 @@ export class UrgentListComponent implements OnInit, OnDestroy {
   }
 
   onFilterReset(): void {
-    this.radiusInMeters.set(null);
+    this.radiusInKm.set(null);
+    this.latitude.set(null);
+    this.longitude.set(null);
 
     this.filter.set({
       ...this.emptyFilter(),

@@ -29,11 +29,11 @@
 
     <ng-template #ageCategoryTpl>
       <div>
-        <label for="filter-age-category" class="text-sm font-medium text-on-surface-variant block mb-1">فئة العمر</label>
+        <label for="filter-age-category" class="text-sm font-medium text-on-surface-variant block mb-1">الفئة العمرية</label>
         <app-form-field id="filter-age-category" type="select" formControlName="ageCategory">
           <option value="">الكل</option>
-          @for (ageCategory of ageCategories; track ageCategory) {
-          <option [value]="ageCategory">{{ getAgeCategoryLabel(ageCategory) }}</option>
+          @for (category of ageCategoryOptions; track category) {
+          <option [value]="category">{{ getAgeCategoryLabel(category) }}</option>
           }
         </app-form-field>
       </div>

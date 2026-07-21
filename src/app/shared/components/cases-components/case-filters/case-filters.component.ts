@@ -18,16 +18,17 @@ import { NgModel } from '@angular/forms';
 import { Subscription, debounceTime, distinctUntilChanged, map, merge } from 'rxjs';
 import { NgTemplateOutlet } from '@angular/common';
 import { CasesFilterRequest } from '../../../../core/models/Cases.model';
-import { AgeCategories } from '../../../enums/age-categories';
-import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.categories.dictionary';
 import { CardComponent } from '../../card/card';
 import { ButtonComponent } from '../../button/button';
 import { FormField } from '../../form-field/form-field';
-import { getAgeRange } from '../../../helper/age-category.helper';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { dateRangeValidator } from '../../../validators/date-range.validator';
 import { pastDateValidator } from '../../../validators/past-date.validator';
+import { ageRangeValidator } from '../../../validators/age-range.validator';
+import { AgeCategories } from '../../../../shared/enums/age-categories';
+import { getAgeRange } from '../../../../shared/helper/age-category.helper';
+import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.categories.dictionary';
 
 @Component({
   selector: 'app-case-filters',
@@ -76,9 +77,9 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   reset = output<void>();
 
   // ---------- Public fields ----------
-  readonly ageCategories = Object.values(AgeCategories);
   readonly caseTypeOptions = [CaseType.Urgent, CaseType.LongTerm, CaseType.Unknown];
   readonly statusOptions = Object.values(CaseStatus) as CaseStatus[];
+  readonly ageCategoryOptions = Object.values(AgeCategories) as AgeCategories[];
 
   showAdvanced = false;
   filterForm!: FormGroup;
@@ -172,7 +173,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
         caseType: [''],
         status: [''],
       },
-      { validators: dateRangeValidator('fromDate', 'toDate') },
+      { validators: [dateRangeValidator('fromDate', 'toDate')] },
     );
 
     // Unified reactive flow
@@ -298,7 +299,6 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   // ---------- Build filter request ----------
   buildFilterRequest(): CasesFilterRequest {
     const raw = this.filterForm.value;
-    const { minAge, maxAge } = getAgeRange(raw.ageCategory);
 
     const searchValue = this.toStringOrNull(raw.fullName);
     let fullName = null;
@@ -315,6 +315,8 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
       }
     }
 
+    const ageRange = getAgeRange(this.toEnumOrNull<AgeCategories>(raw.ageCategory));
+
     return this.normalizeFilterRequest({
       status: raw.status,
       gender: raw.gender,
@@ -323,8 +325,8 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
       caseCode,
       government: raw.government,
       city: raw.city,
-      minAge,
-      maxAge,
+      minAge: ageRange.minAge,
+      maxAge: ageRange.maxAge,
       fromDate: raw.fromDate,
       toDate: raw.toDate,
       ageSort: raw.ageSort,
@@ -400,8 +402,8 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     return labels[gender] ?? String(gender);
   }
 
-  getAgeCategoryLabel(ageCategory: AgeCategories | null): string {
-    return getAgeCategoryTranslationAr(ageCategory ?? null) || 'الكل';
+  getAgeCategoryLabel(category: AgeCategories): string {
+    return getAgeCategoryTranslationAr(category);
   }
 
   getAgeSortLabel(sort: number): string {
