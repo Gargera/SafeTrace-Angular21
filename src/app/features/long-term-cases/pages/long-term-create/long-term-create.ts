@@ -12,7 +12,7 @@ import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
-import { FormField } from '../../../../shared/components/form-field/form-field'; // تم تعديل اسم الكلاس هنا ليطابق الملف الفعلي
+import { FormField } from '../../../../shared/components/form-field/form-field';
 
 type Step = 1 | 2 | 3;
 
@@ -25,7 +25,7 @@ type Step = 1 | 2 | 3;
     RouterLink, 
     ForceCreatePopupComponent,
     ButtonComponent,
-    FormField // تم تمرير الاسم الصحيح هنا
+    FormField
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../../../../shared/styles/case-form.css', './long-term-create.css'],
@@ -180,16 +180,22 @@ export class LongTermCreate {
         this.isSubmitting.set(false);
         const data = res.data;
 
-        if (data && data.isCreated === false) {
+        // في حالة وجود تكرار وعدم إتمام الإنشاء
+        if (data && (data.isCreated === false || data.isCreated === undefined)) {
+          // 1. تعيين الحالات المتطابقة
           if (data.matchedCases) {
             this.matchedCases.set(data.matchedCases.map(mapMatchedCaseResponseToDto));
           } else {
             this.matchedCases.set([]);
           }
           
+          // 2. التحقق من خاصية isSameTypeDuplicate المرجعة من الـ Backend بكافة الأشكال المحتملة (PascalCase / camelCase)
           const rawData = data as any;
-          this.isBlockedDuplicate.set(!!rawData.isSameTypeDuplicate);
+          const isSameType = rawData.isSameTypeDuplicate ?? rawData.IsSameTypeDuplicate ?? false;
           
+          this.isBlockedDuplicate.set(Boolean(isSameType));
+          
+          // 3. إظهار البوب أب
           this.showForceCreatePopup.set(true);
           return;
         }
@@ -212,6 +218,10 @@ export class LongTermCreate {
   }
 
   onForceCreateConfirm(): void {
+    // حماية إضافية: يمنع عمل Force Create إذا كانت الحالة من نفس النوع
+    if (this.isBlockedDuplicate()) {
+      return;
+    }
     this.showForceCreatePopup.set(false);
     this.onSubmit(true);
   }

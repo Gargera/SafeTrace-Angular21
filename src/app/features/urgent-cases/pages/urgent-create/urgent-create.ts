@@ -223,17 +223,16 @@ export class UrgentCreate {
       const photos = this.selectedPhotos();
       const [primaryImage, ...additionalImages] = photos;
 
-      // 💡 معالجة تاريخ البلاغ وتنسيقه ليكون ISO متوافق مع داتابيز الـ .NET
       const formattedDate = v.eventDate ? new Date(v.eventDate).toISOString() : new Date().toISOString();
 
       request = {
         fName: v.fName!,
         lName: v.lName!,
-        sName: v.sName || '', // استبدال النصوص الفارغة بدل الـ null
+        sName: v.sName || '',
         tName: v.tName || '',
         gender: v.gender as Gender,
-        age: Number(v.age!), // تأكيد إرساله كـ number
-        relation: Number(v.relation) as unknown as RelationType, // تأكيد إرسال Enum كـ رقم صريح ليتطابق مع الـ backend
+        age: Number(v.age!),
+        relation: Number(v.relation) as unknown as RelationType,
         communicationPhone: v.communicationPhone!,
         description: v.description || '',
         government: v.government!,
@@ -241,7 +240,7 @@ export class UrgentCreate {
         street: v.street!,
         eventDate: formattedDate,
         primaryImage,
-        additionalImages: additionalImages.length ? additionalImages : [], // إرسال مصفوفة فارغة بدلاً من null لتجنب كسر الـ foreach في الباك إند
+        additionalImages: additionalImages.length ? additionalImages : [],
         video: this.videoFile(),
         latitude: Number(this.selectedLat()!),
         longitude: Number(this.selectedLng()!),
@@ -254,15 +253,19 @@ export class UrgentCreate {
         this.isSubmitting.set(false);
         const data = res.data;
 
-        if (data && data.isCreated === false) {
+        // في حالة التكرار وعدم الإنشـاء
+        if (data && (data.isCreated === false || data.isCreated === undefined)) {
           if (data.matchedCases) {
             this.matchedCases.set(data.matchedCases.map(mapMatchedCaseResponseToDto));
           } else {
             this.matchedCases.set([]);
           }
 
+          // قراءة isSameTypeDuplicate بالصيغتين (PascalCase أو camelCase)
           const rawData = data as any;
-          this.isBlockedDuplicate.set(!!rawData.isSameTypeDuplicate);
+          const isSameType = rawData.isSameTypeDuplicate ?? rawData.IsSameTypeDuplicate ?? false;
+
+          this.isBlockedDuplicate.set(Boolean(isSameType));
 
           this.showForceCreatePopup.set(true);
           return;
@@ -286,6 +289,10 @@ export class UrgentCreate {
   }
 
   onForceCreateConfirm(): void {
+    // منع الـ Force Create لو كانت الحالة مكررة من نفس النوع
+    if (this.isBlockedDuplicate()) {
+      return;
+    }
     this.showForceCreatePopup.set(false);
     this.onSubmit(true);
   }
