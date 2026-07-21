@@ -18,7 +18,10 @@ export interface GetUserInfoDTO {
   phoneNumber: string | null; // ← كانت PhoneNumber بحرف كبير
   cases: any[];
 }
-
+export interface UpdateCurrentLocationDTO {
+  currentLocationLatitude: number;
+  currentLocationLongitude: number;
+}
 // ── One DTO per endpoint — matches the backend exactly, keeps sections independent ──
 
 /** PUT /UserProfile/UpdateName (form-data) */

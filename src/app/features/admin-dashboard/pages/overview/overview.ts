@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, HostListener, inject, OnInit, signa
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { SystemConstants } from '../../../../core/constants/system.constants';
 import Swal from 'sweetalert2';
 import { environment } from '../../../../../environments/environment';
 import { ButtonComponent } from '../../../../shared/components/button/button';
@@ -19,6 +20,10 @@ export class Overview implements OnInit {
   currentUser = this.authService.currentUser;
   
   isSidebarExpanded = signal<boolean>(true);
+
+  isSuperAdmin(): boolean {
+    return this.currentUser()?.email === SystemConstants.RootAdminEmail;
+  }
 
   ngOnInit() {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
