@@ -1,111 +1,175 @@
-<div
-  class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-  (click)="onBackdropClick($event)"
->
-  <div
-    class="w-full max-w-3xl overflow-hidden rounded-3xl border border-outline-variant/20 bg-surface-container-lowest shadow-2xl"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="founded-title"
-    (click)="$event.stopPropagation()"
-  >
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+  (click)="onBackdropClick($event)">
+  <div class="w-full max-w-3xl overflow-hidden rounded-3xl border border-outline-variant/20 bg-surface shadow-2xl"
+    role="dialog" aria-modal="true" aria-labelledby="founded-title" (click)="$event.stopPropagation()">
     <!-- Header -->
-    <div class="flex items-center justify-between border-b border-outline-variant/20 px-6 py-5">
-      <h2 id="founded-title" class="text-lg font-semibold text-on-surface">
-        تسجيل الحالة كـ "تم العثور عليه"
-      </h2>
+    <div
+      class="flex items-center justify-between border-b border-outline-variant/20 bg-gradient-to-r from-primary/10 to-success/10 px-6 py-6">
+      <div class="flex items-center gap-4">
+        <div
+          class="flex h-14 w-14 items-center justify-center rounded-2xl bg-on-tertiary-container text-white shadow-md">
+          <span class="material-symbols-outlined text-3xl">verified</span>
+        </div>
 
-      <button
-        type="button"
-        class="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-surface-container"
-        (click)="cancel.emit()"
-        aria-label="إغلاق"
-      >
+        <div>
+          <h2 id="founded-title" class="text-xl font-bold text-on-surface">
+            تسجيل الحالة كـ "تم العثور عليه"
+          </h2>
+
+          <p class="mt-1 text-sm text-on-surface-variant">
+            سيتم تحديث حالة البلاغ وإضافة بيانات العثور.
+          </p>
+        </div>
+      </div>
+
+      <button type="button"
+        class="flex h-11 w-11 items-center justify-center rounded-full text-on-surface-variant transition hover:bg-error/90 hover:text-on-error cursor-pointer"
+        (click)="cancel.emit()" aria-label="إغلاق">
         <span class="material-symbols-outlined">close</span>
       </button>
     </div>
 
     <!-- Body -->
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5 px-6 py-6">
-      <app-form-field
-        formControlName="description"
-        label="وصف الحالة"
-        placeholder="اكتب وصفًا مختصرًا..."
-        type="textarea"
-        [rows]="3"
-        [extraClass]="isInvalid('description') ? 'border-error' : ''"
-      />
+    <form [formGroup]="form" (ngSubmit)="onSubmit()"
+      class="max-h-[70vh] space-y-6 overflow-y-auto bg-slate-100 p-6 flex flex-col gap-3">
+      <!-- Description Card -->
+      <app-card extraClass="rounded-2xl bg-white border border-outline-variant/20 shadow-sm p-6">
+        <div class="mb-5 flex items-center gap-3">
+          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
+            <span class="material-symbols-outlined text-primary">
+              description
+            </span>
+          </div>
 
-      @if (isInvalid('description')) {
-        <p class="text-sm text-error">{{ getFieldError('description') }}</p>
-      }
-
-      <app-form-field
-        formControlName="government"
-        label="المحافظة"
-        placeholder="مثال: القاهرة"
-        type="text"
-        [extraClass]="isInvalid('government') ? 'border-error' : ''"
-      />
-
-      @if (isInvalid('government')) {
-        <p class="text-sm text-error">{{ getFieldError('government') }}</p>
-      }
-
-      <app-form-field
-        formControlName="city"
-        label="المدينة"
-        placeholder="مثال: مدينة نصر"
-        type="text"
-        [extraClass]="isInvalid('city') ? 'border-error' : ''"
-      />
-
-      @if (isInvalid('city')) {
-        <p class="text-sm text-error">{{ getFieldError('city') }}</p>
-      }
-
-      <app-form-field
-        formControlName="street"
-        label="الشارع"
-        placeholder="اسم الشارع أو أقرب معلم"
-        type="text"
-        [extraClass]="isInvalid('street') ? 'border-error' : ''"
-      />
-
-      @if (isInvalid('street')) {
-        <p class="text-sm text-error">{{ getFieldError('street') }}</p>
-      }
-
-      <app-form-field
-        formControlName="foundedAt"
-        label="تاريخ العثور"
-        type="date"
-        [extraClass]="isInvalid('foundedAt') ? 'border-error' : ''"
-      />
-
-      @if (isInvalid('foundedAt')) {
-        <p class="text-sm text-error">{{ getFieldError('foundedAt') }}</p>
-      }
-
-      @if (errorMsg()) {
-        <div class="rounded-xl bg-error-container px-4 py-3 text-sm text-on-error-container">
-          {{ errorMsg() }}
+          <div>
+            <h3 class="font-semibold text-on-surface">وصف الحالة</h3>
+            <p class="text-sm text-on-surface-variant">
+              أضف وصفًا مختصرًا عن عملية العثور.
+            </p>
+          </div>
         </div>
+
+        <app-form-field formControlName="description" label="الوصف" placeholder="اكتب وصفًا مختصرًا..." type="textarea"
+          [rows]="4" [extraClass]="isInvalid('description') ? 'border-error' : ''" />
+
+        @if (isInvalid('description')) {
+        <p class="mt-2 text-sm text-error">
+          {{ getFieldError('description') }}
+        </p>
+        }
+      </app-card>
+
+      <!-- Location Card -->
+      <app-card extraClass="rounded-2xl bg-white border border-outline-variant/20 shadow-sm p-6">
+        <div class="mb-5 flex items-center gap-3">
+          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
+            <span class="material-symbols-outlined text-primary">
+              location_on
+            </span>
+          </div>
+
+          <div>
+            <h3 class="font-semibold text-on-surface">مكان العثور</h3>
+            <p class="text-sm text-on-surface-variant">
+              أدخل مكان العثور بالتفصيل.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
+            <app-form-field formControlName="government" label="المحافظة" placeholder="مثال: القاهرة" type="text"
+              [extraClass]="isInvalid('government') ? 'border-error' : ''" />
+
+            @if (isInvalid('government')) {
+            <p class="mt-2 text-sm text-error">
+              {{ getFieldError('government') }}
+            </p>
+            }
+          </div>
+
+          <div>
+            <app-form-field formControlName="city" label="المدينة" placeholder="مثال: مدينة نصر" type="text"
+              [extraClass]="isInvalid('city') ? 'border-error' : ''" />
+
+            @if (isInvalid('city')) {
+            <p class="mt-2 text-sm text-error">
+              {{ getFieldError('city') }}
+            </p>
+            }
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <app-form-field formControlName="street" label="الشارع" placeholder="اسم الشارع أو أقرب معلم" type="text"
+            [extraClass]="isInvalid('street') ? 'border-error' : ''" />
+
+          @if (isInvalid('street')) {
+          <p class="mt-2 text-sm text-error">
+            {{ getFieldError('street') }}
+          </p>
+          }
+        </div>
+      </app-card>
+
+      <!-- Date Card -->
+      <app-card extraClass="rounded-2xl bg-white border border-outline-variant/20 shadow-sm p-6">
+        <div class="mb-5 flex items-center gap-3">
+          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
+            <span class="material-symbols-outlined text-primary">
+              calendar_month
+            </span>
+          </div>
+
+          <div>
+            <h3 class="font-semibold text-on-surface">تاريخ العثور</h3>
+            <p class="text-sm text-on-surface-variant">
+              اختر تاريخ العثور على الشخص.
+            </p>
+          </div>
+        </div>
+
+        <app-form-field formControlName="foundedAt" label="تاريخ العثور" type="date"
+          [extraClass]="isInvalid('foundedAt') ? 'border-error' : ''" />
+
+        @if (isInvalid('foundedAt')) {
+        <p class="mt-2 text-sm text-error">
+          {{ getFieldError('foundedAt') }}
+        </p>
+        }
+      </app-card>
+
+      <!-- Error -->
+      @if (errorMsg()) {
+      <app-card extraClass="rounded-2xl border border-error/20 bg-error-container p-4">
+        <div class="flex items-start gap-3">
+          <span class="material-symbols-outlined text-error">
+            error
+          </span>
+
+          <p class="text-sm text-on-error-container">
+            {{ errorMsg() }}
+          </p>
+        </div>
+      </app-card>
       }
     </form>
 
     <!-- Footer -->
-    <div class="flex items-center justify-end gap-3 border-t border-outline-variant/20 px-6 py-5">
-      <app-button variant="secondary" (onClick)="cancel.emit()"> إلغاء </app-button>
+    <div class="flex items-center justify-between border-t border-outline-variant/20 bg-white px-6 py-5">
+      <p class="text-sm text-on-surface-variant">
+        تأكد من صحة البيانات قبل تأكيد العملية.
+      </p>
 
-      <app-button
-        variant="success"
-        [loading]="isSubmitting()"
-        [disabled]="isSubmitting()"
-        (onClick)="onSubmit()"
-      >
-        {{ isSubmitting() ? 'جاري الحفظ...' : 'تأكيد' }}
-      </app-button>
+      <div class="flex items-center gap-3">
+        <app-button variant="secondary" (onClick)="cancel.emit()">
+          إلغاء
+        </app-button>
+
+        <app-button variant="success" [loading]="isSubmitting()" [disabled]="isSubmitting()" (onClick)="onSubmit()">
+          {{ isSubmitting() ? 'جاري الحفظ...' : 'تأكيد العثور' }}
+        </app-button>
+      </div>
     </div>
   </div>
 </div>

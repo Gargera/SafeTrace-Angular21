@@ -18,11 +18,12 @@ import { FoundPersonInfoRequest } from '../../../../core/models/Cases.model';
 // Shared validators
 import { arabicText } from '../../../validators/arabic-text.validator';
 import { pastDate } from '../../../validators/past-date.validator';
+import { CardComponent } from "../../card/card";
 
 @Component({
   selector: 'app-founded-popup',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ButtonComponent, FormField],
+  imports: [CommonModule, ReactiveFormsModule, ButtonComponent, FormField, CardComponent],
   templateUrl: './founded-popup.html',
   styleUrls: ['./founded-popup.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -61,11 +62,12 @@ export class FoundedPopupComponent {
     const control = this.form.get(field);
     if (!control || !control.errors || !(control.touched || control.dirty)) return null;
     const e = control.errors;
-    if (e['required'])      return 'هذا الحقل مطلوب';
-    if (e['arabicText'])    return 'يجب كتابة النص بالحروف العربية فقط';
-    if (e['minlength'])     return `الحد الأدنى ${e['minlength'].requiredLength} أحرف`;
-    if (e['maxlength'])     return `الحد الأقصى ${e['maxlength'].requiredLength} حرفاً`;
-    if (e['pastDate'])      return 'لا يمكن أن يكون التاريخ في المستقبل';
+    if (e['required']) return 'هذا الحقل مطلوب';
+    if (e['arabicText']) return 'يجب كتابة النص بالحروف العربية فقط';
+    if (e['minlength']) return `الحد الأدنى ${e['minlength'].requiredLength} أحرف`;
+    if (e['maxlength']) return `الحد الأقصى ${e['maxlength'].requiredLength} حرفاً`;
+    if (e['description']) return 'لا يمكن أن يتجاوز الوصف 2000 حرف';
+    if (e['pastDate']) return 'لا يمكن أن يكون التاريخ في المستقبل';
     return 'قيمة غير صحيحة';
   }
 

@@ -31,7 +31,6 @@ type Step = 1 | 2 | 3;
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    RouterLink,
     MapLocationPickerComponent,
     ForceCreatePopupComponent,
     ButtonComponent,
@@ -137,6 +136,7 @@ export class UrgentCreate {
     if (e['max']) return `يجب أن لا تتجاوز القيمة ${e['max'].max}`;
     if (e['egyptianPhone']) return 'أدخل رقم هاتف مصري صحيح (مثال: 01xxxxxxxxx)';
     if (e['pastDate']) return 'لا يمكن أن يكون التاريخ في المستقبل';
+    if (e['description']) return 'لا يمكن أن يتجاوز الوصف 2000 حرف';
     if (e['validEnum']) return 'اختر قيمة صحيحة';
     return 'قيمة غير صحيحة';
   }
