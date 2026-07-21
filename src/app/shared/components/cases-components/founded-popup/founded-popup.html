@@ -37,7 +37,12 @@
       />
 
       @if (isInvalid('description')) {
-        <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+        @if (form.get('description')?.hasError('required')) {
+          <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+        }
+        @if (form.get('description')?.hasError('maxlength')) {
+          <p class="text-sm text-error">الحد الأقصى 2000 حرف</p>
+        }
       }
 
       <app-form-field
@@ -49,7 +54,18 @@
       />
 
       @if (isInvalid('government')) {
-        <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+        @if (form.get('government')?.hasError('required')) {
+          <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+        }
+        @if (form.get('government')?.hasError('minlength')) {
+          <p class="text-sm text-error">الحد الأدنى حرفين</p>
+        }
+        @if (form.get('government')?.hasError('maxlength')) {
+          <p class="text-sm text-error">الحد الأقصى 100 حرف</p>
+        }
+        @if (form.get('government')?.hasError('invalidArabicText')) {
+          <p class="text-sm text-error">حروف عربية فقط</p>
+        }
       }
 
       <app-form-field
@@ -61,7 +77,18 @@
       />
 
       @if (isInvalid('city')) {
-        <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+        @if (form.get('city')?.hasError('required')) {
+          <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+        }
+        @if (form.get('city')?.hasError('minlength')) {
+          <p class="text-sm text-error">الحد الأدنى حرفين</p>
+        }
+        @if (form.get('city')?.hasError('maxlength')) {
+          <p class="text-sm text-error">الحد الأقصى 100 حرف</p>
+        }
+        @if (form.get('city')?.hasError('invalidArabicText')) {
+          <p class="text-sm text-error">حروف عربية فقط</p>
+        }
       }
 
       <app-form-field
@@ -73,7 +100,12 @@
       />
 
       @if (isInvalid('street')) {
-        <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+        @if (form.get('street')?.hasError('required')) {
+          <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+        }
+        @if (form.get('street')?.hasError('maxlength')) {
+          <p class="text-sm text-error">الحد الأقصى 200 حرف</p>
+        }
       }
 
       <app-form-field
@@ -84,7 +116,12 @@
       />
 
       @if (isInvalid('foundedAt')) {
-        <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+        @if (form.get('foundedAt')?.hasError('required')) {
+          <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+        }
+        @if (form.get('foundedAt')?.hasError('futureDate')) {
+          <p class="text-sm text-error">لا يمكن اختيار تاريخ في المستقبل</p>
+        }
       }
 
       @if (errorMsg()) {
@@ -101,7 +138,7 @@
       <app-button
         variant="success"
         [loading]="isSubmitting()"
-        [disabled]="isSubmitting()"
+        [disabled]="isSubmitting() || form.invalid"
         (onClick)="onSubmit()"
       >
         {{ isSubmitting() ? 'جاري الحفظ...' : 'تأكيد' }}

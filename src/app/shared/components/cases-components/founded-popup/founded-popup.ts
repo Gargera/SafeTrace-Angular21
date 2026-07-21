@@ -12,6 +12,8 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
+import { arabicTextValidator } from '../../../../shared/validators/arabic-text.validator';
+import { pastDateValidator } from '../../../../shared/validators/past-date.validator';
 
 import { FoundPersonInfoRequest } from '../../../../core/models/Cases.model';
 
@@ -35,11 +37,11 @@ export class FoundedPopupComponent {
   readonly errorMsg = signal<string | null>(null);
 
   readonly form = this.fb.nonNullable.group({
-    description: ['', Validators.required],
-    government: ['', Validators.required],
-    city: ['', Validators.required],
-    street: ['', Validators.required],
-    foundedAt: ['', Validators.required],
+    description: ['', [Validators.required, Validators.maxLength(2000)]],
+    government: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), arabicTextValidator()]],
+    city: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), arabicTextValidator()]],
+    street: ['', [Validators.required, Validators.maxLength(200)]],
+    foundedAt: ['', [Validators.required, pastDateValidator()]],
   });
 
   isInvalid(controlName: keyof FoundPersonInfoRequest): boolean {
