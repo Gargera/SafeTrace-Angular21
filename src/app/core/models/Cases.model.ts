@@ -181,3 +181,5 @@ export interface FoundPersonInfoRequest {
   street: string;
   foundedAt: string; // DateOnly
 }
+
+export { CaseType };
