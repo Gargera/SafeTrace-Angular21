@@ -9,13 +9,21 @@ import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
+import { CardComponent } from '../../../../shared/components/card/card';
+
+// Shared validators
+import { arabicText } from '../../../../shared/validators/arabic-text.validator';
+import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
+import { pastDate } from '../../../../shared/validators/past-date.validator';
+import { validEnum } from '../../../../shared/validators/enum.validator';
 
 type Step = 1 | 2 | 3;
 
 @Component({
   selector: 'app-unknown-update',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, FormField],
+  imports: [ReactiveFormsModule, ButtonComponent, FormField,
+    CardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../../../../shared/styles/case-form.css', './unknown-update.css'],
   templateUrl: './unknown-update.html',
@@ -41,6 +49,8 @@ export class UnknownUpdate implements OnInit {
   newPhotoPreviews = signal<string[]>([]);
   newPrimaryImage = signal<File | null>(null);
   newPrimaryPreview = signal<string | null>(null);
+  newPrimaryError = signal<string | null>(null);
+  newPhotosError = signal<string | null>(null);
 
   existingVideoUrl = signal<string | null>(null);
   videoFile = signal<File | null>(null);
@@ -59,20 +69,50 @@ export class UnknownUpdate implements OnInit {
     return ['بيانات الشخص (إن وُجدت)', 'موقع العثور عليه', 'صور'][this.currentStep - 1];
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // Form definition — validators match backend exactly (UnknownCase Update)
+  // ─────────────────────────────────────────────────────────────
   form = this.fb.group({
-    fName: ['', [Validators.minLength(2), Validators.maxLength(100)]],
-    sName: ['', [Validators.maxLength(100)]],
-    tName: ['', [Validators.maxLength(100)]],
-    lName: ['', [Validators.minLength(2), Validators.maxLength(100)]],
-    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(150)]],
-    gender: ['' as Gender | '', Validators.required],
-    communicationPhone: ['', [Validators.maxLength(20)]],
+    // Optional — Arabic only when provided, 2-60 chars
+    fName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    sName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    tName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    lName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    // Age — required, 0-120
+    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(120)]],
+    // Gender — required, valid enum
+    gender: ['' as Gender | '', [Validators.required, validEnum(Gender)]],
+    // Phone — optional, Egyptian format, max 15
+    communicationPhone: ['', [egyptianPhone(), Validators.maxLength(15)]],
+    // Description — optional, max 2000
     description: ['', [Validators.maxLength(2000)]],
-    government: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
-    city: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
-    street: ['', [Validators.required, Validators.maxLength(500)]],
-    eventDate: ['', Validators.required],
+    // Location — required, Arabic only, 2-100
+    government: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
+    city: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
+    // Street — required, NOT Arabic-only, max 200
+    street: ['', [Validators.required, Validators.maxLength(200)]],
+    // EventDate — required, cannot be future
+    eventDate: ['', [Validators.required, pastDate()]],
   });
+
+  // ─────────────────────────────────────────────────────────────
+  // Error message helper
+  // ─────────────────────────────────────────────────────────────
+  getFieldError(field: string): string | null {
+    const control = this.form.get(field);
+    if (!control || !control.errors || !(control.touched || control.dirty)) return null;
+    const e = control.errors;
+    if (e['required']) return 'هذا الحقل مطلوب';
+    if (e['arabicText']) return 'يجب كتابة النص بالحروف العربية فقط';
+    if (e['minlength']) return `الحد الأدنى ${e['minlength'].requiredLength} أحرف`;
+    if (e['maxlength']) return `الحد الأقصى ${e['maxlength'].requiredLength} حرفاً`;
+    if (e['min']) return `يجب أن لا تقل القيمة عن ${e['min'].min}`;
+    if (e['max']) return `يجب أن لا تتجاوز القيمة ${e['max'].max}`;
+    if (e['egyptianPhone']) return 'أدخل رقم هاتف مصري صحيح (مثال: 01xxxxxxxxx)';
+    if (e['pastDate']) return 'لا يمكن أن يكون التاريخ في المستقبل';
+    if (e['validEnum']) return 'اختر قيمة صحيدة';
+    return 'قيمة غير صحيحة';
+  }
 
   ngOnInit(): void {
     this.caseId = Number(this.route.snapshot.paramMap.get('id'));
@@ -115,7 +155,7 @@ export class UnknownUpdate implements OnInit {
 
   isInvalid(field: string): boolean {
     const c = this.form.get(field);
-    return !!(c?.invalid && c?.touched);
+    return !!(c?.invalid && (c?.touched || c?.dirty));
   }
 
   nextStep(): void {
@@ -149,9 +189,24 @@ export class UnknownUpdate implements OnInit {
     this.newPrimaryPreview.set(null);
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // File validation constants
+  // ─────────────────────────────────────────────────────────────
+  private readonly ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  private readonly MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5 MB
+
   onNewPrimarySelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     if (!file) return;
+    if (!this.ALLOWED_TYPES.includes(file.type.toLowerCase())) {
+      this.newPrimaryError.set('نوع الملف غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+      return;
+    }
+    if (file.size > this.MAX_PHOTO_BYTES) {
+      this.newPrimaryError.set('حجم الصورة يتجاوز الحد المسموح (5 MB)');
+      return;
+    }
+    this.newPrimaryError.set(null);
     this.newPrimaryImage.set(file);
     this.newPrimaryPreview.set(URL.createObjectURL(file));
     this.primaryPhotoId.set(null);
@@ -164,6 +219,17 @@ export class UnknownUpdate implements OnInit {
 
   onNewPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
+    const invalidType = files.find(f => !this.ALLOWED_TYPES.includes(f.type.toLowerCase()));
+    if (invalidType) {
+      this.newPhotosError.set('أحد الملفات من نوع غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+      return;
+    }
+    const oversized = files.find(f => f.size > this.MAX_PHOTO_BYTES);
+    if (oversized) {
+      this.newPhotosError.set('أحد الملفات يتجاوز الحد المسموح (5 MB لكل صورة)');
+      return;
+    }
+    this.newPhotosError.set(null);
     this.newPhotos.update((p) => [...p, ...files].slice(0, 5));
     this.newPhotoPreviews.set(this.newPhotos().map((f) => URL.createObjectURL(f)));
   }

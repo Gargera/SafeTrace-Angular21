@@ -37,7 +37,7 @@
       />
 
       @if (isInvalid('description')) {
-        <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+        <p class="text-sm text-error">{{ getFieldError('description') }}</p>
       }
 
       <app-form-field
@@ -49,7 +49,7 @@
       />
 
       @if (isInvalid('government')) {
-        <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+        <p class="text-sm text-error">{{ getFieldError('government') }}</p>
       }
 
       <app-form-field
@@ -61,7 +61,7 @@
       />
 
       @if (isInvalid('city')) {
-        <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+        <p class="text-sm text-error">{{ getFieldError('city') }}</p>
       }
 
       <app-form-field
@@ -73,7 +73,7 @@
       />
 
       @if (isInvalid('street')) {
-        <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+        <p class="text-sm text-error">{{ getFieldError('street') }}</p>
       }
 
       <app-form-field
@@ -84,7 +84,7 @@
       />
 
       @if (isInvalid('foundedAt')) {
-        <p class="text-sm text-error">هذا الحقل مطلوب.</p>
+        <p class="text-sm text-error">{{ getFieldError('foundedAt') }}</p>
       }
 
       @if (errorMsg()) {

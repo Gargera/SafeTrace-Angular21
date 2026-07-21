@@ -10,14 +10,22 @@ import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
-import { FormField } from '../../../../shared/components/form-field/form-field';  
+import { FormField } from '../../../../shared/components/form-field/form-field';
+import { CardComponent } from '../../../../shared/components/card/card';
+
+// Shared validators
+import { arabicText } from '../../../../shared/validators/arabic-text.validator';
+import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
+import { pastDate } from '../../../../shared/validators/past-date.validator';
+import { validEnum } from '../../../../shared/validators/enum.validator';
 
 type Step = 1 | 2 | 3;
 
 @Component({
   selector: 'app-long-term-update',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, FormField],
+  imports: [ReactiveFormsModule, ButtonComponent, FormField,
+    CardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../../../../shared/styles/case-form.css', './long-term-update.css'],
   templateUrl: './long-term-update.html',
@@ -37,20 +45,22 @@ export class LongTermUpdate implements OnInit {
 
   // existing (already-uploaded) photos coming from GetCaseDetails
   existingPhotos = signal<CaseFileResponse[]>([]);
-  // ids the user marked for deletion (removed from view, sent to backend on submit)
+  // ids the user marked for deletion
   deletedPhotoIds = signal<number[]>([]);
-  // id of the existing photo chosen as primary (defaults to whichever isPrimary=true)
+  // id of the existing photo chosen as primary
   primaryPhotoId = signal<number | null>(null);
 
   // newly added files in this session
   newPhotos = signal<File[]>([]);
   newPhotoPreviews = signal<string[]>([]);
-  /** set only if user replaces the primary photo with a brand-new upload */
   newPrimaryImage = signal<File | null>(null);
   newPrimaryPreview = signal<string | null>(null);
+  newPrimaryError = signal<string | null>(null);
+  newPhotosError = signal<string | null>(null);
 
   existingPoliceReportUrl = signal<string | null>(null);
   policeReportFile = signal<File | null>(null);
+  policeReportError = signal<string | null>(null);
 
   existingVideoUrl = signal<string | null>(null);
   videoFile = signal<File | null>(null);
@@ -70,21 +80,48 @@ export class LongTermUpdate implements OnInit {
     return ['بيانات الشخص المفقود', 'آخر موقع معروف', 'مستندات وصور'][this.currentStep - 1];
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // Form definition — validators match backend exactly (Update same as Create)
+  // ─────────────────────────────────────────────────────────────
   form = this.fb.group({
-    fName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    sName: ['', [Validators.maxLength(100)]],
-    tName: ['', [Validators.maxLength(100)]],
-    lName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(150)]],
-    gender: ['' as Gender | '', Validators.required],
-    relation: [null as RelationType | null, Validators.required],
-    communicationPhone: ['', [Validators.maxLength(20)]],
+    fName: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    sName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    tName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    lName: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(120)]],
+    gender: ['' as Gender | '', [Validators.required, validEnum(Gender)]],
+    relation: [null as RelationType | null, [Validators.required, validEnum(RelationType)]],
+    communicationPhone: ['', [egyptianPhone(), Validators.maxLength(15)]],
     description: ['', [Validators.maxLength(2000)]],
-    government: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
-    city: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
-    street: ['', [Validators.required, Validators.maxLength(500)]],
-    eventDate: ['', Validators.required],
+    government: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
+    city: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
+    street: ['', [Validators.required, Validators.maxLength(200)]],
+    eventDate: ['', [Validators.required, pastDate()]],
   });
+
+  // ─────────────────────────────────────────────────────────────
+  // Error message helper
+  // ─────────────────────────────────────────────────────────────
+  getFieldError(field: string): string | null {
+    const control = this.form.get(field);
+    if (!control || !control.errors || !(control.touched || control.dirty)) return null;
+    const e = control.errors;
+    if (e['required']) return 'هذا الحقل مطلوب';
+    if (e['arabicText']) return 'يجب كتابة النص بالحروف العربية فقط';
+    if (e['minlength']) return `الحد الأدنى ${e['minlength'].requiredLength} أحرف`;
+    if (e['maxlength']) return `الحد الأقصى ${e['maxlength'].requiredLength} حرفاً`;
+    if (e['min']) return `يجب أن لا تقل القيمة عن ${e['min'].min}`;
+    if (e['max']) return `يجب أن لا تتجاوز القيمة ${e['max'].max}`;
+    if (e['egyptianPhone']) return 'أدخل رقم هاتف مصري صحيح (مثال: 01xxxxxxxxx)';
+    if (e['pastDate']) return 'لا يمكن أن يكون التاريخ في المستقبل';
+    if (e['validEnum']) return 'اختر قيمة صحيحة';
+    return 'قيمة غير صحيحة';
+  }
+
+  isInvalid(field: string): boolean {
+    const c = this.form.get(field);
+    return !!(c?.invalid && (c?.touched || c?.dirty));
+  }
 
   ngOnInit(): void {
     this.caseId = Number(this.route.snapshot.paramMap.get('id'));
@@ -95,7 +132,7 @@ export class LongTermUpdate implements OnInit {
     this.isLoading.set(true);
     this.service.getCaseById(this.caseId).subscribe({
       next: (res) => {
-        const c = res.data as any; // adjust to your exact LongTermCaseDetailResponse shape
+        const c = res.data as any;
         this.form.patchValue({
           fName: c.fName ?? '',
           sName: c.sName ?? '',
@@ -128,11 +165,6 @@ export class LongTermUpdate implements OnInit {
     });
   }
 
-  isInvalid(field: string): boolean {
-    const c = this.form.get(field);
-    return !!(c?.invalid && c?.touched);
-  }
-
   nextStep(): void {
     const stepFields: Record<number, string[]> = {
       1: ['fName', 'lName', 'age', 'gender', 'relation'],
@@ -149,6 +181,13 @@ export class LongTermUpdate implements OnInit {
     if (this.currentStep > 1) this.currentStep = (this.currentStep - 1) as Step;
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // File validation constants
+  // ─────────────────────────────────────────────────────────────
+  private readonly ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  private readonly MAX_PHOTO_BYTES = 5 * 1024 * 1024;     // 5 MB
+  private readonly MAX_POLICE_BYTES = 10 * 1024 * 1024;   // 10 MB
+
   // ----- existing photos -----
   removeExistingPhoto(photo: CaseFileResponse): void {
     this.existingPhotos.update((list) => list.filter((p) => p.id !== photo.id));
@@ -161,28 +200,48 @@ export class LongTermUpdate implements OnInit {
 
   setExistingAsPrimary(photo: CaseFileResponse): void {
     this.primaryPhotoId.set(photo.id);
-    // a newly-uploaded primary (if any) is no longer the intended primary
     this.newPrimaryImage.set(null);
     this.newPrimaryPreview.set(null);
   }
 
-  // ----- new primary photo (replace) -----
+  // ----- new primary photo -----
   onNewPrimarySelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     if (!file) return;
+    if (!this.ALLOWED_TYPES.includes(file.type.toLowerCase())) {
+      this.newPrimaryError.set('نوع الملف غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+      return;
+    }
+    if (file.size > this.MAX_PHOTO_BYTES) {
+      this.newPrimaryError.set('حجم الصورة يتجاوز الحد المسموح (5 MB)');
+      return;
+    }
+    this.newPrimaryError.set(null);
     this.newPrimaryImage.set(file);
     this.newPrimaryPreview.set(URL.createObjectURL(file));
-    this.primaryPhotoId.set(null); // uploaded file takes priority over existing selection
+    this.primaryPhotoId.set(null);
   }
 
   clearNewPrimary(): void {
     this.newPrimaryImage.set(null);
     this.newPrimaryPreview.set(null);
+    this.newPrimaryError.set(null);
   }
 
   // ----- new additional photos -----
   onNewPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
+    const invalidType = files.find(f => !this.ALLOWED_TYPES.includes(f.type.toLowerCase()));
+    if (invalidType) {
+      this.newPhotosError.set('أحد الملفات من نوع غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+      return;
+    }
+    const oversized = files.find(f => f.size > this.MAX_PHOTO_BYTES);
+    if (oversized) {
+      this.newPhotosError.set('أحد الملفات يتجاوز الحد المسموح (5 MB لكل صورة)');
+      return;
+    }
+    this.newPhotosError.set(null);
     this.newPhotos.update((p) => [...p, ...files].slice(0, 5));
     this.newPhotoPreviews.set(this.newPhotos().map((f) => URL.createObjectURL(f)));
   }
@@ -192,9 +251,20 @@ export class LongTermUpdate implements OnInit {
     this.newPhotoPreviews.update((p) => p.filter((_, i) => i !== index));
   }
 
-  // ----- police report -----
+  // ----- police report — optional, JPEG/PNG/WebP, max 10 MB -----
   onPoliceReportSelected(event: Event): void {
-    this.policeReportFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
+    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
+    if (!file) return;
+    if (!this.ALLOWED_TYPES.includes(file.type.toLowerCase())) {
+      this.policeReportError.set('نوع الملف غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+      return;
+    }
+    if (file.size > this.MAX_POLICE_BYTES) {
+      this.policeReportError.set('حجم الملف يتجاوز الحد المسموح (10 MB)');
+      return;
+    }
+    this.policeReportError.set(null);
+    this.policeReportFile.set(file);
   }
 
   // ----- video -----
@@ -230,7 +300,7 @@ export class LongTermUpdate implements OnInit {
       city: v.city!,
       street: v.street!,
       eventDate: v.eventDate!,
-      primaryImage: this.newPrimaryImage()??undefined,
+      primaryImage: this.newPrimaryImage() ?? undefined,
       newPhotos: this.newPhotos().length ? this.newPhotos() : null,
       deletedPhotoIds: this.deletedPhotoIds().length ? this.deletedPhotoIds() : null,
       primaryPhotoId: this.primaryPhotoId(),

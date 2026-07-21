@@ -1,8 +1,8 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common'; 
-import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper'; // 👈 استيراد مكتبة الـ Cropper
+import { CommonModule } from '@angular/common';
+import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 
 import { LongTermCaseService } from '../../services/long-term-case.service';
 import { LongTermCaseCreateRequest } from '../../models/request/LongTermCaseCreateRequest';
@@ -15,6 +15,13 @@ import { ForceCreatePopupComponent } from '../../../../shared/components/cases-c
 import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
+import { CardComponent } from '../../../../shared/components/card/card';
+
+// Shared validators
+import { arabicText } from '../../../../shared/validators/arabic-text.validator';
+import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
+import { pastDate } from '../../../../shared/validators/past-date.validator';
+import { validEnum } from '../../../../shared/validators/enum.validator';
 
 type Step = 1 | 2 | 3;
 
@@ -23,13 +30,14 @@ type Step = 1 | 2 | 3;
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule, 
-    RouterLink, 
+    ReactiveFormsModule,
+    RouterLink,
     ForceCreatePopupComponent,
     ButtonComponent,
     FormField,
-    ImageCropperComponent // 👈 تفعيل المكون هنا
-  ],
+    ImageCropperComponent
+  ,
+    CardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../../../../shared/styles/case-form.css', './long-term-create.css'],
   templateUrl: './long-term-create.html',
@@ -39,21 +47,27 @@ export class LongTermCreate {
   private service = inject(LongTermCaseService);
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
-  
+
   currentStep: Step = 1;
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
 
-  // إشارات التحكّم بالـ Cropper والصورة الأساسية
+  // Cropper & primary photo
   cropImageEvent = signal<any>(null);
   croppedPrimaryImagePreview = signal<string | null>(null);
   tempCroppedBlob = signal<Blob | null>(null);
   primaryPhotoFile = signal<File | null>(null);
+  primaryPhotoError = signal<string | null>(null);
 
-  // إشارات الصور الإضافية والمستندات
+  // Additional photos
   additionalPhotos = signal<File[]>([]);
   additionalPhotoPreviews = signal<string[]>([]);
+  additionalPhotosError = signal<string | null>(null);
+
+  // Police report (optional — JPEG/PNG/WebP, max 10 MB)
   policeReportFile = signal<File | null>(null);
+  policeReportError = signal<string | null>(null);
+
   videoFile = signal<File | null>(null);
 
   showForceCreatePopup = signal(false);
@@ -76,25 +90,47 @@ export class LongTermCreate {
     return ['بيانات الشخص المفقود', 'آخر موقع معروف', 'مستندات وصور'][this.currentStep - 1];
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // Form definition — validators match backend exactly
+  // ─────────────────────────────────────────────────────────────
   form = this.fb.group({
-    fName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    sName: ['', [Validators.maxLength(100)]],
-    tName: ['', [Validators.maxLength(100)]],
-    lName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(150)]],
-    gender: ['' as Gender | '', Validators.required],
-    relation: [null as RelationType | null, Validators.required],
-    communicationPhone: ['', [Validators.maxLength(20)]],
+    fName: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    sName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    tName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    lName: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(120)]],
+    gender: ['' as Gender | '', [Validators.required, validEnum(Gender)]],
+    relation: [null as RelationType | null, [Validators.required, validEnum(RelationType)]],
+    communicationPhone: ['', [egyptianPhone(), Validators.maxLength(15)]],
     description: ['', [Validators.maxLength(2000)]],
-    government: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
-    city: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
-    street: ['', [Validators.required, Validators.maxLength(500)]],
-    eventDate: ['', Validators.required],
+    government: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
+    city: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
+    street: ['', [Validators.required, Validators.maxLength(200)]],
+    eventDate: ['', [Validators.required, pastDate()]],
   });
+
+  // ─────────────────────────────────────────────────────────────
+  // Error message helper
+  // ─────────────────────────────────────────────────────────────
+  getFieldError(field: string): string | null {
+    const control = this.form.get(field);
+    if (!control || !control.errors || !(control.touched || control.dirty)) return null;
+    const e = control.errors;
+    if (e['required']) return 'هذا الحقل مطلوب';
+    if (e['arabicText']) return 'يجب كتابة النص بالحروف العربية فقط';
+    if (e['minlength']) return `الحد الأدنى ${e['minlength'].requiredLength} أحرف`;
+    if (e['maxlength']) return `الحد الأقصى ${e['maxlength'].requiredLength} حرفاً`;
+    if (e['min']) return `يجب أن لا تقل القيمة عن ${e['min'].min}`;
+    if (e['max']) return `يجب أن لا تتجاوز القيمة ${e['max'].max}`;
+    if (e['egyptianPhone']) return 'أدخل رقم هاتف مصري صحيح (مثال: 01xxxxxxxxx)';
+    if (e['pastDate']) return 'لا يمكن أن يكون التاريخ في المستقبل';
+    if (e['validEnum']) return 'اختر قيمة صحيحة';
+    return 'قيمة غير صحيحة';
+  }
 
   isInvalid(field: string): boolean {
     const c = this.form.get(field);
-    return !!(c?.invalid && c?.touched);
+    return !!(c?.invalid && (c?.touched || c?.dirty));
   }
 
   nextStep(): void {
@@ -113,13 +149,30 @@ export class LongTermCreate {
     if (this.currentStep > 1) this.currentStep = (this.currentStep - 1) as Step;
   }
 
-  // ---- 1. إدارة الصورة الأساسية مع الـ Cropper ----
+  // ─────────────────────────────────────────────────────────────
+  // File validation constants
+  // ─────────────────────────────────────────────────────────────
+  private readonly ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  private readonly MAX_PHOTO_BYTES = 5 * 1024 * 1024;       // 5 MB
+  private readonly MAX_POLICE_BYTES = 10 * 1024 * 1024;     // 10 MB
 
+  // ─────────────────────────────────────────────────────────────
+  // Primary photo with Cropper
+  // ─────────────────────────────────────────────────────────────
   onPrimaryPhotoSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.cropImageEvent.set(event); // فتح واجهة الـ Crop فور الاختيار
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!this.ALLOWED_TYPES.includes(file.type.toLowerCase())) {
+      this.primaryPhotoError.set('نوع الملف غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+      return;
     }
+    if (file.size > this.MAX_PHOTO_BYTES) {
+      this.primaryPhotoError.set('حجم الصورة يتجاوز الحد المسموح (5 MB)');
+      return;
+    }
+    this.primaryPhotoError.set(null);
+    this.cropImageEvent.set(event);
   }
 
   onImageCropped(event: ImageCroppedEvent): void {
@@ -131,12 +184,8 @@ export class LongTermCreate {
   confirmCrop(): void {
     const blob = this.tempCroppedBlob();
     if (!blob) return;
-
-    // تحويل الـ Blob إلى ملف جاهز للـ Backend
     const croppedFile = new File([blob], 'primary_image.jpg', { type: 'image/jpeg' });
     this.primaryPhotoFile.set(croppedFile);
-
-    // إنشاء رابط للمعاينة وإغلاق الـ Cropper
     this.croppedPrimaryImagePreview.set(URL.createObjectURL(croppedFile));
     this.cropImageEvent.set(null);
     this.errorMsg.set(null);
@@ -152,11 +201,23 @@ export class LongTermCreate {
     this.primaryPhotoFile.set(null);
   }
 
-  // ---- 2. إدارة الصور الإضافية ----
-
+  // ─────────────────────────────────────────────────────────────
+  // Additional photos — max 4, JPEG/PNG/WebP, max 5 MB each
+  // ─────────────────────────────────────────────────────────────
   onAdditionalPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
-    this.additionalPhotos.update((p) => [...p, ...files].slice(0, 4)); // حد أقصى 4 صور إضافية
+    const invalidType = files.find(f => !this.ALLOWED_TYPES.includes(f.type.toLowerCase()));
+    if (invalidType) {
+      this.additionalPhotosError.set('أحد الملفات من نوع غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+      return;
+    }
+    const oversized = files.find(f => f.size > this.MAX_PHOTO_BYTES);
+    if (oversized) {
+      this.additionalPhotosError.set('أحد الملفات يتجاوز الحد المسموح (5 MB لكل صورة)');
+      return;
+    }
+    this.additionalPhotosError.set(null);
+    this.additionalPhotos.update((p) => [...p, ...files].slice(0, 4));
     this.refreshAdditionalPreviews();
   }
 
@@ -169,18 +230,31 @@ export class LongTermCreate {
     this.refreshAdditionalPreviews();
   }
 
-  // ---- 3. المرفقات الأخرى ----
-
+  // ─────────────────────────────────────────────────────────────
+  // Police report — optional, JPEG/PNG/WebP, max 10 MB
+  // ─────────────────────────────────────────────────────────────
   onPoliceReportSelected(event: Event): void {
-    this.policeReportFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
+    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
+    if (!file) return;
+    if (!this.ALLOWED_TYPES.includes(file.type.toLowerCase())) {
+      this.policeReportError.set('نوع الملف غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+      return;
+    }
+    if (file.size > this.MAX_POLICE_BYTES) {
+      this.policeReportError.set('حجم الملف يتجاوز الحد المسموح (10 MB)');
+      return;
+    }
+    this.policeReportError.set(null);
+    this.policeReportFile.set(file);
   }
 
   onVideoSelected(event: Event): void {
     this.videoFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
   }
 
-  // ---- 4. الإرسال للباك إند ----
-
+  // ─────────────────────────────────────────────────────────────
+  // Submit
+  // ─────────────────────────────────────────────────────────────
   onSubmit(forceCreate = false): void {
     const primaryImg = this.primaryPhotoFile();
 
@@ -228,17 +302,16 @@ export class LongTermCreate {
         this.isSubmitting.set(false);
         const data = res.data;
 
-        // في حالة وجود تكرار وعدم إتمام الإنشاء
         if (data && (data.isCreated === false || data.isCreated === undefined)) {
           if (data.matchedCases) {
             this.matchedCases.set(data.matchedCases.map(mapMatchedCaseResponseToDto));
           } else {
             this.matchedCases.set([]);
           }
-          
+
           const rawData = data as any;
           const isSameType = rawData.isSameTypeDuplicate ?? rawData.IsSameTypeDuplicate ?? false;
-          
+
           this.isBlockedDuplicate.set(Boolean(isSameType));
           this.showForceCreatePopup.set(true);
           return;
