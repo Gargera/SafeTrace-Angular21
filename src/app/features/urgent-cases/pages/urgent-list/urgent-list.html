@@ -34,7 +34,13 @@
             (ngModelChange)="radiusInMeters.set($event)"
             [ngModelOptions]="{ standalone: true }"
             placeholder="بدون حد أقصى"
+            #radiusCtrl="ngModel"
           ></app-form-field>
+          @if (radiusCtrl.invalid && (radiusCtrl.dirty || radiusCtrl.touched)) {
+            @if (radiusCtrl.hasError('min')) {
+              <span class="text-xs text-error mt-1 block">يجب أن يكون النطاق 100 متر على الأقل</span>
+            }
+          }
         </div>
       </app-case-filters>
     </section>

@@ -67,6 +67,11 @@
       <div>
         <label for="filter-government" class="text-sm font-medium text-on-surface-variant block mb-1">المحافظة</label>
         <app-form-field id="filter-government" formControlName="government" placeholder="المحافظة..."></app-form-field>
+        @if (filterForm.get('government')?.invalid && (filterForm.get('government')?.dirty || filterForm.get('government')?.touched)) {
+          @if (filterForm.get('government')?.hasError('maxlength')) {
+            <span class="text-xs text-error mt-1 block">الحد الأقصى 100 حرف</span>
+          }
+        }
       </div>
     </ng-template>
 
@@ -74,6 +79,11 @@
       <div>
         <label for="filter-city" class="text-sm font-medium text-on-surface-variant block mb-1">المدينة</label>
         <app-form-field id="filter-city" formControlName="city" placeholder="المدينة..."></app-form-field>
+        @if (filterForm.get('city')?.invalid && (filterForm.get('city')?.dirty || filterForm.get('city')?.touched)) {
+          @if (filterForm.get('city')?.hasError('maxlength')) {
+            <span class="text-xs text-error mt-1 block">الحد الأقصى 100 حرف</span>
+          }
+        }
       </div>
     </ng-template>
 
@@ -88,6 +98,9 @@
       <div>
         <label for="filter-to-date" class="text-sm font-medium text-on-surface-variant block mb-1">إلى تاريخ</label>
         <app-form-field id="filter-to-date" type="date" formControlName="toDate"></app-form-field>
+        @if (filterForm.get('toDate')?.hasError('dateRangeInvalid') && (filterForm.get('toDate')?.dirty || filterForm.get('toDate')?.touched)) {
+          <span class="text-xs text-error mt-1 block">تاريخ النهاية يجب أن يكون بعد تاريخ البداية</span>
+        }
       </div>
     </ng-template>
 
@@ -226,13 +239,7 @@
     </div>
     }
 
-    <!-- Form Validation Messages -->
-    @if (filterForm.hasError('dateRangeInvalid')) {
-    <div class="rounded-lg bg-error-container/20 p-3 text-sm font-medium text-error flex items-center gap-2 mb-2">
-      <span class="material-symbols-outlined text-base">error</span>
-      تاريخ البداية (من تاريخ) لا يمكن أن يكون بعد تاريخ النهاية (إلى تاريخ).
-    </div>
-    }
+    <!-- Form Validation Messages handled inline below fields -->
 
     <!-- Footer -->
     <div class="flex flex-wrap justify-end gap-3 pt-2">

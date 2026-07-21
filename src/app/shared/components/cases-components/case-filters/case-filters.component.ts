@@ -13,7 +13,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, AbstractControl, ValidationErrors, Validators } from '@angular/forms';
 import { NgModel } from '@angular/forms';
 import { Subscription, debounceTime, distinctUntilChanged, map, merge } from 'rxjs';
 import { NgTemplateOutlet } from '@angular/common';
@@ -26,6 +26,7 @@ import { FormField } from '../../form-field/form-field';
 import { getAgeRange } from '../../../helper/age-category.helper';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
+import { dateRangeValidator } from '../../../validators/date-range.validator';
 
 @Component({
   selector: 'app-case-filters',
@@ -161,8 +162,8 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
         fullName: [''],
         gender: [''],
         ageCategory: [''],
-        government: [''],
-        city: [''],
+        government: ['', [Validators.maxLength(100)]],
+        city: ['', [Validators.maxLength(100)]],
         fromDate: [''],
         toDate: [''],
         ageSort: [''],
@@ -170,7 +171,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
         caseType: [''],
         status: [''],
       },
-      { validators: this.dateRangeValidator },
+      { validators: dateRangeValidator('fromDate', 'toDate') },
     );
 
     // Unified reactive flow
@@ -182,7 +183,8 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(() => {
-        if (this.filterForm.valid) {
+        const allProjectedValid = this.projectedModels ? this.projectedModels.toArray().every(m => m.valid !== false) : true;
+        if (this.filterForm.valid && allProjectedValid) {
           this.emitFilterChange();
         }
       });
@@ -209,7 +211,8 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
       const subscription = model.valueChanges
         ?.pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(() => {
-          if (this.filterForm.valid) {
+          const allProjectedValid = this.projectedModels.toArray().every(m => m.valid !== false);
+          if (this.filterForm.valid && allProjectedValid) {
             this.emitFilterChange();
           }
         });
@@ -221,18 +224,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   }
 
   // ---------- Validators ----------
-  private dateRangeValidator(group: AbstractControl): ValidationErrors | null {
-    const from = group.get('fromDate')?.value;
-    const to = group.get('toDate')?.value;
-    if (from && to) {
-      const fromDate = new Date(from);
-      const toDate = new Date(to);
-      if (fromDate > toDate) {
-        return { dateRangeInvalid: true };
-      }
-    }
-    return null;
-  }
+  // Removed local dateRangeValidator in favor of shared dateRangeValidator
 
   // ---------- Emit helpers ----------
   private emitFilterChange(isInitial = false): void {
