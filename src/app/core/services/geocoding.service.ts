@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
+import { UpdateCurrentLocationDTO } from '../../features/user-profile/model/profile.model';
+import { ProfileService } from '../../features/user-profile/service/profile.service';
 
 // ── Nominatim response shape (only the fields we use) ─────────────────────
 interface NominatimReverseResponse {
@@ -99,4 +101,6 @@ export class GeocodingService {
   #fallback(lat: number, lng: number): string {
     return `${lat.toFixed(PRECISION)}, ${lng.toFixed(PRECISION)}`;
   }
+
+  
 }

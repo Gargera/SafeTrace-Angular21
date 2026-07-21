@@ -1,6 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, inject, input, output, signal } from '@angular/core';
-import { GetUserInfoDTO } from '../../model/profile.model';
+import { GetUserInfoDTO, UpdateCurrentLocationDTO } from '../../model/profile.model';
 import { ProfileService } from '../../service/profile.service';
 
 import { UserRole } from '../../../../shared/enums/user-role';

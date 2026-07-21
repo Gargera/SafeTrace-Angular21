@@ -4,7 +4,11 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import Swal from 'sweetalert2';
-import { SocialAuthService, GoogleLoginProvider, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
+import {
+  SocialAuthService,
+  GoogleLoginProvider,
+  GoogleSigninButtonModule,
+} from '@abacritt/angularx-social-login';
 import { Subscription } from 'rxjs';
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
@@ -13,8 +17,15 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormField, CommonModule, ReactiveFormsModule, RouterModule, GoogleSigninButtonModule,  ButtonComponent],
-  templateUrl: './login.html'
+  imports: [
+    FormField,
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    GoogleSigninButtonModule,
+    ButtonComponent,
+  ],
+  templateUrl: './login.html',
 })
 export class Login implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
@@ -25,12 +36,12 @@ export class Login implements OnInit, OnDestroy {
   isLoading = signal<boolean>(false);
   apiErrorMessage = signal<string>('');
   showPassword = signal<boolean>(false);
-  
+
   private authSubscription!: Subscription;
 
   loginForm: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email, Validators.pattern('^\\S+$')]],
-    password: ['', [Validators.required]]
+    password: ['', [Validators.required]],
   });
 
   ngOnInit() {
@@ -43,7 +54,7 @@ export class Login implements OnInit, OnDestroy {
       if (user) {
         this.isLoading.set(true);
         this.apiErrorMessage.set('');
-        
+
         if (user.provider === GoogleLoginProvider.PROVIDER_ID) {
           this.authService.googleLogin({ providerToken: user.idToken! }).subscribe({
             next: (res) => {
@@ -53,7 +64,7 @@ export class Login implements OnInit, OnDestroy {
             error: (err) => {
               this.isLoading.set(false);
               this.handleAuthError(err);
-            }
+            },
           });
         }
       }
@@ -66,10 +77,8 @@ export class Login implements OnInit, OnDestroy {
     }
   }
 
-
-
   togglePassword() {
-    this.showPassword.update(v => !v);
+    this.showPassword.update((v) => !v);
   }
 
   onSubmit() {
@@ -88,14 +97,19 @@ export class Login implements OnInit, OnDestroy {
       error: (err) => {
         this.isLoading.set(false);
         this.handleAuthError(err);
-      }
+      },
     });
   }
 
   private handleAuthError(err: any) {
     const errorMessage = err.error?.detail || err.error?.message || '';
 
-    if (errorMessage.includes('تأكيد') || errorMessage.includes('مفعل') || errorMessage.includes('confirm') || errorMessage.includes('verified')) {
+    if (
+      errorMessage.includes('تأكيد') ||
+      errorMessage.includes('مفعل') ||
+      errorMessage.includes('confirm') ||
+      errorMessage.includes('verified')
+    ) {
       Swal.fire({
         title: 'حسابك غير مفعل!',
         text: 'يجب تأكيد بريدك الإلكتروني لتتمكن من استخدام المنصة.',
@@ -105,10 +119,10 @@ export class Login implements OnInit, OnDestroy {
         cancelButtonColor: '#75777d',
         confirmButtonText: 'الذهاب لتأكيد الحساب',
         cancelButtonText: 'إلغاء',
-        customClass: { popup: 'rounded-xl font-body-md' }
+        customClass: { popup: 'rounded-xl font-body-md' },
       }).then((result) => {
         if (result.isConfirmed) {
-          const emailForConfirm = this.loginForm.value.email || ''; 
+          const emailForConfirm = this.loginForm.value.email || '';
           this.router.navigate(['/auth/confirm-email'], { state: { email: emailForConfirm } });
         }
       });
