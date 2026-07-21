@@ -91,6 +91,9 @@
       <div>
         <label for="filter-from-date" class="text-sm font-medium text-on-surface-variant block mb-1">من تاريخ</label>
         <app-form-field id="filter-from-date" type="date" formControlName="fromDate"></app-form-field>
+        @if (filterForm.get('fromDate')?.hasError('futureDateInvalid') && (filterForm.get('fromDate')?.dirty || filterForm.get('fromDate')?.touched)) {
+          <span class="text-xs text-error mt-1 block">تاريخ البداية لا يمكن أن يكون في المستقبل</span>
+        }
       </div>
     </ng-template>
 

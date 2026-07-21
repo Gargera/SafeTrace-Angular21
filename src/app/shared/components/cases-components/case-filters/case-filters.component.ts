@@ -27,6 +27,7 @@ import { getAgeRange } from '../../../helper/age-category.helper';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { dateRangeValidator } from '../../../validators/date-range.validator';
+import { pastDateValidator } from '../../../validators/past-date.validator';
 
 @Component({
   selector: 'app-case-filters',
@@ -164,7 +165,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
         ageCategory: [''],
         government: ['', [Validators.maxLength(100)]],
         city: ['', [Validators.maxLength(100)]],
-        fromDate: [''],
+        fromDate: ['', [pastDateValidator()]],
         toDate: [''],
         ageSort: [''],
         dateSort: [''],
