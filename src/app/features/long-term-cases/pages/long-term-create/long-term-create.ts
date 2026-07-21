@@ -270,6 +270,6 @@ export class LongTermCreate {
   }
 
   goBack(): void {
-    this.router.navigate(['/long-term-cases']);
+    this.router.navigate(['/long-term']);
   }
 }

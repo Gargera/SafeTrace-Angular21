@@ -229,6 +229,6 @@ export class UnknownCreate {
   }
 
   goBack(): void {
-    this.router.navigate(['/unknown-cases']);
+    this.router.navigate(['/unknown']);
   }
 }

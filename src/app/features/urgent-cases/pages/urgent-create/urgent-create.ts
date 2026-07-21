@@ -328,6 +328,6 @@ export class UrgentCreate {
   }
 
   goBack(): void {
-    this.router.navigate(['/urgent-cases']);
+    this.router.navigate(['/urgent']);
   }
 }

@@ -261,6 +261,6 @@ export class UrgentUpdate implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/urgent-cases', this.caseId]);
+    this.router.navigate(['/urgent', this.caseId]);
   }
 }
