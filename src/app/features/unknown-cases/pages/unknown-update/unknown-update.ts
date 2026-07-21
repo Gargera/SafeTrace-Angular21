@@ -227,6 +227,6 @@ export class UnknownUpdate implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/unknown-cases', this.caseId]);
+    this.router.navigate(['/unknown', this.caseId]);
   }
 }

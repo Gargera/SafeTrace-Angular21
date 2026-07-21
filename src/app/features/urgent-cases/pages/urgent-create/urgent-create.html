@@ -171,13 +171,56 @@
             </div>
 
             <div>
-              <div class="field-label" style="margin-bottom:10px;">الصورة الأساسية <span class="req">*</span></div>
-              <div class="upload-zone" [class.has-files]="selectedPhotos().length > 0" (click)="primaryInput.click()">
-                <input #primaryInput type="file" accept="image/jpeg,image/png,image/webp" style="display:none" (change)="onPrimaryPhotoSelected($event)" />
-                <span class="material-symbols-outlined" style="font-size:40px;" [style.color]="selectedPhotos().length ? '#0058be' : '#adb5c9'">add_photo_alternate</span>
-                <p style="font-size:14px; font-weight:600;">{{ selectedPhotos().length ? 'تم اختيار الصورة الأساسية' : 'اضغط لإضافة الصورة الأساسية' }}</p>
+              <div class="field-label" style="margin-bottom:10px;">
+                الصورة الأساسية (يرجى تحديد الوجه بدقة) <span class="req">*</span>
               </div>
 
+              <!-- 1. منطقة رفع الصورة الأساسية -->
+              @if (!cropImageEvent() && !croppedPrimaryImagePreview()) {
+                <div class="upload-zone" (click)="primaryInput.click()">
+                  <input #primaryInput type="file" accept="image/jpeg,image/png,image/webp" style="display:none" (change)="onPrimaryPhotoSelected($event)" />
+                  <span class="material-symbols-outlined" style="font-size:40px; color:#adb5c9;">add_photo_alternate</span>
+                  <p style="font-size:14px; font-weight:600;">اضغط لإضافة الصورة الأساسية وتحديد الوجه</p>
+                </div>
+              }
+
+              <!-- 2. أداة الـ Cropper لضبط واقتصاص الوجه -->
+              @if (cropImageEvent()) {
+                <div class="cropper-container" style="background: #111; padding: 15px; border-radius: 12px; text-align: center;">
+                  <p style="color: #fff; margin-bottom: 10px; font-size: 14px;">حرك المربع لتحديد الوجه بالكامل داخل الإطار:</p>
+                  <image-cropper
+                    [imageChangedEvent]="cropImageEvent()"
+                    [maintainAspectRatio]="true"
+                    [aspectRatio]="4 / 3"
+                    format="jpeg"
+                    (imageCropped)="onImageCropped($event)">
+                  </image-cropper>
+
+                  <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+                    <button type="button" class="btn-primary" (click)="confirmCrop()" style="padding: 6px 16px; background:#ba1a1a;">
+                      <span class="material-symbols-outlined" style="font-size:16px;">check</span> اعتماد الصورة
+                    </button>
+                    <button type="button" class="btn-secondary" (click)="cancelCrop()" style="padding: 6px 16px;">
+                      إلغاء
+                    </button>
+                  </div>
+                </div>
+              }
+
+              <!-- 3. معاينة الصورة المقتصة النهائية -->
+              @if (croppedPrimaryImagePreview() && !cropImageEvent()) {
+                <div class="cropped-preview-box" style="display: flex; align-items: center; gap: 15px; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                  <img [src]="croppedPrimaryImagePreview()" style="width: 100px; height: 75px; object-fit: cover; border-radius: 8px; border: 1px solid #ccc;" />
+                  <div style="flex: 1;">
+                    <p style="font-weight: 600; font-size: 14px; color: #2e7d32; margin:0;">✓ تم تحديد الصورة وتأطيرها بنجاح</p>
+                    <button type="button" (click)="reCropPhoto()" style="background: none; border: none; color: #ba1a1a; font-size: 13px; cursor: pointer; padding: 0; text-decoration: underline; margin-top:4px;">
+                      إعادة ضبط وتعديل المربع
+                    </button>
+                  </div>
+                </div>
+              }
+
+              <!-- الصور الإضافية -->
               <div class="field-label" style="margin:16px 0 10px;">صور إضافية (حتى 4 صور)</div>
               <div class="upload-zone" (click)="additionalInput.click()">
                 <input #additionalInput type="file" accept="image/jpeg,image/png,image/webp" multiple style="display:none" (change)="onAdditionalPhotosSelected($event)" />
@@ -185,12 +228,12 @@
                 <p style="font-size:13px; color:#75777d;">JPG / PNG / WebP — حتى 5MB لكل صورة</p>
               </div>
 
-              @if (photoPreviews().length > 0) {
-                <div class="photo-grid">
-                  @for (preview of photoPreviews(); track preview; let i = $index) {
+              @if (additionalPhotoPreviews().length > 0) {
+                <div class="photo-grid" style="margin-top:10px;">
+                  @for (preview of additionalPhotoPreviews(); track preview; let i = $index) {
                     <div class="photo-thumb">
-                      <img [src]="preview" alt="صورة" />
-                      <button type="button" (click)="removePhoto(i)">
+                      <img [src]="preview" alt="صورة إضافية" />
+                      <button type="button" (click)="removeAdditionalPhoto(i)">
                         <span class="material-symbols-outlined" style="font-size:12px;">close</span>
                       </button>
                     </div>
@@ -203,7 +246,7 @@
               <div class="field-label" style="margin-bottom:10px;">فيديو <span style="font-size:12px; color:#999; font-weight:400;">(اختياري)</span></div>
               <div class="upload-zone" [class.has-files]="!!videoFile()" (click)="videoInput.click()">
                 <input #videoInput type="file" accept="video/*" style="display:none" (change)="onVideoSelected($event)" />
-                <span class="material-symbols-outlined" style="font-size:36px;" [style.color]="videoFile() ? '#0058be' : '#adb5c9'">videocam</span>
+                <span class="material-symbols-outlined" style="font-size:36px;" [style.color]="videoFile() ? '#ba1a1a' : '#adb5c9'">videocam</span>
                 <p style="font-size:14px; font-weight:600;">{{ videoFile()?.name ?? 'رفع فيديو' }}</p>
               </div>
             </div>
@@ -226,7 +269,7 @@
 
       <div style="display:flex; gap:8px;">
         @for (s of steps; track s.num) {
-          <div style="width:8px; height:8px; border-radius:50%;" [style.background]="currentStep === s.num ? '#0058be' : '#dde1ee'"></div>
+          <div style="width:8px; height:8px; border-radius:50%;" [style.background]="currentStep === s.num ? '#ba1a1a' : '#dde1ee'"></div>
         }
       </div>
 

@@ -2,6 +2,7 @@ import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/cor
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { UrgentCaseService } from '../../services/urgent-case.service';
 import { UrgentCaseCreateRequest } from '../../models/request/UrgentCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
@@ -28,7 +29,8 @@ type Step = 1 | 2 | 3;
     MapLocationPickerComponent, 
     ForceCreatePopupComponent,
     ButtonComponent,
-    FormField
+    FormField,
+    ImageCropperComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../../../../shared/styles/case-form.css', './urgent-create.css'],
@@ -45,8 +47,15 @@ export class UrgentCreate {
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
 
-  selectedPhotos = signal<File[]>([]);
-  photoPreviews = signal<string[]>([]);
+  // خاصيات الـ Cropper والصورة الأساسية
+  cropImageEvent = signal<any>(null);
+  croppedPrimaryImagePreview = signal<string | null>(null);
+  tempCroppedBlob = signal<Blob | null>(null);
+  primaryFile = signal<File | null>(null);
+
+  // الصور الإضافية والفيديو
+  additionalPhotos = signal<File[]>([]);
+  additionalPhotoPreviews = signal<string[]>([]);
   videoFile = signal<File | null>(null);
 
   selectedLat = signal<number | null>(null);
@@ -172,40 +181,67 @@ export class UrgentCreate {
     if (this.currentStep > 1) this.currentStep = (this.currentStep - 1) as Step;
   }
 
+  // --- معالجة الصورة الأساسية والـ Cropper ---
   onPrimaryPhotoSelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
-    if (!file) return;
-    this.selectedPhotos.update((p) => [file, ...p.filter((_, i) => i !== 0)].slice(0, 5));
-    this.refreshPreviews();
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.cropImageEvent.set(event);
+    }
   }
 
+  onImageCropped(event: ImageCroppedEvent): void {
+    if (event.blob) {
+      this.tempCroppedBlob.set(event.blob);
+    }
+  }
+
+  confirmCrop(): void {
+    const blob = this.tempCroppedBlob();
+    if (!blob) return;
+
+    const croppedFile = new File([blob], 'primary_image.jpg', { type: 'image/jpeg' });
+    this.primaryFile.set(croppedFile);
+    this.croppedPrimaryImagePreview.set(URL.createObjectURL(croppedFile));
+    this.cropImageEvent.set(null);
+  }
+
+  cancelCrop(): void {
+    this.cropImageEvent.set(null);
+  }
+
+  reCropPhoto(): void {
+    this.croppedPrimaryImagePreview.set(null);
+    this.cropImageEvent.set(null);
+    this.primaryFile.set(null);
+  }
+
+  // --- معالجة الصور الإضافية ---
   onAdditionalPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
-    this.selectedPhotos.update((p) => [...p, ...files].slice(0, 5));
-    this.refreshPreviews();
+    this.additionalPhotos.update((p) => [...p, ...files].slice(0, 4));
+    this.additionalPhotoPreviews.set(this.additionalPhotos().map((f) => URL.createObjectURL(f)));
   }
 
-  private refreshPreviews(): void {
-    this.photoPreviews.set(this.selectedPhotos().map((f) => URL.createObjectURL(f)));
-  }
-
-  removePhoto(index: number): void {
-    this.selectedPhotos.update((p) => p.filter((_, i) => i !== index));
-    this.photoPreviews.update((p) => p.filter((_, i) => i !== index));
+  removeAdditionalPhoto(index: number): void {
+    this.additionalPhotos.update((p) => p.filter((_, i) => i !== index));
+    this.additionalPhotoPreviews.update((p) => p.filter((_, i) => i !== index));
   }
 
   onVideoSelected(event: Event): void {
     this.videoFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
   }
 
+  // --- إرسال النموذج ---
   onSubmit(forceCreate = false): void {
+    const primary = this.primaryFile();
+
     if (
       !forceCreate &&
-      (this.form.invalid || this.selectedPhotos().length === 0 || this.selectedLat() === null)
+      (this.form.invalid || !primary || this.selectedLat() === null)
     ) {
       this.form.markAllAsTouched();
-      if (this.selectedPhotos().length === 0) {
-        this.errorMsg.set('برجاء إضافة صورة واحدة على الأقل للشخص (الصورة الأساسية).');
+      if (!primary) {
+        this.errorMsg.set('برجاء إضافة وتأطير الصورة الأساسية للشخص.');
       } else if (this.selectedLat() === null) {
         this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
       }
@@ -220,28 +256,24 @@ export class UrgentCreate {
       request = this.pendingRequest;
     } else {
       const v = this.form.getRawValue();
-      const photos = this.selectedPhotos();
-      const [primaryImage, ...additionalImages] = photos;
-
-      // 💡 معالجة تاريخ البلاغ وتنسيقه ليكون ISO متوافق مع داتابيز الـ .NET
       const formattedDate = v.eventDate ? new Date(v.eventDate).toISOString() : new Date().toISOString();
 
       request = {
         fName: v.fName!,
         lName: v.lName!,
-        sName: v.sName || '', // استبدال النصوص الفارغة بدل الـ null
+        sName: v.sName || '',
         tName: v.tName || '',
         gender: v.gender as Gender,
-        age: Number(v.age!), // تأكيد إرساله كـ number
-        relation: Number(v.relation) as unknown as RelationType, // تأكيد إرسال Enum كـ رقم صريح ليتطابق مع الـ backend
+        age: Number(v.age!),
+        relation: Number(v.relation) as unknown as RelationType,
         communicationPhone: v.communicationPhone!,
         description: v.description || '',
         government: v.government!,
         city: v.city!,
         street: v.street!,
         eventDate: formattedDate,
-        primaryImage,
-        additionalImages: additionalImages.length ? additionalImages : [], // إرسال مصفوفة فارغة بدلاً من null لتجنب كسر الـ foreach في الباك إند
+        primaryImage: primary!,
+        additionalImages: this.additionalPhotos().length ? this.additionalPhotos() : [],
         video: this.videoFile(),
         latitude: Number(this.selectedLat()!),
         longitude: Number(this.selectedLng()!),
@@ -254,7 +286,8 @@ export class UrgentCreate {
         this.isSubmitting.set(false);
         const data = res.data;
 
-        if (data && data.isCreated === false) {
+        // في حالة التكرار وعدم الإنشـاء
+        if (data && (data.isCreated === false || data.isCreated === undefined)) {
           if (data.matchedCases) {
             this.matchedCases.set(data.matchedCases.map(mapMatchedCaseResponseToDto));
           } else {
@@ -262,8 +295,9 @@ export class UrgentCreate {
           }
 
           const rawData = data as any;
-          this.isBlockedDuplicate.set(!!rawData.isSameTypeDuplicate);
+          const isSameType = rawData.isSameTypeDuplicate ?? rawData.IsSameTypeDuplicate ?? false;
 
+          this.isBlockedDuplicate.set(Boolean(isSameType));
           this.showForceCreatePopup.set(true);
           return;
         }
@@ -286,11 +320,14 @@ export class UrgentCreate {
   }
 
   onForceCreateConfirm(): void {
+    if (this.isBlockedDuplicate()) {
+      return;
+    }
     this.showForceCreatePopup.set(false);
     this.onSubmit(true);
   }
 
   goBack(): void {
-    this.router.navigate(['/urgent-cases']);
+    this.router.navigate(['/urgent']);
   }
 }
