@@ -8,6 +8,7 @@ import {
   GetUserInfoDTO,
   MyCaseListItemResponse,
   MyCasesFilterRequest,
+  UpdateCurrentLocationDTO,
   UpdateHomeLocationDTO,
   UpdateNameDTO,
   UpdateProfileImageDTO,
@@ -93,5 +94,10 @@ export class ProfileService {
       `${this.#profileUrl}/MyCases`,
       { params },
     );
+  }
+
+  //CurrentLocation
+  updateCurrentLocation(data: UpdateCurrentLocationDTO) {
+    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateCurrentLocation`, data);
   }
 }
