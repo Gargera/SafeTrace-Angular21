@@ -1,18 +1,13 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, inject, input, output, signal } from '@angular/core';
-import { GetUserInfoDTO, UpdateCurrentLocationDTO } from '../../model/profile.model';
-import { isPlatformBrowser, NgTemplateOutlet } from '@angular/common';
+import { UpdateCurrentLocationDTO } from '../../model/profile.model';
+import { isPlatformBrowser } from '@angular/common';
 import {
   AfterViewInit,
-  Component,
   ElementRef,
-  inject,
-  input,
   OnChanges,
   OnDestroy,
-  output,
   PLATFORM_ID,
-  signal,
   SimpleChanges,
   ViewChild,
   effect,
