@@ -38,26 +38,36 @@
               <div class="field-group">
                 <input formControlName="fName" type="text" placeholder="الاسم الأول" class="field" [class.error]="isInvalid('fName')" />
                 @if (isInvalid('fName')) {
-                  @if (form.get('fName')?.hasError('required')) { <p class="err-msg">مطلوب</p> }
-                  @else if (form.get('fName')?.hasError('invalidArabicText')) { <p class="err-msg">حروف عربية فقط</p> }
-                  @else { <p class="err-msg">حرفين على الأقل</p> }
-                }
+  @if (form.get('fName')?.hasError('required')) { <p class="err-msg">مطلوب</p> }
+  @else if (form.get('fName')?.hasError('invalidArabicText')) { <p class="err-msg">حروف عربية فقط</p> }
+  @else if (form.get('fName')?.hasError('minlength')) { <p class="err-msg">الحد الأدنى حرفين</p> }
+  @else if (form.get('fName')?.hasError('maxlength')) { <p class="err-msg">الحد الأقصى 60 حرف</p> }
+}
               </div>
               <div class="field-group">
                 <input formControlName="sName" type="text" placeholder="اسم الأب" class="field" [class.error]="isInvalid('sName')" />
-                @if (isInvalid('sName')) { <p class="err-msg">حروف عربية فقط</p> }
+                @if (isInvalid('sName')) {
+  @if (form.get('sName')?.hasError('invalidArabicText')) { <p class="err-msg">حروف عربية فقط</p> }
+  @else if (form.get('sName')?.hasError('minlength')) { <p class="err-msg">الحد الأدنى حرفين</p> }
+  @else if (form.get('sName')?.hasError('maxlength')) { <p class="err-msg">الحد الأقصى 60 حرف</p> }
+}
               </div>
               <div class="field-group">
                 <input formControlName="tName" type="text" placeholder="اسم الجد" class="field" [class.error]="isInvalid('tName')" />
-                @if (isInvalid('tName')) { <p class="err-msg">حروف عربية فقط</p> }
+                @if (isInvalid('tName')) {
+  @if (form.get('tName')?.hasError('invalidArabicText')) { <p class="err-msg">حروف عربية فقط</p> }
+  @else if (form.get('tName')?.hasError('minlength')) { <p class="err-msg">الحد الأدنى حرفين</p> }
+  @else if (form.get('tName')?.hasError('maxlength')) { <p class="err-msg">الحد الأقصى 60 حرف</p> }
+}
               </div>
               <div class="field-group">
                 <input formControlName="lName" type="text" placeholder="اسم العائلة" class="field" [class.error]="isInvalid('lName')" />
                 @if (isInvalid('lName')) {
-                  @if (form.get('lName')?.hasError('required')) { <p class="err-msg">مطلوب</p> }
-                  @else if (form.get('lName')?.hasError('invalidArabicText')) { <p class="err-msg">حروف عربية فقط</p> }
-                  @else { <p class="err-msg">حرفين على الأقل</p> }
-                }
+  @if (form.get('lName')?.hasError('required')) { <p class="err-msg">مطلوب</p> }
+  @else if (form.get('lName')?.hasError('invalidArabicText')) { <p class="err-msg">حروف عربية فقط</p> }
+  @else if (form.get('lName')?.hasError('minlength')) { <p class="err-msg">الحد الأدنى حرفين</p> }
+  @else if (form.get('lName')?.hasError('maxlength')) { <p class="err-msg">الحد الأقصى 60 حرف</p> }
+}
               </div>
             </div>
 
@@ -65,7 +75,11 @@
               <div class="field-group">
                 <label class="field-label">العمر <span class="req">*</span></label>
                 <input formControlName="age" type="number" min="0" max="150" class="field" [class.error]="isInvalid('age')" />
-                @if (isInvalid('age')) { <p class="err-msg">مطلوب بين 0 و150</p> }
+                @if (isInvalid('age')) {
+  @if (form.get('age')?.hasError('required')) { <p class="err-msg">مطلوب</p> }
+  @else if (form.get('age')?.hasError('min')) { <p class="err-msg">الحد الأدنى 0</p> }
+  @else if (form.get('age')?.hasError('max')) { <p class="err-msg">الحد الأقصى 120</p> }
+}
               </div>
               <div class="field-group">
                 <label class="field-label">الجنس <span class="req">*</span></label>
@@ -74,7 +88,10 @@
                   <option [value]="genders.Male">ذكر</option>
                   <option [value]="genders.Female">أنثى</option>
                 </select>
-                @if (isInvalid('gender')) { <p class="err-msg">مطلوب</p> }
+                @if (isInvalid('gender')) {
+  @if (form.get('gender')?.hasError('required')) { <p class="err-msg">مطلوب</p> }
+  @else if (form.get('gender')?.hasError('invalidEnum')) { <p class="err-msg">قيمة غير صالحة</p> }
+}
               </div>
             </div>
 
@@ -84,22 +101,31 @@
                 <option [value]="null" disabled>اختر الصلة</option>
                 @for (opt of relationOptions; track opt.value) { <option [value]="opt.value">{{ opt.label }}</option> }
               </select>
-              @if (isInvalid('relation')) { <p class="err-msg">مطلوب</p> }
+              @if (isInvalid('relation')) {
+  @if (form.get('relation')?.hasError('required')) { <p class="err-msg">مطلوب</p> }
+  @else if (form.get('relation')?.hasError('invalidEnum')) { <p class="err-msg">قيمة غير صالحة</p> }
+}
             </div>
 
             <div class="field-group">
               <label class="field-label">رقم تواصل عاجل <span class="req">*</span></label>
               <input formControlName="communicationPhone" type="tel" class="field" placeholder="01xxxxxxxxx" [class.error]="isInvalid('communicationPhone')" />
               @if (isInvalid('communicationPhone')) {
-                @if (form.get('communicationPhone')?.hasError('required')) { <p class="err-msg">مطلوب — دي حالة عاجلة</p> }
-                @else { <p class="err-msg">رقم هاتف مصري غير صالح</p> }
-              }
+  @if (form.get('communicationPhone')?.hasError('required')) { <p class="err-msg">مطلوب</p> }
+  @else if (form.get('communicationPhone')?.hasError('maxlength')) { <p class="err-msg">الحد الأقصى 15 رقم</p> }
+  @else if (form.get('communicationPhone')?.hasError('invalidEgyptianPhone')) { <p class="err-msg">رقم هاتف مصري غير صالح</p> }
+}
             </div>
 
             <div class="field-group">
               <label class="field-label">وصف الحالة</label>
               <textarea formControlName="description" rows="3" class="field" placeholder="تفاصيل الحادث أو الحالة"></textarea>
               <div class="char-count">{{ form.get('description')?.value?.length ?? 0 }} / 2000</div>
+              @if (form.get('description')?.invalid && (form.get('description')?.touched || form.get('description')?.dirty)) {
+
+                @if (form.get('description')?.hasError('maxlength')) { <p class="err-msg">الحد الأقصى 2000 حرف</p> }
+
+              }
             </div>
           </div>
         }
@@ -119,30 +145,40 @@
                   @for (g of governorates; track g) { <option [value]="g">{{ g }}</option> }
                 </select>
                 @if (isInvalid('government')) {
-                  @if (form.get('government')?.hasError('invalidArabicText')) { <p class="err-msg">حروف عربية فقط</p> }
-                  @else { <p class="err-msg">مطلوب</p> }
-                }
+  @if (form.get('government')?.hasError('required')) { <p class="err-msg">مطلوب</p> }
+  @else if (form.get('government')?.hasError('minlength')) { <p class="err-msg">الحد الأدنى حرفين</p> }
+  @else if (form.get('government')?.hasError('maxlength')) { <p class="err-msg">الحد الأقصى 100 حرف</p> }
+  @else if (form.get('government')?.hasError('invalidArabicText')) { <p class="err-msg">حروف عربية فقط</p> }
+}
               </div>
               <div class="field-group">
                 <label class="field-label">المدينة / المركز <span class="req">*</span></label>
                 <input formControlName="city" type="text" class="field" [class.error]="isInvalid('city')" />
                 @if (isInvalid('city')) {
-                  @if (form.get('city')?.hasError('invalidArabicText')) { <p class="err-msg">حروف عربية فقط</p> }
-                  @else { <p class="err-msg">مطلوب</p> }
-                }
+  @if (form.get('city')?.hasError('required')) { <p class="err-msg">مطلوب</p> }
+  @else if (form.get('city')?.hasError('minlength')) { <p class="err-msg">الحد الأدنى حرفين</p> }
+  @else if (form.get('city')?.hasError('maxlength')) { <p class="err-msg">الحد الأقصى 100 حرف</p> }
+  @else if (form.get('city')?.hasError('invalidArabicText')) { <p class="err-msg">حروف عربية فقط</p> }
+}
               </div>
             </div>
 
             <div class="field-group">
               <label class="field-label">الشارع / المنطقة <span class="req">*</span></label>
               <input formControlName="street" type="text" class="field" [class.error]="isInvalid('street')" />
-              @if (isInvalid('street')) { <p class="err-msg">مطلوب</p> }
+              @if (isInvalid('street')) {
+  @if (form.get('street')?.hasError('required')) { <p class="err-msg">مطلوب</p> }
+  @else if (form.get('street')?.hasError('maxlength')) { <p class="err-msg">الحد الأقصى 200 حرف</p> }
+}
             </div>
 
             <div class="field-group">
               <label class="field-label">تاريخ ووقت الحادث <span class="req">*</span></label>
               <input formControlName="eventDate" type="date" [max]="today" class="field" [class.error]="isInvalid('eventDate')" />
-              @if (isInvalid('eventDate')) { <p class="err-msg">مطلوب ولا يمكن أن يكون في المستقبل</p> }
+              @if (isInvalid('eventDate')) {
+  @if (form.get('eventDate')?.hasError('required')) { <p class="err-msg">مطلوب</p> }
+  @else if (form.get('eventDate')?.hasError('futureDate')) { <p class="err-msg">لا يمكن أن يكون في المستقبل</p> }
+}
             </div>
 
             <div class="field-group">
@@ -197,8 +233,10 @@
                 <p style="font-size:14px; font-weight:600;">{{ selectedPhotos().length ? 'تم اختيار الصورة الأساسية' : 'اضغط لإضافة الصورة الأساسية' }}</p>
               </div>
               @if (isInvalid('primaryImage')) {
-                <p class="err-msg" style="margin-top:8px">مطلوب صورة صالحة (الحد الأقصى 5MB، والصيغ المدعومة فقط)</p>
-              }
+  @if (form.get('primaryImage')?.hasError('required')) { <p class="err-msg" style="margin-top:8px">مطلوب</p> }
+  @else if (form.get('primaryImage')?.hasError('invalidFileType')) { <p class="err-msg" style="margin-top:8px">صيغة غير مدعومة</p> }
+  @else if (form.get('primaryImage')?.hasError('maxFileSize')) { <p class="err-msg" style="margin-top:8px">الحد الأقصى 5MB</p> }
+}
 
               <div class="field-label" style="margin:16px 0 10px;">صور إضافية (حتى 4 صور)</div>
               <div class="upload-zone" [class.error]="isInvalid('additionalImages')" (click)="additionalInput.click()">
@@ -207,8 +245,10 @@
                 <p style="font-size:13px; color:#75777d;">JPG / PNG / WebP — حتى 5MB لكل صورة</p>
               </div>
               @if (isInvalid('additionalImages')) {
-                <p class="err-msg" style="margin-top:8px">الصور الإضافية غير صالحة (الحد الأقصى 4 صور، و 5MB لكل صورة)</p>
-              }
+  @if (form.get('additionalImages')?.hasError('maxFileCount')) { <p class="err-msg" style="margin-top:8px">الحد الأقصى 4 صور</p> }
+  @else if (form.get('additionalImages')?.hasError('invalidFileType')) { <p class="err-msg" style="margin-top:8px">صيغ مدعومة: JPG/PNG/WebP</p> }
+  @else if (form.get('additionalImages')?.hasError('maxFileSize')) { <p class="err-msg" style="margin-top:8px">الحد الأقصى 5MB لكل صورة</p> }
+}
 
               @if (photoPreviews().length > 0) {
                 <div class="photo-grid">
