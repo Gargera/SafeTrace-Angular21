@@ -467,6 +467,23 @@ openProfile(userId?: string): void {
 }
 
 goToCaseDetails(caseId: number, caseType: string): void {
+  if(this.isAdmin){
+    switch(caseType) {
+
+    case 'Urgent':
+      this.router.navigate(['/admin/urgent', caseId]);
+      break;
+
+    case 'LongTerm':
+      this.router.navigate(['/admin/long-term', caseId]);
+      break;
+
+    case 'Unknown':
+      this.router.navigate(['/admin/unknown', caseId]);
+      break;
+    }
+  }
+  else{
 
   switch(caseType) {
 
@@ -482,6 +499,7 @@ goToCaseDetails(caseId: number, caseType: string): void {
       this.router.navigate(['/unknown', caseId]);
       break;
   }
+}
 }
 
 getRelativeTime(date?: string): string {
