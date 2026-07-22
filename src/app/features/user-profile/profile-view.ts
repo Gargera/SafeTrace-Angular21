@@ -44,11 +44,7 @@ export class ProfileView implements OnInit, OnDestroy {
     { id: 'notifications', label: 'اشعاراتي' },
     { id: 'donations', label: 'تبرعاتي' }, // ADDED ' },
   ];
-  constructor() {
-    effect(() => {
-      console.log('Unread:', this.notificationService.unreadCount());
-    });
-  }
+  
   ngOnInit(): void {
     // Read tab from query param
     this.#route.queryParamMap.subscribe((params) => {
@@ -103,7 +99,6 @@ export class ProfileView implements OnInit, OnDestroy {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0058be&color=fff`;
   }
   openImageZoom() {
-    console.log('avatarUrl:', this.avatarUrl);
     this.selectedZoomImage.set(this.avatarUrl);
     document.body.style.overflow = 'hidden';
   }
