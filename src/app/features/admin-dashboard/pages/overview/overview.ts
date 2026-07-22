@@ -6,11 +6,14 @@ import { SystemConstants } from '../../../../core/constants/system.constants';
 import Swal from 'sweetalert2';
 import { environment } from '../../../../../environments/environment';
 import { ButtonComponent } from '../../../../shared/components/button/button';
+import { Permissions } from '../../../../core/constants/Permissions';
+import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 
 @Component({
   selector: 'app-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule, ButtonComponent], 
+  imports: [CommonModule, RouterModule, ButtonComponent, HasPermissionDirective], 
   templateUrl: './overview.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -20,9 +23,15 @@ export class Overview implements OnInit {
   currentUser = this.authService.currentUser;
   
   isSidebarExpanded = signal<boolean>(true);
+  Permissions = Permissions;
 
   isSuperAdmin(): boolean {
     return this.currentUser()?.email === SystemConstants.RootAdminEmail;
+  }
+
+  getUserRoleTranslated(): string {
+    const role = this.authService.getUserRole();
+    return getRoleTranslationAr(role);
   }
 
   ngOnInit() {
@@ -73,11 +82,14 @@ export class Overview implements OnInit {
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        this.authService.clearSession();
-        this.router.navigate(['/auth']);
         this.authService.revokeToken().subscribe({
-          next: () => {},
-          error: () => {},
+          next: () => {
+            this.router.navigate(['/auth/login']);
+          },
+          error: () => {
+            this.authService.clearSession();
+            this.router.navigate(['/auth/login']);
+          },
         });
       }
     });

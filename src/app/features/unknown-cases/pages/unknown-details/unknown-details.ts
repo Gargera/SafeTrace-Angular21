@@ -41,8 +41,7 @@ import { UnknownCaseDetailResponse } from '../../models/response/UnknownCaseDeta
     ConfirmationModalComponent,
     FoundedPopupComponent,
     ButtonComponent,
-    CardComponent,
-    FormField],
+  ],
   templateUrl: './unknown-details.html',
   styleUrls: ['./unknown-details.css'],
 })

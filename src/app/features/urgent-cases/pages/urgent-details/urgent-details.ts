@@ -43,9 +43,7 @@ import { MapViewerComponent } from '../../../../shared/components/map-viewer/map
     ConfirmationModalComponent,
     FoundedPopupComponent,
     ButtonComponent,
-    MapViewerComponent,
-    CardComponent,
-    FormField],
+    MapViewerComponent],
   templateUrl: './urgent-details.html',
   styleUrls: ['./urgent-details.css'],
 })

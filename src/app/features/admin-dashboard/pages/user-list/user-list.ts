@@ -23,6 +23,9 @@ import { UserStatisticsDto } from '../../models/User/UserStatisticsDto';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import { SnackbarService } from '../../../../core/services/toast.service';
 
+import { Permissions } from '../../../../core/constants/Permissions';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+
 @Component({
   selector: 'app-user-list',
   imports: [
@@ -38,6 +41,7 @@ import { SnackbarService } from '../../../../core/services/toast.service';
     EmptyStateComponent,
     LoadingSpinnerComponent,
     CaseHeaderComponent,
+    HasPermissionDirective,
   ],
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',
@@ -45,6 +49,7 @@ import { SnackbarService } from '../../../../core/services/toast.service';
 })
 export class UserList {
   public authService = inject(AuthService);
+  Permissions = Permissions;
   private userService = inject(UserService);
   private roleService = inject(RoleService);
   private readonly router = inject(Router);

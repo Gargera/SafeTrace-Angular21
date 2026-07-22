@@ -12,7 +12,7 @@ import {
 import { Subscription } from 'rxjs';
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 
 @Component({
   selector: 'app-login',
@@ -33,6 +33,7 @@ export class Login implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private socialAuthService = inject(SocialAuthService);
+  private location = inject(Location);
 
   isLoading = signal<boolean>(false);
   apiErrorMessage = signal<string>('');
@@ -63,7 +64,13 @@ export class Login implements OnInit, OnDestroy {
           this.authService.googleLogin({ providerToken: user.idToken! }).subscribe({
             next: () => {
               this.isLoading.set(false);
-              this.router.navigateByUrl(this.returnUrl, { replaceUrl: true });
+              if (this.returnUrl !== '/home') {
+                this.router.navigateByUrl(this.returnUrl, { replaceUrl: true });
+              } else if (window.history.length > 1 && document.referrer.includes(window.location.host)) {
+                this.location.back();
+              } else {
+                this.router.navigate(['/home'], { replaceUrl: true });
+              }
             },
             error: (err) => {
               this.isLoading.set(false);
@@ -94,7 +101,13 @@ export class Login implements OnInit, OnDestroy {
     this.authService.login(this.loginForm.value).subscribe({
       next: () => {
         this.isLoading.set(false);
-        this.router.navigateByUrl(this.returnUrl, { replaceUrl: true });
+        if (this.returnUrl !== '/home') {
+          this.router.navigateByUrl(this.returnUrl, { replaceUrl: true });
+        } else if (window.history.length > 1 && document.referrer.includes(window.location.host)) {
+          this.location.back();
+        } else {
+          this.router.navigate(['/home'], { replaceUrl: true });
+        }
       },
       error: (err) => {
         this.isLoading.set(false);
@@ -112,48 +125,40 @@ export class Login implements OnInit, OnDestroy {
       errorMessage.includes('confirm') ||
       errorMessage.includes('verified')
     ) {
-      if (
-        errorMessage.includes('تأكيد') ||
-        errorMessage.includes('مفعل') ||
-        errorMessage.includes('confirm') ||
-        errorMessage.includes('verified')
-      ) {
-        Swal.fire({
-          title: 'حسابك غير مفعل!',
-          text: 'يجب تأكيد بريدك الإلكتروني لتتمكن من استخدام المنصة.',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#0058be',
-          cancelButtonColor: '#75777d',
-          confirmButtonText: 'الذهاب لتأكيد الحساب',
-          cancelButtonText: 'إلغاء',
-          customClass: { popup: 'rounded-xl font-body-md' },
-        }).then((result) => {
-          if (result.isConfirmed) {
-            const emailForConfirm = this.loginForm.value.email || '';
-            this.router.navigate(['/auth/confirm-email'], { state: { email: emailForConfirm } });
-          }
-        });
-
-        return;
-      }
-
-      if (err.error?.errors) {
-        const serverErrors = err.error.errors;
-
-        for (const key in serverErrors) {
-          const controlName = key.charAt(0).toLowerCase() + key.slice(1);
-          const control = this.loginForm.get(controlName);
-
-          if (control) {
-            control.setErrors({ serverError: serverErrors[key][0] });
-          } else {
-            this.apiErrorMessage.set(serverErrors[key][0]);
-          }
+      Swal.fire({
+        title: 'حسابك غير مفعل!',
+        text: 'يجب تأكيد بريدك الإلكتروني لتتمكن من استخدام المنصة.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#0058be',
+        cancelButtonColor: '#75777d',
+        confirmButtonText: 'الذهاب لتأكيد الحساب',
+        cancelButtonText: 'إلغاء',
+        customClass: { popup: 'rounded-xl font-body-md' },
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const emailForConfirm = this.loginForm.value.email || '';
+          this.router.navigate(['/auth/confirm-email'], { state: { email: emailForConfirm } });
         }
-      } else {
-        this.apiErrorMessage.set(errorMessage || 'حدث خطأ أثناء تسجيل الدخول.');
+      });
+      return;
+    }
+
+    if (err.error?.errors) {
+      const serverErrors = err.error.errors;
+
+      for (const key in serverErrors) {
+        const controlName = key.charAt(0).toLowerCase() + key.slice(1);
+        const control = this.loginForm.get(controlName);
+
+        if (control) {
+          control.setErrors({ serverError: serverErrors[key][0] });
+        } else {
+          this.apiErrorMessage.set(serverErrors[key][0]);
+        }
       }
+    } else {
+      this.apiErrorMessage.set(errorMessage || 'حدث خطأ أثناء تسجيل الدخول.');
     }
   }
 }
