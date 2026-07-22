@@ -7,13 +7,15 @@ import { Gender } from '../../../../shared/enums/gender';
 import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { FormField } from '../../../../shared/components/form-field/form-field';
 
 type Step = 1 | 2 | 3;
 
 @Component({
   selector: 'app-unknown-update',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, ButtonComponent, FormField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../../../../shared/styles/case-form.css', './unknown-update.css'],
   templateUrl: './unknown-update.html',
@@ -225,6 +227,6 @@ export class UnknownUpdate implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/unknown-cases', this.caseId]);
+    this.router.navigate(['/unknown', this.caseId]);
   }
 }

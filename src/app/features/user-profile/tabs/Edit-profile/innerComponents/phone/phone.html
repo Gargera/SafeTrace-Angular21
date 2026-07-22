@@ -1,0 +1,80 @@
+<form
+  [formGroup]="phoneForm"
+  (ngSubmit)="savePhoneNumber()"
+  class="bg-surface border border-outline-variant rounded-2xl p-lg space-y-md shadow-sm transition-all duration-300 hover:shadow-md block"
+  aria-labelledby="phone-heading"
+>
+  <div class="flex justify-between items-center border-b border-outline-variant pb-sm">
+    <h3
+      id="phone-heading"
+      class="text-headline-sm font-bold text-primary flex items-center gap-sm"
+    >
+      <span class="material-symbols-outlined text-[24px]" aria-hidden="true">call</span>
+      رقم الهاتف
+    </h3>
+    @if (!isEditingPhone()) {
+      <button
+        type="button"
+        (click)="togglePhoneEdit(true)"
+        class="px-md py-xs bg-secondary-container text-on-secondary-container hover:bg-secondary-container-high focus-visible:ring-2 focus-visible:ring-secondary rounded-lg text-label-sm font-bold flex items-center gap-xs transition-colors cursor-pointer"
+      >
+        <span class="material-symbols-outlined text-[16px]" aria-hidden="true">edit</span>
+        تعديل رقم الهاتف
+      </button>
+    } @else {
+      <div class="flex items-center gap-sm">
+        <button
+          type="button"
+          [disabled]="isSavingPhone()"
+          (click)="togglePhoneEdit(false); cancelPhone()"
+          class="px-md py-xs text-secondary border border-secondary rounded-lg text-label-sm font-bold hover:bg-secondary-fixed focus-visible:ring-2 focus-visible:ring-secondary transition-colors disabled:opacity-50 cursor-pointer"
+        >
+          إلغاء
+        </button>
+        <button
+          type="submit"
+          [disabled]="phoneForm.invalid || isSavingPhone()"
+          [attr.aria-busy]="isSavingPhone()"
+          class="px-md py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 focus-visible:ring-2 focus-visible:ring-secondary transition-all flex items-center gap-xs disabled:opacity-50 cursor-pointer"
+        >
+          @if (isSavingPhone()) {
+            <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
+              >progress_activity</span
+            >
+          }
+          حفظ رقم الهاتف
+        </button>
+      </div>
+    }
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-lg pt-sm">
+    <!-- Phone Number -->
+    <div class="space-y-xs">
+      <label for="phoneNumber" class="text-label-md text-on-surface font-semibold">
+        رقم الهاتف <span class="text-error" aria-hidden="true">*</span>
+      </label>
+      <input
+        id="phoneNumber"
+        formControlName="phoneNumber"
+        type="tel"
+        dir="ltr"
+        maxlength="20"
+        [attr.aria-invalid]="isPhoneFieldInvalid('phoneNumber')"
+        [attr.aria-describedby]="isPhoneFieldInvalid('phoneNumber') ? 'phoneNumber-error' : null"
+        class="w-full bg-surface-container-low border rounded-lg p-md transition-all focus:ring-2 focus:ring-secondary focus:border-secondary outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+        [class.border-error]="isPhoneFieldInvalid('phoneNumber')"
+        [class.border-outline-variant]="!isPhoneFieldInvalid('phoneNumber')"
+      />
+      @if (isPhoneFieldInvalid('phoneNumber')) {
+        <p id="phoneNumber-error" class="text-label-sm text-error font-medium mt-xs" role="alert">
+          @if (phoneForm.get('phoneNumber')?.hasError('required')) {
+            رقم الهاتف مطلوب
+          } @else if (phoneForm.get('phoneNumber')?.hasError('pattern')) {
+            صيغة رقم الهاتف غير صحيحة
+          }
+        </p>
+      }
+    </div>
+  </div>
+</form>

@@ -9,13 +9,15 @@ import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.
 import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { FormField } from '../../../../shared/components/form-field/form-field';  
 
 type Step = 1 | 2 | 3;
 
 @Component({
   selector: 'app-long-term-update',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, ButtonComponent, FormField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../../../../shared/styles/case-form.css', './long-term-update.css'],
   templateUrl: './long-term-update.html',
@@ -252,6 +254,6 @@ export class LongTermUpdate implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/long-term-cases', this.caseId]);
+    this.router.navigate(['/long-term', this.caseId]);
   }
 }

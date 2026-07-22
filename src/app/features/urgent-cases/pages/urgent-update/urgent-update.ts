@@ -10,13 +10,15 @@ import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/map-location-picker';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { FormField } from '../../../../shared/components/form-field/form-field';
 
 type Step = 1 | 2 | 3;
 
 @Component({
   selector: 'app-urgent-update',
   standalone: true,
-  imports: [ReactiveFormsModule, MapLocationPickerComponent],
+  imports: [ReactiveFormsModule, MapLocationPickerComponent, ButtonComponent, FormField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../../../../shared/styles/case-form.css', './urgent-update.css'],
   templateUrl: './urgent-update.html',
@@ -259,6 +261,6 @@ export class UrgentUpdate implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/urgent-cases', this.caseId]);
+    this.router.navigate(['/urgent', this.caseId]);
   }
 }

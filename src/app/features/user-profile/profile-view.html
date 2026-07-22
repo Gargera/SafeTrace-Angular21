@@ -49,29 +49,34 @@
         <div class="md:col-span-10">
           <!-- Tabs Navigation -->
           <div class="bg-surface-container-lowest rounded-xl shadow-sm mb-gutter overflow-hidden">
-            <div class="flex border-b border-outline-variant">
-              @for (tab of tabs; track tab.id) {
-                <button
-                  (click)="switchTab(tab.id)"
-                  class="flex-1 py-md px-lg text-label-md font-label-md border-b-2 transition-all hover:bg-surface-container-lowest relative"
-                  [class.border-secondary]="activeTab() === tab.id"
-                  [class.text-secondary]="activeTab() === tab.id"
-                  [class.bg-surface-container-low]="activeTab() === tab.id"
-                  [class.border-transparent]="activeTab() !== tab.id"
-                  [class.text-on-surface-variant]="activeTab() !== tab.id"
-                >
-                  {{ tab.label }}
-                  <!-- Notification badge on Notifications tab -->
-                  @if (tab.id === 'notifications' && notificationUnreadCount() > 0) {
-                    <span
-                      class="absolute top-2 left-1/2 translate-x-6 bg-error text-white text-[10px] font-bold rounded-full min-w-4.5 h-4.5 flex items-center justify-center px-0.75"
-                    >
-                      {{ notificationUnreadCount() > 99 ? '99+' : notificationUnreadCount() }}
-                    </span>
-                  }
-                </button>
-              }
-            </div>
+            <nav class="border-b border-outline-variant">
+              <div
+                class="flex gap-xs overflow-x-auto snap-x snap-mandatory -mx-md px-md sm:-mx-lg sm:px-lg lg:mx-0 lg:px-0 lg:flex-wrap lg:overflow-visible [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-xs"
+              >
+                @for (tab of tabs; track tab.id) {
+                  <button
+                    type="button"
+                    (click)="switchTab(tab.id)"
+                    class="relative shrink-0 snap-start whitespace-nowrap px-lg py-sm rounded-t-lg text-body-sm font-medium transition-all duration-200 border-b-2 hover:bg-primary/10 hover:text-primary hover:border-primary/40"
+                    [class.bg-primary/10]="activeTab() === tab.id"
+                    [class.border-primary]="activeTab() === tab.id"
+                    [class.text-primary]="activeTab() === tab.id"
+                    [class.border-transparent]="activeTab() !== tab.id"
+                    [class.text-on-surface-variant]="activeTab() !== tab.id"
+                  >
+                    {{ tab.label }}
+
+                    @if (tab.id === 'notifications' && notificationService.unreadCount() > 0) {
+                      <span
+                        class="absolute top-0 right-18 bg-error min-w-4.5 h-4.5 px-1 rounded-full text-[10px] text-white flex items-center justify-center font-bold border border-surface shadow-sm"
+                      >
+                        {{ notificationService.unreadCount() }}
+                      </span>
+                    }
+                  </button>
+                }
+              </div>
+            </nav>
 
             <!-- Tab Content -->
             @switch (activeTab()) {

@@ -57,7 +57,7 @@ export class RegisterByAdmin implements OnInit {
     fName: ['', [Validators.required, Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+$')]],
     lName: ['', [Validators.required, Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+( [a-zA-Z\u0600-\u06FF]+)*$')]],
     email: ['', [Validators.required, Validators.email, Validators.pattern('^\\S+$')]],
-    phoneNumber: ['', [Validators.required, Validators.pattern('^01[0125][0-9]{8}$')]],
+    phoneNumber: ['', [Validators.pattern('^01[0125][0-9]{8}$')]],
     password: [
       '',
       [Validators.required, Validators.minLength(8), Validators.maxLength(50), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_])\\S+$')],
@@ -99,6 +99,9 @@ export class RegisterByAdmin implements OnInit {
         const formData = { ...this.registerForm.value };
         formData.fName = formData.fName.trim();
         formData.lName = formData.lName.trim();
+        if (!formData.phoneNumber) {
+          delete formData.phoneNumber;
+        }
 
         this.userService.registerByAdmin(formData).subscribe({
           next: (res) => {
