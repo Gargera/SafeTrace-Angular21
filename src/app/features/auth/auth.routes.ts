@@ -12,8 +12,8 @@ export const AUTH_ROUTES: Routes = [
   },
   { 
     path: 'login', 
-    redirectTo: '', 
-    pathMatch: 'full' 
+    component: Login,
+    title: 'تسجيل الدخول | لقاء'
   },
   { 
     path: 'register', 

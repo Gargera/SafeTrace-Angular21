@@ -77,6 +77,11 @@ export class AuthService {
     );
   }
 
+  getVerificationStatus(): VerificationStatus | undefined {
+    const userData = this.currentUser();
+    return userData ? userData.verificationStatus : undefined;
+  }
+
   getUserRole(): string | null {
     const decodedToken = this.getDecodedToken();
     if (!decodedToken) return null;
@@ -107,9 +112,10 @@ export class AuthService {
     return this.hasRole(UserRole.VerifiedUser);
   }
 
-  getVerificationStatus(): VerificationStatus | undefined {
+  hasPermission(permission: string): boolean {
     const userData = this.currentUser();
-    return userData ? userData.verificationStatus : undefined;
+    if (!userData || !userData.permissions) return false;
+    return userData.permissions.includes(permission);
   }
 
   getToken(): string | null {
@@ -130,6 +136,7 @@ export class AuthService {
       profileImage: response.profileImage || null,
       isVerified: response.verificationStatus === VerificationStatus.Verified,
       verificationStatus: response.verificationStatus,
+      permissions: response.permissions || []
     };
 
     localStorage.setItem(this.userDataKey, JSON.stringify(userData));

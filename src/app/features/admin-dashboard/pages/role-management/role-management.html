@@ -23,7 +23,7 @@
         </div>
 
         @if (selectedRoleId() && isDeletableRole()) {
-          <app-button (onClick)="onDeleteRole()" [disabled]="isDeleting()" [loading]="isDeleting()" variant="icon" extraClass="w-11 h-11 !border-none bg-error-container text-error hover:bg-error hover:text-white shrink-0 transition-colors" ariaLabel="حذف الدور">
+          <app-button *hasPermission="Permissions.Roles.Delete" (onClick)="onDeleteRole()" [disabled]="isDeleting()" [loading]="isDeleting()" variant="icon" extraClass="w-11 h-11 !border-none bg-error-container text-error hover:bg-error hover:text-white shrink-0 transition-colors" ariaLabel="حذف الدور">
             @if (!isDeleting()) {
               <span class="material-symbols-outlined text-[24px]">delete</span>
             }
@@ -32,6 +32,7 @@
       </div>
     </app-card>
 
+    <ng-container *hasPermission="Permissions.Roles.Create">
     <app-card extraClass="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant flex flex-col gap-4 h-full">
       <div class="flex items-center gap-2 text-primary mb-2">
         <span class="material-symbols-outlined">add_moderator</span>
@@ -66,8 +67,10 @@
         }
       </form>
     </app-card>
+    </ng-container>
   </div>
 
+  <ng-container *hasPermission="Permissions.Roles.GetPermissionsByRoleId">
   <section class="space-y-md mt-xl">
     <div class="flex justify-between items-end flex-wrap gap-4">
       <div class="flex flex-col gap-2">
@@ -194,7 +197,9 @@
       </div>
     </div>
   </section>
+  </ng-container>
 
+  <ng-container *hasPermission="Permissions.Roles.UpdateRolePermissions">
   <div class="flex justify-end mt-lg">
     <app-button (onClick)="savePermissions()" 
             [disabled]="!selectedRoleId() || isSaving() || isReadOnly() || !hasChanges()"
@@ -209,6 +214,7 @@
       }
     </app-button>
   </div>
+  </ng-container>
 </div>
 
 @if (showConfirmModal()) {
