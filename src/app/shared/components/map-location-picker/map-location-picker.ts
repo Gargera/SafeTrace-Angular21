@@ -13,10 +13,13 @@ import {
   computed,
   ChangeDetectionStrategy,
   HostListener,
+  DestroyRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Subject, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, catchError, tap } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GeocodingService } from '../../../core/services/geocoding.service';
 import { ButtonComponent } from '../button/button';
 import * as L from 'leaflet';
@@ -40,9 +43,7 @@ interface NominatimSearchResult {
         (click)="onBackdropClick($event)"
       >
         <div
-          [class]="isFullscreen() 
-            ? 'fixed inset-0 z-50 flex h-full w-full flex-col overflow-hidden bg-white shadow-2xl transition-all duration-300' 
-            : 'relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl transition-all duration-300 animate-in zoom-in-95'"
+          [class]="containerClasses()"
           (click)="$event.stopPropagation()"
         >
           <!-- Header -->
@@ -98,7 +99,7 @@ interface NominatimSearchResult {
               } @else if (searchQuery) {
                 <button
                   type="button"
-                  (click)="clearSearch()"
+                  (click)="clearSearchState()"
                   class="absolute left-3 flex h-5 w-5 items-center justify-center rounded-full text-outline hover:text-on-surface"
                 >
                   <span class="material-symbols-outlined text-sm">close</span>
@@ -153,7 +154,7 @@ interface NominatimSearchResult {
             <!-- Actual Leaflet Container -->
             <div #mapContainer class="h-full w-full min-h-[320px] sm:min-h-[380px] z-0"></div>
 
-            <!-- Floating Zoom Controls (Right Top Stack) -->
+            <!-- Floating Zoom Controls -->
             <div class="absolute top-4 right-4 z-[500] flex flex-col gap-2 pointer-events-auto">
               <button
                 type="button"
@@ -181,7 +182,7 @@ interface NominatimSearchResult {
               </button>
             </div>
 
-            <!-- Floating Current Location FAB (Bottom Right INSIDE Map) -->
+            <!-- Floating Current Location FAB -->
             <button
               type="button"
               (click)="useCurrentLocationInModal()"
@@ -276,7 +277,8 @@ interface NominatimSearchResult {
   ],
 })
 export class MapLocationPickerComponent implements OnChanges, OnDestroy {
-  private geocodingService = inject(GeocodingService);
+  private readonly geocodingService = inject(GeocodingService);
+  private readonly destroyRef = inject(DestroyRef);
 
   @Input() isOpen = false;
   @Input() initialLat: number | null = null;
@@ -291,34 +293,44 @@ export class MapLocationPickerComponent implements OnChanges, OnDestroy {
 
   private map: L.Map | null = null;
   private marker: L.Marker | null = null;
-  private reverseGeocodeSub?: Subscription;
-  private searchSub?: Subscription;
+  private resizeObserver?: ResizeObserver;
+  private initTimeout: any = null;
 
-  tempLat = signal<number | null>(null);
-  tempLng = signal<number | null>(null);
-  tempAddress = signal<string>('');
+  private readonly searchSubject$ = new Subject<string>();
+  private readonly resolveAddressSubject$ = new Subject<{ lat: number; lng: number }>();
 
-  isMapLoading = signal<boolean>(true);
-  isReverseGeocoding = signal<boolean>(false);
-  isLocatingModal = signal<boolean>(false);
-  isFullscreen = signal<boolean>(false);
+  readonly tempLat = signal<number | null>(null);
+  readonly tempLng = signal<number | null>(null);
+  readonly tempAddress = signal<string>('');
+
+  readonly isMapLoading = signal<boolean>(true);
+  readonly isReverseGeocoding = signal<boolean>(false);
+  readonly isLocatingModal = signal<boolean>(false);
+  readonly isFullscreen = signal<boolean>(false);
 
   searchQuery = '';
-  searchResults = signal<NominatimSearchResult[]>([]);
-  selectedIndex = signal<number>(-1);
-  isSearching = signal<boolean>(false);
-  hasSearched = signal<boolean>(false);
+  readonly searchResults = signal<NominatimSearchResult[]>([]);
+  readonly selectedIndex = signal<number>(-1);
+  readonly isSearching = signal<boolean>(false);
+  readonly hasSearched = signal<boolean>(false);
 
-  isConfirmDisabled = computed(() => {
+  readonly isConfirmDisabled = computed(() => {
     return this.tempLat() === null || this.tempLng() === null || this.isReverseGeocoding();
   });
 
-  private searchTimeout: any = null;
-  private initTimeout: any = null;
-  private resizeObserver?: ResizeObserver;
+  readonly containerClasses = computed(() =>
+    this.isFullscreen()
+      ? 'fixed inset-0 z-50 flex h-full w-full flex-col overflow-hidden bg-white shadow-2xl transition-all duration-300'
+      : 'relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl transition-all duration-300 animate-in zoom-in-95'
+  );
 
-  private defaultLat = 30.0444;
-  private defaultLng = 31.2357;
+  private readonly defaultLat = 30.0444;
+  private readonly defaultLng = 31.2357;
+
+  constructor() {
+    this.initSearchPipeline();
+    this.initReverseGeocodePipeline();
+  }
 
   @HostListener('window:keydown.escape')
   handleEscapeKey(): void {
@@ -333,15 +345,7 @@ export class MapLocationPickerComponent implements OnChanges, OnDestroy {
         const startLat = this.initialLat ?? this.defaultLat;
         const startLng = this.initialLng ?? this.defaultLng;
 
-        this.tempLat.set(startLat);
-        this.tempLng.set(startLng);
-        this.tempAddress.set(this.initialAddress || '');
-        this.searchQuery = '';
-        this.searchResults.set([]);
-        this.selectedIndex.set(-1);
-        this.hasSearched.set(false);
-        this.isMapLoading.set(true);
-        this.isFullscreen.set(false);
+        this.resetModalState(startLat, startLng);
 
         if (this.initTimeout) clearTimeout(this.initTimeout);
         this.initTimeout = setTimeout(() => {
@@ -352,6 +356,221 @@ export class MapLocationPickerComponent implements OnChanges, OnDestroy {
         this.destroyMap();
       }
     }
+  }
+
+  private initSearchPipeline(): void {
+    this.searchSubject$
+      .pipe(
+        debounceTime(350),
+        distinctUntilChanged(),
+        tap(() => this.isSearching.set(true)),
+        switchMap((query: string) =>
+          this.geocodingService.searchPlaces(query).pipe(
+            catchError(() => of([] as NominatimSearchResult[]))
+          )
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((results: NominatimSearchResult[]) => {
+        this.isSearching.set(false);
+        this.hasSearched.set(true);
+        this.searchResults.set(results);
+      });
+  }
+
+  private initReverseGeocodePipeline(): void {
+    this.resolveAddressSubject$
+      .pipe(
+        tap(() => this.isReverseGeocoding.set(true)),
+        switchMap(({ lat, lng }: { lat: number; lng: number }) =>
+          this.geocodingService.reverseGeocode(lat, lng).pipe(
+            catchError(() => of(`${lat.toFixed(4)}, ${lng.toFixed(4)}`))
+          )
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((address: string) => {
+        this.tempAddress.set(address);
+        this.isReverseGeocoding.set(false);
+      });
+  }
+
+  private resetModalState(startLat: number, startLng: number): void {
+    this.tempLat.set(startLat);
+    this.tempLng.set(startLng);
+    this.tempAddress.set(this.initialAddress || '');
+    this.clearSearchState();
+    this.isMapLoading.set(true);
+    this.isFullscreen.set(false);
+  }
+
+  private setLocation(lat: number, lng: number, knownAddress?: string): void {
+    this.tempLat.set(lat);
+    this.tempLng.set(lng);
+
+    if (this.marker) {
+      this.marker.setLatLng([lat, lng]);
+    }
+
+    this.flyToLocation(lat, lng);
+
+    if (knownAddress) {
+      this.tempAddress.set(knownAddress);
+    } else {
+      this.resolveAddress(lat, lng);
+    }
+  }
+
+  private resolveAddress(lat: number, lng: number): void {
+    this.resolveAddressSubject$.next({ lat, lng });
+  }
+
+  private searchLocation(query: string): void {
+    const q = query ? query.trim() : '';
+    if (!q || q.length < 2) {
+      this.clearSearchState();
+      return;
+    }
+    this.searchSubject$.next(q);
+  }
+
+  private flyToLocation(lat: number, lng: number, zoom?: number): void {
+    if (!this.map) return;
+    const targetZoom = zoom ?? Math.max(this.map.getZoom(), 15);
+    this.map.flyTo([lat, lng], targetZoom, {
+      duration: 1.2,
+      easeLinearity: 0.25,
+    });
+  }
+
+  clearSearchState(): void {
+    this.searchQuery = '';
+    this.searchResults.set([]);
+    this.hasSearched.set(false);
+    this.isSearching.set(false);
+    this.selectedIndex.set(-1);
+  }
+
+  clearSearch(): void {
+    this.clearSearchState();
+  }
+
+  useCurrentLocationInModal(): void {
+    if (!navigator.geolocation || this.isLocatingModal()) return;
+
+    this.isLocatingModal.set(true);
+    this.clearSearchState();
+
+    let handled = false;
+    const timeoutGuard = setTimeout(() => {
+      if (!handled) {
+        handled = true;
+        this.isLocatingModal.set(false);
+      }
+    }, 10000);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (handled) return;
+        handled = true;
+        clearTimeout(timeoutGuard);
+        this.isLocatingModal.set(false);
+
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        if (this.map) {
+          this.map.invalidateSize();
+        }
+        this.setLocation(lat, lng);
+      },
+      () => {
+        if (handled) return;
+        handled = true;
+        clearTimeout(timeoutGuard);
+        this.isLocatingModal.set(false);
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 }
+    );
+  }
+
+  private initOrResetMap(lat: number, lng: number): void {
+    if (!this.mapContainerRef?.nativeElement) return;
+
+    if (!this.map) {
+      const mapInstance = this.initLeafletMap(this.mapContainerRef.nativeElement, [lat, lng]);
+      const markerInstance = this.createCustomMarker([lat, lng]);
+      markerInstance.addTo(mapInstance);
+
+      markerInstance.on('dragend', () => {
+        const pos = markerInstance.getLatLng();
+        if (pos) {
+          this.setLocation(pos.lat, pos.lng);
+        }
+      });
+
+      mapInstance.on('click', (e: L.LeafletMouseEvent) => {
+        this.setLocation(e.latlng.lat, e.latlng.lng);
+      });
+
+      this.map = mapInstance;
+      this.marker = markerInstance;
+    } else {
+      this.flyToLocation(lat, lng, 13);
+      if (this.marker) {
+        this.marker.setLatLng([lat, lng]);
+      }
+    }
+
+    this.setupResizeObserver();
+
+    setTimeout(() => {
+      if (this.map) {
+        this.map.invalidateSize();
+        this.isMapLoading.set(false);
+      }
+    }, 200);
+
+    if (!this.initialAddress) {
+      this.resolveAddress(lat, lng);
+    }
+  }
+
+  private initLeafletMap(container: HTMLElement, center: [number, number]): L.Map {
+    const map = L.map(container, {
+      center,
+      zoom: 13,
+      zoomControl: false,
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map);
+
+    return map;
+  }
+
+  private createCustomMarker(position: [number, number]): L.Marker {
+    const customPin = L.divIcon({
+      className: 'custom-leaflet-pin',
+      html: `
+        <div class="marker-pin-wrapper relative flex flex-col items-center justify-center -translate-x-1/2 -translate-y-full cursor-grab active:cursor-grabbing">
+          <div class="flex h-11 w-11 items-center justify-center rounded-full bg-secondary text-white shadow-2xl ring-4 ring-white transition-transform duration-200 hover:scale-110">
+            <span class="material-symbols-outlined text-2xl">location_on</span>
+          </div>
+          <div class="absolute -bottom-1.5 h-3 w-3 rotate-45 bg-secondary"></div>
+          <div class="absolute -bottom-3 h-2 w-8 rounded-full bg-black/20 blur-[2px]"></div>
+        </div>
+      `,
+      iconSize: [44, 44],
+      iconAnchor: [22, 44],
+    });
+
+    return L.marker(position, {
+      draggable: true,
+      icon: customPin,
+    });
   }
 
   private setupResizeObserver(): void {
@@ -368,126 +587,10 @@ export class MapLocationPickerComponent implements OnChanges, OnDestroy {
     this.resizeObserver.observe(this.mapContainerRef.nativeElement);
   }
 
-  private initOrResetMap(lat: number, lng: number): void {
-    if (!this.mapContainerRef?.nativeElement) return;
-
-    const customPin = L.divIcon({
-      className: 'custom-leaflet-pin',
-      html: `
-        <div class="marker-pin-wrapper relative flex flex-col items-center justify-center -translate-x-1/2 -translate-y-full cursor-grab active:cursor-grabbing">
-          <div class="flex h-11 w-11 items-center justify-center rounded-full bg-secondary text-white shadow-2xl ring-4 ring-white transition-transform duration-200 hover:scale-110">
-            <span class="material-symbols-outlined text-2xl">location_on</span>
-          </div>
-          <div class="absolute -bottom-1.5 h-3 w-3 rotate-45 bg-secondary"></div>
-          <div class="absolute -bottom-3 h-2 w-8 rounded-full bg-black/20 blur-[2px]"></div>
-        </div>
-      `,
-      iconSize: [44, 44],
-      iconAnchor: [22, 44],
-    });
-
-    if (!this.map) {
-      this.map = L.map(this.mapContainerRef.nativeElement, {
-        center: [lat, lng],
-        zoom: 13,
-        zoomControl: false,
-      });
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors',
-      }).addTo(this.map);
-
-      this.marker = L.marker([lat, lng], {
-        draggable: true,
-        icon: customPin,
-      }).addTo(this.map);
-
-      this.marker.on('dragend', () => {
-        const pos = this.marker?.getLatLng();
-        if (pos) {
-          this.updateLocation(pos.lat, pos.lng);
-        }
-      });
-
-      this.map.on('click', (e: L.LeafletMouseEvent) => {
-        this.updateLocation(e.latlng.lat, e.latlng.lng);
-      });
-    } else {
-      this.map.flyTo([lat, lng], 13, { duration: 1 });
-      if (this.marker) {
-        this.marker.setLatLng([lat, lng]);
-      }
-    }
-
-    this.setupResizeObserver();
-
-    setTimeout(() => {
-      if (this.map) {
-        this.map.invalidateSize();
-        this.isMapLoading.set(false);
-      }
-    }, 200);
-
-    if (!this.initialAddress) {
-      this.updateAddress(lat, lng);
-    }
-  }
-
-  private updateLocation(lat: number, lng: number, knownAddress?: string): void {
-    this.tempLat.set(lat);
-    this.tempLng.set(lng);
-
-    if (this.marker) {
-      this.marker.setLatLng([lat, lng]);
-    }
-    if (this.map) {
-      this.map.flyTo([lat, lng], Math.max(this.map.getZoom(), 15), {
-        duration: 1.2,
-        easeLinearity: 0.25,
-      });
-    }
-
-    if (knownAddress) {
-      this.tempAddress.set(knownAddress);
-    } else {
-      this.updateAddress(lat, lng);
-    }
-  }
-
-  private updateAddress(lat: number, lng: number): void {
-    this.isReverseGeocoding.set(true);
-    if (this.reverseGeocodeSub) {
-      this.reverseGeocodeSub.unsubscribe();
-    }
-    this.reverseGeocodeSub = this.geocodingService.reverseGeocode(lat, lng).subscribe({
-      next: (address) => {
-        this.tempAddress.set(address);
-        this.isReverseGeocoding.set(false);
-      },
-      error: () => {
-        this.tempAddress.set(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
-        this.isReverseGeocoding.set(false);
-      },
-    });
-  }
-
   onSearchInput(event: Event): void {
     const val = (event.target as HTMLInputElement).value;
-    if (this.searchTimeout) clearTimeout(this.searchTimeout);
     this.selectedIndex.set(-1);
-
-    if (!val || val.trim().length < 2) {
-      this.searchResults.set([]);
-      this.isSearching.set(false);
-      this.hasSearched.set(false);
-      return;
-    }
-
-    this.isSearching.set(true);
-    this.searchTimeout = setTimeout(() => {
-      this.performSearch(val);
-    }, 350);
+    this.searchLocation(val);
   }
 
   onSearchKeydown(event: KeyboardEvent): void {
@@ -508,43 +611,15 @@ export class MapLocationPickerComponent implements OnChanges, OnDestroy {
       if (idx >= 0 && results[idx]) {
         this.selectSearchResult(results[idx]);
       } else if (this.searchQuery.trim()) {
-        if (this.searchTimeout) clearTimeout(this.searchTimeout);
-        this.performSearch(this.searchQuery);
+        this.searchLocation(this.searchQuery);
       }
     }
   }
 
-  private performSearch(query: string): void {
-    this.isSearching.set(true);
-    if (this.searchSub) {
-      this.searchSub.unsubscribe();
-    }
-    this.searchSub = this.geocodingService.searchPlaces(query).subscribe({
-      next: (results) => {
-        this.isSearching.set(false);
-        this.hasSearched.set(true);
-        this.searchResults.set(results);
-      },
-      error: () => {
-        this.isSearching.set(false);
-        this.hasSearched.set(true);
-        this.searchResults.set([]);
-      },
-    });
-  }
-
   selectSearchResult(res: NominatimSearchResult): void {
-    this.searchResults.set([]);
-    this.hasSearched.set(false);
+    this.clearSearchState();
     this.searchQuery = res.displayName;
-    this.updateLocation(res.lat, res.lng, res.displayName);
-  }
-
-  clearSearch(): void {
-    this.searchQuery = '';
-    this.searchResults.set([]);
-    this.hasSearched.set(false);
-    this.selectedIndex.set(-1);
+    this.setLocation(res.lat, res.lng, res.displayName);
   }
 
   zoomIn(): void {
@@ -558,9 +633,7 @@ export class MapLocationPickerComponent implements OnChanges, OnDestroy {
   reCenterMap(): void {
     const lat = this.tempLat() ?? this.defaultLat;
     const lng = this.tempLng() ?? this.defaultLng;
-    if (this.map) {
-      this.map.flyTo([lat, lng], 14, { duration: 1 });
-    }
+    this.flyToLocation(lat, lng, 14);
   }
 
   toggleFullscreen(): void {
@@ -568,23 +641,6 @@ export class MapLocationPickerComponent implements OnChanges, OnDestroy {
     setTimeout(() => {
       if (this.map) this.map.invalidateSize();
     }, 200);
-  }
-
-  useCurrentLocationInModal(): void {
-    if (!navigator.geolocation) return;
-    this.isLocatingModal.set(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        this.isLocatingModal.set(false);
-        this.updateLocation(lat, lng);
-      },
-      () => {
-        this.isLocatingModal.set(false);
-      },
-      { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
-    );
   }
 
   onConfirm(): void {
@@ -606,11 +662,9 @@ export class MapLocationPickerComponent implements OnChanges, OnDestroy {
   }
 
   private destroyMap(): void {
-    if (this.reverseGeocodeSub) {
-      this.reverseGeocodeSub.unsubscribe();
-    }
-    if (this.searchSub) {
-      this.searchSub.unsubscribe();
+    if (this.initTimeout) {
+      clearTimeout(this.initTimeout);
+      this.initTimeout = null;
     }
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();

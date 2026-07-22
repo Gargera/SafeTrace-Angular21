@@ -2,8 +2,6 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { UpdateCurrentLocationDTO } from '../../features/user-profile/model/profile.model';
-import { ProfileService } from '../../features/user-profile/service/profile.service';
 
 declare const google: any;
 
