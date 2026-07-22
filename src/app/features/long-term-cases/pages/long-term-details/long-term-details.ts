@@ -1,3 +1,5 @@
+import { FormField } from '../../../../shared/components/form-field/form-field';
+import { CardComponent } from '../../../../shared/components/card/card';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -19,7 +21,7 @@ import { AgeBadgeDirective } from '../../../../shared/directives/age-badge-direc
 import { AgeCategories } from '../../../../shared/enums/age-categories';
 import { FileType } from '../../../../shared/enums/file-type';
 import { ConfirmationModalComponent } from
-'../../../../shared/components/confirmation-modal/confirmation-modal';
+  '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup';
 import { FoundPersonInfoRequest } from '../../../../core/models/Cases.model';
@@ -38,9 +40,10 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
     CaseTypeBadgeDirective,
     AgeBadgeDirective,
     ConfirmationModalComponent,
-     FoundedPopupComponent,
-     ButtonComponent,
-  ],
+    FoundedPopupComponent,
+    ButtonComponent,
+    CardComponent,
+    FormField],
   templateUrl: './long-term-details.html',
   styleUrls: ['./long-term-details.css'],
 })
@@ -54,10 +57,10 @@ export class LongTermDetails implements OnInit {
 
   readonly apiUrl = environment.baseUrl;
   readonly FileType = FileType;
-showDeleteConfirmation = signal(false);
-deleting = signal(false);
-showFoundedPopup = signal(false);
-isFounding = signal(false);
+  showDeleteConfirmation = signal(false);
+  deleting = signal(false);
+  showFoundedPopup = signal(false);
+  isFounding = signal(false);
   caseDetails = signal<LongTermCaseDetailResponse | null>(null);
 
   loading = signal(true);
@@ -70,10 +73,10 @@ isFounding = signal(false);
   currentIndex = signal(0);
   readonly CaseStatus = CaseStatus;
 
-isAdmin(): boolean {
-  return this.authService.isAdmin();
-}
-isAdminPage = signal(false);
+  isAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
+  isAdminPage = signal(false);
 
   ngOnInit(): void {
 
@@ -86,64 +89,64 @@ isAdminPage = signal(false);
 
     this.fetchCase(id);
 
-      this.isAdminPage.set(this.router.url.startsWith('/admin'));
+    this.isAdminPage.set(this.router.url.startsWith('/admin'));
   }
 
   private fetchCase(id: number): void {
 
-  this.loading.set(true);
+    this.loading.set(true);
 
-  const request = this.authService.isAdmin()
-    ? this.longTermCaseService.adminGetCaseById(id)
-    : this.longTermCaseService.getCaseById(id);
+    const request = this.authService.isAdmin()
+      ? this.longTermCaseService.adminGetCaseById(id)
+      : this.longTermCaseService.getCaseById(id);
 
-  request.subscribe({
+    request.subscribe({
 
-    next: (apiRes) => {
+      next: (apiRes) => {
 
-      if (apiRes.success && apiRes.data) {
+        if (apiRes.success && apiRes.data) {
 
-        this.caseDetails.set(apiRes.data);
+          this.caseDetails.set(apiRes.data);
 
-        const currentUserEmail =
-          this.authService.currentUser()?.email?.toLowerCase();
+          const currentUserEmail =
+            this.authService.currentUser()?.email?.toLowerCase();
 
-        const caseOwnerEmail =
-          apiRes.data.user?.email?.toLowerCase();
+          const caseOwnerEmail =
+            apiRes.data.user?.email?.toLowerCase();
 
-        this.isOwner.set(
-          !!currentUserEmail &&
-          currentUserEmail === caseOwnerEmail
-        );
-
-        if (apiRes.data.photos?.length) {
-
-          const primary =
-            apiRes.data.photos.find(x => x.isPrimary)
-            ?? apiRes.data.photos[0];
-
-          this.selectedMedia.set(primary);
-
-          this.currentIndex.set(
-            apiRes.data.photos.findIndex(x => x.id === primary.id)
+          this.isOwner.set(
+            !!currentUserEmail &&
+            currentUserEmail === caseOwnerEmail
           );
+
+          if (apiRes.data.photos?.length) {
+
+            const primary =
+              apiRes.data.photos.find(x => x.isPrimary)
+              ?? apiRes.data.photos[0];
+
+            this.selectedMedia.set(primary);
+
+            this.currentIndex.set(
+              apiRes.data.photos.findIndex(x => x.id === primary.id)
+            );
+          }
         }
+
+        this.loading.set(false);
+
+      },
+
+      error: err => {
+
+        console.error(err);
+        this.loading.set(false);
+
       }
 
-      this.loading.set(false);
+    });
 
-    },
-
-    error: err => {
-
-      console.error(err);
-      this.loading.set(false);
-
-    }
-
-  });
-
-}
+  }
 
   getImageUrl(path?: string): string {
 
@@ -159,7 +162,7 @@ isAdminPage = signal(false);
   }
 
   changeMedia(media: any): void {
-     console.log(media);
+    console.log(media);
     this.selectedMedia.set(media);
 
     const index =
@@ -225,70 +228,70 @@ isAdminPage = signal(false);
     this.selectedMedia.set(photos[index]);
 
   }
-openFoundedPopup(): void {
-  if (!this.caseDetails()?.id) return;
+  openFoundedPopup(): void {
+    if (!this.caseDetails()?.id) return;
 
-  this.showFoundedPopup.set(true);
-}
-cancelFounded(): void {
-  this.showFoundedPopup.set(false);
-}
-confirmFounded(data: FoundPersonInfoRequest): void {
+    this.showFoundedPopup.set(true);
+  }
+  cancelFounded(): void {
+    this.showFoundedPopup.set(false);
+  }
+  confirmFounded(data: FoundPersonInfoRequest): void {
 
-  const id = this.caseDetails()?.id;
+    const id = this.caseDetails()?.id;
 
-  if (!id) return;
+    if (!id) return;
 
-  this.isFounding.set(true);
-
-
-  this.longTermCaseService.markAsFound(id, data)
-    .subscribe({
-
-      next: (res) => {
-
-        this.isFounding.set(false);
-        this.showFoundedPopup.set(false);
+    this.isFounding.set(true);
 
 
-        if(res.success){
+    this.longTermCaseService.markAsFound(id, data)
+      .subscribe({
 
-          this.snackbar.success(
-            'تم تحديث الحالة إلى تم العثور عليه'
+        next: (res) => {
+
+          this.isFounding.set(false);
+          this.showFoundedPopup.set(false);
+
+
+          if (res.success) {
+
+            this.snackbar.success(
+              'تم تحديث الحالة إلى تم العثور عليه'
+            );
+
+
+            // تحديث الـ UI بدون reload
+            this.caseDetails.update(current => {
+
+              if (!current)
+                return current;
+
+              return {
+                ...current,
+                status: CaseStatus.Found
+              };
+
+            });
+
+          }
+
+        },
+
+
+        error: () => {
+
+          this.isFounding.set(false);
+
+          this.snackbar.error(
+            'حدث خطأ أثناء تحديث الحالة'
           );
-
-
-          // تحديث الـ UI بدون reload
-         this.caseDetails.update(current => {
-
-  if(!current)
-    return current;
-
-  return {
-    ...current,
-    status: CaseStatus.Found
-  };
-
-});
 
         }
 
-      },
+      });
 
-
-      error: () => {
-
-        this.isFounding.set(false);
-
-        this.snackbar.error(
-          'حدث خطأ أثناء تحديث الحالة'
-        );
-
-      }
-
-    });
-
-}
+  }
   editCase(): void {
 
     const id = this.caseDetails()?.id;
@@ -299,117 +302,114 @@ confirmFounded(data: FoundPersonInfoRequest): void {
 
   }
 
- deleteCase(): void {
-  this.showDeleteConfirmation.set(true);
-}
-cancelDelete(): void {
-  this.showDeleteConfirmation.set(false);
-}
-confirmDelete(): void {
+  deleteCase(): void {
+    this.showDeleteConfirmation.set(true);
+  }
+  cancelDelete(): void {
+    this.showDeleteConfirmation.set(false);
+  }
+  confirmDelete(): void {
 
-  const id = this.caseDetails()?.id;
+    const id = this.caseDetails()?.id;
 
-  if (!id) return;
+    if (!id) return;
 
-  this.deleting.set(true);
+    this.deleting.set(true);
 
-  this.longTermCaseService.deleteCase(id).subscribe({
+    this.longTermCaseService.deleteCase(id).subscribe({
 
-next: (res) => {
+      next: (res) => {
 
-  this.deleting.set(false);
-  this.showDeleteConfirmation.set(false);
+        this.deleting.set(false);
+        this.showDeleteConfirmation.set(false);
 
-  if (res.success) {
+        if (res.success) {
 
-    this.snackbar.success('تم حذف الحالة بنجاح');
+          this.snackbar.success('تم حذف الحالة بنجاح');
 
-    this.router.navigate(['/long-term']);
+          this.router.navigate(['/long-term']);
+
+        }
+
+      },
+
+      error: () => {
+
+        this.deleting.set(false);
+        this.showDeleteConfirmation.set(false);
+
+        this.snackbar.error('حدث خطأ أثناء حذف الحالة');
+
+      }
+
+    });
 
   }
+  getAgeCategoryEnum(): AgeCategories {
 
-},
+    switch (this.caseDetails()?.ageCategory?.name) {
 
-    error: () => {
+      case 'Toddler':
+        return AgeCategories.Toddler;
 
-  this.deleting.set(false);
-  this.showDeleteConfirmation.set(false);
+      case 'Child':
+        return AgeCategories.Child;
 
-  this.snackbar.error('حدث خطأ أثناء حذف الحالة');
+      case 'Teenager':
+        return AgeCategories.Teenager;
 
-}
+      case 'Young':
+        return AgeCategories.Young;
 
-  });
+      case 'Adult':
+        return AgeCategories.Adult;
 
-}
-getAgeCategoryEnum(): AgeCategories {
+      case 'Late Adult':
+        return AgeCategories.LateAdult;
 
-  switch (this.caseDetails()?.ageCategory?.name) {
-
-    case 'Toddler':
-      return AgeCategories.Toddler;
-
-    case 'Child':
-      return AgeCategories.Child;
-
-    case 'Teenager':
-      return AgeCategories.Teenager;
-
-    case 'Young':
-      return AgeCategories.Young;
-
-    case 'Adult':
-      return AgeCategories.Adult;
-
-    case 'Mid Adult':
-      return AgeCategories.MidAdult;
-
-    case 'Late Adult':
-      return AgeCategories.LateAdult;
-
-    default:
-      return AgeCategories.Child;
+      default:
+        return AgeCategories.Child;
+    }
   }
-}
-approveCase(): void {
-  const id = this.caseDetails()?.id;
-  if (!id) return;
+  approveCase(): void {
+    const id = this.caseDetails()?.id;
+    if (!id) return;
 
-  this.longTermCaseService.approveCase(id).subscribe({
-    next: (res) => {
-      if (res.success) {
-        this.snackbar.success('تم قبول الحالة');
-        this.fetchCase(id);
+    this.longTermCaseService.approveCase(id).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.snackbar.success('تم قبول الحالة');
+          this.fetchCase(id);
+        }
       }
-    }
-  });
-}
+    });
+  }
 
-rejectCase(): void {
-  const id = this.caseDetails()?.id;
-  if (!id) return;
+  rejectCase(): void {
+    const id = this.caseDetails()?.id;
+    if (!id) return;
 
-  this.longTermCaseService.rejectCase(id).subscribe({
-    next: (res) => {
-      if (res.success) {
-        this.snackbar.success('تم رفض الحالة');
-        this.fetchCase(id);
+    this.longTermCaseService.rejectCase(id).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.snackbar.success('تم رفض الحالة');
+          this.fetchCase(id);
+        }
       }
-    }
-  });
-}
+    });
+  }
 
-permanentDeleteCase(): void {
-  const id = this.caseDetails()?.id;
-  if (!id) return;
+  permanentDeleteCase(): void {
+    const id = this.caseDetails()?.id;
+    if (!id) return;
 
-  this.longTermCaseService.permanentDelete(id).subscribe({
-    next: (res) => {
-      if (res.success) {
-        this.snackbar.success('تم حذف الحالة نهائياً');
-        this.router.navigate(['/long-term']);
+    this.longTermCaseService.permanentDelete(id).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.snackbar.success('تم حذف الحالة نهائياً');
+          this.router.navigate(['/long-term']);
+        }
       }
-    }
-  });
-}
+    });
+  }
 }

@@ -1,6 +1,11 @@
 @if (label()) {
-  <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-    {{ label() }}
+  <label class="mb-1.5 block text-sm font-medium transition-colors duration-200"
+    [class.text-error]="hasError()"
+    [class.text-on-surface-variant]="!hasError()">
+    {{ labelParts().text }}
+    @if (labelParts().hasStar) {
+      <span class="mr-0.5 font-bold text-error transition-colors duration-200">*</span>
+    }
   </label>
 }
 
@@ -20,7 +25,11 @@
         [placeholder]="placeholder()"
         (input)="handleInput($event)"
         (blur)="handleBlur()"
-        class="w-full rounded-lg border border-outline-variant bg-surface-container-lowest py-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none transition-all duration-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20 disabled:cursor-not-allowed disabled:opacity-60"
+        class="w-full rounded-lg border bg-surface-container-lowest py-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60"
+        [ngClass]="{
+          'border-error focus:border-error focus:ring-4 focus:ring-error/20': hasError(),
+          'border-outline-variant focus:border-secondary focus:ring-4 focus:ring-secondary/20': !hasError()
+        }"
         [class.pr-10]="prefix()"
         [class.pl-10]="suffix()"
         [class.pr-3.5]="!prefix()"
@@ -30,11 +39,15 @@
 
     @case ('select') {
       <select
-        [ngModel]="value"
+        [ngModel]="value === null ? '' : value"
         (ngModelChange)="onModelChange($event)"
         (blur)="handleBlur()"
         [disabled]="disabled"
-        class="h-11 w-full appearance-none rounded-lg border border-outline-variant bg-surface-container-lowest text-sm text-on-surface outline-none transition-all duration-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20 disabled:cursor-not-allowed disabled:opacity-60"
+        class="h-11 w-full appearance-none rounded-lg border bg-surface-container-lowest text-sm text-on-surface outline-none transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60"
+        [ngClass]="{
+          'border-error focus:border-error focus:ring-4 focus:ring-error/20': hasError(),
+          'border-outline-variant focus:border-secondary focus:ring-4 focus:ring-secondary/20': !hasError()
+        }"
         [class.pr-10]="prefix()"
         [class.pl-10]="suffix() || true"
         [class.pr-3.5]="!prefix()"
@@ -54,7 +67,11 @@
         [placeholder]="placeholder()"
         (input)="handleInput($event)"
         (blur)="handleBlur()"
-        class="h-11 w-full rounded-lg border border-outline-variant bg-surface-container-lowest text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none transition-all duration-200 focus:border-secondary focus:ring-4 focus:ring-secondary/20 disabled:cursor-not-allowed disabled:opacity-60"
+        class="h-11 w-full rounded-lg border bg-surface-container-lowest text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60"
+        [ngClass]="{
+          'border-error focus:border-error focus:ring-4 focus:ring-error/20': hasError(),
+          'border-outline-variant focus:border-secondary focus:ring-4 focus:ring-secondary/20': !hasError()
+        }"
         [class.pr-10]="prefix()"
         [class.pl-10]="suffix()"
         [class.pr-3.5]="!prefix()"
