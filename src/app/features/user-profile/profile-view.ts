@@ -38,11 +38,11 @@ export class ProfileView implements OnInit, OnDestroy {
   readonly activeTab = signal<ProfileTab>('edit');
 
   readonly tabs: { id: ProfileTab; label: string }[] = [
-    { id: 'edit', label: 'تعديل البيانات' },
+    { id: 'edit', label: 'تعديل بياناتي' },
     { id: 'cases', label: 'حالاتي' }, // RENAMED from 'بلاغاتي' / uncommented
-    { id: 'chat', label: 'المحادثات' },
-    { id: 'notifications', label: 'الإشعارات' },
-    { id: 'donations', label: 'التبرعات' },
+    { id: 'chat', label: 'محادثاتي' },
+    { id: 'notifications', label: 'اشعاراتي' },
+    { id: 'donations', label: 'تبرعاتي' }, // ADDED ' },
   ];
 
   ngOnInit(): void {
@@ -60,7 +60,6 @@ export class ProfileView implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.notificationService.stopConnection();
-   
   }
 
   switchTab(tab: ProfileTab): void {

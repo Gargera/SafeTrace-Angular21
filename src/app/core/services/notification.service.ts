@@ -105,11 +105,12 @@ export class NotificationService implements OnDestroy {
 
     // Fired when a new notification is pushed from server
     this.#hubConnection.on('ReceiveNotification', (notification: GetUserNotificationsDTO) => {
-      console.log('ReceiveNotification Fired', notification);
-
       this.#notifications.update((prev) => [notification, ...prev]);
-
+      console.log(notification);
+      console.log(notification.createdAt);
+      console.log(new Date(notification.createdAt));
       this.#totalCount.update((c) => c + 1);
+      this.#unreadCount.update((c) => c + 1);
       this.#totalPages.set(Math.ceil(this.#totalCount() / DEFAULT_PAGE_SIZE));
     });
 
@@ -329,9 +330,11 @@ export class NotificationService implements OnDestroy {
   }
 
   formatDate(dateStr: string): string {
-    const date = new Date(dateStr + 'Z'); // اعتبره UTC
+    const date = new Date(dateStr); // اعتبره UTC
 
     const diff = Date.now() - date.getTime();
+
+
 
     const seconds = Math.floor(diff / 1000);
     const minutes = Math.floor(seconds / 60);
