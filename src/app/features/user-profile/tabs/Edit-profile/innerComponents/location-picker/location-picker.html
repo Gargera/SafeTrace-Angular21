@@ -1,133 +1,67 @@
 <section
   class="bg-surface border border-outline-variant rounded-2xl p-lg space-y-md shadow-sm transition-all duration-300 hover:shadow-md"
-  aria-labelledby="location-heading"
->
+  aria-labelledby="location-heading">
   <div class="flex items-center justify-between border-b border-outline-variant pb-sm">
-    <h3
-      id="location-heading"
-      class="text-headline-sm font-bold text-primary flex items-center gap-sm"
-    >
+    <h3 id="location-heading" class="text-headline-sm font-bold text-primary flex items-center gap-sm">
       <span class="material-symbols-outlined text-[24px]" aria-hidden="true">location_on</span>
       الموقع الجغرافي
     </h3>
-    @if (!isEditingLocation()) {
-      <button
-        type="button"
-        (click)="isEditingLocation.set(true)"
-        class="px-md py-xs bg-secondary-container text-on-secondary-container hover:bg-secondary-container-high focus-visible:ring-2 focus-visible:ring-secondary rounded-lg text-label-sm font-bold flex items-center gap-xs transition-colors cursor-pointer"
-      >
-        <span class="material-symbols-outlined text-[16px]" aria-hidden="true">edit</span>
-        تعديل الموقع
-      </button>
-    } @else {
-      <div class="flex items-center gap-sm">
-        <button
-          type="button"
-          [disabled]="isSavingLocation()"
-          (click)="cancelLocation()"
-          class="px-md py-xs text-secondary border border-secondary rounded-lg text-label-sm font-bold hover:bg-secondary-fixed focus-visible:ring-2 focus-visible:ring-secondary transition-colors disabled:opacity-50 cursor-pointer"
-        >
-          إلغاء
-        </button>
-        <button
-          type="button"
-          [disabled]="isSavingLocation() || !resolvedAddress()"
-          (click)="saveLocation()"
-          [attr.aria-busy]="isSavingLocation()"
-          class="px-md py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 focus-visible:ring-2 focus-visible:ring-secondary transition-all flex items-center gap-xs disabled:opacity-50 cursor-pointer"
-        >
-          @if (isSavingLocation()) {
-            <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
-              >progress_activity</span
-            >
-          }
-          حفظ الموقع
-        </button>
-      </div>
-    }
+
+    <button type="button" (click)="openMapModal()" [disabled]="isSavingLocation()"
+      class="px-md py-xs bg-secondary text-white hover:bg-secondary-container-high focus-visible:ring-2 focus-visible:ring-secondary rounded-lg text-label-sm font-bold flex items-center gap-xs transition-colors cursor-pointer disabled:opacity-50">
+      <span class="material-symbols-outlined text-[18px]" aria-hidden="true">map</span>
+      تحديد الموقع على الخريطة
+    </button>
   </div>
 
-  @if (isEditingLocation()) {
-    <div class="flex flex-wrap justify-start gap-md animate-fade-in">
-      <button
-        type="button"
-        (click)="useCurrentLocation()"
-        class="text-label-sm text-secondary hover:underline flex items-center gap-xs font-bold cursor-pointer"
-      >
-        <span class="material-symbols-outlined text-[16px]" aria-hidden="true"
-          >my_location</span
-        >
-        استخدام موقعي الحالي
-      </button>
-      @if (selectedLat() !== null) {
-        <button
-          type="button"
-          (click)="resetMap()"
-          class="text-label-sm text-error hover:underline flex items-center gap-xs font-bold cursor-pointer"
-        >
-          <span class="material-symbols-outlined text-[16px]" aria-hidden="true">clear</span>
-          إعادة تعيين
-        </button>
-      }
-    </div>
-  }
-
-  <!-- Resolved address — read-only, populated automatically from reverse geocoding -->
+  <!-- Resolved address input -->
   <div class="space-y-xs pt-xs">
-    <label for="resolvedAddress" class="text-label-sm text-on-surface-variant font-semibold"
-      >العنوان</label
-    >
+    <label for="resolvedAddress" class="text-label-sm text-on-surface-variant font-semibold">العنوان الحالي</label>
     <div class="relative">
-      <input
-        id="resolvedAddress"
-        type="text"
-        readonly
-        [value]="resolvedAddress() ?? ''"
-        placeholder="سيتم تحديد العنوان تلقائياً بعد اختيار الموقع"
-        aria-live="polite"
-        class="w-full bg-surface-container border border-outline-variant rounded-lg p-md text-body-sm text-on-surface cursor-default select-none pr-10 focus:outline-none"
-      />
-      @if (isResolvingAddress()) {
-        <span
-          class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-secondary animate-spin"
-          aria-hidden="true"
-        >
-          progress_activity
-        </span>
+      <input id="resolvedAddress" type="text" readonly [value]="resolvedAddress() ?? ''"
+        placeholder="اضغط على زر الخريطة أعلاه لتحديد عنوانك على الخريطة" aria-live="polite"
+        class="w-full bg-surface-container border border-outline-variant rounded-lg p-md text-body-sm text-on-surface cursor-default select-none pr-10 focus:outline-none" />
+      @if (isResolvingAddress() || isSavingLocation()) {
+      <span
+        class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-secondary animate-spin"
+        aria-hidden="true">
+        progress_activity
+      </span>
       } @else if (resolvedAddress()) {
-        <span
-          class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-on-tertiary-container"
-          style="font-variation-settings: 'FILL' 1"
-          aria-hidden="true"
-        >
-          check_circle
-        </span>
+      <span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-emerald-600"
+        style="font-variation-settings: 'FILL' 1" aria-hidden="true">
+        check_circle
+      </span>
       }
     </div>
   </div>
 
-  <!-- Google Maps Native Container -->
-  <div
-    class="relative rounded-xl overflow-hidden border border-outline-variant shadow-sm"
-    style="height: 320px"
-  >
-    @if (!isEditingLocation()) {
-      <div class="absolute inset-0 bg-black/5 z-10 cursor-not-allowed"></div>
-    }
+  <!-- Action Bar & Coordinates display -->
+  <div class="flex flex-wrap items-center justify-between gap-md pt-xs">
+    <div class="flex items-center gap-sm">
+      <button type="button" (click)="useCurrentLocation()" [disabled]="isLocating() || isSavingLocation()"
+        class="text-label-sm text-secondary hover:underline flex items-center gap-xs font-bold cursor-pointer disabled:opacity-50">
+        @if (isLocating()) {
+        <span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+        جاري التحديد...
+        } @else {
+        <span class="material-symbols-outlined text-[16px]" aria-hidden="true">my_location</span>
+        استخدام موقعي الحالي
+        }
+      </button>
+    </div>
 
+    @if (selectedLat() !== null && selectedLng() !== null) {
     <div
-      #mapContainer
-      class="w-full h-full"
-      role="application"
-      aria-label="خريطة اختيار الموقع"
-    ></div>
-
-    @if (isEditingLocation()) {
-      <div
-        class="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-label-sm py-sm px-md text-center pointer-events-none z-20 animate-fade-in"
-      >
-        اسحب المؤشر أو اضغط على أي مكان في الخريطة لتحديد موقعك بدقة
-      </div>
+      class="flex items-center gap-xs text-[12px] font-mono text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-lg border border-outline-variant/40">
+      <span class="material-symbols-outlined text-sm text-secondary">pin_drop</span>
+      <span>{{ selectedLat()?.toFixed(4) }}, {{ selectedLng()?.toFixed(4) }}</span>
+    </div>
     }
   </div>
+
+  <!-- Leaflet Map Location Picker Modal Component -->
+  <app-map-location-picker [isOpen]="isMapModalOpen()" [initialLat]="selectedLat()" [initialLng]="selectedLng()"
+    [initialAddress]="resolvedAddress() ?? ''" (confirmLocation)="onLocationConfirmed($event)"
+    (cancel)="closeMapModal()" />
 </section>
