@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProfileSidebar } from './shared/profile-sidebar/profile-sidebar';
 
@@ -44,7 +44,11 @@ export class ProfileView implements OnInit, OnDestroy {
     { id: 'notifications', label: 'اشعاراتي' },
     { id: 'donations', label: 'تبرعاتي' }, // ADDED ' },
   ];
-
+  constructor() {
+    effect(() => {
+      console.log('Unread:', this.notificationService.unreadCount());
+    });
+  }
   ngOnInit(): void {
     // Read tab from query param
     this.#route.queryParamMap.subscribe((params) => {
