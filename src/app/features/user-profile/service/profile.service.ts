@@ -8,6 +8,7 @@ import {
   GetUserInfoDTO,
   MyCaseListItemResponse,
   MyCasesFilterRequest,
+  UpdateCurrentLocationDTO,
   UpdateHomeLocationDTO,
   UpdateNameDTO,
   UpdateProfileImageDTO,
@@ -64,6 +65,7 @@ export class ProfileService {
 
     return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdatePhoneNumber`, formData);
   }
+
   getMyCases(
     filter: MyCasesFilterRequest,
   ): Observable<ApiResponse<PaginationResponse<MyCaseListItemResponse>>> {
@@ -81,6 +83,10 @@ export class ProfileService {
       params = params.set('caseType', filter.caseType.toString());
     }
 
+    if (filter.status !== null && filter.status !== undefined) {
+      params = params.set('status', filter.status.toString());
+    }
+
     params = params.set('page', (filter.page ?? 1).toString());
     params = params.set('pageSize', (filter.pageSize ?? 6).toString());
 
@@ -88,5 +94,10 @@ export class ProfileService {
       `${this.#profileUrl}/MyCases`,
       { params },
     );
+  }
+
+  //CurrentLocation
+  updateCurrentLocation(data: UpdateCurrentLocationDTO) {
+    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateCurrentLocation`, data);
   }
 }

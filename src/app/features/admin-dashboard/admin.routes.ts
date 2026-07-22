@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { UserRole } from '../../shared/enums/user-role';
 import { roleGuard } from '../../core/guards/role-guard';
+import { superAdminGuard } from '../../core/guards/super-admin.guard';
 
 export const ADMIN_ROUTES: Routes = [
   {
@@ -73,6 +74,17 @@ export const ADMIN_ROUTES: Routes = [
           import('../chat/pages/admin-chats/admin-chats').then((m) => m.AdminChats),
       },
       {
+        path: 'chats/:chatId',
+        canActivate: [roleGuard],
+        data: {
+          roles: [UserRole.Admin],
+          mode : 'admin',
+        },
+        title:'المحادثة | لقاء',
+        loadComponent: () =>
+          import('../chat/pages/chat-window/chat-window').then((m) => m.ChatWindow),
+      },
+      {
         path: 'cases-management',
         canActivate: [roleGuard],
         data: { roles: [UserRole.Admin, UserRole.Moderator] },
@@ -81,12 +93,37 @@ export const ADMIN_ROUTES: Routes = [
           import('./pages/cases-management/cases-management').then((m) => m.CasesManagement),
       },
       {
+        path: 'long-term/:id',
+        loadComponent: () =>
+          import('../long-term-cases/pages/long-term-details/long-term-details')
+            .then(c => c.LongTermDetails),
+      },
+      {
+        path: 'unknown/:id',
+        loadComponent: () =>
+          import('../unknown-cases/pages/unknown-details/unknown-details')
+            .then(c => c.UnknownDetails),
+      },
+      {
+        path: 'urgent/:id',
+        loadComponent: () =>
+          import('../urgent-cases/pages/urgent-details/urgent-details')
+            .then(c => c.UrgentDetails),
+      },
+      {
         path: 'complaints-management',
         canActivate: [roleGuard],
         data: { roles: [UserRole.Admin, UserRole.Moderator] },
         title: 'إدارة الشكاوى | لقاء',
         loadComponent: () =>
           import('../complaints/pages/complaints-list/complaints-list').then((m) => m.ComplaintsList),
+      },
+      {
+        path: 'audit-logs',
+        canActivate: [superAdminGuard],
+        title: 'سجلات النظام | لقاء',
+        loadComponent: () =>
+          import('./pages/audit-logs/audit-logs.component').then((m) => m.AuditLogsComponent),
       },
     ],
   },

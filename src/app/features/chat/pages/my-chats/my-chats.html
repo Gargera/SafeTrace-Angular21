@@ -1,3 +1,14 @@
+@if(loading()){
+  <app-loading-spinner
+    [fullscreen]="false"
+    title="جاري تحميل المحادثات..."
+    subtitle="يرجى الانتظار قليلاً"
+    size="md"
+    containerClass="flex min-h-[60vh] items-center justify-center">
+  </app-loading-spinner>
+
+}
+@else {
 <div class="max-w-3xl mx-auto py-lg px-md">
   <h1 class="text-xl font-semibold text-on-surface mb-md">الرسائل والمحادثات</h1>
   <p class="text-sm text-on-surface-variant mb-md">تواصل مع المفقودين وعائلات المفقودين لتحديث مسار البحث.</p>
@@ -68,7 +79,7 @@
 
         <button
           type="button"
-          class="text-on-surface-variant hover:text-error shrink-0"
+          class="text-on-surface-variant hover:text-error shrink-1"
           (click)="$event.stopPropagation(); deleteChat(chat)"
           aria-label="حذف المحادثة"
         >
@@ -82,3 +93,4 @@
     }
   </div>
 </div>
+}

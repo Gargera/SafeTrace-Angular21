@@ -11,12 +11,21 @@ import { PaginationResponse } from '../../../shared/models/responses/pagination-
 import { CreateCaseResponse } from '../../../shared/models/responses/create-case-response.model';
 import { environment } from '../../../../environments/environment';
 import { UrgentCasesFilterRequest } from '../models/request/UrgentCaseFilterRequest';
+import { UrgentCreationStatusResponse } from '../models/response/UrgentCreationStatusResponse';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UrgentCaseService extends ApiService {
   private readonly baseUrl = `${environment.baseUrl}/api/UrgentCase`;
+
+  /**
+   * Get urgent creation status / cooldown
+   * GET: /api/UrgentCase/CreationStatus
+   */
+  getCreationStatus(): Observable<ApiResponse<UrgentCreationStatusResponse>> {
+    return this.get<ApiResponse<UrgentCreationStatusResponse>>(`${this.baseUrl}/CreationStatus`);
+  }
 
   /**
    * Get all urgent cases with filters (public)

@@ -48,6 +48,7 @@ export interface ChatDetailsDto {
   caseId: number;
   caseTitle: string;
   caseImage: string;
+  caseType:CaseType;
   senderId: string;
   senderName?: string;
   senderImage?:string;
@@ -77,6 +78,8 @@ export interface ChatDetailsDto {
 export interface AdminChatsDto {
   chatId: number;
   caseId: number;
+  caseTitle:string;
+  caseType:CaseType;
   senderId: string;
   senderName: string;
   receiverId: string;
@@ -85,6 +88,7 @@ export interface AdminChatsDto {
   unreadMessagesCount: number;
   createdAt: string;
   lastMessage?: string;
+  lastMessageAt?:string;
   isDeletedBySender: boolean;
   isDeletedByReceiver: boolean;
   senderDeletedAt?: string;

@@ -8,7 +8,14 @@ import { ComplaintStatus } from '../enums/complaint-status';
 export class ComplaintStatusBadgeDirective implements OnChanges {
   @Input('appComplaintStatusBadge') status!: ComplaintStatus | string | null;
 
-  constructor(private el: ElementRef, private renderer: Renderer2) {}
+  constructor(private el: ElementRef, private renderer: Renderer2) {
+    this.renderer.addClass(this.el.nativeElement, 'px-sm');
+    this.renderer.addClass(this.el.nativeElement, 'py-1');
+    this.renderer.addClass(this.el.nativeElement, 'rounded-full');
+    this.renderer.addClass(this.el.nativeElement, 'font-bold');
+    this.renderer.addClass(this.el.nativeElement, 'text-[10px]');
+    this.renderer.addClass(this.el.nativeElement, 'whitespace-nowrap');
+  }
 
   ngOnChanges() {
     this.updateBadge();
@@ -17,30 +24,23 @@ export class ComplaintStatusBadgeDirective implements OnChanges {
   private updateBadge() {
     const el = this.el.nativeElement;
     
-    // Base classes
-    this.renderer.addClass(el, 'px-3');
-    this.renderer.addClass(el, 'py-1');
-    this.renderer.addClass(el, 'rounded-full');
-    this.renderer.addClass(el, 'text-sm');
-    this.renderer.addClass(el, 'font-medium');
-    this.renderer.addClass(el, 'inline-block');
+    el.className = el.className.replace(/\bbg-\S+|text-\S+/g, '');
 
-    this.renderer.removeClass(el, 'bg-green-100');
-    this.renderer.removeClass(el, 'text-green-800');
-    this.renderer.removeClass(el, 'bg-red-100');
-    this.renderer.removeClass(el, 'text-red-800');
-    this.renderer.removeClass(el, 'bg-gray-100');
-    this.renderer.removeClass(el, 'text-gray-800');
+    let label = 'غير معروف';
 
     if (this.status === ComplaintStatus.Solved) {
-      this.renderer.addClass(el, 'bg-green-100');
-      this.renderer.addClass(el, 'text-green-800');
+      this.renderer.addClass(el, 'bg-tertiary-fixed');
+      this.renderer.addClass(el, 'text-on-tertiary-fixed');
+      label = 'تم الحل';
     } else if (this.status === ComplaintStatus.UnSolved) {
-      this.renderer.addClass(el, 'bg-red-100');
-      this.renderer.addClass(el, 'text-red-800');
+      this.renderer.addClass(el, 'bg-error-container');
+      this.renderer.addClass(el, 'text-error');
+      label = 'لم يتم الحل';
     } else {
-      this.renderer.addClass(el, 'bg-gray-100');
-      this.renderer.addClass(el, 'text-gray-800');
+      this.renderer.addClass(el, 'bg-surface-container-highest');
+      this.renderer.addClass(el, 'text-on-surface-variant');
     }
+    
+    el.innerText = label;
   }
 }

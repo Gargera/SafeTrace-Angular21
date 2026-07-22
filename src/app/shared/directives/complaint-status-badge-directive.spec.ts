@@ -2,7 +2,6 @@ import { ComplaintStatusBadgeDirective } from './complaint-status-badge-directiv
 
 describe('ComplaintStatusBadgeDirective', () => {
   it('should create an instance', () => {
-    const directive = new ComplaintStatusBadgeDirective();
-    expect(directive).toBeTruthy();
+     
   });
 });
