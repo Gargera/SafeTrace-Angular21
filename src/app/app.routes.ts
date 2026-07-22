@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth-guard';
 import { About } from './shared/components/about/about';
-import { roleGuard } from './core/guards/role-guard';
-import { UserRole } from './shared/enums/user-role';
+import { permissionGuard } from './core/guards/permission.guard';
+import { Permissions } from './core/constants/Permissions';
 import { Home } from './shared/components/home/home';
 
 export const routes: Routes = [
@@ -12,8 +12,8 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
-    canActivate: [roleGuard],
-    data: { roles: [UserRole.Admin, UserRole.Moderator] },
+    canActivate: [permissionGuard],
+    data: { requiredPermission: Permissions.Cases.GetAll },
     loadChildren: () =>
       import('./features/admin-dashboard/admin.routes').then((m) => m.ADMIN_ROUTES),
   },
@@ -81,6 +81,8 @@ export const routes: Routes = [
       {
         path: 'aisearch',
         title: 'البحث الذكي | لقاء',
+        canActivate: [permissionGuard],
+        data: { requiredPermission: Permissions.AiMatching.Search },
         loadChildren: () => import('./features/ai-search/ai.routes').then((m) => m.AiSearch_ROUTES),
       },
       {

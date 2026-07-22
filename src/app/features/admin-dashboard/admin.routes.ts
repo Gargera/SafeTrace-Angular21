@@ -1,24 +1,29 @@
 import { Routes } from '@angular/router';
-import { UserRole } from '../../shared/enums/user-role';
-import { roleGuard } from '../../core/guards/role-guard';
+import { permissionGuard } from '../../core/guards/permission.guard';
 import { superAdminGuard } from '../../core/guards/super-admin.guard';
+import { Permissions } from '../../core/constants/Permissions';
 
 export const ADMIN_ROUTES: Routes = [
   {
     path: '',
-    canActivate: [roleGuard],
-    data: { roles: [UserRole.Admin, UserRole.Moderator] },
+    canActivate: [permissionGuard],
+    data: { requiredPermission: Permissions.Cases.GetAll },
     loadComponent: () => import('./pages/overview/overview').then((c) => c.Overview),
     children: [
       {
         path: '',
-        pathMatch: 'full',
-        redirectTo: 'dashboard',
+        canActivate: [permissionGuard],
+        data: { requiredPermission: Permissions.Cases.GetAll },
+        title: 'إدارة الحالات | لقاء',
+        loadComponent: () =>
+          import('./pages/cases-management/cases-management').then(
+            (m) => m.CasesManagement,
+          ),
       },
       {
         path: 'dashboard',
-        canActivate: [roleGuard],
-        data: { roles: [UserRole.Admin, UserRole.Moderator] },
+        canActivate: [permissionGuard],
+        data: { requiredPermission: Permissions.Dashboard.GetStatistics },
         title: 'لوحة التحكم | لقاء',
         loadComponent: () =>
           import('./pages/dashboard-statistics/dashboard-statistics').then(
@@ -27,38 +32,38 @@ export const ADMIN_ROUTES: Routes = [
       },
       {
         path: 'users',
-        canActivate: [roleGuard],
-        data: { roles: [UserRole.Admin, UserRole.Moderator] },
+        canActivate: [permissionGuard],
+        data: { requiredPermission: Permissions.Users.GetAll },
         title: 'إدارة المستخدمين | لقاء',
         loadComponent: () => import('./pages/user-list/user-list').then((m) => m.UserList),
       },
       {
         path: 'users/registerByAdmin',
-        canActivate: [roleGuard],
-        data: { roles: [UserRole.Admin] },
+        canActivate: [permissionGuard],
+        data: { requiredPermission: Permissions.Users.RegisterByAdmin },
         title: 'تسجيل مستخدم جديد | لقاء',
         loadComponent: () =>
           import('./pages/register-by-admin/register-by-admin').then((m) => m.RegisterByAdmin),
       },
       {
         path: 'rolesManagement',
-        canActivate: [roleGuard],
-        data: { roles: [UserRole.Admin] },
+        canActivate: [permissionGuard],
+        data: { requiredPermission: Permissions.Roles.GetPermissionsByRoleId },
         title: 'إدارة الأدوار | لقاء',
         loadComponent: () =>
           import('./pages/role-management/role-management').then((m) => m.RoleManagement),
       },
       {
         path: 'users/:id',
-        canActivate: [roleGuard],
-        data: { roles: [UserRole.Admin, UserRole.Moderator] },
+        canActivate: [permissionGuard],
+        data: { requiredPermission: Permissions.Users.GetById },
         title: 'تفاصيل المستخدم | لقاء',
         loadComponent: () => import('./pages/user-details/user-details').then((m) => m.UserDetails),
       },
       {
         path: 'donations',
-        canActivate: [roleGuard],
-        data: { roles: [UserRole.Admin] },
+        canActivate: [permissionGuard],
+        data: { requiredPermission: Permissions.Donations.GetDonations },
         title: 'إدارة التبرعات | لقاء',
         loadComponent: () =>
           import('./pages/donations/pages/donation-list/donation-admin-list.component').then(
@@ -67,17 +72,17 @@ export const ADMIN_ROUTES: Routes = [
       },
       {
         path: 'chats',
-        canActivate: [roleGuard],
-        data: { roles: [UserRole.Admin] },
+        canActivate: [permissionGuard],
+        data: { requiredPermission: Permissions.Chat.GetAll },
         title: 'إدارة المحادثات | لقاء',
         loadComponent: () =>
           import('../chat/pages/admin-chats/admin-chats').then((m) => m.AdminChats),
       },
       {
         path: 'chats/:chatId',
-        canActivate: [roleGuard],
+        canActivate: [permissionGuard],
         data: {
-          roles: [UserRole.Admin],
+          requiredPermission: Permissions.Chat.GetById,
           mode : 'admin',
         },
         title:'المحادثة | لقاء',
@@ -86,8 +91,8 @@ export const ADMIN_ROUTES: Routes = [
       },
       {
         path: 'cases-management',
-        canActivate: [roleGuard],
-        data: { roles: [UserRole.Admin, UserRole.Moderator] },
+        canActivate: [permissionGuard],
+        data: { requiredPermission: Permissions.Cases.GetAll },
         title: 'إدارة الحالات | لقاء',
         loadComponent: () =>
           import('./pages/cases-management/cases-management').then((m) => m.CasesManagement),
@@ -112,8 +117,8 @@ export const ADMIN_ROUTES: Routes = [
       },
       {
         path: 'complaints-management',
-        canActivate: [roleGuard],
-        data: { roles: [UserRole.Admin, UserRole.Moderator] },
+        canActivate: [permissionGuard],
+        data: { requiredPermission: Permissions.Complaints.GetAll },
         title: 'إدارة الشكاوى | لقاء',
         loadComponent: () =>
           import('../complaints/pages/complaints-list/complaints-list').then((m) => m.ComplaintsList),

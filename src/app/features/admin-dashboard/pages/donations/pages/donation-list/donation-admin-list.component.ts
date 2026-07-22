@@ -16,6 +16,8 @@ import { ButtonComponent } from '../../../../../../shared/components/button/butt
 import { FormField } from '../../../../../../shared/components/form-field/form-field';
 import { PaymentStatusBadgeDirective } from '../../../../../../shared/directives/payment-status-badge.directive';
 import { AdminDonationStatisticsDto } from '../../models/admin-donation-statistics.dto';
+import { Permissions } from '../../../../../../core/constants/Permissions';
+import { HasPermissionDirective } from '../../../../../../shared/directives/has-permission.directive';
 
 @Component({
   selector: 'app-donation-admin-list',
@@ -31,12 +33,15 @@ import { AdminDonationStatisticsDto } from '../../models/admin-donation-statisti
     ButtonComponent,
     FormField,
     PaymentStatusBadgeDirective,
+    HasPermissionDirective,
   ],
   templateUrl: './donation-admin-list.component.html',
 })
 export class DonationAdminListComponent implements OnInit {
   private readonly donationService = inject(DonationService);
   private readonly searchSubject = new Subject<string>();
+
+  Permissions = Permissions;
 
   selectedMessage = signal<DonationAdminListDto | null>(null);
   donations = signal<DonationAdminListDto[]>([]);

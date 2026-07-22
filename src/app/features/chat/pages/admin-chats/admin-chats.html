@@ -4,18 +4,19 @@
 </div>
 
 <!-- 2. Statistics Cards -->
-@if (isLoadingStats()) {
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
-  @for (i of [1, 2, 3, 4, 5]; track i) {
-  <app-card
-    extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse">
-    <div class="h-4 bg-surface-container-high rounded w-3/4 mb-2"></div>
-    <div class="h-6 bg-surface-container-high rounded w-1/2"></div>
-  </app-card>
-  }
-</div>
-} @else {
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+<ng-container *hasPermission="Permissions.Chat.GetChatStatistics">
+  @if (isLoadingStats()) {
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+    @for (i of [1, 2, 3, 4, 5]; track i) {
+    <app-card
+      extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse">
+      <div class="h-4 bg-surface-container-high rounded w-3/4 mb-2"></div>
+      <div class="h-6 bg-surface-container-high rounded w-1/2"></div>
+    </app-card>
+    }
+  </div>
+  } @else {
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
   <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
     <div class="flex items-center justify-between">
       <span class="text-sm font-medium text-on-surface-variant">الإجمالي</span>
@@ -56,7 +57,8 @@
     <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.deletedByBoth ?? 0 }}</p>
   </app-card>
 </div>
-}
+  }
+</ng-container>
 
 <!-- 3. Filters Card -->
 <app-card extraClass="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg relative overflow-visible">
@@ -204,7 +206,9 @@
           <th class="px-lg py-md">تاريخ الإنشاء</th>
           <th class="px-lg py-md text-center">الرسائل</th>
           <th class="px-lg py-md text-center">غير مقروءة</th>
-          <th class="px-lg py-md text-center">الإجراءات</th>
+          <ng-container *hasPermission="chatActionPermissions">
+            <th class="px-lg py-md text-center">الإجراءات</th>
+          </ng-container>
         </tr>
       </thead>
       <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
@@ -246,7 +250,7 @@
                 }
               </div>
             </td>
-            <td class="px-lg py-md text-on-surface-variant max-w-[200px] truncate">
+            <td class="px-lg py-md text-on-surface-variant max-w-50 truncate">
               <div class="flex flex-col">
                 <span
                 [class.text-red-600]="chat.unreadMessagesCount > 0"
@@ -283,27 +287,31 @@
                 <span class="text-on-surface-variant/50">-</span>
               }
             </td>
-            <td class="px-lg py-md text-center" (click)="$event.stopPropagation()">
-              <div class="flex items-center justify-center gap-2">
-                <app-button
-                  variant="primary"
-                  (onClick)="openChat(chat)"
-                  extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
-                >
-                  <span class="material-symbols-outlined text-[16px]">visibility</span>
-                  عرض
-                </app-button>
-                
-                <app-button
-                  variant="danger"
-                  (onClick)="openDeleteModal(chat, $event)"
-                  extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200"
-                >
-                  <span class="material-symbols-outlined text-[16px]">delete</span>
-                  حذف
-                </app-button>
-              </div>
-            </td>
+            <ng-container *hasPermission="chatActionPermissions">
+              <td class="px-lg py-md text-center" (click)="$event.stopPropagation()">
+                <div class="flex items-center justify-center gap-2">
+                  <app-button
+                    *hasPermission="Permissions.Chat.GetById"
+                    variant="primary"
+                    (onClick)="openChat(chat)"
+                    extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
+                  >
+                    <span class="material-symbols-outlined text-[16px]">visibility</span>
+                    عرض
+                  </app-button>
+                  
+                  <app-button
+                    *hasPermission="Permissions.Chat.HardDelete"
+                    variant="danger"
+                    (onClick)="openDeleteModal(chat, $event)"
+                    extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200"
+                  >
+                    <span class="material-symbols-outlined text-[16px]">delete</span>
+                    حذف
+                  </app-button>
+                </div>
+              </td>
+            </ng-container>
           </tr>
         } @empty {
           @if (!isLoading()) {
