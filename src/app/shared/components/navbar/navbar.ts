@@ -7,11 +7,13 @@ import { environment } from '../../../../environments/environment';
 import Swal from 'sweetalert2';
 import { GetUserInfoDTO } from '../../../features/user-profile/model/profile.model';
 import { UserRole } from '../../enums/user-role';
+import { Permissions } from '../../../core/constants/Permissions';
+import { HasPermissionDirective } from '../../directives/has-permission.directive';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterModule],
+  imports: [RouterModule, HasPermissionDirective],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
 })
@@ -22,6 +24,7 @@ export class Navbar implements OnInit {
 
   isLoggedIn = this.authService.isLoggedIn;
   currentUser = this.authService.currentUser;
+  Permissions = Permissions;
 
   isNotificationDropdownOpen = signal(false);
   isProfileDropdownOpen = signal(false);
@@ -108,7 +111,7 @@ export class Navbar implements OnInit {
   }
 
   canAccessDashboard(): boolean {
-    return this.authService.isAdmin() || this.authService.isModerator();
+    return this.authService.hasPermission(this.Permissions.Cases.GetAll);
   }
 
   logout(): void {
@@ -129,11 +132,14 @@ export class Navbar implements OnInit {
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        this.authService.clearSession();
-        this.router.navigate(['/auth/login']);
         this.authService.revokeToken().subscribe({
-          next: () => {},
-          error: () => {},
+          next: () => {
+            this.router.navigate(['/auth/login']);
+          },
+          error: () => {
+            this.authService.clearSession();
+            this.router.navigate(['/auth/login']);
+          },
         });
       }
     });

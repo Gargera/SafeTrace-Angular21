@@ -27,6 +27,7 @@ import { FoundedPopupComponent } from '../../../../shared/components/cases-compo
 import { FoundPersonInfoRequest } from '../../../../core/models/Cases.model';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { ButtonComponent } from '../../../../shared/components/button/button';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 
 
 @Component({
@@ -41,9 +42,7 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
     AgeBadgeDirective,
     ConfirmationModalComponent,
     FoundedPopupComponent,
-    ButtonComponent,
-    CardComponent,
-    FormField],
+    ButtonComponent],
   templateUrl: './long-term-details.html',
   styleUrls: ['./long-term-details.css'],
 })

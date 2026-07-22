@@ -54,7 +54,6 @@ import { LocationPicker } from './innerComponents/location-picker/location-picke
     NgTemplateOutlet,
     Toast,
     ImageCropDialog,
-    ViewProfilePopup,
     ProfileImage,
     IdentificationImage,
     Password,

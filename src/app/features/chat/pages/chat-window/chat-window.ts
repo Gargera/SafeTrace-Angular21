@@ -21,7 +21,7 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
   selector: 'app-chat-window',
   standalone: true,
   imports: [FormsModule, DatePipe, ViewProfilePopup,LoadingSpinnerComponent,
-    ButtonComponent,CommonModule
+    CommonModule
   ],
   templateUrl: './chat-window.html',
 })

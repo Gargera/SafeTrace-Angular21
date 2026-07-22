@@ -22,7 +22,8 @@ import { CardComponent } from '../../../../shared/components/card/card';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
-
+import { Permissions } from '../../../../core/constants/Permissions';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 interface PermissionGroup {
   groupName: string;
   groupTitle: string;
@@ -33,7 +34,7 @@ interface PermissionGroup {
 @Component({
   selector: 'app-user-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, FormField, LoadingSpinnerComponent, ConfirmationModalComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, FormField, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective],
   templateUrl: './user-details.html',
   styleUrl: './user-details.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -45,6 +46,7 @@ export class UserDetails implements OnInit {
   private route = inject(ActivatedRoute);
   private location = inject(Location);
   private snackbar = inject(SnackbarService);
+  Permissions = Permissions;
 
   userId = signal<string>('');
   user = signal<GetUserByIdDto | null>(null);
