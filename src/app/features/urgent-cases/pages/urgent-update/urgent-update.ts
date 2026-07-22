@@ -23,6 +23,8 @@ import { validEnum } from '../../../../shared/validators/enum.validator';
 import { CommonModule } from '@angular/common';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 
+import { GeocodingService } from '../../../../core/services/geocoding.service';
+
 type Step = 1 | 2 | 3;
 
 @Component({
@@ -47,6 +49,7 @@ export class UrgentUpdate implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private snackbar = inject(SnackbarService);
+  private geocoding = inject(GeocodingService);
 
   caseId!: number;
   currentStep: Step = 1;
@@ -73,6 +76,10 @@ export class UrgentUpdate implements OnInit {
   selectedAddress = signal<string>('');
   /** initial coords passed to the map picker so it centers on the existing location */
   initialMapCenter = signal<{ lat: number; lng: number } | null>(null);
+  isMapModalOpen = signal(false);
+
+  isLocating = signal(false);
+  locationError = signal<string | null>(null);
 
   readonly genders = Gender;
   readonly relationOptions = RELATION_TYPE_OPTIONS;
@@ -165,6 +172,10 @@ export class UrgentUpdate implements OnInit {
           this.selectedLat.set(c.latitude);
           this.selectedLng.set(c.longitude);
           this.initialMapCenter.set({ lat: c.latitude, lng: c.longitude });
+          this.geocoding.reverseGeocode(c.latitude, c.longitude).subscribe({
+            next: (addr) => this.selectedAddress.set(addr),
+            error: () => this.selectedAddress.set(`${c.latitude.toFixed(4)}, ${c.longitude.toFixed(4)}`),
+          });
         }
 
         const files: CaseFileResponse[] = c.files ?? c.caseFiles ?? [];
@@ -185,6 +196,67 @@ export class UrgentUpdate implements OnInit {
     this.selectedLat.set(loc.lat);
     this.selectedLng.set(loc.lng);
     this.selectedAddress.set(loc.address);
+  }
+
+  openMapModal(): void {
+    this.isMapModalOpen.set(true);
+  }
+
+  closeMapModal(): void {
+    this.isMapModalOpen.set(false);
+  }
+
+  onMapLocationConfirmed(loc: { lat: number; lng: number; address: string }): void {
+    this.selectedLat.set(loc.lat);
+    this.selectedLng.set(loc.lng);
+    this.selectedAddress.set(loc.address);
+    this.initialMapCenter.set({ lat: loc.lat, lng: loc.lng });
+    this.isMapModalOpen.set(false);
+  }
+
+  useCurrentLocation(): void {
+    if (!navigator.geolocation) {
+      this.locationError.set('المتصفح لا يدعم تحديد الموقع الجغرافي.');
+      return;
+    }
+
+    this.isLocating.set(true);
+    this.locationError.set(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        this.geocoding.reverseGeocode(lat, lng).subscribe({
+          next: (address) => {
+            this.onLocationChange({ lat, lng, address });
+            this.isLocating.set(false);
+          },
+          error: () => {
+            this.onLocationChange({ lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
+            this.isLocating.set(false);
+          },
+        });
+      },
+      (error: GeolocationPositionError) => {
+        this.isLocating.set(false);
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            this.locationError.set('تم رفض إذن الوصول لموقعك. من فضلك فعّل صلاحية الموقع من إعدادات المتصفح.');
+            break;
+          case error.POSITION_UNAVAILABLE:
+            this.locationError.set('تعذر تحديد موقعك الحالي.');
+            break;
+          case error.TIMEOUT:
+            this.locationError.set('انتهت مهلة تحديد الموقع، حاول مرة أخرى.');
+            break;
+          default:
+            this.locationError.set('حدث خطأ أثناء تحديد الموقع.');
+        }
+      },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 },
+    );
   }
 
   nextStep(): void {
