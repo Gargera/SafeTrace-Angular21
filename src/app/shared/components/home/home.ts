@@ -106,7 +106,7 @@ export class Home implements OnInit {
         this.isSendingComplaint.set(false);
       },
       error: (err) => {
-        this.snackbar.error(err.error?.message || 'حدث خطأ أثناء إرسال الرسالة، يرجى المحاولة مرة أخرى');
+        this.snackbar.error(err.error?.message || err.error?.detail || 'حدث خطأ أثناء إرسال الرسالة، يرجى المحاولة مرة أخرى');
         this.isSendingComplaint.set(false);
       }
     });
