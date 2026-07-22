@@ -21,11 +21,11 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
   selector: 'app-chat-window',
   standalone: true,
   imports: [FormsModule, DatePipe, ViewProfilePopup,LoadingSpinnerComponent,
-    ButtonComponent,CommonModule
+    CommonModule
   ],
   templateUrl: './chat-window.html',
 })
-export class ChatWindow implements OnInit, AfterViewInit {
+export class ChatWindow implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private location = inject(Location);
@@ -60,9 +60,7 @@ export class ChatWindow implements OnInit, AfterViewInit {
 
   async ngOnInit(): Promise<void> {
     this.route.data.subscribe(data => {
-      console.log(data);
       this.isAdmin = data['mode'] === 'admin';
-      console.log('isAdmin =', this.isAdmin);
     });
 
     console.log("CURRENT USER ID:", this.currentUserId);
@@ -75,7 +73,6 @@ export class ChatWindow implements OnInit, AfterViewInit {
     this.isLoading.set(true);
     this.chatService.getChatDetails(this.chatId).subscribe({
       next: (res) => {
-        console.log(res.data);
         this.chat.set(res.data);
         this.checkLoadingStatus();
       },
@@ -87,7 +84,6 @@ export class ChatWindow implements OnInit, AfterViewInit {
       },
     });
 
-    this.loadMessages();
 
     await this.chatHubService.start();
     await this.chatHubService.joinChat(this.chatId);
@@ -95,14 +91,14 @@ export class ChatWindow implements OnInit, AfterViewInit {
     this.chatHubService.onMessagesRead(this.handleMessagesRead);
     this.chatHubService.onMessageDeletedForEveryone(this.handleMessageDeletedForEveryone);
 
-    this.markAsRead();
+    this.loadMessages();
   }
 
-ngAfterViewInit(): void {
-  setTimeout(() => {
-    this.scrollToBottom();
-  });
-}
+// ngAfterViewInit(): void {
+//   setTimeout(() => {
+//     this.scrollToBottom();
+//   });
+// }
 
   async ngOnDestroy(): Promise<void> {
     this.chatHubService.offReceiveMessage(this.handleReceivedMessage);
@@ -115,15 +111,9 @@ ngAfterViewInit(): void {
 
   private markAsRead() : void{
     this.messageService.markMessageAsRead(this.chatId).subscribe();
-    this.chatHubService.markAsRead(this.chatId);
   }
 
   private normalizeMessage(message: MessageDto):MessageDto{
-    console.log({
-    senderId: message.senderId,
-    currentUserId: this.currentUserId,
-    isMine: message.senderId === this.currentUserId
-  });
     return{...message,isMine:message.senderId === this.currentUserId};
   }
 
@@ -132,26 +122,46 @@ ngAfterViewInit(): void {
       return;
     }
     
-    this.addOrUpdateMessage(this.normalizeMessage(message));
-    setTimeout(() => {
-    this.scrollToBottom();
-    });
-    console.log(
-    "After SignalR:",
-    this.messages().find(m => m.id === message.id)?.sendAt
-  );
+    const normalized = this.normalizeMessage(message);
 
+    this.addOrUpdateMessage(normalized);
+
+    if(!normalized.isMine){
+      setTimeout(() => {
+        this.markAsRead();
+      }, 300);
+    }
+    
     if(!this.normalizeMessage(message).isMine){
       this.markAsRead();
     }
   };
 
   private handleMessagesRead = (event: MessagesReadEvent) : void => {
+      console.log("MESSAGES READ EVENT RECEIVED", event);
+
     if(event.chatId !== this.chatId || event.userId === this.currentUserId) {
       return;
     }
-    this.messages.update((current) =>
-    current.map((m) => (m.senderId === this.currentUserId ? { ...m, isRead: true } : m)));
+    this.messages.update(messages =>
+    messages.map(message => {
+
+      if(message.senderId === this.currentUserId)
+      {
+        console.log(
+          "MARKING READ:",
+          message.id
+        );
+        return {
+          ...message,
+          isRead:true
+        };
+      }
+
+      return message;
+
+    })
+    );
   };
 
   private addOrUpdateMessage(message: MessageDto): void {
@@ -166,9 +176,10 @@ ngAfterViewInit(): void {
     // الرسالة موجودة -> حدث بياناتها
     const updated = [...current];
     updated[index] = {
-      ...updated[index],
-      ...message,
-    };
+  ...updated[index],
+  ...message,
+  isRead: updated[index].isRead || message.isRead
+};
 
     return updated;
   });
@@ -203,10 +214,38 @@ private handleMessageDeletedForEveryone = (
   loadMessages(): void {
     this.chatService.getMessages(this.chatId).subscribe({
       next: (res) => {
-        this.messages.set(res.data!.map((m) => this.normalizeMessage(m)));
+      const incomingMessages = res.data!.map((m) =>
+        this.normalizeMessage(m)
+      );
+      console.log(
+      "API MESSAGES",
+      res.data?.map(m=>({
+        id:m.id,
+        isRead:m.isRead
+      }))
+      );
+      this.messages.update(current => {
+
+        const currentMap = new Map(
+          current.map(m => [m.id, m])
+        );
+
+        return incomingMessages.map(message => {
+
+          const oldMessage = currentMap.get(message.id);
+
+          return {
+            ...message,
+            isRead: oldMessage?.isRead ?? message.isRead
+          };
+
+        });
+
+      });     
         this.hasMoreMessages.set(false);
         this.messagesLoaded.set(true);
         this.checkLoadingStatus();
+        this.markAsRead();
         setTimeout(() => {
         this.scrollToBottom();
         });
@@ -280,10 +319,8 @@ private handleMessageDeletedForEveryone = (
     this.messageService.sendMessage({chatId: this.chatId, content: text || undefined, file: file || undefined})
     .subscribe({
       next: (res) => {
-      console.log("API MESSAGE", res.data);
-      console.log(typeof res.data!.fileType, res.data!.fileType);
-      console.log(typeof res.data!.sendAt);
-      console.log(res.data!.sendAt);
+      console.log("API MESSAGE in on send", res.data);
+    
         const message = res.data;
 
       if (message != null) {
@@ -430,6 +467,23 @@ openProfile(userId?: string): void {
 }
 
 goToCaseDetails(caseId: number, caseType: string): void {
+  if(this.isAdmin){
+    switch(caseType) {
+
+    case 'Urgent':
+      this.router.navigate(['/admin/urgent', caseId]);
+      break;
+
+    case 'LongTerm':
+      this.router.navigate(['/admin/long-term', caseId]);
+      break;
+
+    case 'Unknown':
+      this.router.navigate(['/admin/unknown', caseId]);
+      break;
+    }
+  }
+  else{
 
   switch(caseType) {
 
@@ -445,6 +499,7 @@ goToCaseDetails(caseId: number, caseType: string): void {
       this.router.navigate(['/unknown', caseId]);
       break;
   }
+}
 }
 
 getRelativeTime(date?: string): string {

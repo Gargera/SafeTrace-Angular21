@@ -4,8 +4,9 @@
 </div>
 
 <!-- Statistics Cards -->
-@if (loadingStats()) {
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+<ng-container *hasPermission="Permissions.Dashboard.GetCasesStatistics">
+  @if (loadingStats()) {
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
   @for (i of [1, 2, 3, 4, 5, 6]; track i) {
   <app-card
     extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse">
@@ -60,6 +61,7 @@
   </app-card>
 </div>
 }
+</ng-container>
 
 <!-- Filters Card (styled exactly like user-list) -->
 <section class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm mb-lg">
@@ -83,7 +85,9 @@
           <th class="px-lg py-md">نوع الحالة</th>
           <th class="px-lg py-md">الحالة</th>
           <th class="px-lg py-md">الموقع</th>
-          <th class="px-lg py-md text-center">الإجراءات</th>
+          <ng-container *hasPermission="caseActionPermissions">
+            <th class="px-lg py-md text-center">الإجراءات</th>
+          </ng-container>
         </tr>
       </thead>
       <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
@@ -104,20 +108,22 @@
           <td class="px-lg py-md opacity-70">
             {{ getLocation(caseItem) }}
           </td>
-          <td class="px-lg py-md text-center">
-            <div class="flex items-center justify-center gap-2">
-              <app-button  [routerLink]="getDetailsRoute(caseItem)" variant="primary"
-                extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-secondary-container transition-all duration-200">
-                <span class="material-symbols-outlined text-[16px]">visibility</span>
-                عرض
-              </app-button>
-              <app-button variant="danger" (onClick)="requestDelete(caseItem.id)"
-                extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200">
-                <span class="material-symbols-outlined text-[16px]">delete</span>
-                حذف
-              </app-button>
-            </div>
-          </td>
+          <ng-container *hasPermission="caseActionPermissions">
+            <td class="px-lg py-md text-center">
+              <div class="flex items-center justify-center gap-2">
+                <app-button *hasPermission="getViewPermission(caseItem.caseType)" [routerLink]="getDetailsRoute(caseItem)" variant="primary"
+                  extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-secondary-container transition-all duration-200">
+                  <span class="material-symbols-outlined text-[16px]">visibility</span>
+                  عرض
+                </app-button>
+                <app-button *hasPermission="getDeletePermission(caseItem.caseType)" variant="danger" (onClick)="requestDelete(caseItem.id)"
+                  extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200">
+                  <span class="material-symbols-outlined text-[16px]">delete</span>
+                  حذف
+                </app-button>
+              </div>
+            </td>
+          </ng-container>
         </tr>
         } @empty {
         @if (!loading()) {

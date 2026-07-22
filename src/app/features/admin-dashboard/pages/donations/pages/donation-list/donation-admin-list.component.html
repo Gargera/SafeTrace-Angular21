@@ -6,8 +6,9 @@
 </div>
 
 <!-- Statistics Cards -->
-@if (isLoadingStats()) {
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+<ng-container *hasPermission="Permissions.Donations.GetDonationStatistics">
+  @if (isLoadingStats()) {
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
   @for (i of [1, 2, 3, 4, 5]; track i) {
   <app-card
     [extraClass]="i === 1 ? 'xl:col-span-2 p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse' : 'p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse'"
@@ -60,6 +61,7 @@
   </app-card>
 </div>
 }
+</ng-container>
 
 <!-- Filters Section like user-list -->
 <app-card extraClass="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg">
@@ -123,7 +125,9 @@
           <th class="px-lg py-md text-center">تاريخ الإنشاء</th>
           <th class="px-lg py-md text-center">تاريخ الدفع</th>
           <th class="px-lg py-md">الرسالة</th>
-          <th class="px-lg py-md text-center">الإجراءات</th>
+          <ng-container *hasPermission="Permissions.Donations.GetDonations">
+            <th class="px-lg py-md text-center">الإجراءات</th>
+          </ng-container>
         </tr>
       </thead>
       <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
@@ -154,20 +158,22 @@
               <span class="text-outline">—</span>
             }
           </td>
-          <td class="px-lg py-md text-center">
-            @if (donation.message) {
-              <app-button
-                (onClick)="openMessage(donation)"
-                variant="primary"
-                extraClass="flex items-center justify-center gap-1.5 px-6 py-2 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
-              >
-                <span class="material-symbols-outlined text-[18px]">visibility</span>
-                عرض
-              </app-button>
-            } @else {
-              <span class="text-outline text-sm">—</span>
-            }
-          </td>
+          <ng-container *hasPermission="Permissions.Donations.GetDonations">
+            <td class="px-lg py-md text-center">
+              @if (donation.message) {
+                <app-button
+                  (onClick)="openMessage(donation)"
+                  variant="primary"
+                  extraClass="flex items-center justify-center gap-1.5 px-6 py-2 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
+                >
+                  <span class="material-symbols-outlined text-[18px]">visibility</span>
+                  عرض
+                </app-button>
+              } @else {
+                <span class="text-outline text-sm">—</span>
+              }
+            </td>
+          </ng-container>
         </tr>
         } @empty {
           @if (!loading()) {
