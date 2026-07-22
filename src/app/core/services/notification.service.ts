@@ -67,14 +67,21 @@ export class NotificationService implements OnDestroy {
     this.#hubConnection
       ?.start()
       .then(() => {
+        console.log('SignalR Connected');
+        console.log('State:', this.#hubConnection?.state);
+        console.log('ConnectionId:', this.#hubConnection?.connectionId);
         this.#isConnected.set(true);
         // Load notifications via SignalR after connection
-
+        this.#hubConnection
+          ?.invoke('Test')
+          .then(() => console.log('Invoke Success'))
+          .catch((err) => console.error('Invoke Error', err));
         this.#hubConnection?.invoke('GetMyNotifications', 1, DEFAULT_PAGE_SIZE);
       })
       .catch((err) => {
-        this.#isConnected.set(false);
         console.error('SignalR connection error:', err);
+
+        this.#isConnected.set(false);
       });
   }
 
@@ -98,6 +105,8 @@ export class NotificationService implements OnDestroy {
 
     // Fired when a new notification is pushed from server
     this.#hubConnection.on('ReceiveNotification', (notification: GetUserNotificationsDTO) => {
+      console.log('ReceiveNotification Fired', notification);
+
       this.#notifications.update((prev) => [notification, ...prev]);
 
       this.#totalCount.update((c) => c + 1);
