@@ -4,8 +4,9 @@ import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { UnknownCaseService } from '../../services/unknown-case.service';
-import { CasesFilterRequest } from '../../../../core/models/Cases.model';
+import { CasesFilterRequest, CaseType } from '../../../../core/models/Cases.model';
 import { UnknownCaseListItemResponse } from '../../models/response/UnknownCaseListItemResponse';
+import { CaseCreationFlowService } from '../../../../core/services/case-creation-flow.service';
 
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
@@ -33,6 +34,7 @@ import { CaseCardComponent } from '../../../../shared/components/cases-component
 export class UnknownList implements OnInit {
   private readonly router = inject(Router);
   private readonly unknownCaseService = inject(UnknownCaseService);
+  private readonly caseCreationFlowService = inject(CaseCreationFlowService);
 
   private readonly defaultPageSize = 12;
 
@@ -51,7 +53,7 @@ export class UnknownList implements OnInit {
   }
 
   navigateToCreate(): void {
-    this.router.navigate(['/unknown/create']);
+    this.caseCreationFlowService.start(CaseType.Unknown);
   }
 
   onFilterChange(newFilter: CasesFilterRequest): void {

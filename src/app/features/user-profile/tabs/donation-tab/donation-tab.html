@@ -1,125 +1,125 @@
-<div dir="rtl">
-  <div class="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-    @if (loading()) {
-      <div class="p-6 space-y-3">
-        @for (i of [1, 2, 3]; track i) {
-          <div class="h-12 rounded-xl bg-gray-100 animate-pulse"></div>
-        }
-      </div>
-    } @else {
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="bg-gray-50 text-gray-500">
-            <tr>
-              <th class="p-4 text-right font-medium whitespace-nowrap">المبلغ</th>
-              <th class="p-4 text-right font-medium whitespace-nowrap">حالة الدفع</th>
-              <th class="p-4 text-right font-medium whitespace-nowrap">تاريخ الدفع</th>
-              <th class="p-4 text-right font-medium">الرسالة</th>
-              <th class="p-4 text-center font-medium whitespace-nowrap">الإجراءات</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (donation of donations(); track $index) {
-              <tr class="border-t border-gray-100">
-                <td class="p-4 font-semibold text-gray-900 whitespace-nowrap">
-                  {{ donation.amount | number: '1.2-2' }}$
-                </td>
-                <td class="p-4">
-                  <span
-                    class="inline-block px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200"
-                  >
-                    مكتمل
-                  </span>
-                </td>
-                <td class="p-4 text-gray-500 whitespace-nowrap">
-                  {{ donation.paidAt ? (donation.paidAt | date: 'dd MMMM y') : '—' }}
-                </td>
-                <td class="p-4 text-gray-600 max-w-xs">
-                  <span class="block truncate">{{ donation.message || '—' }}</span>
-                </td>
-                <td class="p-4 text-center">
-                  @if (donation.message) {
-                    <button
-                      type="button"
-                      (click)="openMessage(donation)"
-                      class="text-indigo-500 hover:text-indigo-700 transition"
-                      aria-label="عرض الرسالة"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-5 w-5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                      >
-                        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    </button>
-                  } @else {
-                    <span class="text-gray-300 inline-flex" aria-hidden="true">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-5 w-5"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                      >
-                        <path
-                          d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.5 5.3A9.8 9.8 0 0 1 12 5c6.5 0 10 7 10 7a13.2 13.2 0 0 1-2.3 3.1M6.2 6.2C4 7.8 2 12 2 12a13.6 13.6 0 0 0 4.2 5"
-                        />
-                      </svg>
-                    </span>
-                  }
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="5" class="text-center py-12 text-gray-400">
-                  لا توجد تبرعات ناجحة بعد.
-                </td>
-              </tr>
+<div class="rounded-2xl border border-outline-variant bg-white shadow-sm overflow-hidden relative min-h-75">
+  @if (loading()) {
+    <app-loading-spinner
+      title="جارِ تحميل التبرعات..."
+      [fullscreen]="false"
+      containerClass="absolute inset-0 bg-white/60 flex items-center justify-center z-10"
+    ></app-loading-spinner>
+  }
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-right border-collapse whitespace-nowrap">
+      <thead>
+        <tr class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant">
+          <th class="px-lg py-md text-center">#</th>
+          <th class="px-lg py-md">المبلغ</th>
+          <th class="px-lg py-md">الحالة</th>
+          <th class="px-lg py-md text-center">تاريخ الدفع</th>
+          <th class="px-lg py-md">الرسالة</th>
+          <th class="px-lg py-md text-center">الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
+        @for (donation of donations(); track $index) {
+        <tr class="hover:bg-surface-container-low transition-colors group">
+          <td class="px-lg py-md text-center font-bold text-on-surface-variant">
+            {{ $index + 1 }}
+          </td>
+          <td class="px-lg py-md font-bold text-on-surface">
+            {{ donation.amount | number: '1.2-2' }} <span class="text-xs text-on-surface-variant font-normal">ج.م</span>
+          </td>
+          <td class="px-lg py-md">
+            <span [appPaymentStatusBadge]="donation.paymentStatus"></span>
+          </td>
+          <td class="px-lg py-md text-on-surface-variant text-center" dir="ltr">
+            <span class="inline-block whitespace-nowrap">{{ donation.paidAt ? (donation.paidAt | date: 'dd MMM yyyy, hh:mm a') : '—' }}</span>
+          </td>
+          <td class="px-lg py-md text-on-surface-variant max-w-37.5">
+            @if (donation.message) {
+              <span class="truncate block" [title]="donation.message">{{ donation.message | truncate: 20 }}</span>
+            } @else {
+              <span class="text-outline">—</span>
             }
-          </tbody>
-        </table>
-      </div>
-    }
-
-    @if (loadingMore()) {
-      <div class="p-4 text-center text-sm text-gray-500">جارٍ تحميل المزيد...</div>
-    }
+          </td>
+          <td class="px-lg py-md text-center">
+            @if (donation.message) {
+              <app-button
+                (onClick)="openMessage(donation)"
+                variant="primary"
+                extraClass="flex items-center justify-center gap-1.5 px-6 py-2 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
+              >
+                <span class="material-symbols-outlined text-[18px]">visibility</span>
+                عرض
+              </app-button>
+            } @else {
+              <span class="text-outline text-sm">—</span>
+            }
+          </td>
+        </tr>
+        } @empty {
+          @if (!loading()) {
+            <tr>
+              <td colspan="6" class="py-xl">
+                <app-empty-state
+                  title="لا توجد تبرعات"
+                  message="لم تقم بأي عمليات تبرع ناجحة حتى الآن."
+                ></app-empty-state>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
   </div>
-</div>
 
-@if (selectedMessage(); as msg) {
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-    (click)="closeMessage()"
-  >
-    <div
-      class="w-full max-w-[90vw] rounded-2xl border border-white/40 bg-white shadow-xl p-6"
-      (click)="$event.stopPropagation()"
-    >
-      <div class="flex items-start justify-between gap-4 mb-4">
-        <h3 class="text-lg font-bold text-gray-900">رسالتك</h3>
-        <button
-          type="button"
-          (click)="closeMessage()"
-          class="text-gray-400 hover:text-gray-700 text-xl leading-none"
-        >
-          ✕
-        </button>
-      </div>
-      <div
-        class="rounded-xl bg-gray-50 p-4 text-gray-800 leading-relaxed whitespace-pre-wrap max-h-72 overflow-y-auto"
-      >
-        {{ msg.message ? (msg.message | truncate: 50) : 'لا توجد رسالة' }}
-      </div>
-      <div class="mt-4 text-xs text-gray-400">
-        {{ msg.paidAt | date: 'dd MMMM y' }} — {{ msg.amount | number: '1.2-2' }}$
+  @if (loadingMore()) {
+    <div class="p-4 flex items-center justify-center border-t border-outline-variant bg-surface-container-low">
+      <div class="flex items-center gap-2 text-sm text-primary font-medium animate-pulse">
+        <span class="material-symbols-outlined animate-spin">refresh</span>
+        جارٍ تحميل المزيد...
       </div>
     </div>
+  }
+</div>
+
+<!-- Message Modal -->
+@if (selectedMessage(); as msg) {
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" (click)="closeMessage()">
+  <div class="w-full max-w-120 rounded-3xl border border-outline-variant/20 bg-surface shadow-2xl animate-scale-in flex flex-col overflow-hidden" (click)="$event.stopPropagation()">
+    
+    <div class="px-6 pt-10 pb-8 flex flex-col items-center text-center">
+      <div class="w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-primary/10 text-primary">
+        <span class="material-symbols-outlined text-[40px]">chat_bubble</span>
+      </div>
+      
+      <h2 class="text-2xl font-bold text-on-surface mb-3">
+        رسالتك
+      </h2>
+
+      <div class="w-full mt-4 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 text-on-surface leading-relaxed text-sm whitespace-pre-wrap max-h-[40vh] overflow-y-auto text-right">
+        {{ msg.message }}
+      </div>
+      
+      <div class="w-full mt-6 flex flex-wrap items-center justify-between px-2 text-sm gap-4">
+        <div class="flex flex-col text-right">
+          <span class="text-on-surface-variant text-xs mb-1">المبلغ</span>
+          <span class="font-bold text-on-surface">{{ msg.amount | number: '1.2-2' }} ج.م</span>
+        </div>
+        <div class="flex flex-col text-right">
+          <span class="text-on-surface-variant text-xs mb-1">تاريخ الدفع</span>
+          <span class="font-medium text-on-surface" dir="ltr">
+            {{ msg.paidAt ? (msg.paidAt | date: 'dd MMM yyyy, hh:mm a') : '—' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-center items-center bg-surface-container-lowest px-6 py-6 border-t border-outline-variant/10">
+      <app-button variant="secondary" extraClass="min-w-[140px] px-6 h-13 rounded-xl flex items-center justify-center font-bold text-base shadow-sm" (onClick)="closeMessage()">
+        إغلاق
+      </app-button>
+    </div>
+    
   </div>
+</div>
 }

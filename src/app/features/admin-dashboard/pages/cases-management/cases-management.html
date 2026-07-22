@@ -106,7 +106,7 @@
           </td>
           <td class="px-lg py-md text-center">
             <div class="flex items-center justify-center gap-2">
-              <app-button [routerLink]="['/admin/cases/details/', caseItem.id]" variant="primary"
+              <app-button  [routerLink]="getDetailsRoute(caseItem)" variant="primary"
                 extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-secondary-container transition-all duration-200">
                 <span class="material-symbols-outlined text-[16px]">visibility</span>
                 عرض

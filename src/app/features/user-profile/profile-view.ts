@@ -28,7 +28,7 @@ export type ProfileTab = 'edit' | 'cases' | 'chat' | 'notifications' | 'donation
 })
 export class ProfileView implements OnInit, OnDestroy {
   readonly #profileService = inject(ProfileService);
-  readonly #notificationService = inject(NotificationService);
+  readonly notificationService = inject(NotificationService);
   readonly #route = inject(ActivatedRoute);
   readonly #router = inject(Router);
 
@@ -55,11 +55,12 @@ export class ProfileView implements OnInit, OnDestroy {
     });
 
     this.#loadUserInfo();
-    this.#notificationService.startConnection();
+    this.notificationService.startConnection();
   }
 
   ngOnDestroy(): void {
-    this.#notificationService.stopConnection();
+    this.notificationService.stopConnection();
+   
   }
 
   switchTab(tab: ProfileTab): void {
@@ -110,6 +111,6 @@ export class ProfileView implements OnInit, OnDestroy {
   }
 
   get notificationUnreadCount() {
-    return this.#notificationService.unreadCount;
+    return this.notificationService.unreadCount;
   }
 }

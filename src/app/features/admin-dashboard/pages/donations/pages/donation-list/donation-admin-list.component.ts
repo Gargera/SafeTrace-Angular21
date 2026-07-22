@@ -5,55 +5,85 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { DonationService } from '../../../../services/donations.service';
 import { DonationAdminListDto } from '../../models/donation-admin-list.dto';
-import { PaymentStatus } from '../../models/payment-status';
+import { PaymentStatus } from '../../../../../../shared/enums/payment-status.enum';
 import { TruncatePipe } from '../../../../../../shared/pipes/truncate-pipe';
+import { CardComponent } from '../../../../../../shared/components/card/card';
+
+import { CaseHeaderComponent } from '../../../../../../shared/components/cases-components/case-header/case-header.component';
+import { LoadingSpinnerComponent } from '../../../../../../shared/components/loading-spinner/loading-spinner.component';
+import { EmptyStateComponent } from '../../../../../../shared/components/empty-state/empty-state.component';
+import { ButtonComponent } from '../../../../../../shared/components/button/button';
+import { FormField } from '../../../../../../shared/components/form-field/form-field';
+import { PaymentStatusBadgeDirective } from '../../../../../../shared/directives/payment-status-badge.directive';
+import { AdminDonationStatisticsDto } from '../../models/admin-donation-statistics.dto';
 
 @Component({
   selector: 'app-donation-admin-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, TruncatePipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TruncatePipe,
+    CardComponent,
+    CaseHeaderComponent,
+    LoadingSpinnerComponent,
+    EmptyStateComponent,
+    ButtonComponent,
+    FormField,
+    PaymentStatusBadgeDirective,
+  ],
   templateUrl: './donation-admin-list.component.html',
 })
 export class DonationAdminListComponent implements OnInit {
   private readonly donationService = inject(DonationService);
   private readonly searchSubject = new Subject<string>();
+
   selectedMessage = signal<DonationAdminListDto | null>(null);
-
-  openMessage(donation: DonationAdminListDto): void {
-    if (!donation.message) return;
-    this.selectedMessage.set(donation);
-  }
-
-  closeMessage(): void {
-    this.selectedMessage.set(null);
-  }
   donations = signal<DonationAdminListDto[]>([]);
   loading = signal(false);
 
-  search = '';
-  selectedStatus: PaymentStatus | null = null;
+  statistics = signal<AdminDonationStatisticsDto | null>(null);
+  isLoadingStats = signal(true);
 
+  search = signal('');
+  selectedStatus = signal<PaymentStatus | string>('');
+
+  readonly PaymentStatus = PaymentStatus;
   readonly statuses = [
-    { label: 'الكل', value: null },
+    { label: 'ناجح', value: PaymentStatus.Succeeded },
     { label: 'قيد الانتظار', value: PaymentStatus.Pending },
-    { label: 'ناجحة', value: PaymentStatus.Succeeded },
-    { label: 'فشلت', value: PaymentStatus.Failed },
+    { label: 'فشل', value: PaymentStatus.Failed },
+    { label: 'ملغي', value: PaymentStatus.Cancelled },
+    { label: 'مسترد', value: PaymentStatus.Refunded },
   ];
 
   pageNumber = signal(1);
   pageSize = 12;
-
   totalCount = signal(0);
-  totalPages = signal(0);
+  totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize)));
 
-  readonly showingFrom = computed(() =>
-    this.totalCount() === 0 ? 0 : (this.pageNumber() - 1) * this.pageSize + 1,
-  );
-  readonly showingTo = computed(() =>
-    Math.min(this.pageNumber() * this.pageSize, this.totalCount()),
-  );
+  pagesArray = computed(() => {
+    const current = this.pageNumber();
+    const total = this.totalPages();
+    const pages: number[] = [];
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, current + 2);
+
+    if (current <= 3) {
+      end = Math.min(total, 5);
+    }
+    if (current >= total - 2) {
+      start = Math.max(1, total - 4);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  });
 
   ngOnInit(): void {
+    this.loadStatistics();
     this.loadDonations();
 
     this.searchSubject.pipe(debounceTime(400), distinctUntilChanged()).subscribe(() => {
@@ -62,27 +92,31 @@ export class DonationAdminListComponent implements OnInit {
     });
   }
 
-  onSearchInput(): void {
-    this.searchSubject.next(this.search);
+  private loadStatistics(): void {
+    this.isLoadingStats.set(true);
+    this.donationService.getDonationStatistics().subscribe({
+      next: (res) => {
+        this.statistics.set(res.data!);
+        this.isLoadingStats.set(false);
+      },
+      error: () => this.isLoadingStats.set(false),
+    });
   }
 
   loadDonations(): void {
     this.loading.set(true);
-
     this.donationService
       .getDonations({
         pageNumber: this.pageNumber(),
         pageSize: this.pageSize,
-        userEmail: this.search || undefined,
-        paymentStatus: this.selectedStatus,
+        userEmail: this.search() || undefined,
+        paymentStatus: (this.selectedStatus() as PaymentStatus) || undefined,
       })
       .subscribe({
         next: (res) => {
-          console.log(res);
           this.loading.set(false);
           this.donations.set(res.items ?? []);
           this.totalCount.set(res.totalCount);
-          this.totalPages.set(res.totalPages);
         },
         error: () => {
           this.loading.set(false);
@@ -91,43 +125,48 @@ export class DonationAdminListComponent implements OnInit {
       });
   }
 
-  onStatusChange(): void {
+  onSearchInput(value: string): void {
+    this.search.set(value);
+    this.searchSubject.next(value);
+  }
+
+  updateFilterStatus(status: string): void {
+    this.selectedStatus.set(status);
     this.pageNumber.set(1);
     this.loadDonations();
   }
 
-  previousPage(): void {
-    if (this.pageNumber() <= 1) return;
-    this.pageNumber.update((p) => p - 1);
+  resetFilters(): void {
+    this.search.set('');
+    this.selectedStatus.set('');
+    this.pageNumber.set(1);
     this.loadDonations();
   }
 
-  nextPage(): void {
-    if (this.pageNumber() >= this.totalPages()) return;
-    this.pageNumber.update((p) => p + 1);
-    console.log(this.pageNumber(), this.totalPages());
-    this.loadDonations();
-  }
-
-  getStatusText(status: PaymentStatus): string {
-    switch (status) {
-      case PaymentStatus.Pending:
-        return 'قيد الانتظار';
-      case PaymentStatus.Succeeded:
-        return 'ناجحة';
-      case PaymentStatus.Failed:
-        return 'فشلت';
-
-      default:
-        return '';
+  changePage(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.pageNumber.set(page);
+      this.loadDonations();
     }
   }
 
-  getStatusClass(status: PaymentStatus): Record<string, boolean> {
-    return {
-      'bg-amber-100 text-amber-700 ring-1 ring-amber-200': status === PaymentStatus.Pending,
-      'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200': status === PaymentStatus.Succeeded,
-      'bg-red-100 text-red-700 ring-1 ring-red-200': status === PaymentStatus.Failed,
-    };
+  formatAmount(amount: number | undefined): string {
+    if (amount === undefined) return '0';
+    if (amount >= 1000000) {
+      return (amount / 1000000).toFixed(1) + 'M';
+    }
+    if (amount >= 1000) {
+      return (amount / 1000).toFixed(1) + 'K';
+    }
+    return amount.toString();
+  }
+
+  openMessage(donation: DonationAdminListDto): void {
+    if (!donation.message) return;
+    this.selectedMessage.set(donation);
+  }
+
+  closeMessage(): void {
+    this.selectedMessage.set(null);
   }
 }
