@@ -107,12 +107,12 @@
               @if (isInvalid('fName')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('fName') }}</p> }
             </div>
             <div>
-              <app-form-field label="اسم الأب *" formControlName="sName" type="text" placeholder="مثال: محمد"
+              <app-form-field label="اسم الأب" formControlName="sName" type="text" placeholder="مثال: محمد"
                 [extraClass]="isInvalid('sName') ? 'border-error' : ''"></app-form-field>
               @if (isInvalid('sName')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('sName') }}</p> }
             </div>
             <div>
-              <app-form-field label="اسم الجد *" formControlName="tName" type="text" placeholder="مثال: محمود"
+              <app-form-field label="اسم الجد" formControlName="tName" type="text" placeholder="مثال: محمود"
                 [extraClass]="isInvalid('tName') ? 'border-error' : ''"></app-form-field>
               @if (isInvalid('tName')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('tName') }}</p> }
             </div>

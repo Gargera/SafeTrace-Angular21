@@ -44,7 +44,7 @@ export class FoundedPopupComponent {
     description: ['', [Validators.required, Validators.maxLength(2000)]],
     government: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
     city: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
-    street: ['', [Validators.required, Validators.maxLength(200)]],
+    street: ['', [Validators.maxLength(200)]],
     foundedAt: ['', [Validators.required, pastDate()]],
   });
 
