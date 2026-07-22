@@ -30,6 +30,9 @@ import { DashboardService } from '../../services/dashboard.service';
 import { CasesStatisticsDto as DashboardStatistics } from '../../models/Dashboard/CasesStatisticsDto';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { CasesManagementService } from '../../services/cases-management.service';
+import { Permissions } from '../../../../core/constants/Permissions';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+import { AuthService } from '../../../../core/services/auth.service';
 
 const FILTER_DEBOUNCE_MS = 400;
 
@@ -49,6 +52,7 @@ const FILTER_DEBOUNCE_MS = 400;
     CaseStatusBadgeDirective,
     CaseHeaderComponent,
     CaseFiltersComponent,
+    HasPermissionDirective,
   ],
   templateUrl: './cases-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -56,6 +60,17 @@ const FILTER_DEBOUNCE_MS = 400;
 export class CasesManagement implements OnInit, OnDestroy {
   protected readonly CaseType = CaseType;
   protected readonly CaseStatus = CaseStatus;
+  Permissions = Permissions;
+  caseActionPermissions = [
+    Permissions.LongTermCases.GetById,
+    Permissions.LongTermCases.HardDelete,
+    Permissions.UnknownCases.GetById,
+    Permissions.UnknownCases.HardDelete,
+    Permissions.UrgentCases.GetById,
+    Permissions.UrgentCases.HardDelete,
+  ];
+
+  public authService = inject(AuthService);
 
   private readonly casesService = inject(CasesManagementService);
   private readonly dashboardService = inject(DashboardService);
@@ -200,8 +215,8 @@ export class CasesManagement implements OnInit, OnDestroy {
         }
         this.loadingStats.set(false);
       },
-      error: () => {
-        this.toast.error('تعذر الاتصال بالخادم لتحميل الإحصائيات');
+      error: (err) => {
+        this.toast.error(err.error?.detail || 'تعذر الاتصال بالخادم لتحميل الإحصائيات');
         this.loadingStats.set(false);
       },
     });
@@ -218,8 +233,8 @@ export class CasesManagement implements OnInit, OnDestroy {
         this.totalPages.set(result.totalPages);
         this.loading.set(false);
       },
-      error: () => {
-        this.toast.error('تعذر الاتصال بالخادم');
+      error: (err) => {
+        this.toast.error(err.error?.detail || 'تعذر الاتصال بالخادم');
         this.cases.set([]);
         this.totalCount.set(0);
         this.totalPages.set(0);
@@ -261,8 +276,8 @@ export class CasesManagement implements OnInit, OnDestroy {
         this.toast.success('تم حذف الحالة بنجاح');
         this.modalConfig.set(null);
       },
-      error: () => {
-        this.toast.error('فشل حذف الحالة');
+      error: (err) => {
+        this.toast.error(err.error?.detail || 'فشل حذف الحالة');
         this.modalConfig.set(null);
       },
     });
@@ -287,4 +302,23 @@ export class CasesManagement implements OnInit, OnDestroy {
       return ['/admin/cases-management'];
   }
 }
+
+getDeletePermission(caseType: CaseType): string {
+  switch (caseType) {
+    case CaseType.LongTerm: return Permissions.LongTermCases.HardDelete;
+    case CaseType.Unknown: return Permissions.UnknownCases.HardDelete;
+    case CaseType.Urgent: return Permissions.UrgentCases.HardDelete;
+    default: return '';
+  }
+}
+
+getViewPermission(caseType: CaseType): string {
+  switch (caseType) {
+    case CaseType.LongTerm: return Permissions.LongTermCases.GetById;
+    case CaseType.Unknown: return Permissions.UnknownCases.GetById;
+    case CaseType.Urgent: return Permissions.UrgentCases.GetById;
+    default: return '';
+  }
+}
+
 }

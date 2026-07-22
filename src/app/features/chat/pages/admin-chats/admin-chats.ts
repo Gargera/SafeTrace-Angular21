@@ -16,6 +16,8 @@ import { CaseHeaderComponent } from '../../../../shared/components/cases-compone
 import {CaseTypeBadgeDirective} from '../../../../shared/directives/case-type-badge-directive';
 import {TruncatePipe} from '../../../../shared/pipes/truncate-pipe';
 import { SnackbarService } from '../../../../core/services/toast.service';
+import { Permissions } from '../../../../core/constants/Permissions';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 const PAGE_SIZE = 10;
 
 @Component({
@@ -32,7 +34,8 @@ const PAGE_SIZE = 10;
     ConfirmationModalComponent,
     CaseHeaderComponent,
     CaseTypeBadgeDirective,
-    TruncatePipe
+    TruncatePipe,
+    HasPermissionDirective
   ],
   templateUrl: './admin-chats.html',
 })
@@ -41,6 +44,11 @@ export class AdminChats implements OnInit {
   private chatAlerts = inject(ChatAlertsService);
   private router = inject(Router);
   private snackbarService = inject(SnackbarService);
+  Permissions = Permissions;
+  chatActionPermissions = [
+    Permissions.Chat.GetById,
+    Permissions.Chat.HardDelete
+  ];
   readonly pageSize = PAGE_SIZE;
 
   // Signals الأساسية
