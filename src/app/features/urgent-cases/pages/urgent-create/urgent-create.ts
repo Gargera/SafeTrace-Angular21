@@ -17,23 +17,33 @@ import { GeocodingService } from '../../../../core/services/geocoding.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 
+// Shared validators
+import { arabicText } from '../../../../shared/validators/arabic-text.validator';
+import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
+import { pastDate } from '../../../../shared/validators/past-date.validator';
+import { validEnum } from '../../../../shared/validators/enum.validator';
+
+import { CardComponent } from '../../../../shared/components/card/card';
+import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+
 type Step = 1 | 2 | 3;
 
 @Component({
   selector: 'app-urgent-create',
-  standalone: true, 
+  standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule, 
-    RouterLink, 
-    MapLocationPickerComponent, 
+    ReactiveFormsModule,
+    MapLocationPickerComponent,
     ForceCreatePopupComponent,
     ButtonComponent,
     FormField,
-    ImageCropperComponent
+    ImageCropperComponent,
+    CardComponent,
+    CaseHeaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrls: ['../../../../shared/styles/case-form.css', './urgent-create.css'],
+  styleUrls: ['./urgent-create.css'],
   templateUrl: './urgent-create.html',
 })
 export class UrgentCreate {
@@ -52,10 +62,12 @@ export class UrgentCreate {
   croppedPrimaryImagePreview = signal<string | null>(null);
   tempCroppedBlob = signal<Blob | null>(null);
   primaryFile = signal<File | null>(null);
+  primaryPhotoError = signal<string | null>(null);
 
   // الصور الإضافية والفيديو
   additionalPhotos = signal<File[]>([]);
   additionalPhotoPreviews = signal<string[]>([]);
+  additionalPhotosError = signal<string | null>(null);
   videoFile = signal<File | null>(null);
 
   selectedLat = signal<number | null>(null);
@@ -85,25 +97,58 @@ export class UrgentCreate {
     return ['بيانات الشخص المفقود', 'موقع الحادث على الخريطة', 'صور'][this.currentStep - 1];
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // Form definition — validators match backend exactly
+  // ─────────────────────────────────────────────────────────────
   form = this.fb.group({
-    fName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    sName: ['', [Validators.maxLength(100)]],
-    tName: ['', [Validators.maxLength(100)]],
-    lName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(150)]],
-    gender: ['' as Gender | '', Validators.required],
-    relation: [null as RelationType | null, Validators.required],
-    communicationPhone: ['', [Validators.required, Validators.maxLength(20)]],
+    // Name — required, Arabic only, 2-60 chars
+    fName: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    // Optional name parts — Arabic only when provided, max 60
+    sName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    tName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    lName: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    // Age — required, 0-120
+    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(120)]],
+    // Gender — required, valid enum
+    gender: ['' as Gender | '', [Validators.required, validEnum(Gender)]],
+    // Relation — required, valid enum (Urgent Create only)
+    relation: [null as RelationType | null, [Validators.required, validEnum(RelationType)]],
+    // Phone — optional, Egyptian format, max 15
+    communicationPhone: ['', [egyptianPhone(), Validators.maxLength(15)]],
+    // Description — optional, max 2000
     description: ['', [Validators.maxLength(2000)]],
-    government: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
-    city: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
-    street: ['', [Validators.required, Validators.maxLength(500)]],
-    eventDate: ['', Validators.required],
+    // Location — required, Arabic only, 2-100 chars
+    government: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
+    city: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
+    // Street — required, NOT Arabic-only, max 200
+    street: ['', [Validators.required, Validators.maxLength(200)]],
+    // EventDate — required, cannot be future
+    eventDate: ['', [Validators.required, pastDate()]],
   });
+
+  // ─────────────────────────────────────────────────────────────
+  // Error message helper
+  // ─────────────────────────────────────────────────────────────
+  getFieldError(field: string): string | null {
+    const control = this.form.get(field);
+    if (!control || !control.errors || !(control.touched || control.dirty)) return null;
+    const e = control.errors;
+    if (e['required']) return 'هذا الحقل مطلوب';
+    if (e['arabicText']) return 'يجب كتابة النص بالحروف العربية فقط';
+    if (e['minlength']) return `الحد الأدنى ${e['minlength'].requiredLength} أحرف`;
+    if (e['maxlength']) return `الحد الأقصى ${e['maxlength'].requiredLength} حرفاً`;
+    if (e['min']) return `يجب أن لا تقل القيمة عن ${e['min'].min}`;
+    if (e['max']) return `يجب أن لا تتجاوز القيمة ${e['max'].max}`;
+    if (e['egyptianPhone']) return 'أدخل رقم هاتف مصري صحيح (مثال: 01xxxxxxxxx)';
+    if (e['pastDate']) return 'لا يمكن أن يكون التاريخ في المستقبل';
+    if (e['description']) return 'لا يمكن أن يتجاوز الوصف 2000 حرف';
+    if (e['validEnum']) return 'اختر قيمة صحيحة';
+    return 'قيمة غير صحيحة';
+  }
 
   isInvalid(field: string): boolean {
     const c = this.form.get(field);
-    return !!(c?.invalid && c?.touched);
+    return !!(c?.invalid && (c?.touched || c?.dirty));
   }
 
   onLocationChange(loc: { lat: number; lng: number; address: string }): void {
@@ -181,12 +226,27 @@ export class UrgentCreate {
     if (this.currentStep > 1) this.currentStep = (this.currentStep - 1) as Step;
   }
 
-  // --- معالجة الصورة الأساسية والـ Cropper ---
+  // ─────────────────────────────────────────────────────────────
+  // Primary photo & Cropper
+  // ─────────────────────────────────────────────────────────────
+  private readonly ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  private readonly MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5 MB
+
   onPrimaryPhotoSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.cropImageEvent.set(event);
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (!this.ALLOWED_TYPES.includes(file.type.toLowerCase())) {
+      this.primaryPhotoError.set('نوع الملف غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+      return;
     }
+    if (file.size > this.MAX_PHOTO_BYTES) {
+      this.primaryPhotoError.set('حجم الصورة يتجاوز الحد المسموح (5 MB)');
+      return;
+    }
+    this.primaryPhotoError.set(null);
+    this.cropImageEvent.set(event);
   }
 
   onImageCropped(event: ImageCroppedEvent): void {
@@ -215,9 +275,22 @@ export class UrgentCreate {
     this.primaryFile.set(null);
   }
 
-  // --- معالجة الصور الإضافية ---
+  // ─────────────────────────────────────────────────────────────
+  // Additional photos — max 4, JPEG/PNG/WebP, max 5 MB each
+  // ─────────────────────────────────────────────────────────────
   onAdditionalPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
+    const invalidType = files.find(f => !this.ALLOWED_TYPES.includes(f.type.toLowerCase()));
+    if (invalidType) {
+      this.additionalPhotosError.set('أحد الملفات من نوع غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+      return;
+    }
+    const oversized = files.find(f => f.size > this.MAX_PHOTO_BYTES);
+    if (oversized) {
+      this.additionalPhotosError.set('أحد الملفات يتجاوز الحد المسموح (5 MB لكل صورة)');
+      return;
+    }
+    this.additionalPhotosError.set(null);
     this.additionalPhotos.update((p) => [...p, ...files].slice(0, 4));
     this.additionalPhotoPreviews.set(this.additionalPhotos().map((f) => URL.createObjectURL(f)));
   }
@@ -231,7 +304,9 @@ export class UrgentCreate {
     this.videoFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
   }
 
-  // --- إرسال النموذج ---
+  // ─────────────────────────────────────────────────────────────
+  // Submit
+  // ─────────────────────────────────────────────────────────────
   onSubmit(forceCreate = false): void {
     const primary = this.primaryFile();
 
