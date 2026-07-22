@@ -16,6 +16,7 @@ import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
+import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 
 // Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
@@ -35,11 +36,12 @@ type Step = 1 | 2 | 3;
     ForceCreatePopupComponent,
     ButtonComponent,
     FormField,
-    ImageCropperComponent
-    ,
-    CardComponent],
+    ImageCropperComponent,
+    CardComponent,
+    CaseHeaderComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrls: ['../../../../shared/styles/case-form.css', './long-term-create.css'],
+  styleUrls: ['./long-term-create.css'],
   templateUrl: './long-term-create.html',
 })
 export class LongTermCreate {

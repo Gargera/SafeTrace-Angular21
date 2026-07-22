@@ -20,15 +20,25 @@ import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.vali
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
 
+import { CommonModule } from '@angular/common';
+import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+
 type Step = 1 | 2 | 3;
 
 @Component({
   selector: 'app-urgent-update',
   standalone: true,
-  imports: [ReactiveFormsModule, MapLocationPickerComponent, ButtonComponent, FormField,
-    CardComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MapLocationPickerComponent,
+    ButtonComponent,
+    FormField,
+    CardComponent,
+    CaseHeaderComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrls: ['../../../../shared/styles/case-form.css', './urgent-update.css'],
+  styleUrls: ['./urgent-update.css'],
   templateUrl: './urgent-update.html',
 })
 export class UrgentUpdate implements OnInit {

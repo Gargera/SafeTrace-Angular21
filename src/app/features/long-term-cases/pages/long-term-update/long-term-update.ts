@@ -9,9 +9,11 @@ import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.
 import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
+import { NgClass } from '@angular/common';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
+import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 
 // Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
@@ -24,10 +26,16 @@ type Step = 1 | 2 | 3;
 @Component({
   selector: 'app-long-term-update',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, FormField,
-    CardComponent],
+  imports: [
+    NgClass,
+    ReactiveFormsModule,
+    ButtonComponent,
+    FormField,
+    CardComponent,
+    CaseHeaderComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrls: ['../../../../shared/styles/case-form.css', './long-term-update.css'],
+  styleUrls: ['./long-term-update.css'],
   templateUrl: './long-term-update.html',
 })
 export class LongTermUpdate implements OnInit {

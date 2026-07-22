@@ -23,6 +23,9 @@ import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.vali
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
 
+import { CardComponent } from '../../../../shared/components/card/card';
+import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+
 type Step = 1 | 2 | 3;
 
 @Component({
@@ -35,10 +38,12 @@ type Step = 1 | 2 | 3;
     ForceCreatePopupComponent,
     ButtonComponent,
     FormField,
-    ImageCropperComponent
+    ImageCropperComponent,
+    CardComponent,
+    CaseHeaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrls: ['../../../../shared/styles/case-form.css', './urgent-create.css'],
+  styleUrls: ['./urgent-create.css'],
   templateUrl: './urgent-create.html',
 })
 export class UrgentCreate {

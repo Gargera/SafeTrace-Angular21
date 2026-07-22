@@ -20,16 +20,25 @@ import { validEnum } from '../../../../shared/validators/enum.validator';
 
 type Step = 1 | 2 | 3;
 
+import { CommonModule } from '@angular/common';
 import { ButtonComponent } from '../../../../shared/components/button/button';
+import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+
 @Component({
   selector: 'app-unknown-create',
   standalone: true,
-  imports: [ReactiveFormsModule, ForceCreatePopupComponent, ImageCropperComponent,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    ForceCreatePopupComponent,
+    ImageCropperComponent,
     CardComponent,
     FormField,
-    ButtonComponent],
+    ButtonComponent,
+    CaseHeaderComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrls: ['../../../../shared/styles/case-form.css', './unknown-create.css'],
+  styleUrls: ['./unknown-create.css'],
   templateUrl: './unknown-create.html',
 })
 export class UnknownCreate {
