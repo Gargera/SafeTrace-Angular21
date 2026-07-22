@@ -1,0 +1,205 @@
+@if (isOpen()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 sm:p-4 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
+    dir="rtl"
+    (click)="onBackdropClick($event)"
+  >
+    <div
+      [class]="facade.containerClasses()"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-outline-variant/20 px-5 py-3.5 sm:px-6 sm:py-4">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
+            <span class="material-symbols-outlined text-2xl">location_on</span>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-on-surface">تحديد الموقع على الخريطة</h3>
+            <p class="text-xs text-on-surface-variant">انقر على الخريطة أو اسحب الدبوس لتحديد الموقع بدقة</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <button
+            type="button"
+            (click)="facade.toggleFullscreen()"
+            [title]="facade.state().isFullscreen ? 'تصغير الشاشة' : 'ملء الشاشة'"
+            class="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant/70 transition hover:bg-surface-container-high hover:text-on-surface"
+          >
+            <span class="material-symbols-outlined text-xl">
+              {{ facade.state().isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}
+            </span>
+          </button>
+          <button
+            type="button"
+            (click)="onCancel()"
+            title="إغلاق (ESC)"
+            class="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant/70 transition hover:bg-surface-container-high hover:text-on-surface"
+          >
+            <span class="material-symbols-outlined text-xl">close</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Search Input Section -->
+      <div class="relative z-[1000] border-b border-outline-variant/15 bg-surface-bright px-5 py-3 sm:px-6">
+        <div class="relative flex items-center">
+          <input
+            #searchInput
+            type="text"
+            [ngModel]="facade.state().searchQuery"
+            (input)="onSearchInput($event)"
+            (keydown)="facade.onSearchKeydown($event)"
+            placeholder="ابحث عن منطقة، شارع، أو مدينة (عربي / English)..."
+            class="w-full rounded-xl border border-outline-variant/50 bg-white py-2.5 pr-10 pl-10 text-xs text-on-surface shadow-2xs outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+          />
+          <span class="material-symbols-outlined absolute right-3 text-lg text-outline">search</span>
+
+          @if (facade.state().isSearching) {
+            <span class="material-symbols-outlined absolute left-3 animate-spin text-lg text-secondary">progress_activity</span>
+          } @else if (facade.state().searchQuery) {
+            <button
+              type="button"
+              (click)="facade.clearSearchState()"
+              class="absolute left-3 flex h-5 w-5 items-center justify-center rounded-full text-outline hover:text-on-surface"
+            >
+              <span class="material-symbols-outlined text-sm">close</span>
+            </button>
+          }
+        </div>
+
+        <!-- Search Results Dropdown -->
+        @if (facade.state().searchResults.length > 0) {
+          <div class="absolute right-5 left-5 sm:right-6 sm:left-6 z-[1050] mt-1 max-h-52 overflow-y-auto rounded-xl border border-outline-variant/40 bg-white shadow-2xl">
+            @for (res of facade.state().searchResults; track res.displayName; let i = $index) {
+              <button
+                type="button"
+                (click)="facade.selectSearchResult(res)"
+                [class.bg-secondary/10]="i === facade.state().selectedIndex"
+                class="flex w-full items-start gap-2.5 border-b border-outline-variant/10 p-3 text-right text-xs transition hover:bg-secondary/5"
+              >
+                <span class="material-symbols-outlined text-base text-secondary shrink-0 mt-0.5">place</span>
+                <span class="text-on-surface font-medium line-clamp-2 leading-relaxed">{{ res.displayName }}</span>
+              </button>
+            }
+          </div>
+        }
+
+        <!-- No Results Found Box -->
+        @if (facade.state().hasSearched && facade.state().searchResults.length === 0 && !facade.state().isSearching) {
+          <div class="absolute right-5 left-5 sm:right-6 sm:left-6 z-[1050] mt-1 rounded-xl border border-outline-variant/30 bg-white p-3.5 text-center text-xs text-on-surface-variant shadow-xl animate-in fade-in">
+            <p class="font-bold text-on-surface">لم نتمكن من العثور على هذا المكان</p>
+            <p class="mt-0.5 text-[11px] text-outline">تأكد من كتابة الاسم بطريقة صحيحة أو حدده يدويًا على الخريطة</p>
+          </div>
+        }
+      </div>
+
+      <!-- Map Container View -->
+      <div class="relative z-0 flex-1 w-full overflow-hidden bg-surface-container-low min-h-[320px] sm:min-h-[380px]">
+        <!-- Map Ready Spinner Overlay -->
+        @if (facade.state().isMapLoading) {
+          <div class="absolute inset-0 z-[600] flex flex-col items-center justify-center bg-surface-bright/90 backdrop-blur-xs transition-opacity duration-300">
+            <span class="material-symbols-outlined animate-spin text-4xl text-secondary">progress_activity</span>
+            <p class="mt-3 text-xs font-bold text-on-surface">جاري تحميل الخريطة...</p>
+          </div>
+        }
+
+        <!-- Geocoding Overlay Badge -->
+        @if (facade.state().isReverseGeocoding) {
+          <div class="absolute top-4 left-4 z-[500] flex items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-secondary shadow-md border border-secondary/20 backdrop-blur-xs animate-in fade-in duration-200">
+            <span class="material-symbols-outlined animate-spin text-sm">progress_activity</span>
+            <span>جاري تحديد العنوان...</span>
+          </div>
+        }
+
+        <!-- Actual Leaflet Container -->
+        <div #mapContainer class="h-full w-full min-h-[320px] sm:min-h-[380px] z-0"></div>
+
+        <!-- Floating Zoom Controls -->
+        <div class="absolute top-4 right-4 z-[500] flex flex-col gap-2 pointer-events-auto">
+          <button
+            type="button"
+            (click)="facade.zoomIn()"
+            title="تكبير"
+            class="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-on-surface shadow-md border border-outline-variant/30 transition hover:bg-surface-bright active:scale-95"
+          >
+            <span class="material-symbols-outlined text-lg">add</span>
+          </button>
+          <button
+            type="button"
+            (click)="facade.zoomOut()"
+            title="تصغير"
+            class="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-on-surface shadow-md border border-outline-variant/30 transition hover:bg-surface-bright active:scale-95"
+          >
+            <span class="material-symbols-outlined text-lg">remove</span>
+          </button>
+          <button
+            type="button"
+            (click)="facade.reCenter()"
+            title="إعادة التمركز على الدبوس"
+            class="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-secondary shadow-md border border-outline-variant/30 transition hover:bg-surface-bright active:scale-95"
+          >
+            <span class="material-symbols-outlined text-lg">center_focus_strong</span>
+          </button>
+        </div>
+
+        <!-- Floating Current Location FAB -->
+        <button
+          type="button"
+          (click)="facade.useCurrentLocation()"
+          [disabled]="facade.state().isLocatingModal"
+          title="موقعي الحالي"
+          class="absolute bottom-5 right-5 z-[500] flex h-12 w-12 items-center justify-center rounded-full bg-white text-secondary shadow-xl border border-outline-variant/30 transition-all hover:bg-surface-bright hover:scale-105 active:scale-95 disabled:opacity-60 disabled:pointer-events-none pointer-events-auto"
+        >
+          @if (facade.state().isLocatingModal) {
+            <span class="material-symbols-outlined animate-spin text-xl">progress_activity</span>
+          } @else {
+            <span class="material-symbols-outlined text-2xl">my_location</span>
+          }
+        </button>
+      </div>
+
+      <!-- Location Info Bar -->
+      <div class="border-t border-outline-variant/15 bg-surface-bright px-5 py-3 sm:px-6">
+        <div class="flex items-center gap-2.5 text-xs text-on-surface-variant">
+          <span class="material-symbols-outlined text-xl text-secondary shrink-0">place</span>
+          <div class="flex-1 overflow-hidden">
+            @if (facade.state().isReverseGeocoding) {
+              <span class="flex items-center gap-1.5 font-medium text-secondary">
+                <span class="material-symbols-outlined animate-spin text-sm">progress_activity</span>
+                جاري جلب العنوان...
+              </span>
+            } @else if (facade.state().address) {
+              <span class="font-semibold text-on-surface truncate block">{{ facade.state().address }}</span>
+            } @else {
+              <span class="text-outline">اضغط على الخريطة لتحديد الموقع</span>
+            }
+          </div>
+          @if (facade.formattedCoordinates()) {
+            <span class="rounded-md bg-surface-container px-2.5 py-1 text-[11px] font-mono text-on-surface-variant font-medium shrink-0">
+              {{ facade.formattedCoordinates() }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="flex items-center justify-end gap-3 border-t border-outline-variant/20 bg-white px-5 py-3.5 sm:px-6 sm:py-4">
+        <app-button variant="secondary" type="button" (onClick)="onCancel()" extraClass="px-5">
+          إلغاء
+        </app-button>
+        <app-button
+          variant="primary"
+          type="button"
+          (onClick)="onConfirm()"
+          [disabled]="facade.isConfirmDisabled()"
+          extraClass="px-6 gap-2"
+        >
+          <span class="material-symbols-outlined text-lg">check</span>
+          تأكيد الموقع
+        </app-button>
+      </div>
+    </div>
+  </div>
+}

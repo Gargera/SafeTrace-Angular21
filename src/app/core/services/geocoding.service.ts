@@ -2,8 +2,6 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { UpdateCurrentLocationDTO } from '../../features/user-profile/model/profile.model';
-import { ProfileService } from '../../features/user-profile/service/profile.service';
 
 declare const google: any;
 
@@ -149,5 +147,28 @@ export class GeocodingService {
     return `${lat.toFixed(PRECISION)}, ${lng.toFixed(PRECISION)}`;
   }
 
-  
+  searchPlaces(query: string): Observable<Array<{ lat: number; lng: number; displayName: string }>> {
+    const q = query ? query.trim() : '';
+    if (!q || q.length < 2) {
+      return of([]);
+    }
+
+    const headers = new HttpHeaders({
+      'Accept-Language': 'ar,en',
+    });
+
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=6`;
+
+    return this.#http.get<any[]>(url, { headers }).pipe(
+      map((results) => {
+        if (!Array.isArray(results)) return [];
+        return results.map((r) => ({
+          lat: parseFloat(r.lat),
+          lng: parseFloat(r.lon),
+          displayName: r.display_name,
+        }));
+      }),
+      catchError(() => of([]))
+    );
+  }
 }
