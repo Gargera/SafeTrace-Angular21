@@ -67,14 +67,21 @@ export class NotificationService implements OnDestroy {
     this.#hubConnection
       ?.start()
       .then(() => {
+        console.log('SignalR Connected');
+        console.log('State:', this.#hubConnection?.state);
+        console.log('ConnectionId:', this.#hubConnection?.connectionId);
         this.#isConnected.set(true);
         // Load notifications via SignalR after connection
-
+        this.#hubConnection
+          ?.invoke('Test')
+          .then(() => console.log('Invoke Success'))
+          .catch((err) => console.error('Invoke Error', err));
         this.#hubConnection?.invoke('GetMyNotifications', 1, DEFAULT_PAGE_SIZE);
       })
       .catch((err) => {
-        this.#isConnected.set(false);
         console.error('SignalR connection error:', err);
+
+        this.#isConnected.set(false);
       });
   }
 
@@ -99,8 +106,11 @@ export class NotificationService implements OnDestroy {
     // Fired when a new notification is pushed from server
     this.#hubConnection.on('ReceiveNotification', (notification: GetUserNotificationsDTO) => {
       this.#notifications.update((prev) => [notification, ...prev]);
-
+      console.log(notification);
+      console.log(notification.createdAt);
+      console.log(new Date(notification.createdAt));
       this.#totalCount.update((c) => c + 1);
+      this.#unreadCount.update((c) => c + 1);
       this.#totalPages.set(Math.ceil(this.#totalCount() / DEFAULT_PAGE_SIZE));
     });
 
@@ -320,9 +330,11 @@ export class NotificationService implements OnDestroy {
   }
 
   formatDate(dateStr: string): string {
-    const date = new Date(dateStr + 'Z'); // اعتبره UTC
+    const date = new Date(dateStr); // اعتبره UTC
 
     const diff = Date.now() - date.getTime();
+
+
 
     const seconds = Math.floor(diff / 1000);
     const minutes = Math.floor(seconds / 60);
