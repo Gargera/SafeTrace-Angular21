@@ -32,7 +32,6 @@ type Step = 1 | 2 | 3;
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    RouterLink,
     ForceCreatePopupComponent,
     ButtonComponent,
     FormField,
