@@ -27,7 +27,7 @@
 
   @if (dashboard(); as data) {
     <!-- Top-level Stat Cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-9 gap-md">
+    <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-3 gap-md">
       @for (card of statCards(); track card.label) {
         <div
           class="relative glass-card p-md rounded-xl flex flex-col justify-between shadow-sm overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
@@ -62,7 +62,7 @@
     </div>
 
     <!-- Charts Row: Case Status, Donations, and Complaints Donuts -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+    <div class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-lg">
       <!-- Case Status Donut -->
       <div
         class="relative glass-card p-xl rounded-2xl shadow-sm flex flex-col overflow-hidden"
@@ -94,7 +94,7 @@
                     cy="80"
                     r="60"
                     fill="none"
-                    [attr.stroke]="segment.color"
+                    [style.stroke]="segment.color"
                     stroke-width="18"
                     stroke-linecap="butt"
                     [attr.stroke-dasharray]="segment.dashArray"

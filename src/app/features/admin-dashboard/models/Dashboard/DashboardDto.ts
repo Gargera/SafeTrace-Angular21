@@ -10,7 +10,7 @@ export interface DashboardDto {
   totalActiveCases: number;
   totalDeletedCases: number;
   totalPendingCases: number;
-  totalRejectedgCases: number;
+  totalRejectedCases: number;
   totalExpiredCases: number;
   totalSumDonations: number;
   totalCountFailedDonations: number;

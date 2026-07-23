@@ -144,7 +144,7 @@ export class DashboardStatistics implements OnInit {
       {
         icon: 'block',
         label: 'مرفوضة',
-        value: d.totalRejectedgCases,
+        value: d.totalRejectedCases,
         color: c.rejected,
         bg: 'rgba(148,163,184,0.12)',
       },
@@ -174,7 +174,7 @@ export class DashboardStatistics implements OnInit {
       ['نشطة', d.totalActiveCases, c.active],
       ['تم العثور عليها', d.totalFoundedCases, c.found],
       ['قيد الانتظار', d.totalPendingCases, c.pending],
-      ['مرفوضة', d.totalRejectedgCases, c.rejected],
+      ['مرفوضة', d.totalRejectedCases, c.rejected],
       ['منتهية الصلاحية', d.totalExpiredCases, c.expired],
       ['محذوفة', d.totalDeletedCases, c.deleted],
     ]);
@@ -251,6 +251,7 @@ export class DashboardStatistics implements OnInit {
 
     this.dashboardService.getDashboard().subscribe({
       next: (response) => {
+        console.log(response.data);
         this.dashboard.set(response.data);
         this.error.set(null);
         this.isLoading.set(false);
