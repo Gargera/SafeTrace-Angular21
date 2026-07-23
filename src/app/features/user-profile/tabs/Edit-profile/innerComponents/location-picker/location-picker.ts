@@ -12,7 +12,7 @@ import { CommonModule } from '@angular/common';
 import { Subject, of } from 'rxjs';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { GeocodingService } from '../../../../../../core/services/geocoding.service';
+import { GeocodingService } from '../../../../../../core/services/geocoding/geocoding.service';
 import { SnackbarService } from '../../../../../../core/services/toast.service';
 import { GetUserInfoDTO, UpdateHomeLocationDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';

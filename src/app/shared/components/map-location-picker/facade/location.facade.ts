@@ -16,7 +16,7 @@ import { formatCoordinates } from '../utils/location.utils';
 
 import { LeafletMapService } from '../services/leaflet-map.service';
 import { CurrentLocationService } from '../services/current-location.service';
-import { GeocodingService } from '../../../../core/services/geocoding.service';
+import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 import { LocationState } from '../state/location.state';
 
 const MAP_RENDER_DELAY_MS = 200;

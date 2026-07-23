@@ -31,7 +31,7 @@ export class LeafletMapService {
     initialPosition: [number, number],
     onMarkerDragEnd?: (latLngPosition: L.LatLng) => void
   ): L.Marker {
-    const customMarker = createCustomMarker(initialPosition);
+    const customMarker = createCustomMarker(initialPosition, { draggable: true });
     customMarker.addTo(leafletMap);
 
     if (onMarkerDragEnd) {
@@ -39,6 +39,12 @@ export class LeafletMapService {
     }
 
     return customMarker;
+  }
+
+  createReadOnlyMarker(leafletMap: L.Map, position: [number, number]): L.Marker {
+    const readOnlyMarker = createCustomMarker(position, { draggable: false });
+    readOnlyMarker.addTo(leafletMap);
+    return readOnlyMarker;
   }
 
   bindDrag(markerInstance: L.Marker, onMarkerDragEnd: (latLngPosition: L.LatLng) => void): void {
@@ -109,9 +115,9 @@ export class LeafletMapService {
     return resizeObserver;
   }
 
-  destroy(
+  destroyMap(
     leafletMap: L.Map | null,
-    markerInstance: L.Marker | null,
+    markerInstance?: L.Marker | null,
     resizeObserverInstance?: ResizeObserver
   ): void {
     if (resizeObserverInstance) {
@@ -125,6 +131,14 @@ export class LeafletMapService {
       leafletMap.off();
       leafletMap.remove();
     }
+  }
+
+  destroy(
+    leafletMap: L.Map | null,
+    markerInstance: L.Marker | null,
+    resizeObserverInstance?: ResizeObserver
+  ): void {
+    this.destroyMap(leafletMap, markerInstance, resizeObserverInstance);
   }
 
   private isSamePosition(currentLatLng: L.LatLng, targetPosition: [number, number]): boolean {

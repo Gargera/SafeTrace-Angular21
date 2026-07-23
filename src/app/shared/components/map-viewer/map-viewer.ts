@@ -1,65 +1,50 @@
 import {
-  Component,
   AfterViewInit,
+  Component,
   ElementRef,
-  ViewChild,
   Input,
+  OnDestroy,
+  ViewChild,
+  inject,
 } from '@angular/core';
+import * as L from 'leaflet';
+import { LeafletMapService } from '../map-location-picker/services/leaflet-map.service';
 
-import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
-
-declare const google: any;
+const VIEWER_DEFAULT_ZOOM = 15;
 
 @Component({
   selector: 'app-map-viewer',
   standalone: true,
   templateUrl: './map-viewer.html',
-  styleUrls: ['./map-viewer.css'],
+  styleUrl: './map-viewer.css',
 })
-export class MapViewerComponent implements AfterViewInit {
+export class MapViewerComponent implements AfterViewInit, OnDestroy {
+  @Input({ required: true }) lat!: number;
+  @Input({ required: true }) lng!: number;
 
-  @Input() lat!: number;
-  @Input() lng!: number;
+  @ViewChild('map', { static: true })
+  private readonly mapElement!: ElementRef<HTMLDivElement>;
 
-  @ViewChild('map')
-  mapElement!: ElementRef<HTMLDivElement>;
+  private readonly leafletMapService = inject(LeafletMapService);
 
-  constructor(
-    private mapsLoader: GoogleMapsLoaderService
-  ) {}
+  private mapInstance: L.Map | null = null;
+  private markerInstance: L.Marker | null = null;
 
-  async ngAfterViewInit() {
-
-    await this.mapsLoader.load();
-
-    const map = new google.maps.Map(this.mapElement.nativeElement, {
-
-      center: {
-        lat: this.lat,
-        lng: this.lng
-      },
-
-      zoom: 15,
-
-      streetViewControl: false,
-
-      fullscreenControl: false,
-
-      mapTypeControl: false,
-
-    });
-
-    new google.maps.Marker({
-
-      position: {
-        lat: this.lat,
-        lng: this.lng
-      },
-
-      map
-
-    });
-
+  ngAfterViewInit(): void {
+    this.initializeMapViewer();
   }
 
+  ngOnDestroy(): void {
+    this.leafletMapService.destroyMap(this.mapInstance, this.markerInstance);
+    this.mapInstance = null;
+    this.markerInstance = null;
+  }
+
+  private initializeMapViewer(): void {
+    const position: [number, number] = [this.lat, this.lng];
+    const container = this.mapElement.nativeElement;
+
+    this.mapInstance = this.leafletMapService.createMap(container, position, VIEWER_DEFAULT_ZOOM);
+    this.markerInstance = this.leafletMapService.createReadOnlyMarker(this.mapInstance, position);
+  }
 }
