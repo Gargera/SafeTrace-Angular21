@@ -311,8 +311,8 @@ export class UnknownDetails implements OnInit {
         return AgeCategories.Young;
       case 'Adult':
         return AgeCategories.Adult;
-      case 'Mid Adult':
-        return AgeCategories.MidAdult;
+      // case 'Mid Adult':
+      //   return AgeCategories.MidAdult;
       case 'Late Adult':
         return AgeCategories.LateAdult;
       default:
