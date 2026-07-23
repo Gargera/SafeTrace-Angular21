@@ -6,7 +6,6 @@ export const AGE_CATEGORIES_TRANSLATIONS_AR: Record<AgeCategories, string> = {
   [AgeCategories.Teenager]: 'مراهق',
   [AgeCategories.Young]: 'شاب',
   [AgeCategories.Adult]: 'بالغ',
-  [AgeCategories.MidAdult]: 'في منتصف العمر',
   [AgeCategories.LateAdult]: 'مسن'
 };
 

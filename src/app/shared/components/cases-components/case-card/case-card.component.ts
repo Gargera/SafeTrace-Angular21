@@ -1,23 +1,30 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { DatePipe } from '@angular/common';
-import { RouterModule } from '@angular/router';
+// case-card.component.ts
+import { ChangeDetectionStrategy, Component, input, inject, output, signal, computed } from '@angular/core';
+import { DatePipe, DecimalPipe } from '@angular/common';
+import { RouterModule, Router } from '@angular/router';
+
 import { CaseListItemResponse } from '../../../../core/models/Cases.model';
-import { AgeCategories } from '../../../enums/age-categories';
 import { getAgeCategory } from '../../../helper/age-category.helper';
+
 import { GenderBadgeDirective } from '../../../directives/gender-badge-directive';
 import { AgeBadgeDirective } from '../../../directives/age-badge-directive';
+import { CaseTypeBadgeDirective } from '../../../directives/case-type-badge-directive';
 import { CardComponent } from '../../card/card';
 import { ButtonComponent } from '../../button/button';
+
 import { environment } from '../../../../../environments/environment';
+import { CaseType } from '../../../enums/case-type';
 
 @Component({
   selector: 'app-case-card',
   standalone: true,
   imports: [
     DatePipe,
+    DecimalPipe,
     RouterModule,
     GenderBadgeDirective,
     AgeBadgeDirective,
+    CaseTypeBadgeDirective,
     CardComponent,
     ButtonComponent,
   ],
@@ -25,67 +32,88 @@ import { environment } from '../../../../../environments/environment';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CaseCardComponent {
+  router = inject(Router);
+  // Inputs and outputs
   readonly caseItem = input.required<CaseListItemResponse>();
   readonly showUrgentTag = input(false);
   readonly detailRoute = input<Array<string | number> | null>(null);
-
+  readonly similarity = input<number>();
   readonly onContact = output<number>();
+  showCaseType = input(true);
+  showContactButton = input(true);
+  showGender = input(true);
+  showAge = input(true);
+  createdAtLabel = input('تاريخ الإضافة');
 
-  readonly fallbackImage = '/images/logo.jpg';
-  private readonly url = environment.baseUrl;
+  // Enums for template
+  protected readonly CaseTypeEnum = CaseType;
 
-  private imageHasError = false;
+  // Static values
+  private readonly baseUrl = environment.baseUrl;
+  protected readonly fallbackImage = '/images/logo.jpg';
 
-  getImageSrc(): string {
+  // Reactive state
+  private imageError = signal(false);
+
+  // Computed signals
+  readonly imageSrc = computed(() => {
     const item = this.caseItem();
-
-    if (this.imageHasError || !item.mainPhoto) {
+    if (this.imageError() || !item.mainPhoto) {
       return this.fallbackImage;
     }
+    return `${this.baseUrl}${item.mainPhoto}`;
+  });
 
-    return `${this.url}${item.mainPhoto}`;
-  }
-
-  onImageError(): void {
-    this.imageHasError = true;
-  }
-
-  getFullName(): string {
+  readonly fullName = computed(() => {
     const item = this.caseItem();
-
     return [item.fName, item.sName, item.tName, item.lName].filter(Boolean).join(' ').trim();
-  }
+  });
 
-  getLocation(): string | null {
+  readonly location = computed(() => {
     const item = this.caseItem();
-
     const parts = [item.city, item.government].filter(Boolean);
-
     return parts.length ? parts.join(' ، ') : null;
-  }
+  });
 
-  getUrgentEndDate(): string | null {
-    const item = this.caseItem() as CaseListItemResponse & {
-      endDate?: string | null;
-    };
+  readonly ageCategory = computed(() => getAgeCategory(this.caseItem().age));
 
-    return item.endDate ?? null;
-  }
-
-  getAgeCategoryEnum(): AgeCategories {
-    return getAgeCategory(this.caseItem().age);
-  }
-
-  hasLocation(): boolean {
+  readonly hasLocation = computed(() => {
     const item = this.caseItem();
     return !!(item.city || item.government);
+  });
+
+  readonly hasCreatedAt = computed(() => !!this.caseItem().createdAt);
+
+  readonly urgentEndDate = computed(() => {
+    const item = this.caseItem() as CaseListItemResponse & { endDate?: string | null };
+    return item.endDate ?? null;
+  });
+
+  readonly hasUrgentEndDate = computed(() => !!this.urgentEndDate());
+
+  readonly detailRouteArray = computed(() => {
+    const custom = this.detailRoute();
+    if (custom) return custom;
+
+    const item = this.caseItem();
+    switch (item.caseType) {
+      case CaseType.Urgent:
+        return ['/urgent', item.id];
+      case CaseType.LongTerm:
+        return ['/long-term', item.id];
+      case CaseType.Unknown:
+        return ['/unknown', item.id];
+      default:
+        return ['/cases', item.id];
+    }
+  });
+
+  // Event handler
+  onImageError(): void {
+    this.imageError.set(true);
   }
 
-  hasCreatedAt(): boolean {
-    return !!this.caseItem().createdAt;
-  }
-
-  hasUrgentEndDate(): boolean {
-    return !!this.getUrgentEndDate();
+  startChat(id: number): void {
+    this.router.navigate(['/chat/start', id]);
   }
 }

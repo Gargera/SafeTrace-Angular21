@@ -8,6 +8,7 @@
         [badge]="!loading() ? totalItems() + ' حالة' : ''"
         [loading]="loading()"
         primaryActionLabel="إنشاء حالة طويلة الأمد"
+        primaryActionIcon="add"
         (primaryAction)="navigateToCreate()"
       >
       </app-case-header>
@@ -46,6 +47,7 @@
             <app-case-card
               [caseItem]="c"
               [detailRoute]="['/long-term', c.id]"
+              [showCaseType]="false"
               (onContact)="onContactReporter($event)"
               class="block"
             >

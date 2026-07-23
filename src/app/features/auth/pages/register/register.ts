@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import Swal from 'sweetalert2';
+import { mustMatch } from '../../../../shared/validators/must-match.validator';
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
 
@@ -23,17 +24,23 @@ export class Register {
   apiErrorMessage = signal<string>('');
   
   isPasswordVisible = signal<boolean>(false);
+  isConfirmPasswordVisible = signal<boolean>(false);
 
-  registerForm: FormGroup = this.fb.group({
-    fName: ['', [Validators.required, Validators.maxLength(100)]],
-    lName: ['', [Validators.required, Validators.maxLength(100)]],
-    email: ['', [Validators.required, Validators.email]],
-    phoneNumber: ['', [Validators.required, Validators.pattern('^01[0125][0-9]{8}$')]],
-    password: ['', [Validators.required, Validators.minLength(8), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$')]]
-  });
+    registerForm: FormGroup = this.fb.group({
+    fName: ['', [Validators.required, Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+$')]],
+    lName: ['', [Validators.required, Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+( [a-zA-Z\u0600-\u06FF]+)*$')]],
+    email: ['', [Validators.required, Validators.email, Validators.pattern('^\\S+$')]],
+    phoneNumber: ['', [Validators.pattern('^01[0125][0-9]{8}$')]],
+    password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(50), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_])\\S+$')]],
+    confirmPassword: ['', [Validators.required]]
+  }, { validators: mustMatch('password', 'confirmPassword') });
 
   togglePasswordVisibility() {
     this.isPasswordVisible.update(v => !v);
+  }
+
+  toggleConfirmPasswordVisibility() {
+    this.isConfirmPasswordVisible.update(v => !v);
   }
 
   onSubmit() {
@@ -43,7 +50,16 @@ export class Register {
     if (this.registerForm.invalid) return;
 
     this.isLoading.set(true);
-    this.authService.register(this.registerForm.value).subscribe({
+
+    const formData = { ...this.registerForm.value };
+    formData.fName = formData.fName.trim();
+    formData.lName = formData.lName.trim();
+    delete formData.confirmPassword;
+    if (!formData.phoneNumber) {
+      delete formData.phoneNumber;
+    }
+
+    this.authService.register(formData).subscribe({
       next: (res) => {
         this.isLoading.set(false);
         Swal.fire({

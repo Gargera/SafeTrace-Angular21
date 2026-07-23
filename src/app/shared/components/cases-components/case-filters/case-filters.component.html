@@ -1,153 +1,244 @@
-<app-card
-  extraClass="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm"
-  dir="rtl"
->
+<app-card extraClass="rounded-xl bg-surface-container-lowest p-6 shadow-sm" dir="rtl">
   <form [formGroup]="filterForm" class="space-y-6">
-    <!-- Main Filters Grid -->
-    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+    <!-- Templates for Filters -->
+    <ng-template #searchTpl>
       <div>
-        <label class="text-sm font-medium text-on-surface-variant block mb-1">بحث</label>
-        <app-form-field formControlName="fullName" placeholder="ابحث بالاسم..." [prefix]="true"
-          ><span
-            prefix
-            class="material-symbols-outlined text-on-surface-variant"
-            style="
+        <label for="filter-search" class="text-sm font-medium text-on-surface-variant block mb-1">بحث</label>
+        <app-form-field id="filter-search" formControlName="fullName" placeholder="ابحث بالاسم أو كود الحالة..." [prefix]="true">
+          <span prefix class="material-symbols-outlined text-on-surface-variant" style="
               font-variation-settings:
                 'FILL' 0,
                 'wght' 300,
                 'opsz' 20;
-            "
-            >search</span
-          >
+            ">search</span>
         </app-form-field>
       </div>
+    </ng-template>
 
+    <ng-template #genderTpl>
       <div>
-        <label class="text-sm font-medium text-on-surface-variant block mb-1">الجنس</label>
-        <app-form-field type="select" formControlName="gender">
+        <label for="filter-gender" class="text-sm font-medium text-on-surface-variant block mb-1">الجنس</label>
+        <app-form-field id="filter-gender" type="select" formControlName="gender">
           <option value="">الكل</option>
           @for (gender of genders(); track gender) {
-            <option [value]="gender">{{ getGenderLabel(gender) }}</option>
+          <option [value]="gender">{{ getGenderLabel(gender) }}</option>
           }
         </app-form-field>
       </div>
+    </ng-template>
 
+    <ng-template #ageCategoryTpl>
       <div>
-        <label class="text-sm font-medium text-on-surface-variant block mb-1">فئة العمر</label>
-        <app-form-field type="select" formControlName="ageCategory">
+        <label for="filter-age-category" class="text-sm font-medium text-on-surface-variant block mb-1">فئة العمر</label>
+        <app-form-field id="filter-age-category" type="select" formControlName="ageCategory">
           <option value="">الكل</option>
           @for (ageCategory of ageCategories; track ageCategory) {
-            <option [value]="ageCategory">{{ getAgeCategoryLabel(ageCategory) }}</option>
+          <option [value]="ageCategory">{{ getAgeCategoryLabel(ageCategory) }}</option>
           }
         </app-form-field>
       </div>
+    </ng-template>
 
+    <ng-template #caseTypeTpl>
       <div>
-        <label class="text-sm font-medium text-on-surface-variant block mb-1">ترتيب العمر</label>
-        <app-form-field type="select" formControlName="ageSort">
+        <label for="filter-case-type" class="text-sm font-medium text-on-surface-variant block mb-1">نوع الحالة</label>
+        <app-form-field id="filter-case-type" type="select" formControlName="caseType">
+          <option value="">الكل</option>
+          @for (type of caseTypeOptions; track type) {
+          <option [value]="type">{{ getCaseTypeLabel(type) }}</option>
+          }
+        </app-form-field>
+      </div>
+    </ng-template>
+
+    <ng-template #caseStatusTpl>
+      <div>
+        <label for="filter-case-status" class="text-sm font-medium text-on-surface-variant block mb-1">حالة الحالة</label>
+        <app-form-field id="filter-case-status" type="select" formControlName="status">
+          <option value="">الكل</option>
+          @for (status of statusOptions; track status) {
+          <option [value]="status">{{ getCaseStatusLabel(status) }}</option>
+          }
+        </app-form-field>
+      </div>
+    </ng-template>
+
+    <ng-template #governmentTpl>
+      <div>
+        <label for="filter-government" class="text-sm font-medium text-on-surface-variant block mb-1">المحافظة</label>
+        <app-form-field id="filter-government" formControlName="government" placeholder="المحافظة..."></app-form-field>
+      </div>
+    </ng-template>
+
+    <ng-template #cityTpl>
+      <div>
+        <label for="filter-city" class="text-sm font-medium text-on-surface-variant block mb-1">المدينة</label>
+        <app-form-field id="filter-city" formControlName="city" placeholder="المدينة..."></app-form-field>
+      </div>
+    </ng-template>
+
+    <ng-template #fromDateTpl>
+      <div>
+        <label for="filter-from-date" class="text-sm font-medium text-on-surface-variant block mb-1">من تاريخ</label>
+        <app-form-field id="filter-from-date" type="date" formControlName="fromDate"></app-form-field>
+      </div>
+    </ng-template>
+
+    <ng-template #toDateTpl>
+      <div>
+        <label for="filter-to-date" class="text-sm font-medium text-on-surface-variant block mb-1">إلى تاريخ</label>
+        <app-form-field id="filter-to-date" type="date" formControlName="toDate"></app-form-field>
+      </div>
+    </ng-template>
+
+    <ng-template #ageSortTpl>
+      <div>
+        <label for="filter-age-sort" class="text-sm font-medium text-on-surface-variant block mb-1">ترتيب العمر</label>
+        <app-form-field id="filter-age-sort" type="select" formControlName="ageSort">
           <option value="">بدون ترتيب</option>
           @for (sort of ageSorts(); track sort) {
-            <option [value]="sort">{{ getAgeSortLabel(sort) }}</option>
+          <option [value]="sort">{{ getAgeSortLabel(sort) }}</option>
           }
         </app-form-field>
       </div>
+    </ng-template>
+
+    <ng-template #dateSortTpl>
+      <div>
+        <label for="filter-date-sort" class="text-sm font-medium text-on-surface-variant block mb-1">ترتيب التاريخ</label>
+        <app-form-field id="filter-date-sort" type="select" formControlName="dateSort">
+          <option value="">بدون ترتيب</option>
+          <option value="0">{{ getDateSortLabel(0) }}</option>
+          <option value="1">{{ getDateSortLabel(1) }}</option>
+        </app-form-field>
+      </div>
+    </ng-template>
+
+    <!-- Main Filters Grid -->
+    <div class="grid grid-cols-1 gap-5 md:grid" [style.grid-template-columns]="activeGridTemplate()">
+      @if (showSearch() && !searchInAdvanced()) {
+        <ng-container *ngTemplateOutlet="searchTpl"></ng-container>
+      }
+      @if (showGender() && !genderInAdvanced()) {
+      <ng-container *ngTemplateOutlet="genderTpl"></ng-container>
+      }
+      @if (showAgeCategory() && !ageCategoryInAdvanced()) {
+      <ng-container *ngTemplateOutlet="ageCategoryTpl"></ng-container>
+      }
+      @if (showCaseType() && !caseTypeInAdvanced()) {
+      <ng-container *ngTemplateOutlet="caseTypeTpl"></ng-container>
+      }
+      @if (showCaseStatus() && !caseStatusInAdvanced()) {
+      <ng-container *ngTemplateOutlet="caseStatusTpl"></ng-container>
+      }
+      @if (showGovernment() && !governmentInAdvanced()) {
+      <ng-container *ngTemplateOutlet="governmentTpl"></ng-container>
+      }
+      @if (showCity() && !cityInAdvanced()) {
+      <ng-container *ngTemplateOutlet="cityTpl"></ng-container>
+      }
+      @if (showFromDate() && !fromDateInAdvanced()) {
+      <ng-container *ngTemplateOutlet="fromDateTpl"></ng-container>
+      }
+      @if (showToDate() && !toDateInAdvanced()) {
+      <ng-container *ngTemplateOutlet="toDateTpl"></ng-container>
+      }
+      @if (showAgeSort() && !ageSortInAdvanced()) {
+      <ng-container *ngTemplateOutlet="ageSortTpl"></ng-container>
+      }
+      @if (showDateSort() && !dateSortInAdvanced()) {
+      <ng-container *ngTemplateOutlet="dateSortTpl"></ng-container>
+      }
     </div>
 
+    <!-- Advanced Filters -->
+    @if (hasAdvancedFilters()) {
     <!-- Advanced Filters Toggle -->
     <div class="flex items-center gap-3 pt-1 m-0">
       <div class="h-px flex-1 bg-outline-variant/20"></div>
 
-      <app-button
-        variant="text"
-        type="button"
-        (onClick)="toggleAdvanced()"
-        extraClass="group inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:text-secondary focus:outline-none"
-      >
+      <app-button variant="text" type="button" (onClick)="toggleAdvanced()"
+        extraClass="group inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:text-secondary focus:outline-none">
         <span class="relative">
           فلاتر إضافية
           <span
             class="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-secondary transition-all duration-300 group-hover:w-full"
-            [class.w-full]="showAdvanced"
-          ></span>
+            [class.w-full]="showAdvanced"></span>
         </span>
 
         @if (activeAdvancedCount > 0) {
-          <span class="bg-secondary/10 px-1.5 text-secondary rounded-full">
-            {{ activeAdvancedCount }}
-          </span>
+        <span class="bg-secondary/10 px-1.5 text-secondary rounded-full">
+          {{ activeAdvancedCount }}
+        </span>
         }
 
-        <span
-          class="material-symbols-outlined shrink-0 transition-transform duration-300"
-          [class.-rotate-180]="showAdvanced"
-          >expand_more</span
-        >
+        <span class="material-symbols-outlined shrink-0 transition-transform duration-300"
+          [class.-rotate-180]="showAdvanced">expand_more</span>
       </app-button>
 
       <div class="h-px flex-1 bg-outline-variant/20"></div>
     </div>
 
     <!-- Advanced Filters Content -->
-    <div
-      class="grid transition-[grid-template-rows] duration-300 ease-in-out m-0"
-      [style.grid-template-rows]="showAdvanced ? '1fr' : '0fr'"
-    >
+    <div class="grid transition-[grid-template-rows] duration-300 ease-in-out m-0"
+      [style.grid-template-rows]="showAdvanced ? '1fr' : '0fr'">
       <div class="overflow-hidden">
-        <div
-          class="grid grid-cols-1 gap-5 pt-4 transition-all duration-300 ease-out md:grid-cols-2 xl:grid-cols-4"
-          [class.opacity-100]="showAdvanced"
-          [class.translate-y-0]="showAdvanced"
-          [class.opacity-0]="!showAdvanced"
-          [class.-translate-y-2]="!showAdvanced"
-        >
-          <div>
-            <label class="text-sm font-medium text-on-surface-variant block mb-1">المحافظة</label>
-            <app-form-field formControlName="government" placeholder="المحافظة..."></app-form-field>
-          </div>
-
-          <div>
-            <label class="text-sm font-medium text-on-surface-variant block mb-1">المدينة</label>
-            <app-form-field formControlName="city" placeholder="المدينة..."></app-form-field>
-          </div>
-
-          <div>
-            <label class="text-sm font-medium text-on-surface-variant block mb-1">من تاريخ</label>
-            <app-form-field type="date" formControlName="fromDate"></app-form-field>
-          </div>
-
-          <div>
-            <label class="text-sm font-medium text-on-surface-variant block mb-1">إلى تاريخ</label>
-            <app-form-field type="date" formControlName="toDate"></app-form-field>
-          </div>
-
-          <div>
-            <label class="text-sm font-medium text-on-surface-variant block mb-1"
-              >ترتيب التاريخ</label
-            >
-            <app-form-field type="select" formControlName="dateSort">
-              <option value="">بدون ترتيب</option>
-              <option value="0">{{ getDateSortLabel(0) }}</option>
-              <option value="1">{{ getDateSortLabel(1) }}</option>
-            </app-form-field>
-          </div>
+        <div class="grid grid-cols-1 gap-5 pt-4 transition-all duration-300 ease-out md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          [class.opacity-100]="showAdvanced" [class.translate-y-0]="showAdvanced" [class.opacity-0]="!showAdvanced"
+          [class.-translate-y-2]="!showAdvanced">
+          @if (showSearch() && searchInAdvanced()) {
+          <ng-container *ngTemplateOutlet="searchTpl"></ng-container>
+          }
+          @if (showGender() && genderInAdvanced()) {
+          <ng-container *ngTemplateOutlet="genderTpl"></ng-container>
+          }
+          @if (showAgeCategory() && ageCategoryInAdvanced()) {
+          <ng-container *ngTemplateOutlet="ageCategoryTpl"></ng-container>
+          }
+          @if (showCaseType() && caseTypeInAdvanced()) {
+          <ng-container *ngTemplateOutlet="caseTypeTpl"></ng-container>
+          }
+          @if (showCaseStatus() && caseStatusInAdvanced()) {
+          <ng-container *ngTemplateOutlet="caseStatusTpl"></ng-container>
+          }
+          @if (showGovernment() && governmentInAdvanced()) {
+          <ng-container *ngTemplateOutlet="governmentTpl"></ng-container>
+          }
+          @if (showCity() && cityInAdvanced()) {
+          <ng-container *ngTemplateOutlet="cityTpl"></ng-container>
+          }
+          @if (showFromDate() && fromDateInAdvanced()) {
+          <ng-container *ngTemplateOutlet="fromDateTpl"></ng-container>
+          }
+          @if (showToDate() && toDateInAdvanced()) {
+          <ng-container *ngTemplateOutlet="toDateTpl"></ng-container>
+          }
+          @if (showAgeSort() && ageSortInAdvanced()) {
+          <ng-container *ngTemplateOutlet="ageSortTpl"></ng-container>
+          }
+          @if (showDateSort() && dateSortInAdvanced()) {
+          <ng-container *ngTemplateOutlet="dateSortTpl"></ng-container>
+          }
 
           <ng-content select="[extendedFilters]"></ng-content>
         </div>
       </div>
     </div>
+    }
+
+    <!-- Form Validation Messages -->
+    @if (filterForm.hasError('dateRangeInvalid')) {
+    <div class="rounded-lg bg-error-container/20 p-3 text-sm font-medium text-error flex items-center gap-2 mb-2">
+      <span class="material-symbols-outlined text-base">error</span>
+      تاريخ البداية (من تاريخ) لا يمكن أن يكون بعد تاريخ النهاية (إلى تاريخ).
+    </div>
+    }
 
     <!-- Footer -->
     <div class="flex flex-wrap justify-end gap-3 pt-2">
-      <app-button
-        variant="text"
-        type="button"
-        (onClick)="resetFilters()"
-        extraClass="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary"
-      >
-        <span
-          class="material-symbols-outlined transition-transform duration-200 group-hover:-rotate-90"
-          >refresh</span
-        >
+      <app-button variant="text" type="button" (onClick)="resetFilters()"
+        extraClass="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary">
+        <span class="material-symbols-outlined transition-transform duration-200 group-hover:-rotate-90">refresh</span>
         <span>إعادة تعيين</span>
       </app-button>
     </div>

@@ -8,6 +8,7 @@
         [badge]="!loading() ? totalItems() + ' حالة' : ''"
         [loading]="loading()"
         primaryActionLabel="إنشاء حالة مجهولة"
+        primaryActionIcon="add"
         primaryButtonClass="bg-primary hover:opacity-90 text-on-primary shadow-sm"
         (primaryAction)="navigateToCreate()"
       >
@@ -47,6 +48,7 @@
             <app-case-card
               [caseItem]="c"
               [detailRoute]="['/unknown', c.id]"
+              [showCaseType]="false"
               (onContact)="onContactReporter($event)"
               class="block"
             >

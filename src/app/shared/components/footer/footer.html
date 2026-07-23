@@ -1,60 +1,40 @@
-<footer class="bg-primary text-primary-fixed-dim border-t border-outline-variant pt-xl pb-md px-margin-mobile md:px-margin-desktop transition-colors duration-300">
-  <div class="max-w-max-width mx-auto grid grid-cols-1 md:grid-cols-3 gap-y-10 gap-x-gutter mb-xl text-center md:text-start">
+<footer class="bg-primary text-primary-fixed-dim border-t border-outline-variant pt-6 md:pt-8 pb-6 px-margin-mobile md:px-margin-desktop transition-colors duration-300 mt-auto">
+  <div class="max-w-max-width mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 mb-6">
     
-    <div class="flex flex-col gap-sm items-center md:items-start">
-      <a routerLink="/home" class="flex items-center gap-3 mb-4 md:mb-6">
-        <img src="images/logo-white.svg" alt="منصة لقاء" class="h-10 md:h-12 w-auto" />
-        <span class="text-on-primary font-headline-lg text-2xl md:text-3xl tracking-wide mt-1 font-bold">لـقـاء</span>
-      </a>
-      <p class="text-body-sm text-white/80 leading-relaxed max-w-87.5">
-        منصة إنسانية متطورة تعتمد على تقنيات الذكاء الاصطناعي والتعرف على الوجوه للمساعدة في تتبع
-        وحماية المفقودين وإعادتهم إلى عائلاتهم بأسرع وقت ممكن.
+    <!-- Right Section (Logo & Brief) -->
+    <div class="flex flex-col gap-3 w-full md:w-1/2">
+      <div class="flex justify-between items-center md:justify-start gap-4">
+        <a routerLink="/home" class="flex items-center gap-3">
+          <img src="images/logo-white.svg" alt="منصة لقاء" class="h-8 md:h-10 w-auto" />
+          <span class="text-on-primary font-headline-lg text-xl md:text-2xl tracking-wide mt-1 font-bold">لـقـاء</span>
+        </a>
+        <span class="md:hidden text-body-sm text-white/90 px-3 py-1 bg-white/10 border border-white/20 rounded-full font-medium">
+          طوارئ: 122
+        </span>
+      </div>
+      <p class="text-body-sm text-white/80 leading-relaxed max-w-112.5 text-start">
+        منصة إنسانية تعتمد على الذكاء الاصطناعي للمساعدة في تتبع المفقودين وإعادتهم لعائلاتهم.
       </p>
     </div>
 
-    <div class="flex flex-col gap-sm">
-      <h3 class="text-white font-headline-sm font-semibold mb-2">روابط سريعة</h3>
-      <ul class="flex flex-col gap-3 font-label-md">
+    <!-- Left Section (Links & Emergency for desktop) -->
+    <div class="flex flex-col gap-3 w-full md:w-1/2 md:items-end mt-2 md:mt-0">
+      <ul class="flex flex-wrap gap-4 md:gap-6 font-label-md items-center">
         <li>
-          <a routerLink="/home" class="text-white/90 hover:text-white transition-colors">الرئيسية</a>
-        </li>
-        <li>
-          <a routerLink="/urgent" class="text-white/90 hover:text-white transition-colors">الحالات الطارئة</a>
-        </li>
-        <li>
-          <a routerLink="/long-term" class="text-white/90 hover:text-white transition-colors">حالات طويلة المدى</a>
-        </li>
-        <li>
-          <a routerLink="/unknown" class="text-white/90 hover:text-white transition-colors">حالات غير معروفة</a>
-        </li>
-        <li>
-          <a routerLink="/founded" class="text-white/90 hover:text-white transition-colors">الحالات المعثور عليها</a>
-        </li>
-      </ul>
-    </div>
-
-    <div class="flex flex-col gap-sm">
-      <h3 class="text-white font-headline-sm font-semibold mb-2">الدعم والقانونية</h3>
-      <ul class="flex flex-col gap-3 font-label-md items-center md:items-start">
-        <li>
-          <a routerLink="/about" class="text-white/90 hover:text-white transition-colors">دليل المنصة (عن الموقع)</a>
+          <a routerLink="/about" class="text-white/90 hover:text-white transition-colors">عن المنصة</a>
         </li>
         <li>
           <a routerLink="/privacy-policy" class="text-white/90 hover:text-white transition-colors">سياسة الخصوصية</a>
         </li>
-        <li>
-          <a routerLink="/aisearch" class="text-white font-medium flex items-center justify-center md:justify-start gap-1 hover:text-white/80 transition-colors">
-            البحث الذكي بصورة (AI)
-          </a>
-        </li>
-        <li>
-          <span class="text-body-sm text-white/70 inline-block mt-2 px-3 py-1 bg-white/10 rounded-full">رقم الطوارئ: 122</span>
+        <!-- Emergency badge for desktop -->
+        <li class="hidden md:block">
+          <span class="text-body-sm text-white/90 px-3 py-1 bg-white/10 border border-white/20 rounded-full font-medium">طوارئ: 122</span>
         </li>
       </ul>
     </div>
   </div>
 
-  <div class="max-w-max-width mx-auto pt-md border-t border-white/10 flex flex-col-reverse sm:flex-row items-center justify-between gap-4 text-body-sm text-white/60 text-center sm:text-start">
+  <div class="max-w-max-width mx-auto pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/60 text-center sm:text-start">
     <p>© {{ currentYear }} منصة لقاء. جميع الحقوق محفوظة.</p>
     <p>صُنع بكل حب لدعم المجتمع المصري</p>
   </div>

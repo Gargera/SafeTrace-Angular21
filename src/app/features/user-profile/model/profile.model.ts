@@ -1,3 +1,7 @@
+import { AgeCategoryResponse } from '../../../core/models/Cases.model';
+import { CaseStatus } from '../../../shared/enums/case-status';
+import { CaseType } from '../../../shared/enums/case-type';
+import { Gender } from '../../../shared/enums/gender';
 import { UserRole } from '../../../shared/enums/user-role';
 import { VerificationStatus } from '../../../shared/enums/verification-status';
 
@@ -14,7 +18,10 @@ export interface GetUserInfoDTO {
   phoneNumber: string | null; // ← كانت PhoneNumber بحرف كبير
   cases: any[];
 }
-
+export interface UpdateCurrentLocationDTO {
+  currentLocationLatitude: number;
+  currentLocationLongitude: number;
+}
 // ── One DTO per endpoint — matches the backend exactly, keeps sections independent ──
 
 /** PUT /UserProfile/UpdateName (form-data) */
@@ -51,4 +58,28 @@ export interface ChangePasswordDTO {
 }
 export interface UpdateProfileImageDTO {
   profileImage: File;
+}
+
+export interface MyCasesFilterRequest {
+  fullName?: string | null;
+  caseCode?: string | null;
+  status?: CaseStatus | null;
+  caseType?: CaseType | null;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface MyCaseListItemResponse {
+  id: number;
+  fullName: string;
+  caseCode?: string;
+  age: number;
+  ageCategory: AgeCategoryResponse | null;
+  gender: Gender;
+  status: CaseStatus;
+  government: string;
+  city: string;
+  caseType: CaseType;
+  createdAt: string;
+  mainImageUrl: string | null;
 }

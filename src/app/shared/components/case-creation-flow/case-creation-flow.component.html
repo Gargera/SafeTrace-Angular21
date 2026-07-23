@@ -1,0 +1,27 @@
+@if (dialogState() === DialogType.NotVerified) {
+<app-confirmation-modal title="الحساب غير موثق" message="يجب توثيق حسابك أولاً حتى تتمكن من إنشاء هذا النوع من الحالات."
+  confirmText="توثيق الحساب" cancelText="إلغاء" icon="gpp_bad" (confirm)="flowService.navigateToVerification()"
+  (cancel)="flowService.closeDialog()">
+</app-confirmation-modal>
+}
+
+@if (dialogState() === DialogType.Pending) {
+<app-confirmation-modal title="طلب التوثيق قيد المراجعة"
+  message="طلب توثيق حسابك قيد المراجعة حالياً. يرجى الانتظار حتى يتم اعتماد الطلب." confirmText="حسناً"
+  cancelText="إلغاء" icon="pending_actions" (confirm)="flowService.closeDialog()" (cancel)="flowService.closeDialog()">
+</app-confirmation-modal>
+}
+
+@if (dialogState() === DialogType.UrgentCooldown) {
+<app-confirmation-modal title="لا يمكن إنشاء حالة عاجلة الآن" [message]="getCooldownMessage()" confirmText="حسناً"
+  cancelText="إلغاء" icon="timer" (confirm)="flowService.closeDialog()" (cancel)="flowService.closeDialog()">
+</app-confirmation-modal>
+}
+
+@if (dialogState() === DialogType.UrgentWarning) {
+<app-confirmation-modal title="تنبيه"
+  message="الحالات العاجلة مخصصة للحالات الحرجة فقط، ويمكن إنشاء حالة عاجلة واحدة كل 14 يوماً." confirmText="متابعة"
+  cancelText="إلغاء" icon="warning" (confirm)="flowService.acknowledgeUrgentWarningAndNavigate()"
+  (cancel)="flowService.closeDialog()">
+</app-confirmation-modal>
+}

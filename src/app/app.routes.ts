@@ -1,25 +1,30 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth-guard';
 import { About } from './shared/components/about/about';
-import { roleGuard } from './core/guards/role-guard';
-import { UserRole } from './shared/enums/user-role';
+import { permissionGuard } from './core/guards/permission.guard';
+import { Permissions } from './core/constants/Permissions';
 import { Home } from './shared/components/home/home';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'home', pathMatch: 'full', title: 'الرئيسية | لقاء' },
-
-  {
-    path: 'auth',
-    loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
+  { 
+    path: 'auth', 
+    loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES) 
   },
   {
     path: 'admin',
-    canActivate: [roleGuard],
-    data: { roles: [UserRole.Admin, UserRole.Moderator] },
+    canActivate: [permissionGuard],
+    data: { requiredPermission: Permissions.Cases.GetAll },
     loadChildren: () =>
       import('./features/admin-dashboard/admin.routes').then((m) => m.ADMIN_ROUTES),
   },
-
+  {
+    path: 'chat/chat/:chatId',
+    title: "المحادثة | لقاء",
+    canActivate: [authGuard],
+    data: {mode: 'user'},
+    loadComponent: () =>
+      import('./features/chat/pages/chat-window/chat-window').then((m) => m.ChatWindow),
+  },
   {
     path: '',
     loadComponent: () =>
@@ -76,6 +81,8 @@ export const routes: Routes = [
       {
         path: 'aisearch',
         title: 'البحث الذكي | لقاء',
+        canActivate: [permissionGuard],
+        data: { requiredPermission: Permissions.AiMatching.Search },
         loadChildren: () => import('./features/ai-search/ai.routes').then((m) => m.AiSearch_ROUTES),
       },
       {
@@ -91,6 +98,12 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/donations/donations.routes').then((m) => m.DONATIONS_ROUTES),
       },
+      {
+        path: 'chat',
+        title: "المحادثات | لقاء",
+        canActivate: [authGuard],
+        loadChildren: () => import('./features/chat/chat.routes').then(m => m.CHAT_ROUTES) 
+      }
     ],
   },
 

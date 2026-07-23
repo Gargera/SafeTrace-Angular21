@@ -73,8 +73,9 @@ export class NotificationService implements OnDestroy {
         this.#hubConnection?.invoke('GetMyNotifications', 1, DEFAULT_PAGE_SIZE);
       })
       .catch((err) => {
-        this.#isConnected.set(false);
         console.error('SignalR connection error:', err);
+
+        this.#isConnected.set(false);
       });
   }
 
@@ -82,10 +83,9 @@ export class NotificationService implements OnDestroy {
     if (!this.#hubConnection) return;
 
     // Fired on connect with current unread count
-    this.#hubConnection.on('UnreadCount', (count: number) => {
-      this.#unreadCount.set(count);
+    this.#hubConnection.on('UnreadCount', (response: ApiResponse<number>) => {
+      this.#unreadCount.set(response.data ?? 0);
     });
-
     // Fired after invoking GetMyNotifications
 
     this.#hubConnection.on('ReceiveNotifications', (response: ApiResponse<NotificationPage>) => {
@@ -100,8 +100,8 @@ export class NotificationService implements OnDestroy {
     // Fired when a new notification is pushed from server
     this.#hubConnection.on('ReceiveNotification', (notification: GetUserNotificationsDTO) => {
       this.#notifications.update((prev) => [notification, ...prev]);
-
       this.#totalCount.update((c) => c + 1);
+      this.#unreadCount.update((c) => c + 1);
       this.#totalPages.set(Math.ceil(this.#totalCount() / DEFAULT_PAGE_SIZE));
     });
 
@@ -121,13 +121,6 @@ export class NotificationService implements OnDestroy {
     this.#notifications.update((list) =>
       list.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
     );
-
-    this.#hubConnection?.invoke('GetMyNotifications').catch((err) => {
-      console.error('Invoke Error:', err);
-      console.error(err?.message);
-      console.error(err?.stack);
-    });
-
     this.#hubConnection?.invoke('MarkAsRead', notificationId).catch((err) => {
       console.error('MarkAsRead failed:', err);
       // Rollback on error
@@ -171,7 +164,6 @@ export class NotificationService implements OnDestroy {
 
   // ─── REST API Fallback (used if SignalR is not connected) ─────────────────
   loadPage(page: number, append = false): void {
-
     this.#isLoading.set(true);
 
     const params = new HttpParams().set('page', page).set('pageSize', DEFAULT_PAGE_SIZE);
@@ -329,7 +321,7 @@ export class NotificationService implements OnDestroy {
   }
 
   formatDate(dateStr: string): string {
-    const date = new Date(dateStr + 'Z'); // اعتبره UTC
+    const date = new Date(dateStr); // اعتبره UTC
 
     const diff = Date.now() - date.getTime();
 

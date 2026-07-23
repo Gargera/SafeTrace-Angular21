@@ -35,59 +35,58 @@ export abstract class ApiService {
 
   /**
    * Converts any object into FormData.
-   * Supports:
-   * - primitives
-   * - File
-   * - File[]
-   * - primitive arrays
-   * - nested objects
+   * Converts first letter of keys to PascalCase for .NET compatibility.
    */
-  protected buildFormData(data: Record<string, any>): FormData {
+  protected buildFormData(data: any): FormData {
+    if (data instanceof FormData) {
+      return data;
+    }
+
     const formData = new FormData();
+    if (!data) return formData;
 
     Object.entries(data).forEach(([key, value]) => {
-
       if (value === null || value === undefined) {
         return;
       }
 
-      // Single file
+      const pascalKey = key.charAt(0).toUpperCase() + key.slice(1);
+
       if (value instanceof File) {
-        formData.append(key, value);
+        formData.append(pascalKey, value, value.name);
         return;
       }
 
-      // Arrays
       if (Array.isArray(value)) {
+        // 💡 تعديل حاسم: إذا كانت المصفوفة فارغة، نرسل المفتاح بقيمة نصية فارغة
+        // لمنع الـ .NET Model Binder من اعتبار المصفوفة Null بالكامل
+        if (value.length === 0) {
+          formData.append(pascalKey, '');
+          return;
+        }
 
         value.forEach(item => {
-
           if (item === null || item === undefined) {
             return;
           }
 
           if (item instanceof File) {
-            formData.append(key, item);
+            formData.append(pascalKey, item, item.name);
           } else if (typeof item === 'object') {
-            formData.append(key, JSON.stringify(item));
+            formData.append(pascalKey, JSON.stringify(item));
           } else {
-            formData.append(key, item.toString());
+            formData.append(pascalKey, item.toString());
           }
-
         });
-
         return;
       }
 
-      // Nested object
       if (typeof value === 'object') {
-        formData.append(key, JSON.stringify(value));
+        formData.append(pascalKey, JSON.stringify(value));
         return;
       }
 
-      // Primitive
-      formData.append(key, value.toString());
-
+      formData.append(pascalKey, value.toString());
     });
 
     return formData;
@@ -115,11 +114,17 @@ export abstract class ApiService {
     return this.http.delete<T>(url);
   }
 
-  protected postFormData<T>(url: string, request: object): Observable<T> {
-    return this.http.post<T>(url, this.buildFormData(request));
+  protected postFormData<T>(url: string, request: any, params?: any): Observable<T> {
+    const httpParams = params ? this.buildParams(params) : undefined;
+    const body = this.buildFormData(request);
+    
+    return this.http.post<T>(url, body, {
+      params: httpParams
+    });
   }
 
-  protected putFormData<T>(url: string, request: object): Observable<T> {
-    return this.http.put<T>(url, this.buildFormData(request));
+  protected putFormData<T>(url: string, request: any): Observable<T> {
+    const body = this.buildFormData(request);
+    return this.http.put<T>(url, body);
   }
 }

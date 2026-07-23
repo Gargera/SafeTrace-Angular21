@@ -1,4 +1,6 @@
+import { AgeCategories } from '../../../shared/enums/age-categories';
 import { CaseType } from '../../../shared/enums/case-type';
+import { Gender } from '../../../shared/enums/gender';
 
 export interface FoundedHeaderQueryDTO {
   search?: string;
@@ -9,16 +11,12 @@ export interface FoundedHeaderQueryDTO {
   pageSize: number;
 }
 
-export enum Gender {
-  Male = 0,
-  Female = 1,
-}
 
 export interface FoundedApiListItemDto {
   id: number;
   caseId: number;
   name: string;
-  age: string;
+  age: number;
   foundedAt: string;
   image: string;
 }
@@ -27,32 +25,19 @@ export interface FoundPersonListItemDto {
   id: number;
   fullName: string;
   mainImage: string;
-  age: string;
-  ageCategory: string;
+  age: number;
+  ageCategory: AgeCategories;
   foundDate: string;
 }
 
 export interface PostDetailsResponseDTO {
   fullName: string;
   mainImage: string;
-  age: string;
+  age: number;
   gender: string;
   founedDate: string;
   foundDescription: string;
   missingDescription: string;
   foundLocation: string;
   missingLocation: string;
-}
-
-export interface PaginationResponseDto<T> {
-  items: T[];
-  pageNumber: number;
-  pageSize: number;
-  totalCount: number;
-}
-
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
 }

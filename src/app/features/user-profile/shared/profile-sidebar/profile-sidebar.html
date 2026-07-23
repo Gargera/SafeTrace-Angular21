@@ -46,28 +46,19 @@
       {{ userInfo()?.fullName ?? '—' }}
     </h2>
 
-    <p class="text-body-sm text-on-surface-variant mb-md">
-      @if (isAdmin) {
-      } @else if (isModerator) {
-      } @else if (isVerified) {
-        مستخدم موثق
-      } @else if (userInfo()?.verificationStatus === VerificationStatus.Pending) {
-        قيد التوثيق
-      } @else {
-        مستخدم
-      }
-    </p>
+    <!-- Verification badge (uses VerificationBadgeDirective) -->
+    @if (userInfo()?.verificationStatus !== undefined && userInfo()?.verificationStatus !== null) {
+      <div class="mb-md">
+        <span [appVerificationBadgeDirective]="userInfo()!.verificationStatus"></span>
+      </div>
+    }
 
-    <div class="bg-surface-container px-md py-xs rounded-full inline-flex items-center gap-xs">
-      <span
-        class="material-symbols-outlined text-on-tertiary-container text-[18px]"
-        style="font-variation-settings: 'FILL' 1"
-      >
-      </span>
-      <span class="text-label-sm text-on-tertiary-container">
-        {{ verificationLabel }}
-      </span>
-    </div>
+    <!-- Role badge (uses RoleBadgeDirective) -->
+    @if (userInfo()?.role) {
+      <div class="mb-md">
+        <span [appRoleBadgeDirective]="userInfo()!.role"></span>
+      </div>
+    }
 
     <!-- Contact Info -->
     <div class="w-full border-t border-outline-variant mt-lg pt-lg space-y-md text-right">
@@ -75,13 +66,15 @@
       @if (userInfo()?.email) {
         <div class="flex items-center gap-sm text-on-surface-variant">
           <span class="material-symbols-outlined text-secondary shrink-0">mail</span>
-          <span class="text-body-sm break-all">{{ userInfo()!.email }}</span>
+          <span dir="ltr" class="block truncate text-left">
+            {{ userInfo()!.email }}
+          </span>
         </div>
       }
       @if (userInfo()?.phoneNumber) {
         <div class="flex items-center gap-sm text-on-surface-variant">
           <span class="material-symbols-outlined text-secondary shrink-0">phone</span>
-          <span class="text-body-sm break-all">{{ userInfo()!.phoneNumber }}</span>
+          <span dir="ltr" class="block truncate text-left"> {{ userInfo()!.phoneNumber }}</span>
         </div>
       }
       <!-- Address (resolved from lat/lng via Geocoding API) -->

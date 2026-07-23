@@ -1,10 +1,10 @@
 <div class="min-h-screen bg-surface flex flex-col justify-center items-center px-margin-mobile py-12 relative">
   
   <div class="absolute top-6 right-6 md:top-8 md:right-8">
-    <a routerLink="/home" class="inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold transition-all duration-200 active:scale-95 border border-outline-variant bg-surface-container-low text-on-surface hover:bg-surface-container-high">
+    <app-button routerLink="/home" variant="secondary">
       <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
       العودة للرئيسية
-    </a>
+    </app-button>
   </div>
 
   <div class="text-center mb-8">
@@ -26,16 +26,8 @@
       </div>
     }
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-      
-      <div class="flex items-center justify-center border border-outline bg-surface-container-lowest rounded-xl overflow-hidden hover:bg-surface-container-low transition-colors h-11.5">
-        <asl-google-signin-button type="standard" size="large"></asl-google-signin-button>
-      </div>
-
-      <app-button type="button" (onClick)="signInWithFB()" variant="secondary" extraClass="flex items-center justify-center gap-2 border border-outline text-on-surface bg-surface-container-lowest hover:bg-surface-container-low rounded-xl py-2.5 font-label-md font-medium transition-colors h-11.5">
-        <svg class="w-5 h-5 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-        تسجيل عبر فيسبوك
-      </app-button>
+    <div class="flex justify-center mb-6 h-[40px] w-full">
+      <asl-google-signin-button type="standard" size="large" locale="ar"></asl-google-signin-button>
     </div>
 
     <div class="relative flex py-2 items-center mb-4">
@@ -49,7 +41,7 @@
         <app-form-field 
           formControlName="email" 
           type="email" 
-          label="البريد الإلكتروني" 
+          label="البريد الإلكتروني *" 
           placeholder="name@example.com"
           [class.border-error]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid">
         </app-form-field>
@@ -64,7 +56,7 @@
 
       <div class="flex flex-col gap-1">
         <div class="flex justify-between items-center mb-1">
-          <label class="text-label-md font-medium text-on-surface">كلمة المرور</label>
+          <label class="text-label-md font-medium text-on-surface">كلمة المرور <span class="text-error">*</span></label>
           <a routerLink="/auth/forgot-password" class="text-secondary text-body-sm font-medium hover:underline">نسيت كلمة المرور؟</a>
         </div>
         

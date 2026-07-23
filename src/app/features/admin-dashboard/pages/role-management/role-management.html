@@ -23,7 +23,7 @@
         </div>
 
         @if (selectedRoleId() && isDeletableRole()) {
-          <app-button (onClick)="onDeleteRole()" [disabled]="isDeleting()" [loading]="isDeleting()" variant="icon" extraClass="w-11 h-11 !border-none bg-error-container text-error hover:bg-error hover:text-white shrink-0 transition-colors" ariaLabel="حذف الدور">
+          <app-button *hasPermission="Permissions.Roles.Delete" (onClick)="onDeleteRole()" [disabled]="isDeleting()" [loading]="isDeleting()" variant="icon" extraClass="w-11 h-11 !border-none bg-error-container text-error hover:bg-error hover:text-white shrink-0 transition-colors" ariaLabel="حذف الدور">
             @if (!isDeleting()) {
               <span class="material-symbols-outlined text-[24px]">delete</span>
             }
@@ -32,6 +32,7 @@
       </div>
     </app-card>
 
+    <ng-container *hasPermission="Permissions.Roles.Create">
     <app-card extraClass="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant flex flex-col gap-4 h-full">
       <div class="flex items-center gap-2 text-primary mb-2">
         <span class="material-symbols-outlined">add_moderator</span>
@@ -50,7 +51,7 @@
           <div class="flex-1">
             <app-form-field formControlName="roleName" placeholder="e.g. Volunteer"></app-form-field>
           </div>
-          <app-button type="submit" [disabled]="createRoleForm.invalid" variant="primary" extraClass="px-6 rounded-xl font-bold shrink-0">
+          <app-button type="submit" [disabled]="createRoleForm.invalid || isCreating()" [loading]="isCreating()" variant="primary" extraClass="px-6 rounded-xl font-bold shrink-0">
             إنشاء
           </app-button>
         </div>
@@ -66,8 +67,10 @@
         }
       </form>
     </app-card>
+    </ng-container>
   </div>
 
+  <ng-container *hasPermission="Permissions.Roles.GetPermissionsByRoleId">
   <section class="space-y-md mt-xl">
     <div class="flex justify-between items-end flex-wrap gap-4">
       <div class="flex flex-col gap-2">
@@ -94,9 +97,7 @@
     <div class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-50">
       
       @if (isLoadingTree()) {
-        <div class="absolute inset-0 bg-white/70 flex items-center justify-center z-10 backdrop-blur-sm">
-          <span class="material-symbols-outlined text-secondary animate-spin text-[32px]">progress_activity</span>
-        </div>
+        <app-loading-spinner title="جارِ تحميل الصلاحيات..." [fullscreen]="false" containerClass="absolute inset-0 bg-white/70 flex items-center justify-center z-10 backdrop-blur-sm"></app-loading-spinner>
       }
 
       <div class="divide-y divide-outline-variant">
@@ -196,7 +197,9 @@
       </div>
     </div>
   </section>
+  </ng-container>
 
+  <ng-container *hasPermission="Permissions.Roles.UpdateRolePermissions">
   <div class="flex justify-end mt-lg">
     <app-button (onClick)="savePermissions()" 
             [disabled]="!selectedRoleId() || isSaving() || isReadOnly() || !hasChanges()"
@@ -211,4 +214,17 @@
       }
     </app-button>
   </div>
+  </ng-container>
 </div>
+
+@if (showConfirmModal()) {
+  <app-confirmation-modal
+    [title]="modalConfig().title"
+    [message]="modalConfig().message"
+    [confirmText]="modalConfig().confirmText"
+    [icon]="modalConfig().icon"
+    [variant]="modalConfig().variant"
+    (confirm)="onConfirmModal()"
+    (cancel)="showConfirmModal.set(false)"
+  ></app-confirmation-modal>
+}

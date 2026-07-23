@@ -8,5 +8,5 @@ export interface AuthResponse {
   fullName: string;
   profileImage?: string | null;
   verificationStatus: VerificationStatus;
-
+  permissions: string[];
 }

@@ -1,27 +1,14 @@
-<div class="bg-surface text-on-surface flex min-h-screen relative overflow-hidden" dir="rtl">
-  <aside
-    class="bg-primary text-white flex flex-col fixed h-full z-40 shadow-xl transition-all duration-300 ease-in-out right-0 top-0 overflow-hidden"
-    [ngClass]="isSidebarExpanded() ? 'w-72' : 'w-20'"
-  >
-    <div
-      class="flex items-center mt-6"
-      [ngClass]="isSidebarExpanded() ? 'px-lg justify-between' : 'justify-center flex-col gap-6'"
-    >
-      <a
-        routerLink="/home"
-        class="flex items-center gap-sm overflow-hidden group outline-none"
-        title="العودة للرئيسية"
-      >
-        <img
-          src="images/logo-white.svg"
-          alt="SafeTrace"
-          class="h-8 w-auto shrink-0 group-hover:scale-105 transition-transform"
-        />
-        <span
-          class="text-headline-sm font-bold tracking-tight mt-1 whitespace-nowrap"
-          [class.hidden]="!isSidebarExpanded()"
-          >لـقـاء</span
-        >
+<div class="bg-surface text-on-surface flex h-dvh relative overflow-hidden w-full" dir="rtl">
+
+  <aside 
+    class="bg-primary text-white flex flex-col fixed h-dvh z-50 shadow-xl transition-all duration-300 ease-in-out right-0 top-0 overflow-hidden"
+    [ngClass]="isSidebarExpanded() ? 'w-64 md:w-72' : 'w-16 md:w-20'">
+    
+    <div class="flex items-center mt-6" [ngClass]="isSidebarExpanded() ? 'px-lg justify-between' : 'justify-center flex-col gap-6'">
+      
+      <a routerLink="/home" class="flex items-center gap-sm overflow-hidden group outline-none" title="العودة للرئيسية">
+        <img src="images/logo-white.svg" alt="SafeTrace" class="h-8 w-auto shrink-0 group-hover:scale-105 transition-transform">
+        <span class="text-headline-sm font-bold tracking-tight mt-1 whitespace-nowrap" [class.hidden]="!isSidebarExpanded()">لـقـاء</span>
       </a>
 
       <app-button
@@ -41,7 +28,8 @@
       style="scrollbar-width: thin"
     >
       <a
-        routerLink="/admin"
+        *hasPermission="Permissions.Dashboard.GetStatistics"
+        routerLink="/admin/dashboard"
         routerLinkActive="bg-white/10 opacity-100"
         [routerLinkActiveOptions]="{ exact: true }"
         class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
@@ -59,61 +47,29 @@
         >
       </a>
 
-      <div class="space-y-1">
-        <button
-          class="w-full flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group outline-none"
-          [ngClass]="isSidebarExpanded() ? 'px-4 justify-between' : 'justify-center px-0'"
-          (click)="handleDropdownClick()"
-          [title]="!isSidebarExpanded() ? 'إدارة البلاغات (اضغط للتوسيع)' : ''"
+      <a
+        *hasPermission="Permissions.Cases.GetAll"
+        routerLink="/admin"
+        routerLinkActive="bg-white/10 opacity-100"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
+        [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"
+        [title]="!isSidebarExpanded() ? 'إدارة الحالات' : ''"
+      >
+        <span
+          class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform"
+          >manage_search</span
         >
-          <div
-            class="flex items-center"
-            [ngClass]="isSidebarExpanded() ? 'gap-3' : 'justify-center'"
-          >
-            <span
-              class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform"
-              >manage_search</span
-            >
-            <span
-              class="text-body-md font-semibold whitespace-nowrap"
-              [class.hidden]="!isSidebarExpanded()"
-              >إدارة البلاغات</span
-            >
-          </div>
-          <span
-            class="material-symbols-outlined text-sm shrink-0"
-            [class.hidden]="!isSidebarExpanded()"
-          >
-            {{ isCasesDropdownOpen() ? 'expand_less' : 'expand_more' }}
-          </span>
-        </button>
-
-        @if (isCasesDropdownOpen() && isSidebarExpanded()) {
-          <div class="pr-12 space-y-1 animate-fade-in">
-            <a
-              routerLink="/admin/urgent-cases"
-              routerLinkActive="text-secondary-fixed-dim"
-              class="block py-2 text-body-sm opacity-60 hover:opacity-100 transition-colors"
-              >بلاغات عاجلة</a
-            >
-            <a
-              routerLink="/admin/long-term-cases"
-              routerLinkActive="text-secondary-fixed-dim"
-              class="block py-2 text-body-sm opacity-60 hover:opacity-100 transition-colors"
-              >بلاغات طويلة المدى</a
-            >
-            <a
-              routerLink="/admin/unknown-cases"
-              routerLinkActive="text-secondary-fixed-dim"
-              class="block py-2 text-body-sm opacity-60 hover:opacity-100 transition-colors"
-              >بلاغات غير معروفة</a
-            >
-          </div>
-        }
-      </div>
+        <span
+          class="text-body-md font-semibold whitespace-nowrap"
+          [class.hidden]="!isSidebarExpanded()"
+          >إدارة الحالات</span
+        >
+      </a>
 
       <a
-        routerLink="/admin/complaints"
+        *hasPermission="Permissions.Complaints.GetAll"
+        routerLink="/admin/complaints-management"
         routerLinkActive="bg-white/10 opacity-100"
         class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
         [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"
@@ -131,6 +87,7 @@
       </a>
 
       <a
+        *hasPermission="Permissions.Chat.GetAll"
         routerLink="/admin/chats"
         routerLinkActive="bg-white/10 opacity-100"
         class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
@@ -149,6 +106,7 @@
       </a>
 
       <a
+        *hasPermission="Permissions.Users.GetAll"
         routerLink="/admin/users"
         routerLinkActive="bg-white/10 opacity-100"
         class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
@@ -166,40 +124,60 @@
         >
       </a>
 
-      @if (authService.isAdmin()) {
-        <a
-          routerLink="/admin/rolesManagement"
-          routerLinkActive="bg-white/10 opacity-100"
-          class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
-          [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"
-          [title]="!isSidebarExpanded() ? 'إدارة الأدوار والصلاحيات' : ''"
+      <a
+        *hasPermission="Permissions.Roles.GetPermissionsByRoleId"
+        routerLink="/admin/rolesManagement"
+        routerLinkActive="bg-white/10 opacity-100"
+        class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
+        [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"
+        [title]="!isSidebarExpanded() ? 'إدارة الأدوار والصلاحيات' : ''"
+      >
+        <span
+          class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform"
+          >admin_panel_settings</span
         >
-          <span
-            class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform"
-            >admin_panel_settings</span
-          >
-          <span
-            class="text-body-md font-semibold whitespace-nowrap"
-            [class.hidden]="!isSidebarExpanded()"
-            >إدارة الأدوار</span
-          >
-        </a>
+        <span
+          class="text-body-md font-semibold whitespace-nowrap"
+          [class.hidden]="!isSidebarExpanded()"
+          >إدارة الأدوار</span
+        >
+      </a>
 
+      <a
+        *hasPermission="Permissions.Donations.GetDonations"
+        routerLink="/admin/donations"
+        routerLinkActive="bg-white/10 opacity-100"
+        class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
+        [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"
+        [title]="!isSidebarExpanded() ? 'إدارة التبرعات' : ''"
+      >
+        <span
+          class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform"
+          >volunteer_activism</span
+        >
+        <span
+          class="text-body-md font-semibold whitespace-nowrap"
+          [class.hidden]="!isSidebarExpanded()"
+          >إدارة التبرعات</span
+        >
+      </a>
+
+      @if (isSuperAdmin()) {
         <a
-          routerLink="/admin/donations"
+          routerLink="/admin/audit-logs"
           routerLinkActive="bg-white/10 opacity-100"
           class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
           [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"
-          [title]="!isSidebarExpanded() ? 'إدارة التبرعات' : ''"
+          [title]="!isSidebarExpanded() ? 'سجلات النظام' : ''"
         >
           <span
             class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform"
-            >volunteer_activism</span
+            >history</span
           >
           <span
             class="text-body-md font-semibold whitespace-nowrap"
             [class.hidden]="!isSidebarExpanded()"
-            >إدارة التبرعات</span
+            >سجلات النظام</span
           >
         </a>
       }
@@ -226,7 +204,7 @@
               currentUser()?.fullName
             }}</span>
             <span class="text-label-sm opacity-60 text-white truncate">{{
-              authService.isAdmin() ? 'مدير النظام' : 'مشرف'
+              getUserRoleTranslated()
             }}</span>
           </div>
         </div>
@@ -243,10 +221,9 @@
     </div>
   </aside>
 
-  <main
-    class="flex-1 transition-all duration-300 w-full p-margin-mobile md:p-margin-desktop bg-surface-bright min-h-screen overflow-x-hidden"
-    [ngClass]="isSidebarExpanded() ? 'mr-72' : 'mr-20'"
-  >
+  <main 
+    class="flex-1 transition-all duration-300 w-full p-4 md:p-8 bg-surface-bright h-dvh overflow-y-auto"
+    [ngClass]="isSidebarExpanded() ? 'mr-64 md:mr-72' : 'mr-16 md:mr-20'">
     <router-outlet></router-outlet>
   </main>
 </div>

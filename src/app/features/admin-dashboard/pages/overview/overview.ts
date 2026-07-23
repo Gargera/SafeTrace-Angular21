@@ -2,14 +2,18 @@ import { ChangeDetectionStrategy, Component, HostListener, inject, OnInit, signa
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { SystemConstants } from '../../../../core/constants/system.constants';
 import Swal from 'sweetalert2';
 import { environment } from '../../../../../environments/environment';
 import { ButtonComponent } from '../../../../shared/components/button/button';
+import { Permissions } from '../../../../core/constants/Permissions';
+import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 
 @Component({
   selector: 'app-overview',
   standalone: true,
-  imports: [CommonModule, RouterModule, ButtonComponent], 
+  imports: [CommonModule, RouterModule, ButtonComponent, HasPermissionDirective], 
   templateUrl: './overview.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -18,9 +22,17 @@ export class Overview implements OnInit {
   private router = inject(Router);
   currentUser = this.authService.currentUser;
   
-  isCasesDropdownOpen = signal<boolean>(false);
-  
   isSidebarExpanded = signal<boolean>(true);
+  Permissions = Permissions;
+
+  isSuperAdmin(): boolean {
+    return this.currentUser()?.email === SystemConstants.RootAdminEmail;
+  }
+
+  getUserRoleTranslated(): string {
+    const role = this.authService.getUserRole();
+    return getRoleTranslationAr(role);
+  }
 
   ngOnInit() {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -38,21 +50,8 @@ export class Overview implements OnInit {
       this.isSidebarExpanded.set(true);
     }
   }
-  
-  handleDropdownClick() {
-    if (!this.isSidebarExpanded()) {
-      this.isSidebarExpanded.set(true);
-      this.isCasesDropdownOpen.set(true);
-    } else {
-      this.isCasesDropdownOpen.update(v => !v);
-    }
-  }
-
   toggleSidebar() {
     this.isSidebarExpanded.update(v => !v);
-    if (!this.isSidebarExpanded()) {
-      this.isCasesDropdownOpen.set(false);
-    }
   }
 
   getProfileImageUrl(): string {
@@ -83,11 +82,14 @@ export class Overview implements OnInit {
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        this.authService.clearSession();
-        this.router.navigate(['/auth']);
         this.authService.revokeToken().subscribe({
-          next: () => {},
-          error: () => {},
+          next: () => {
+            this.router.navigate(['/auth/login']);
+          },
+          error: () => {
+            this.authService.clearSession();
+            this.router.navigate(['/auth/login']);
+          },
         });
       }
     });

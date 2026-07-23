@@ -59,7 +59,8 @@ export interface MatchedCaseResponse {
 }
 
 export interface CreateCaseResponse {
-  isCreated: boolean;
+  IsCreated: boolean;
+  IsSameTypeDuplicate?: boolean;
   caseId: number | null;
   matchedCases: MatchedCaseResponse[];
 }
@@ -132,26 +133,21 @@ export interface CaseMatchSubjectInfoRequest {
 }
 
 export interface CaseUpsertBaseRequest {
-  // REQUIRED FIELDS (Both Create & Update)
   gender: Gender;
   age: number;
   government: string;
   city: string;
   street: string | null;
-  primaryImage: File;
-  eventDate: string; // DateTime
+  eventDate: string;
 
-  // OPTIONAL FIELDS
   sName: string | null;
   tName: string | null;
   communicationPhone: string | null;
   description: string | null;
 
-  // PHOTO MANAGEMENT
-  additionalImages: File[] | null;
   video: File | null;
 }
-export interface CaseCreateBaseRequest extends CaseUpsertBaseRequest {}
+export interface CaseCreateBaseRequest extends CaseUpsertBaseRequest { }
 
 export interface CaseUpdateBaseRequest extends CaseUpsertBaseRequest {
   newPhotos: File[] | null;
@@ -161,9 +157,11 @@ export interface CaseUpdateBaseRequest extends CaseUpsertBaseRequest {
 
 export interface CasesFilterRequest {
   status: CaseStatus | null;
+  caseType: CaseType | null;
   gender: Gender | null;
   ageCategory: AgeCategories | null;
   fullName: string | null;
+  caseCode: string | null;
   government: string | null;
   city: string | null;
   minAge: number | null;
@@ -183,3 +181,5 @@ export interface FoundPersonInfoRequest {
   street: string;
   foundedAt: string; // DateOnly
 }
+
+export { CaseType };

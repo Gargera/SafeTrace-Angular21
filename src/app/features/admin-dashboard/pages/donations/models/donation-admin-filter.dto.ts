@@ -1,4 +1,4 @@
-import { PaymentStatus } from './payment-status';
+import { PaymentStatus } from '../../../../../shared/enums/payment-status.enum';
 
 export interface DonationAdminFilterDto {
   pageNumber: number;

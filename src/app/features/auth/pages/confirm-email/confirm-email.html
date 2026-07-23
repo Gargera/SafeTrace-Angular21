@@ -1,10 +1,10 @@
 <div class="min-h-screen bg-surface flex flex-col justify-center items-center px-margin-mobile py-12">
   
   <div class="absolute top-6 right-6 md:top-8 md:right-8">
-    <a routerLink="/home" class="inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold transition-all duration-200 active:scale-95 border border-outline-variant bg-surface-container-low text-on-surface hover:bg-surface-container-high">
+    <app-button routerLink="/home" variant="secondary">
       <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
       العودة للرئيسية
-    </a>
+    </app-button>
   </div>
   
   <div class="text-center mb-8">
@@ -28,7 +28,7 @@
 
     <form [formGroup]="confirmForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
       <div class="flex flex-col gap-1">
-        <label class="text-label-md font-medium text-on-surface text-center mb-2">أدخل الرمز هنا</label>
+        <label class="text-label-md font-medium text-on-surface text-center mb-2">أدخل الرمز هنا <span class="text-error">*</span></label>
         <app-form-field 
           formControlName="otpCode" 
           type="text" 
@@ -36,6 +36,15 @@
           [class.border-error]="confirmForm.get('otpCode')?.touched && confirmForm.get('otpCode')?.invalid"
           class="text-center tracking-widest text-2xl font-bold">
         </app-form-field>
+        @if (confirmForm.get('otpCode')?.touched && confirmForm.get('otpCode')?.invalid) {
+          <span class="text-error text-xs font-medium mt-1 text-center">
+            @if (confirmForm.get('otpCode')?.hasError('required')) {
+              رمز التحقق مطلوب.
+            } @else {
+              يجب أن يتكون رمز التحقق من 6 أرقام.
+            }
+          </span>
+        }
       </div>
 
       <app-button type="submit" [disabled]="isLoading()" variant="primary" [loading]="isLoading()" extraClass="w-full justify-center mt-2 font-label-lg transition-all">

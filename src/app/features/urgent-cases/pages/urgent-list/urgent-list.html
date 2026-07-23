@@ -8,6 +8,7 @@
         [badge]="!loading() ? totalItems() + ' حالة' : ''"
         [loading]="loading()"
         primaryActionLabel="إنشاء حالة عاجلة"
+        primaryActionIcon="add"
         primaryButtonClass="bg-error hover:opacity-90 text-on-error shadow-sm"
         (primaryAction)="navigateToCreate()"
       >
@@ -21,7 +22,9 @@
       <app-case-filters (filterChange)="onFilterChange($event)" (reset)="onFilterReset()">
         <!-- Urgent-only extra filter -->
         <div extendedFilters>
-          <label class="text-sm font-medium text-on-surface-variant block mb-1">نطاق البحث (متر)</label>
+          <label class="text-sm font-medium text-on-surface-variant block mb-1"
+            >نطاق البحث (متر)</label
+          >
 
           <app-form-field
             type="number"
@@ -59,7 +62,8 @@
             <app-case-card
               [caseItem]="case"
               [showUrgentTag]="true"
-              [detailRoute]="['/urgent-cases', case.id]"
+              [showCaseType]="false"
+              [detailRoute]="['/urgent', case.id]"
               (onContact)="onContactReporter($event)"
               class="block"
             >
