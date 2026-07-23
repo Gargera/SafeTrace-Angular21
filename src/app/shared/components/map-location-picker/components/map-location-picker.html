@@ -16,7 +16,11 @@
           </div>
           <div>
             <h3 class="text-base font-bold text-on-surface">تحديد الموقع على الخريطة</h3>
-            <p class="text-xs text-on-surface-variant">انقر على الخريطة أو اسحب الدبوس لتحديد الموقع بدقة</p>
+            @if (readOnly()) {
+              <p class="text-xs text-on-surface-variant">عرض الموقع على الخريطة</p>
+            } @else {
+              <p class="text-xs text-on-surface-variant">انقر على الخريطة أو اسحب الدبوس لتحديد الموقع بدقة</p>
+            }
           </div>
         </div>
 
@@ -42,58 +46,60 @@
         </div>
       </div>
 
-      <!-- Search Input Section -->
-      <div class="relative z-[1000] border-b border-outline-variant/15 bg-surface-bright px-5 py-3 sm:px-6">
-        <div class="relative flex items-center">
-          <input
-            #searchInput
-            type="text"
-            [ngModel]="state.searchQuery()"
-            (input)="onSearchInput($event)"
-            (keydown)="facade.onSearchKeydown($event)"
-            placeholder="ابحث عن منطقة، شارع، أو مدينة (عربي / English)..."
-            class="w-full rounded-xl border border-outline-variant/50 bg-white py-2.5 pr-10 pl-10 text-xs text-on-surface shadow-2xs outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-          />
-          <span class="material-symbols-outlined absolute right-3 text-lg text-outline">search</span>
+      @if (!readOnly()) {
+        <!-- Search Input Section -->
+        <div class="relative z-[1000] border-b border-outline-variant/15 bg-surface-bright px-5 py-3 sm:px-6">
+          <div class="relative flex items-center">
+            <input
+              #searchInput
+              type="text"
+              [ngModel]="state.searchQuery()"
+              (input)="onSearchInput($event)"
+              (keydown)="facade.onSearchKeydown($event)"
+              placeholder="ابحث عن منطقة، شارع، أو مدينة (عربي / English)..."
+              class="w-full rounded-xl border border-outline-variant/50 bg-white py-2.5 pr-10 pl-10 text-xs text-on-surface shadow-2xs outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+            />
+            <span class="material-symbols-outlined absolute right-3 text-lg text-outline">search</span>
 
-          @if (state.isSearching()) {
-            <span class="material-symbols-outlined absolute left-3 animate-spin text-lg text-secondary">progress_activity</span>
-          } @else if (state.searchQuery()) {
-            <button
-              type="button"
-              (click)="facade.clearSearchState()"
-              class="absolute left-3 flex h-5 w-5 items-center justify-center rounded-full text-outline hover:text-on-surface"
-            >
-              <span class="material-symbols-outlined text-sm">close</span>
-            </button>
-          }
-        </div>
-
-        <!-- Search Results Dropdown -->
-        @if (state.searchResults().length > 0) {
-          <div class="absolute right-5 left-5 sm:right-6 sm:left-6 z-[1050] mt-1 max-h-52 overflow-y-auto rounded-xl border border-outline-variant/40 bg-white shadow-2xl">
-            @for (res of state.searchResults(); track res.displayName; let i = $index) {
+            @if (state.isSearching()) {
+              <span class="material-symbols-outlined absolute left-3 animate-spin text-lg text-secondary">progress_activity</span>
+            } @else if (state.searchQuery()) {
               <button
                 type="button"
-                (click)="facade.selectSearchResult(res)"
-                [class.bg-secondary/10]="i === state.selectedIndex()"
-                class="flex w-full items-start gap-2.5 border-b border-outline-variant/10 p-3 text-right text-xs transition hover:bg-secondary/5"
+                (click)="facade.clearSearchState()"
+                class="absolute left-3 flex h-5 w-5 items-center justify-center rounded-full text-outline hover:text-on-surface"
               >
-                <span class="material-symbols-outlined text-base text-secondary shrink-0 mt-0.5">place</span>
-                <span class="text-on-surface font-medium line-clamp-2 leading-relaxed">{{ res.displayName }}</span>
+                <span class="material-symbols-outlined text-sm">close</span>
               </button>
             }
           </div>
-        }
 
-        <!-- No Results Found Box -->
-        @if (state.hasSearched() && state.searchResults().length === 0 && !state.isSearching()) {
-          <div class="absolute right-5 left-5 sm:right-6 sm:left-6 z-[1050] mt-1 rounded-xl border border-outline-variant/30 bg-white p-3.5 text-center text-xs text-on-surface-variant shadow-xl animate-in fade-in">
-            <p class="font-bold text-on-surface">لم نتمكن من العثور على هذا المكان</p>
-            <p class="mt-0.5 text-[11px] text-outline">تأكد من كتابة الاسم بطريقة صحيحة أو حدده يدويًا على الخريطة</p>
-          </div>
-        }
-      </div>
+          <!-- Search Results Dropdown -->
+          @if (state.searchResults().length > 0) {
+            <div class="absolute right-5 left-5 sm:right-6 sm:left-6 z-[1050] mt-1 max-h-52 overflow-y-auto rounded-xl border border-outline-variant/40 bg-white shadow-2xl">
+              @for (res of state.searchResults(); track res.displayName; let i = $index) {
+                <button
+                  type="button"
+                  (click)="facade.selectSearchResult(res)"
+                  [class.bg-secondary/10]="i === state.selectedIndex()"
+                  class="flex w-full items-start gap-2.5 border-b border-outline-variant/10 p-3 text-right text-xs transition hover:bg-secondary/5"
+                >
+                  <span class="material-symbols-outlined text-base text-secondary shrink-0 mt-0.5">place</span>
+                  <span class="text-on-surface font-medium line-clamp-2 leading-relaxed">{{ res.displayName }}</span>
+                </button>
+              }
+            </div>
+          }
+
+          <!-- No Results Found Box -->
+          @if (state.hasSearched() && state.searchResults().length === 0 && !state.isSearching()) {
+            <div class="absolute right-5 left-5 sm:right-6 sm:left-6 z-[1050] mt-1 rounded-xl border border-outline-variant/30 bg-white p-3.5 text-center text-xs text-on-surface-variant shadow-xl animate-in fade-in">
+              <p class="font-bold text-on-surface">لم نتمكن من العثور على هذا المكان</p>
+              <p class="mt-0.5 text-[11px] text-outline">تأكد من كتابة الاسم بطريقة صحيحة أو حدده يدويًا على الخريطة</p>
+            </div>
+          }
+        </div>
+      }
 
       <!-- Map Container View -->
       <div class="relative z-0 flex-1 w-full overflow-hidden bg-surface-container-low min-h-[320px] sm:min-h-[380px]">
@@ -144,20 +150,22 @@
           </button>
         </div>
 
-        <!-- Floating Current Location FAB -->
-        <button
-          type="button"
-          (click)="facade.useCurrentLocation()"
-          [disabled]="state.isLocatingModal()"
-          title="موقعي الحالي"
-          class="absolute bottom-5 right-5 z-[500] flex h-12 w-12 items-center justify-center rounded-full bg-white text-secondary shadow-xl border border-outline-variant/30 transition-all hover:bg-surface-bright hover:scale-105 active:scale-95 disabled:opacity-60 disabled:pointer-events-none pointer-events-auto"
-        >
-          @if (state.isLocatingModal()) {
-            <span class="material-symbols-outlined animate-spin text-xl">progress_activity</span>
-          } @else {
-            <span class="material-symbols-outlined text-2xl">my_location</span>
-          }
-        </button>
+        @if (!readOnly()) {
+          <!-- Floating Current Location FAB -->
+          <button
+            type="button"
+            (click)="facade.useCurrentLocation()"
+            [disabled]="state.isLocatingModal()"
+            title="موقعي الحالي"
+            class="absolute bottom-5 right-5 z-[500] flex h-12 w-12 items-center justify-center rounded-full bg-white text-secondary shadow-xl border border-outline-variant/30 transition-all hover:bg-surface-bright hover:scale-105 active:scale-95 disabled:opacity-60 disabled:pointer-events-none pointer-events-auto"
+          >
+            @if (state.isLocatingModal()) {
+              <span class="material-symbols-outlined animate-spin text-xl">progress_activity</span>
+            } @else {
+              <span class="material-symbols-outlined text-2xl">my_location</span>
+            }
+          </button>
+        }
       </div>
 
       <!-- Location Info Bar -->
@@ -184,22 +192,24 @@
         </div>
       </div>
 
-      <!-- Footer Buttons -->
-      <div class="flex items-center justify-end gap-3 border-t border-outline-variant/20 bg-white px-5 py-3.5 sm:px-6 sm:py-4">
-        <app-button variant="secondary" type="button" (onClick)="onCancel()" extraClass="px-5">
-          إلغاء
-        </app-button>
-        <app-button
-          variant="primary"
-          type="button"
-          (onClick)="onConfirm()"
-          [disabled]="state.isConfirmDisabled()"
-          extraClass="px-6 gap-2"
-        >
-          <span class="material-symbols-outlined text-lg">check</span>
-          تأكيد الموقع
-        </app-button>
-      </div>
+      @if (!readOnly()) {
+        <!-- Footer Buttons -->
+        <div class="flex items-center justify-end gap-3 border-t border-outline-variant/20 bg-white px-5 py-3.5 sm:px-6 sm:py-4">
+          <app-button variant="secondary" type="button" (onClick)="onCancel()" extraClass="px-5">
+            إلغاء
+          </app-button>
+          <app-button
+            variant="primary"
+            type="button"
+            (onClick)="onConfirm()"
+            [disabled]="state.isConfirmDisabled()"
+            extraClass="px-6 gap-2"
+          >
+            <span class="material-symbols-outlined text-lg">check</span>
+            تأكيد الموقع
+          </app-button>
+        </div>
+      }
     </div>
   </div>
 }

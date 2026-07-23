@@ -33,6 +33,7 @@ export class LocationFacade {
   private markerInstance: L.Marker | null = null;
   private mapResizeObserver?: ResizeObserver;
   private modalInitializationTimer: ReturnType<typeof setTimeout> | null = null;
+  private isReadOnly = false;
 
   private readonly searchSubject$ = new Subject<string>();
   private readonly reverseGeocodeSubject$ = new Subject<MapCoordinates>();
@@ -46,8 +47,10 @@ export class LocationFacade {
     containerElement: HTMLElement,
     initialLatitude: number | null,
     initialLongitude: number | null,
-    initialAddress: string
+    initialAddress: string,
+    readOnly = false
   ): void {
+    this.isReadOnly = readOnly;
     const startLatitude = initialLatitude ?? DEFAULT_MAP_CENTER.lat;
     const startLongitude = initialLongitude ?? DEFAULT_MAP_CENTER.lng;
 
@@ -117,7 +120,7 @@ export class LocationFacade {
     containerElement: HTMLElement,
     latitude: number,
     longitude: number,
-    initialAddress: string
+    address: string
   ): void {
     if (!this.mapInstance) {
       this.initializeMap(containerElement, latitude, longitude);
@@ -129,22 +132,30 @@ export class LocationFacade {
     this.setupResizeObserver(containerElement);
     this.finalizeMapLoading();
 
-    if (!initialAddress) {
+    if (!address) {
       this.reverseGeocode(latitude, longitude);
     }
   }
 
   private initializeMap(containerElement: HTMLElement, latitude: number, longitude: number): void {
     this.mapInstance = this.leafletMapService.createMap(containerElement, [latitude, longitude], DEFAULT_ZOOM);
-    this.markerInstance = this.leafletMapService.createMarker(
-      this.mapInstance,
-      [latitude, longitude],
-      (latLng) => this.updateLocation(latLng.lat, latLng.lng)
-    );
 
-    this.leafletMapService.bindClick(this.mapInstance, (latLng) => {
-      this.updateLocation(latLng.lat, latLng.lng);
-    });
+    if (this.isReadOnly) {
+      this.markerInstance = this.leafletMapService.createReadOnlyMarker(
+        this.mapInstance,
+        [latitude, longitude]
+      );
+    } else {
+      this.markerInstance = this.leafletMapService.createMarker(
+        this.mapInstance,
+        [latitude, longitude],
+        (latLng) => this.updateLocation(latLng.lat, latLng.lng)
+      );
+
+      this.leafletMapService.bindClick(this.mapInstance, (latLng) => {
+        this.updateLocation(latLng.lat, latLng.lng);
+      });
+    }
   }
 
   private setupResizeObserver(containerElement: HTMLElement): void {

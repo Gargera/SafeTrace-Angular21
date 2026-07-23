@@ -33,6 +33,7 @@ export class MapLocationPickerComponent {
   readonly initialLat = input<number | null>(null);
   readonly initialLng = input<number | null>(null);
   readonly initialAddress = input<string>('');
+  readonly readOnly = input<boolean>(false);
 
   readonly confirmLocation = output<LocationResult>();
   readonly cancel = output<void>();
@@ -58,10 +59,13 @@ export class MapLocationPickerComponent {
         containerElement,
         this.initialLat(),
         this.initialLng(),
-        this.initialAddress()
+        this.initialAddress(),
+        this.readOnly()
       );
 
-      this.focusSearchInput();
+      if (!this.readOnly()) {
+        this.focusSearchInput();
+      }
     });
   }
 
