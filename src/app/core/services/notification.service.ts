@@ -73,8 +73,9 @@ export class NotificationService implements OnDestroy {
         this.#hubConnection?.invoke('GetMyNotifications', 1, DEFAULT_PAGE_SIZE);
       })
       .catch((err) => {
-        this.#isConnected.set(false);
         console.error('SignalR connection error:', err);
+
+        this.#isConnected.set(false);
       });
   }
 
@@ -99,8 +100,8 @@ export class NotificationService implements OnDestroy {
     // Fired when a new notification is pushed from server
     this.#hubConnection.on('ReceiveNotification', (notification: GetUserNotificationsDTO) => {
       this.#notifications.update((prev) => [notification, ...prev]);
-
       this.#totalCount.update((c) => c + 1);
+      this.#unreadCount.update((c) => c + 1);
       this.#totalPages.set(Math.ceil(this.#totalCount() / DEFAULT_PAGE_SIZE));
     });
 
@@ -320,7 +321,7 @@ export class NotificationService implements OnDestroy {
   }
 
   formatDate(dateStr: string): string {
-    const date = new Date(dateStr + 'Z'); // اعتبره UTC
+    const date = new Date(dateStr); // اعتبره UTC
 
     const diff = Date.now() - date.getTime();
 

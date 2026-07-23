@@ -80,6 +80,7 @@
         >الحالات المعثور عليها</a
       >
       <a
+        *hasPermission="Permissions.AiMatching.Search"
         routerLink="/aisearch"
         routerLinkActive="text-secondary border-b-2 border-secondary font-medium"
         class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 gap-1 transition-colors duration-200"
@@ -125,7 +126,7 @@
 
           @if (isNotificationDropdownOpen()) {
             <div
-              class="absolute -right-65 w-85 md:w-[calc(100vw-3rem)] lg:w-112.5 h-125 bg-surface/95 top-16 md:-right-66.75 backdrop-blur-xl border border-outline-variant rounded-3xl shadow-2xl overflow-hidden flex flex-col z-50 animate-fade-in"
+              class="absolute -right-65 w-85 md:w-100 lg:w-112.5 h-125 bg-surface/95 top-16 md:-right-66.75 backdrop-blur-xl border border-outline-variant rounded-3xl shadow-2xl overflow-hidden flex flex-col z-50 animate-fade-in"
             >
               <!-- Header -->
               <div
@@ -203,9 +204,7 @@
                           </h4>
 
                           @if (!n.isRead) {
-                            <span
-                              class="w-2 h-2 rounded-full bg-secondary mt-1 shrink-0"
-                            ></span>
+                            <span class="w-2 h-2 rounded-full bg-secondary mt-1 shrink-0"></span>
                           }
                         </div>
 
@@ -298,24 +297,17 @@
             <div
               class="absolute left-0 top-14 w-44 bg-surface-container border border-outline-variant rounded-xl shadow-lg z-50 animate-fade-in"
             >
-              @if (canAccessDashboard()) {
-                <a
-                  routerLink="/admin"
-                  class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl"
-                  >لوحة التحكم</a
-                >
-                <a
-                  routerLink="/profile"
-                  class="block px-md py-sm text-on-surface hover:bg-surface-container-high"
-                  >حسابي</a
-                >
-              } @else {
-                <a
-                  routerLink="/profile"
-                  class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl"
-                  >حسابي</a
-                >
-              }
+              <a
+                *hasPermission="Permissions.Cases.GetAll"
+                routerLink="/admin"
+                class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl"
+                >لوحة التحكم</a
+              >
+              <a
+                routerLink="/profile"
+                class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl"
+                >حسابي</a
+              >
               <button
                 (click)="logout()"
                 class="w-full text-right block px-md py-sm text-error hover:bg-error-container hover:text-on-error-container last:rounded-b-xl"
@@ -382,6 +374,7 @@
         >الحالات المعثور عليها</a
       >
       <a
+        *hasPermission="Permissions.AiMatching.Search"
         routerLink="/aisearch"
         (click)="isMobileMenuOpen.set(false)"
         class="px-margin-mobile py-4 border-b border-outline-variant text-on-surface hover:bg-surface-container-low font-medium"
@@ -392,6 +385,12 @@
         (click)="isMobileMenuOpen.set(false)"
         class="px-margin-mobile py-4 text-on-surface hover:bg-surface-container-low font-medium"
         >دليل المنصة</a
+      >
+      <a
+        routerLink="/donation"
+        routerLinkActive="text-secondary border-b-2 border-secondary font-medium"
+        class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200"
+        >التبرع</a
       >
     </div>
   }

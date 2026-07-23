@@ -1,10 +1,13 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { Subject } from 'rxjs';
 
 import { LongTermCaseService } from '../../services/long-term-case.service';
-import { CasesFilterRequest } from '../../../../core/models/Cases.model';
+import { CasesFilterRequest, CaseType } from '../../../../core/models/Cases.model';
 import { LongTermCaseListItemResponse } from '../../models/response/LongTermCaseListItemResponse';
+import { CaseCreationFlowService } from '../../../../core/services/case-creation-flow.service';
 
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
@@ -17,6 +20,8 @@ import { CaseCardComponent } from '../../../../shared/components/cases-component
   selector: 'app-long-term-list',
   standalone: true,
   imports: [
+    CommonModule,
+    RouterModule,
     FormsModule,
     CaseHeaderComponent,
     CaseFiltersComponent,
@@ -29,12 +34,15 @@ import { CaseCardComponent } from '../../../../shared/components/cases-component
   styleUrls: ['./long-term-list.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LongTermList implements OnInit {
+export class LongTermList implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly longTermCaseService = inject(LongTermCaseService);
+  private readonly caseCreationFlowService = inject(CaseCreationFlowService);
+  private readonly destroy$ = new Subject<void>();
 
   readonly cases = signal<LongTermCaseListItemResponse[]>([]);
   readonly loading = signal(true);
+  readonly hasError = signal(false);
 
   readonly currentPage = signal(1);
   readonly totalPages = signal(1);
@@ -47,8 +55,13 @@ export class LongTermList implements OnInit {
     this.fetchCases();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   navigateToCreate(): void {
-    this.router.navigate(['/long-term/create']);
+    this.caseCreationFlowService.start(CaseType.LongTerm);
   }
 
   onFilterChange(newFilter: CasesFilterRequest): void {
@@ -112,6 +125,8 @@ export class LongTermList implements OnInit {
   private emptyFilter(): CasesFilterRequest {
     return {
       status: null,
+      caseType: null,
+      caseCode: null,
       gender: null,
       ageCategory: null,
       fullName: null,
@@ -131,6 +146,8 @@ export class LongTermList implements OnInit {
   private sanitizeFilter(filter: CasesFilterRequest): CasesFilterRequest {
     return {
       ...filter,
+      caseType: this.normalizeEnum(filter.caseType),
+      caseCode: this.normalizeText(filter.caseCode),
       gender: this.normalizeEnum(filter.gender),
       ageCategory: this.normalizeEnum(filter.ageCategory),
       fullName: this.normalizeText(filter.fullName),

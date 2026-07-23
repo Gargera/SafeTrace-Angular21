@@ -7,18 +7,40 @@ import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
 import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
-import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/map-location-picker';
+import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { FormField } from '../../../../shared/components/form-field/form-field';
+import { CardComponent } from '../../../../shared/components/card/card';
+
+// Shared validators
+import { arabicText } from '../../../../shared/validators/arabic-text.validator';
+import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
+import { pastDate } from '../../../../shared/validators/past-date.validator';
+import { validEnum } from '../../../../shared/validators/enum.validator';
+
+import { CommonModule } from '@angular/common';
+import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+
+import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 
 type Step = 1 | 2 | 3;
 
 @Component({
   selector: 'app-urgent-update',
   standalone: true,
-  imports: [ReactiveFormsModule, MapLocationPickerComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MapLocationPickerComponent,
+    ButtonComponent,
+    FormField,
+    CardComponent,
+    CaseHeaderComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrls: ['../../../../shared/styles/case-form.css', './urgent-update.css'],
+  styleUrls: ['./urgent-update.css'],
   templateUrl: './urgent-update.html',
 })
 export class UrgentUpdate implements OnInit {
@@ -27,6 +49,7 @@ export class UrgentUpdate implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private snackbar = inject(SnackbarService);
+  private geocoding = inject(GeocodingService);
 
   caseId!: number;
   currentStep: Step = 1;
@@ -42,6 +65,8 @@ export class UrgentUpdate implements OnInit {
   newPhotoPreviews = signal<string[]>([]);
   newPrimaryImage = signal<File | null>(null);
   newPrimaryPreview = signal<string | null>(null);
+  newPrimaryError = signal<string | null>(null);
+  newPhotosError = signal<string | null>(null);
 
   existingVideoUrl = signal<string | null>(null);
   videoFile = signal<File | null>(null);
@@ -51,6 +76,10 @@ export class UrgentUpdate implements OnInit {
   selectedAddress = signal<string>('');
   /** initial coords passed to the map picker so it centers on the existing location */
   initialMapCenter = signal<{ lat: number; lng: number } | null>(null);
+  isMapModalOpen = signal(false);
+
+  isLocating = signal(false);
+  locationError = signal<string | null>(null);
 
   readonly genders = Gender;
   readonly relationOptions = RELATION_TYPE_OPTIONS;
@@ -67,21 +96,51 @@ export class UrgentUpdate implements OnInit {
     return ['بيانات الشخص', 'موقع الحادث على الخريطة', 'صور'][this.currentStep - 1];
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // Form definition — validators match backend exactly (Update)
+  // ─────────────────────────────────────────────────────────────
   form = this.fb.group({
-    fName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    sName: ['', [Validators.maxLength(100)]],
-    tName: ['', [Validators.maxLength(100)]],
-    lName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(150)]],
-    gender: ['' as Gender | '', Validators.required],
-    relation: [null as RelationType | null, Validators.required],
-    communicationPhone: ['', [Validators.required, Validators.maxLength(20)]],
+    fName: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    sName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    tName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    lName: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(120)]],
+    gender: ['' as Gender | '', [Validators.required, validEnum(Gender)]],
+    // Relation is optional on Update
+    relation: [null as RelationType | null, [validEnum(RelationType)]],
+    // Phone — optional, Egyptian format, max 15
+    communicationPhone: ['', [egyptianPhone(), Validators.maxLength(15)]],
     description: ['', [Validators.maxLength(2000)]],
-    government: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
-    city: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
-    street: ['', [Validators.required, Validators.maxLength(500)]],
-    eventDate: ['', Validators.required],
+    government: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
+    city: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
+    street: ['', [Validators.required, Validators.maxLength(200)]],
+    eventDate: ['', [Validators.required, pastDate()]],
   });
+
+  // ─────────────────────────────────────────────────────────────
+  // Error message helper
+  // ─────────────────────────────────────────────────────────────
+  getFieldError(field: string): string | null {
+    const control = this.form.get(field);
+    if (!control || !control.errors || !(control.touched || control.dirty)) return null;
+    const e = control.errors;
+    if (e['required']) return 'هذا الحقل مطلوب';
+    if (e['arabicText']) return 'يجب كتابة النص بالحروف العربية فقط';
+    if (e['minlength']) return `الحد الأدنى ${e['minlength'].requiredLength} أحرف`;
+    if (e['maxlength']) return `الحد الأقصى ${e['maxlength'].requiredLength} حرفاً`;
+    if (e['min']) return `يجب أن لا تقل القيمة عن ${e['min'].min}`;
+    if (e['max']) return `يجب أن لا تتجاوز القيمة ${e['max'].max}`;
+    if (e['egyptianPhone']) return 'أدخل رقم هاتف مصري صحيح (مثال: 01xxxxxxxxx)';
+    if (e['pastDate']) return 'لا يمكن أن يكون التاريخ في المستقبل';
+    if (e['description']) return 'لا يمكن أن يتجاوز الوصف 2000 حرف';
+    if (e['validEnum']) return 'اختر قيمة صحيحة';
+    return 'قيمة غير صحيحة';
+  }
+
+  isInvalid(field: string): boolean {
+    const c = this.form.get(field);
+    return !!(c?.invalid && (c?.touched || c?.dirty));
+  }
 
   ngOnInit(): void {
     this.caseId = Number(this.route.snapshot.paramMap.get('id'));
@@ -113,6 +172,10 @@ export class UrgentUpdate implements OnInit {
           this.selectedLat.set(c.latitude);
           this.selectedLng.set(c.longitude);
           this.initialMapCenter.set({ lat: c.latitude, lng: c.longitude });
+          this.geocoding.reverseGeocode(c.latitude, c.longitude).subscribe({
+            next: (addr) => this.selectedAddress.set(addr),
+            error: () => this.selectedAddress.set(`${c.latitude.toFixed(4)}, ${c.longitude.toFixed(4)}`),
+          });
         }
 
         const files: CaseFileResponse[] = c.files ?? c.caseFiles ?? [];
@@ -129,20 +192,76 @@ export class UrgentUpdate implements OnInit {
     });
   }
 
-  isInvalid(field: string): boolean {
-    const c = this.form.get(field);
-    return !!(c?.invalid && c?.touched);
-  }
-
   onLocationChange(loc: { lat: number; lng: number; address: string }): void {
     this.selectedLat.set(loc.lat);
     this.selectedLng.set(loc.lng);
     this.selectedAddress.set(loc.address);
   }
 
+  openMapModal(): void {
+    this.isMapModalOpen.set(true);
+  }
+
+  closeMapModal(): void {
+    this.isMapModalOpen.set(false);
+  }
+
+  onMapLocationConfirmed(loc: { lat: number; lng: number; address: string }): void {
+    this.selectedLat.set(loc.lat);
+    this.selectedLng.set(loc.lng);
+    this.selectedAddress.set(loc.address);
+    this.initialMapCenter.set({ lat: loc.lat, lng: loc.lng });
+    this.isMapModalOpen.set(false);
+  }
+
+  useCurrentLocation(): void {
+    if (!navigator.geolocation) {
+      this.locationError.set('المتصفح لا يدعم تحديد الموقع الجغرافي.');
+      return;
+    }
+
+    this.isLocating.set(true);
+    this.locationError.set(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        this.geocoding.reverseGeocode(lat, lng).subscribe({
+          next: (address) => {
+            this.onLocationChange({ lat, lng, address });
+            this.isLocating.set(false);
+          },
+          error: () => {
+            this.onLocationChange({ lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
+            this.isLocating.set(false);
+          },
+        });
+      },
+      (error: GeolocationPositionError) => {
+        this.isLocating.set(false);
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            this.locationError.set('تم رفض إذن الوصول لموقعك. من فضلك فعّل صلاحية الموقع من إعدادات المتصفح.');
+            break;
+          case error.POSITION_UNAVAILABLE:
+            this.locationError.set('تعذر تحديد موقعك الحالي.');
+            break;
+          case error.TIMEOUT:
+            this.locationError.set('انتهت مهلة تحديد الموقع، حاول مرة أخرى.');
+            break;
+          default:
+            this.locationError.set('حدث خطأ أثناء تحديد الموقع.');
+        }
+      },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 },
+    );
+  }
+
   nextStep(): void {
     if (this.currentStep === 1) {
-      const fields = ['fName', 'lName', 'age', 'gender', 'relation', 'communicationPhone'];
+      const fields = ['fName', 'lName', 'age', 'gender', 'communicationPhone'];
       fields.forEach((f) => this.form.get(f)?.markAsTouched());
       if (fields.some((f) => this.form.get(f)?.invalid)) return;
     }
@@ -163,6 +282,12 @@ export class UrgentUpdate implements OnInit {
     if (this.currentStep > 1) this.currentStep = (this.currentStep - 1) as Step;
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // Photo management — file type/size validation
+  // ─────────────────────────────────────────────────────────────
+  private readonly ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  private readonly MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5 MB
+
   removeExistingPhoto(photo: CaseFileResponse): void {
     this.existingPhotos.update((list) => list.filter((p) => p.id !== photo.id));
     this.deletedPhotoIds.update((ids) => [...ids, photo.id]);
@@ -181,6 +306,15 @@ export class UrgentUpdate implements OnInit {
   onNewPrimarySelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     if (!file) return;
+    if (!this.ALLOWED_TYPES.includes(file.type.toLowerCase())) {
+      this.newPrimaryError.set('نوع الملف غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+      return;
+    }
+    if (file.size > this.MAX_PHOTO_BYTES) {
+      this.newPrimaryError.set('حجم الصورة يتجاوز الحد المسموح (5 MB)');
+      return;
+    }
+    this.newPrimaryError.set(null);
     this.newPrimaryImage.set(file);
     this.newPrimaryPreview.set(URL.createObjectURL(file));
     this.primaryPhotoId.set(null);
@@ -189,10 +323,22 @@ export class UrgentUpdate implements OnInit {
   clearNewPrimary(): void {
     this.newPrimaryImage.set(null);
     this.newPrimaryPreview.set(null);
+    this.newPrimaryError.set(null);
   }
 
   onNewPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
+    const invalidType = files.find(f => !this.ALLOWED_TYPES.includes(f.type.toLowerCase()));
+    if (invalidType) {
+      this.newPhotosError.set('أحد الملفات من نوع غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+      return;
+    }
+    const oversized = files.find(f => f.size > this.MAX_PHOTO_BYTES);
+    if (oversized) {
+      this.newPhotosError.set('أحد الملفات يتجاوز الحد المسموح (5 MB لكل صورة)');
+      return;
+    }
+    this.newPhotosError.set(null);
     this.newPhotos.update((p) => [...p, ...files].slice(0, 5));
     this.newPhotoPreviews.set(this.newPhotos().map((f) => URL.createObjectURL(f)));
   }
@@ -259,6 +405,6 @@ export class UrgentUpdate implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/urgent-cases', this.caseId]);
+    this.router.navigate(['/urgent', this.caseId]);
   }
 }

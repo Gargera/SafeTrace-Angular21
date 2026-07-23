@@ -1,141 +1,216 @@
-<main class="w-full bg-surface min-h-screen pb-24" dir="rtl">
+<div class="bg-surface min-h-screen pb-12 font-sans" dir="rtl">
+<div class="max-w-[1280px] mx-auto px-4 md:px-8 py-8 space-y-16">
   
-  <section class="relative bg-primary text-white overflow-hidden py-24 px-margin-mobile md:px-margin-desktop">
-    <div class="absolute inset-0 opacity-10 pointer-events-none">
-      <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M0 40L40 0H20L0 20M40 40V20L20 40" stroke="currentColor" stroke-width="1" fill="none"/>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grid-pattern)"/>
-      </svg>
+  <!-- Hero Section -->
+  <section class="relative text-white overflow-hidden py-24 px-4 md:px-8 bg-primary rounded-3xl shadow-lg border border-outline-variant">
+    <div class="absolute inset-0 opacity-20 pointer-events-none">
+      <div class="absolute w-96 h-96 bg-secondary blur-3xl rounded-full top-[-10%] right-[-10%] animate-pulse"></div>
+      <div class="absolute w-96 h-96 bg-tertiary blur-3xl rounded-full bottom-[-10%] left-[-10%] animate-pulse" style="animation-delay: 2s;"></div>
     </div>
 
-    <div class="max-w-5xl mx-auto relative z-10 flex flex-col items-center text-center gap-6">
-      <div class="inline-flex items-center gap-2 bg-white/10 px-4 py-1.5 rounded-full backdrop-blur-sm border border-white/20 mb-2">
-        <span class="material-symbols-outlined text-[18px] text-tertiary-fixed-dim">verified</span>
-        <span class="text-label-sm font-bold tracking-wider">منصة إنسانية تقنية</span>
+    <div class="max-w-[896px] mx-auto relative z-10 flex flex-col items-center text-center gap-8">
+      <div class="inline-flex items-center gap-2 bg-white/10 px-5 py-2 rounded-full backdrop-blur-md border border-white/20 shadow-sm cursor-default">
+        <span class="material-symbols-outlined text-[20px] text-secondary">psychology</span>
+        <span class="text-[14px] font-bold tracking-wider">تقنيات ذكية لخدمة الإنسانية</span>
       </div>
       
-      <h1 class="text-4xl md:text-5xl lg:text-headline-xl font-bold leading-tight">
-        أمل جديد يجمعنا.. <span class="text-secondary-fixed">منصة لقاء</span>
+      <h1 class="text-[36px] md:text-[48px] font-extrabold leading-tight tracking-tight drop-shadow-md">
+        أمل جديد يجمعنا..<br/>
+        <span class="inline-block mt-4 text-secondary bg-white font-black px-8 py-2 rounded-2xl shadow-[0_0_20px_rgba(0,88,190,0.5)] border border-secondary/50">
+          منصة لقاء
+        </span>
       </h1>
       
-      <p class="text-body-lg text-inverse-on-surface opacity-90 max-w-4xl mx-auto leading-relaxed">
-        نسخر قوة الذكاء الاصطناعي والتكنولوجيا الحديثة لربط المجتمع، وتسهيل الإبلاغ عن المفقودين، وتسريع عملية البحث والتعرف عليهم لضمان عودتهم سالمين إلى ذويهم من خلال بيئة آمنة وموثوقة.
+      <p class="text-[18px] md:text-[20px] text-inverse-on-surface opacity-95 max-w-[896px] mx-auto leading-relaxed font-medium mt-4">
+        المكان الذي تتلاقى فيه التكنولوجيا المتقدمة مع قلوب تبحث عن أحبائها. نحن هنا لنسرع عملية البحث، ونتعرف على مجهولي الهوية، ونعيد الابتسامة للعائلات في أسرع وقت.
       </p>
     </div>
   </section>
 
-  <section class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop -mt-12 relative z-20">
+  <!-- Vision & Mission Section -->
+  <section class="relative z-20">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
       
-      <div class="bg-white p-8 rounded-2xl shadow-lg border border-outline-variant hover:-translate-y-1 transition-transform duration-300">
-        <div class="w-14 h-14 bg-secondary-container text-on-secondary-container rounded-xl flex items-center justify-center mb-6">
-          <span class="material-symbols-outlined text-[32px]">favorite</span>
+      <!-- Card 1 -->
+      <div class="bg-surface/90 backdrop-blur-xl p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-outline-variant hover:-translate-y-2 hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)] transition-all duration-300 group">
+        <div class="w-16 h-16 bg-linear-to-br from-secondary-container to-secondary text-on-secondary-container rounded-2xl flex items-center justify-center mb-6 shadow-inner group-hover:rotate-6 transition-transform">
+          <span class="material-symbols-outlined text-[36px] text-white">favorite</span>
         </div>
-        <h2 class="text-headline-md font-bold text-primary mb-3">رسالتنا</h2>
-        <p class="text-body-md text-on-surface-variant leading-relaxed max-w-3xl">
-          توفير بيئة رقمية آمنة وفعالة تمكن الأفراد والمؤسسات من الإبلاغ عن حالات الاختفاء، والبحث عن المفقودين باستخدام أدوات مطابقة ذكية، لتقليل وقت البحث وزيادة فرص العثور عليهم بأسرع وقت ممكن.
+        <h2 class="text-[30px] font-extrabold text-primary mb-4">رسالتنا</h2>
+        <p class="text-[18px] text-on-surface-variant leading-relaxed">
+          توفير بيئة رقمية آمنة وموثوقة تمكن الأفراد من الإبلاغ السريع عن حالات الاختفاء، واستخدام أدوات مطابقة ذكية للصور، لتقليص وقت البحث وزيادة فرص العودة الآمنة لذويهم دون أي تعقيدات.
         </p>
       </div>
 
-      <div class="bg-white p-8 rounded-2xl shadow-lg border border-outline-variant hover:-translate-y-1 transition-transform duration-300">
-        <div class="w-14 h-14 bg-tertiary-container text-on-tertiary-container rounded-xl flex items-center justify-center mb-6">
-          <span class="material-symbols-outlined text-[32px]">visibility</span>
+      <!-- Card 2 -->
+      <div class="bg-surface/90 backdrop-blur-xl p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-outline-variant hover:-translate-y-2 hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)] transition-all duration-300 group">
+        <div class="w-16 h-16 bg-linear-to-br from-tertiary-container to-tertiary text-on-tertiary-container rounded-2xl flex items-center justify-center mb-6 shadow-inner group-hover:-rotate-6 transition-transform">
+          <span class="material-symbols-outlined text-[36px] text-white">visibility</span>
         </div>
-        <h2 class="text-headline-md font-bold text-primary mb-3">رؤيتنا</h2>
-        <p class="text-body-md text-on-surface-variant leading-relaxed max-w-3xl">
-          مجتمع متكاتف لا يبقى فيه مفقود بعيداً عن أهله، حيث تتكامل التكنولوجيا المتطورة مع الإنسانية لتصبح "لقاء" المنصة الرائدة والأولى في مصر للبحث والإنقاذ المجتمعي.
+        <h2 class="text-[30px] font-extrabold text-primary mb-4">رؤيتنا</h2>
+        <p class="text-[18px] text-on-surface-variant leading-relaxed">
+          أن نصبح الوجهة الأولى التي تحول المجتمع إلى شبكة بحث مترابطة، لا يضيع فيها أحد. حيث تتكامل الحلول الذكية مع الحس الإنساني لضمان الحفاظ على الأرواح ولم شمل العائلات.
         </p>
       </div>
 
     </div>
   </section>
 
-  <section class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop mt-28">
+  <!-- Core Features Section -->
+  <section class="">
     <div class="text-center mb-16 flex flex-col items-center">
-      <h2 class="text-headline-lg font-bold text-primary mb-4">مميزات منصة لقاء</h2>
-      <div class="w-24 h-1.5 bg-secondary rounded-full"></div>
+      <div class="inline-flex items-center gap-2 bg-secondary/10 px-4 py-2 rounded-full mb-4">
+        <span class="material-symbols-outlined text-[20px] text-secondary">bolt</span>
+        <span class="text-[14px] font-bold text-secondary tracking-wider">كيف نساعدك؟</span>
+      </div>
+      <h2 class="text-[40px] md:text-[48px] font-extrabold text-on-surface mb-6">حلول صُممت من أجل طمأنينتك</h2>
+      <p class="text-[20px] text-on-surface-variant max-w-[896px] mx-auto">
+        نظامنا مبني ليكون سهل الاستخدام ويوفر لك أقصى درجات الأمان والسرعة في الوصول للمعلومات.
+      </p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       
-      <div class="bg-surface-container-lowest p-8 rounded-2xl border border-outline-variant hover:border-secondary transition-colors group shadow-sm hover:shadow-md">
-        <span class="material-symbols-outlined text-[44px] text-secondary mb-5 group-hover:scale-110 transition-transform">center_focus_strong</span>
-        <h3 class="text-headline-sm font-bold text-primary mb-3">البحث الذكي بالصور</h3>
-        <p class="text-body-md text-on-surface-variant leading-relaxed max-w-3xl">
-          بفضل تقنيات الذكاء الاصطناعي، يمكنك البحث باستخدام صورة الشخص المفقود، وسيقوم النظام فوراً باسترجاع كافة الحالات التي تحتوي على ملامح مطابقة لتسريع عملية الوصول.
+      <!-- Feature 1 -->
+      <div class="bg-surface p-8 rounded-3xl border border-outline-variant hover:border-secondary hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-secondary/10 rounded-full blur-2xl group-hover:bg-secondary/20 transition-colors"></div>
+        <div class="w-16 h-16 bg-secondary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-[36px] text-secondary">face_retouching_natural</span>
+        </div>
+        <h3 class="text-[24px] font-bold text-on-surface mb-4">البحث السريع بالصور</h3>
+        <p class="text-[18px] text-on-surface-variant leading-relaxed">
+          فقط قم برفع صورة الشخص المفقود، وسيقوم النظام فوراً بالبحث في جميع البلاغات ومطابقة الملامح ليعرض لك النتائج المشابهة بدقة فائقة، مما يوفر عليك عناء البحث اليدوي.
         </p>
       </div>
 
-      <div class="bg-surface-container-lowest p-8 rounded-2xl border border-outline-variant hover:border-error transition-colors group shadow-sm hover:shadow-md">
-        <span class="material-symbols-outlined text-[44px] text-error mb-5 group-hover:scale-110 transition-transform">emergency</span>
-        <h3 class="text-headline-sm font-bold text-primary mb-3">التنبيهات الجغرافية السريعة</h3>
-        <p class="text-body-md text-on-surface-variant leading-relaxed max-w-3xl">
-          عند نشر بلاغ عاجل، نرسل إشعارات ورسائل بريد إلكتروني فورية للمستخدمين في محيطك للمساعدة. (يستمر البلاغ لـ 48 ساعة، ويُسمح بإنشاء بلاغ واحد كل 14 يوماً  ).
+      <!-- Feature 2 -->
+      <div class="bg-surface p-8 rounded-3xl border border-outline-variant hover:border-error hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-error/10 rounded-full blur-2xl group-hover:bg-error/20 transition-colors"></div>
+        <div class="w-16 h-16 bg-error/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-[36px] text-error">sensors</span>
+        </div>
+        <h3 class="text-[24px] font-bold text-on-surface mb-4">إشعارات فورية لمن حولك</h3>
+        <p class="text-[18px] text-on-surface-variant leading-relaxed">
+          في الحالات العاجلة، يقوم النظام بإرسال تنبيهات فورية ورسائل للمستخدمين المتواجدين بالقرب من مكان الفقدان، ليتحرك الجميع للمساعدة في نفس اللحظة.
         </p>
       </div>
 
-      <div class="bg-surface-container-lowest p-8 rounded-2xl border border-outline-variant hover:border-tertiary-fixed-dim transition-colors group shadow-sm hover:shadow-md">
-        <span class="material-symbols-outlined text-[44px] text-tertiary-fixed-dim mb-5 group-hover:scale-110 transition-transform">verified_user</span>
-        <h3 class="text-headline-sm font-bold text-primary mb-3">بيئة موثقة وآمنة</h3>
-        <p class="text-body-md text-on-surface-variant leading-relaxed max-w-3xl">
-          أمانك هو أولويتنا. نوفر نظام توثيق للمستخدمين باستخدام بطاقة الهوية الوطنية (National ID)، مما يضمن مصداقية الحالات المنشورة ويحمي المنصة من أي معلومات مضللة.
+      <!-- Feature 3 -->
+      <div class="bg-surface p-8 rounded-3xl border border-outline-variant hover:border-primary hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors"></div>
+        <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-[36px] text-primary">hub</span>
+        </div>
+        <h3 class="text-[24px] font-bold text-on-surface mb-4">تتبع مجهولي الهوية</h3>
+        <p class="text-[18px] text-on-surface-variant leading-relaxed">
+          نساعد في رسم مسار للأشخاص مجهولي الهوية. إذا تم الإبلاغ عن نفس الشخص في مناطق مختلفة، نربط هذه البلاغات معاً لتسهيل تتبع حركته والوصول إليه بسرعة.
         </p>
       </div>
 
-      <div class="bg-surface-container-lowest p-8 rounded-2xl border border-outline-variant hover:border-secondary transition-colors group shadow-sm hover:shadow-md">
-        <span class="material-symbols-outlined text-[44px] text-secondary mb-5 group-hover:scale-110 transition-transform">forum</span>
-        <h3 class="text-headline-sm font-bold text-primary mb-3">تواصل مباشر وخاص</h3>
-        <p class="text-body-md text-on-surface-variant leading-relaxed max-w-3xl">
-          يمكنك التواصل بشكل آمن مع أي شخص قام بنشر حالة معينة لتقديم معلومات المساعدة، وكل محادثة تكون مرتبطة بالحالة نفسها لضمان السياق الدقيق وسرعة الاستجابة.
+      <!-- Feature 4 -->
+      <div class="bg-surface p-8 rounded-3xl border border-outline-variant hover:border-tertiary hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-tertiary/10 rounded-full blur-2xl group-hover:bg-tertiary/20 transition-colors"></div>
+        <div class="w-16 h-16 bg-tertiary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-[36px] text-tertiary">lock_person</span>
+        </div>
+        <h3 class="text-[24px] font-bold text-on-surface mb-4">بيئة موثقة تحمي بياناتك</h3>
+        <p class="text-[18px] text-on-surface-variant leading-relaxed">
+          خصوصيتك في أمان تام. نطلب توثيق الحسابات بالرقم القومي لضمان مصداقية البلاغات، ونحمي بياناتك من أي محاولات اختراق لنوفر مجتمعاً موثوقاً وخالياً من الشائعات.
         </p>
       </div>
 
-      <div class="bg-surface-container-lowest p-8 rounded-2xl border border-outline-variant hover:border-tertiary-fixed-dim transition-colors group shadow-sm hover:shadow-md">
-        <span class="material-symbols-outlined text-[44px] text-tertiary-fixed-dim mb-5 group-hover:scale-110 transition-transform">diversity_1</span>
-        <h3 class="text-headline-sm font-bold text-primary mb-3">بارقة أمل (قصص النجاح)</h3>
-        <p class="text-body-md text-on-surface-variant leading-relaxed max-w-3xl">
-          نخصص صفحة كاملة (Founded Cases) للحالات التي تم العثور عليها وقصص نجاح عودتهم لأهلهم عبر منصتنا، لننشر الأمل ونوثق ثمرة التعاون المجتمعي المستمر.
+      <!-- Feature 5 -->
+      <div class="bg-surface p-8 rounded-3xl border border-outline-variant hover:border-secondary hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-secondary/10 rounded-full blur-2xl group-hover:bg-secondary/20 transition-colors"></div>
+        <div class="w-16 h-16 bg-secondary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-[36px] text-secondary">forum</span>
+        </div>
+        <h3 class="text-[24px] font-bold text-on-surface mb-4">تواصل آمن ومباشر</h3>
+        <p class="text-[18px] text-on-surface-variant leading-relaxed">
+          تواصل مع أصحاب البلاغات بكل طمأنينة لتقديم المعلومات. المحادثات مغلقة ومرتبطة بالحالة فقط، وتخضع لإشراف كامل من الإدارة لمنع أي رسائل مزعجة أو غير لائقة.
         </p>
       </div>
 
-      <div class="bg-surface-container-lowest p-8 rounded-2xl border border-outline-variant hover:border-secondary transition-colors group shadow-sm hover:shadow-md">
-        <span class="material-symbols-outlined text-[44px] text-secondary mb-5 group-hover:scale-110 transition-transform">security_update_good</span>
-        <h3 class="text-headline-sm font-bold text-primary mb-3">متابعة مستمرة وإشعارات</h3>
-        <p class="text-body-md text-on-surface-variant leading-relaxed max-w-3xl">
-          نبقيك على اطلاع دائم عبر الإشعارات والبريد الإلكتروني بكل ما يخص رسائلك وحل شكاواك. كما ندير بيئة صارمة تتضمن حظر المستخدمين المسيئين لضمان مجتمع راقٍ.
+      <!-- Feature 6 -->
+      <div class="bg-surface p-8 rounded-3xl border border-outline-variant hover:border-primary hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors"></div>
+        <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-[36px] text-primary">family_home</span>
+        </div>
+        <h3 class="text-[24px] font-bold text-on-surface mb-4">قصص تمنحنا الأمل</h3>
+        <p class="text-[18px] text-on-surface-variant leading-relaxed">
+          نحتفي بكل حالة تعود سالمة إلى أهلها. قسم الحالات المعثور عليها ليس مجرد أرشيف، بل هو مساحة لنشر الفرحة وتوثيق لحظات لم الشمل التي تمنح الجميع دافعاً للاستمرار.
+        </p>
+      </div>
+
+      <!-- Feature 7 -->
+      <div class="bg-surface p-8 rounded-3xl border border-outline-variant hover:border-tertiary hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-tertiary/10 rounded-full blur-2xl group-hover:bg-tertiary/20 transition-colors"></div>
+        <div class="w-16 h-16 bg-tertiary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-[36px] text-tertiary">support</span>
+        </div>
+        <h3 class="text-[24px] font-bold text-on-surface mb-4">دعم مستمر للمنصة</h3>
+        <p class="text-[18px] text-on-surface-variant leading-relaxed">
+          بإمكان الجميع المساهمة ودعم المنصة لتغطية تكاليف الخوادم وتطوير آليات البحث. مساهمتك تضمن بقاء هذه الخدمة الإنسانية متاحة وقوية لإنقاذ المزيد من الأرواح.
+        </p>
+      </div>
+
+      <!-- Feature 8: Ban System -->
+      <div class="bg-surface p-8 rounded-3xl border border-outline-variant hover:border-error hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-error/10 rounded-full blur-2xl group-hover:bg-error/20 transition-colors"></div>
+        <div class="w-16 h-16 bg-error/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-[36px] text-error">gavel</span>
+        </div>
+        <h3 class="text-[24px] font-bold text-on-surface mb-4">بيئة جادة وصارمة</h3>
+        <p class="text-[18px] text-on-surface-variant leading-relaxed">
+          لأننا نتعامل مع أرواح ومشاعر، وفرنا نظاماً صارماً لحظر الحسابات التي تنشر بلاغات كاذبة أو تسيء استخدام المنصة، لضمان بقاء مجتمعنا آمناً وجاداً بنسبة 100%.
+        </p>
+      </div>
+
+      <!-- Feature 9: 24/7 Availability -->
+      <div class="bg-surface p-8 rounded-3xl border border-outline-variant hover:border-secondary hover:shadow-xl transition-all duration-300 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-secondary/10 rounded-full blur-2xl group-hover:bg-secondary/20 transition-colors"></div>
+        <div class="w-16 h-16 bg-secondary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-[36px] text-secondary">schedule</span>
+        </div>
+        <h3 class="text-[24px] font-bold text-on-surface mb-4">جاهزية على مدار الساعة</h3>
+        <p class="text-[18px] text-on-surface-variant leading-relaxed">
+          لأن وقت المفقود لا يحتمل التأخير، فإن أنظمة الذكاء الاصطناعي والإشعارات الجغرافية لدينا تعمل آلياً على مدار الساعة دون توقف لضمان استجابة فورية في أي وقت.
         </p>
       </div>
 
     </div>
   </section>
 
-  <section class="max-w-6xl mx-auto px-margin-mobile md:px-margin-desktop mt-28">
-    <div class="bg-surface-container-high rounded-3xl p-10 md:p-14 flex flex-col md:flex-row items-center justify-between gap-10 border border-outline-variant shadow-sm relative overflow-hidden">
+  <!-- CTA Section -->
+  <section class="">
+    <div class="bg-primary rounded-[40px] p-12 md:p-16 flex flex-col lg:flex-row items-center justify-between gap-12 shadow-2xl relative overflow-hidden border border-outline-variant">
       
-      <span class="material-symbols-outlined absolute -left-10 -bottom-10 text-[200px] text-primary/5 pointer-events-none">groups</span>
+      <div class="absolute inset-0 opacity-20 pointer-events-none">
+        <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path d="M0,100 C30,50 70,100 100,0 L100,100 Z" fill="white" opacity="0.3"></path>
+        </svg>
+      </div>
 
-      <div class="flex-1 relative z-10 text-center md:text-right">
-        <h2 class="text-headline-lg font-bold text-primary mb-4">كن جزءاً من الحل</h2>
-        <p class="text-body-lg text-on-surface-variant max-w-3xl mx-auto md:mx-0">
-          كل ثانية تهم، ومساهمتك قد تكون السبب في إعادة الأمل لعائلة بأكملها. انضم إلى منصة لقاء الآن وساعدنا في صناعة الفارق.
+      <div class="flex-1 relative z-10 text-center lg:text-right">
+        <h2 class="text-[40px] md:text-[48px] font-extrabold text-white mb-6">كن جزءاً من الحل وأنقذ حياة</h2>
+        <p class="text-[20px] text-white/90 max-w-[896px] mx-auto lg:mx-0 leading-relaxed">
+          كل ثانية تمر قد تكون فارقة في حياة إنسان، ومشاركتك معنا سواء بالإبلاغ أو المساعدة تعيد الأمل لعائلة بأكملها. انضم إلى عائلة لقاء الآن.
         </p>
       </div>
       
-      <div class="flex flex-col sm:flex-row gap-4 relative z-10 w-full md:w-auto">
-        <app-button routerLink="/auth/register" variant="primary" extraClass="px-10 py-4 h-auto text-body-lg justify-center shadow-md whitespace-nowrap gap-2 font-bold">
+      <div class="flex flex-col sm:flex-row gap-5 relative z-10 w-full lg:w-auto shrink-0">
+        <app-button routerLink="/auth/register" variant="secondary" extraClass="px-8 py-4 h-auto text-lg justify-center shadow-lg whitespace-nowrap gap-3 bg-white text-primary font-bold hover:bg-surface-container-lowest hover:scale-105 transition-all">
           <span class="material-symbols-outlined">person_add</span>
           إنشاء حساب جديد
         </app-button>
-        <app-button routerLink="/urgent" variant="secondary" extraClass="px-10 py-4 h-auto text-body-lg justify-center shadow-sm whitespace-nowrap gap-2 bg-white text-primary font-bold">
-          <span class="material-symbols-outlined">search</span>
-          تصفح الحالات
+        <app-button routerLink="/urgent" variant="primary" extraClass="px-8 py-4 h-auto text-lg justify-center shadow-lg whitespace-nowrap gap-3 bg-secondary text-white font-bold hover:bg-secondary/90 hover:scale-105 transition-all">
+          <span class="material-symbols-outlined">emergency</span>
+          الحالات الطارئة
         </app-button>
       </div>
     </div>
   </section>
 
-</main>
+</div>
+</div>

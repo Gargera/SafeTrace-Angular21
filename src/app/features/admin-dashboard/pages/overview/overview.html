@@ -28,7 +28,8 @@
       style="scrollbar-width: thin"
     >
       <a
-        routerLink="/admin"
+        *hasPermission="Permissions.Dashboard.GetStatistics"
+        routerLink="/admin/dashboard"
         routerLinkActive="bg-white/10 opacity-100"
         [routerLinkActiveOptions]="{ exact: true }"
         class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
@@ -47,8 +48,10 @@
       </a>
 
       <a
-        routerLink="/admin/cases-management"
+        *hasPermission="Permissions.Cases.GetAll"
+        routerLink="/admin"
         routerLinkActive="bg-white/10 opacity-100"
+        [routerLinkActiveOptions]="{ exact: true }"
         class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
         [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"
         [title]="!isSidebarExpanded() ? 'إدارة الحالات' : ''"
@@ -65,6 +68,7 @@
       </a>
 
       <a
+        *hasPermission="Permissions.Complaints.GetAll"
         routerLink="/admin/complaints-management"
         routerLinkActive="bg-white/10 opacity-100"
         class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
@@ -83,6 +87,7 @@
       </a>
 
       <a
+        *hasPermission="Permissions.Chat.GetAll"
         routerLink="/admin/chats"
         routerLinkActive="bg-white/10 opacity-100"
         class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
@@ -101,6 +106,7 @@
       </a>
 
       <a
+        *hasPermission="Permissions.Users.GetAll"
         routerLink="/admin/users"
         routerLinkActive="bg-white/10 opacity-100"
         class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
@@ -118,40 +124,60 @@
         >
       </a>
 
-      @if (authService.isAdmin()) {
-        <a
-          routerLink="/admin/rolesManagement"
-          routerLinkActive="bg-white/10 opacity-100"
-          class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
-          [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"
-          [title]="!isSidebarExpanded() ? 'إدارة الأدوار والصلاحيات' : ''"
+      <a
+        *hasPermission="Permissions.Roles.GetPermissionsByRoleId"
+        routerLink="/admin/rolesManagement"
+        routerLinkActive="bg-white/10 opacity-100"
+        class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
+        [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"
+        [title]="!isSidebarExpanded() ? 'إدارة الأدوار والصلاحيات' : ''"
+      >
+        <span
+          class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform"
+          >admin_panel_settings</span
         >
-          <span
-            class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform"
-            >admin_panel_settings</span
-          >
-          <span
-            class="text-body-md font-semibold whitespace-nowrap"
-            [class.hidden]="!isSidebarExpanded()"
-            >إدارة الأدوار</span
-          >
-        </a>
+        <span
+          class="text-body-md font-semibold whitespace-nowrap"
+          [class.hidden]="!isSidebarExpanded()"
+          >إدارة الأدوار</span
+        >
+      </a>
 
+      <a
+        *hasPermission="Permissions.Donations.GetDonations"
+        routerLink="/admin/donations"
+        routerLinkActive="bg-white/10 opacity-100"
+        class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
+        [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"
+        [title]="!isSidebarExpanded() ? 'إدارة التبرعات' : ''"
+      >
+        <span
+          class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform"
+          >volunteer_activism</span
+        >
+        <span
+          class="text-body-md font-semibold whitespace-nowrap"
+          [class.hidden]="!isSidebarExpanded()"
+          >إدارة التبرعات</span
+        >
+      </a>
+
+      @if (isSuperAdmin()) {
         <a
-          routerLink="/admin/donations"
+          routerLink="/admin/audit-logs"
           routerLinkActive="bg-white/10 opacity-100"
           class="flex items-center py-3 rounded-xl opacity-70 hover:opacity-100 hover:bg-white/5 transition-all group"
           [ngClass]="isSidebarExpanded() ? 'px-4 gap-3' : 'justify-center px-0'"
-          [title]="!isSidebarExpanded() ? 'إدارة التبرعات' : ''"
+          [title]="!isSidebarExpanded() ? 'سجلات النظام' : ''"
         >
           <span
             class="material-symbols-outlined shrink-0 text-[24px] group-hover:scale-110 transition-transform"
-            >volunteer_activism</span
+            >history</span
           >
           <span
             class="text-body-md font-semibold whitespace-nowrap"
             [class.hidden]="!isSidebarExpanded()"
-            >إدارة التبرعات</span
+            >سجلات النظام</span
           >
         </a>
       }
@@ -178,7 +204,7 @@
               currentUser()?.fullName
             }}</span>
             <span class="text-label-sm opacity-60 text-white truncate">{{
-              authService.isAdmin() ? 'مدير النظام' : 'مشرف'
+              getUserRoleTranslated()
             }}</span>
           </div>
         </div>

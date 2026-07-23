@@ -1,4 +1,4 @@
-import { PaymentStatus } from '../../../../admin-dashboard/pages/donations/models/payment-status';
+import { PaymentStatus } from '../../../../../shared/enums/payment-status.enum';
 
 export interface DonationUserListDto {
   amount: number;

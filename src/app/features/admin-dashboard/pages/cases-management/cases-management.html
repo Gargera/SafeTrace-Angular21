@@ -4,212 +4,135 @@
 </div>
 
 <!-- Statistics Cards -->
-@if (loadingStats()) {
+<ng-container *hasPermission="Permissions.Dashboard.GetCasesStatistics">
+  @if (loadingStats()) {
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-    @for (i of [1, 2, 3, 4, 5, 6]; track i) {
-      <app-card
-        extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse"
-      >
-        <div class="h-4 bg-surface-container-high rounded w-3/4 mb-2"></div>
-        <div class="h-6 bg-surface-container-high rounded w-1/2"></div>
-      </app-card>
-    }
-  </div>
+  @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+  <app-card
+    extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse">
+    <div class="h-4 bg-surface-container-high rounded w-3/4 mb-2"></div>
+    <div class="h-6 bg-surface-container-high rounded w-1/2"></div>
+  </app-card>
+  }
+</div>
 } @else {
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-    <app-card
-      extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
-    >
-      <div class="flex items-center justify-between">
-        <span class="text-sm font-medium text-on-surface-variant">الإجمالي</span>
-        <span class="material-symbols-outlined text-secondary">folder</span>
-      </div>
-      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.total ?? 0 }}</p>
-    </app-card>
-    <app-card
-      extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
-    >
-      <div class="flex items-center justify-between">
-        <span class="text-sm font-medium text-on-surface-variant">عاجل</span>
-        <span class="material-symbols-outlined text-red-500">emergency</span>
-      </div>
-      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.urgent ?? 0 }}</p>
-    </app-card>
-    <app-card
-      extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
-    >
-      <div class="flex items-center justify-between">
-        <span class="text-sm font-medium text-on-surface-variant">طويل الأمد</span>
-        <span class="material-symbols-outlined text-indigo-500">schedule</span>
-      </div>
-      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.longTerm ?? 0 }}</p>
-    </app-card>
-    <app-card
-      extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
-    >
-      <div class="flex items-center justify-between">
-        <span class="text-sm font-medium text-on-surface-variant">مجهول</span>
-        <span class="material-symbols-outlined text-gray-500">help</span>
-      </div>
-      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.unknown ?? 0 }}</p>
-    </app-card>
-    <app-card
-      extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
-    >
-      <div class="flex items-center justify-between">
-        <span class="text-sm font-medium text-on-surface-variant">نشط</span>
-        <span class="material-symbols-outlined text-green-500">check_circle</span>
-      </div>
-      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.active ?? 0 }}</p>
-    </app-card>
-    <app-card
-      extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
-    >
-      <div class="flex items-center justify-between">
-        <span class="text-sm font-medium text-on-surface-variant">تم العثور</span>
-        <span class="material-symbols-outlined text-blue-500">beenhere</span>
-      </div>
-      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.found ?? 0 }}</p>
-    </app-card>
-  </div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-medium text-on-surface-variant">الإجمالي</span>
+      <span class="material-symbols-outlined text-secondary">folder</span>
+    </div>
+    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.total ?? 0 }}</p>
+  </app-card>
+  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-medium text-on-surface-variant">عاجل</span>
+      <span class="material-symbols-outlined text-red-500">emergency</span>
+    </div>
+    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.urgent ?? 0 }}</p>
+  </app-card>
+  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-medium text-on-surface-variant">طويل الأمد</span>
+      <span class="material-symbols-outlined text-indigo-500">schedule</span>
+    </div>
+    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.longTerm ?? 0 }}</p>
+  </app-card>
+  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-medium text-on-surface-variant">مجهول</span>
+      <span class="material-symbols-outlined text-gray-500">help</span>
+    </div>
+    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.unknown ?? 0 }}</p>
+  </app-card>
+  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-medium text-on-surface-variant">نشط</span>
+      <span class="material-symbols-outlined text-green-500">check_circle</span>
+    </div>
+    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.active ?? 0 }}</p>
+  </app-card>
+  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-medium text-on-surface-variant">تم العثور</span>
+      <span class="material-symbols-outlined text-blue-500">beenhere</span>
+    </div>
+    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.found ?? 0 }}</p>
+  </app-card>
+</div>
 }
+</ng-container>
 
 <!-- Filters Card (styled exactly like user-list) -->
-<app-card extraClass="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg">
-  <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-md items-end">
-    <!-- Search -->
-    <div class="flex flex-col gap-xs md:col-span-2">
-      <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">بحث</label>
-      <app-form-field
-        type="search"
-        [ngModel]="baseFilter().fullName ?? ''"
-        (ngModelChange)="onSearchChange($event)"
-        placeholder="ابحث باسم المفقود..."
-      >
-      </app-form-field>
-    </div>
-
-    <!-- Case Type Filter -->
-    <div class="flex flex-col gap-xs">
-      <app-form-field
-        type="select"
-        [ngModel]="caseTypeFilter()"
-        (ngModelChange)="onCaseTypeChange($event)"
-        label="نوع الحالة"
-      >
-        <option value="">الكل</option>
-        <option [value]="CaseType.Urgent">عاجل</option>
-        <option [value]="CaseType.LongTerm">طويل الأمد</option>
-        <option [value]="CaseType.Unknown">مجهول</option>
-      </app-form-field>
-    </div>
-
-    <!-- Status Filter -->
-    <div class="flex flex-col gap-xs">
-      <app-form-field
-        type="select"
-        [ngModel]="baseFilter().status ?? ''"
-        (ngModelChange)="onStatusChange($event)"
-        label="حالة القضية"
-      >
-        <option value="">الكل</option>
-        <option [value]="CaseStatus.Active">نشط</option>
-        <option [value]="CaseStatus.Found">تم العثور</option>
-      </app-form-field>
-    </div>
-
-    <!-- Reset Button -->
-    <div class="flex justify-end">
-      <app-button
-        variant="text"
-        (onClick)="resetFilters()"
-        extraClass="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary"
-      >
-        <span
-          class="material-symbols-outlined transition-transform duration-200 group-hover:-rotate-90"
-          >refresh</span
-        >
-        <span>إعادة تعيين</span>
-      </app-button>
-    </div>
-  </div>
-</app-card>
+<section class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm mb-lg">
+  <app-case-filters [showCaseType]="true" [showCaseStatus]="true" [genderInAdvanced]="true"
+    [ageCategoryInAdvanced]="true" (filterChange)="onFilterChange($event)" />
+</section>
 
 <!-- Cases Table -->
-<section
-  class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75"
->
+<section class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75">
   @if (loading()) {
-    <app-loading-spinner
-      title="جارِ تحميل الحالات..."
-      [fullscreen]="false"
-      containerClass="absolute inset-0 bg-white/60 flex items-center justify-center z-10"
-    />
+  <app-loading-spinner title="جارِ تحميل الحالات..." [fullscreen]="false"
+    containerClass="absolute inset-0 bg-white/60 flex items-center justify-center z-10" />
   }
 
   <div class="overflow-x-auto">
     <table class="w-full text-right border-collapse whitespace-nowrap">
       <thead>
-        <tr
-          class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant"
-        >
+        <tr class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant">
           <th class="px-lg py-md">#</th>
           <th class="px-lg py-md">اسم المفقود</th>
           <th class="px-lg py-md">نوع الحالة</th>
           <th class="px-lg py-md">الحالة</th>
           <th class="px-lg py-md">الموقع</th>
-          <th class="px-lg py-md text-center">الإجراءات</th>
+          <ng-container *hasPermission="caseActionPermissions">
+            <th class="px-lg py-md text-center">الإجراءات</th>
+          </ng-container>
         </tr>
       </thead>
       <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
         @for (caseItem of cases(); track caseItem.id) {
-          <tr class="hover:bg-surface-container-low transition-colors group">
-            <td class="px-lg py-md font-mono text-on-surface-variant/70">
-              {{ caseItem.id }}
-            </td>
-            <td class="px-lg py-md font-semibold text-primary">
-              {{ caseItem.fullName || 'غير معروف' }}
-            </td>
-            <td class="px-lg py-md">
-              <span [appCaseTypeBadgeDirective]="caseItem.caseType"></span>
-            </td>
-            <td class="px-lg py-md">
-              <span [appCaseStatusBadgeDirective]="caseItem.status"></span>
-            </td>
-            <td class="px-lg py-md opacity-70">
-              {{ getLocation(caseItem) }}
-            </td>
+        <tr class="hover:bg-surface-container-low transition-colors group">
+          <td class="px-lg py-md font-mono text-on-surface-variant/70">
+            {{ (currentPage() - 1) * pageSize + $index + 1 }}
+          </td>
+          <td class="px-lg py-md font-semibold text-primary">
+            {{ getFullName(caseItem) }}
+          </td>
+          <td class="px-lg py-md">
+            <span [appCaseTypeBadgeDirective]="caseItem.caseType"></span>
+          </td>
+          <td class="px-lg py-md">
+            <span [appCaseStatusBadgeDirective]="caseItem.status"></span>
+          </td>
+          <td class="px-lg py-md opacity-70">
+            {{ getLocation(caseItem) }}
+          </td>
+          <ng-container *hasPermission="caseActionPermissions">
             <td class="px-lg py-md text-center">
-              <div class="flex items-center justify-center gap-2" dir="ltr">
-                <app-button
-                  [routerLink]="['/cases', caseItem.id]"
-                  [queryParams]="{ type: caseItem.caseType }"
-                  variant="primary"
-                  extraClass="px-3 py-1.5 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
-                >
+              <div class="flex items-center justify-center gap-2">
+                <app-button *hasPermission="getViewPermission(caseItem.caseType)" [routerLink]="getDetailsRoute(caseItem)" variant="primary"
+                  extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-secondary-container transition-all duration-200">
+                  <span class="material-symbols-outlined text-[16px]">visibility</span>
                   عرض
                 </app-button>
-                <app-button
-                  (onClick)="requestDelete(caseItem.id)"
-                  variant="danger"
-                  extraClass="px-3 py-1.5 rounded-full text-label-sm font-bold shadow-sm hover:bg-red-100 transition-all duration-200"
-                >
+                <app-button *hasPermission="getDeletePermission(caseItem.caseType)" variant="danger" (onClick)="requestDelete(caseItem.id)"
+                  extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200">
+                  <span class="material-symbols-outlined text-[16px]">delete</span>
                   حذف
                 </app-button>
               </div>
             </td>
-          </tr>
+          </ng-container>
+        </tr>
         } @empty {
-          @if (!loading()) {
-            <tr>
-              <td colspan="6" class="py-xl">
-                <app-empty-state
-                  title="لا توجد حالات"
-                  message="لا توجد حالات تطابق معايير البحث."
-                />
-              </td>
-            </tr>
-          }
+        @if (!loading()) {
+        <tr>
+          <td colspan="6" class="py-xl">
+            <app-empty-state title="لا توجد حالات" message="لا توجد حالات تطابق معايير البحث." />
+          </td>
+        </tr>
+        }
         }
       </tbody>
     </table>
@@ -217,53 +140,36 @@
 
   <!-- Pagination (matching user-list) -->
   @if (totalPages() > 1) {
-    <div
-      class="p-md md:p-lg bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-4"
-    >
-      <span class="text-label-sm text-on-surface-variant font-medium">
-        إجمالي عدد الحالات: <span class="font-bold">{{ totalCount() }}</span>
-      </span>
-      <div class="flex gap-xs" dir="ltr">
-        <button
-          [disabled]="currentPage() === 1"
-          (click)="changePage(currentPage() - 1)"
-          class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <span class="material-symbols-outlined text-md">chevron_left</span>
-        </button>
-        @for (page of pagesArray(); track page) {
-          <button
-            (click)="changePage(page)"
-            [class.bg-secondary]="page === currentPage()"
-            [class.text-white]="page === currentPage()"
-            [class.bg-white]="page !== currentPage()"
-            [class.text-primary]="page !== currentPage()"
-            class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant font-bold text-label-sm hover:bg-secondary-fixed-dim transition-all"
-          >
-            {{ page }}
-          </button>
-        }
-        <button
-          [disabled]="currentPage() === totalPages()"
-          (click)="changePage(currentPage() + 1)"
-          class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <span class="material-symbols-outlined text-md">chevron_right</span>
-        </button>
-      </div>
+  <div
+    class="p-md md:p-lg bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-4">
+    <span class="text-label-sm text-on-surface-variant font-medium">
+      إجمالي عدد الحالات: <span class="font-bold">{{ totalCount() }}</span>
+    </span>
+    <div class="flex gap-xs" dir="ltr">
+      <button [disabled]="currentPage() === 1" (click)="changePage(currentPage() - 1)"
+        class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+        <span class="material-symbols-outlined text-md">chevron_left</span>
+      </button>
+      @for (page of pagesArray(); track page) {
+      <button (click)="changePage(page)" [class.bg-secondary]="page === currentPage()"
+        [class.text-white]="page === currentPage()" [class.bg-white]="page !== currentPage()"
+        [class.text-primary]="page !== currentPage()"
+        class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant font-bold text-label-sm hover:bg-secondary-fixed-dim transition-all">
+        {{ page }}
+      </button>
+      }
+      <button [disabled]="currentPage() === totalPages()" (click)="changePage(currentPage() + 1)"
+        class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+        <span class="material-symbols-outlined text-md">chevron_right</span>
+      </button>
     </div>
+  </div>
   }
 </section>
 
 <!-- Confirmation Modal -->
 @if (showConfirmModal()) {
-  <app-confirmation-modal
-    [title]="modalConfig()?.title || 'تأكيد'"
-    [message]="modalConfig()?.message || 'هل أنت متأكد؟'"
-    [confirmText]="modalConfig()?.confirmText || 'تأكيد'"
-    [cancelText]="modalConfig()?.cancelText || 'إلغاء'"
-    variant="danger"
-    (confirm)="confirmAction()"
-    (cancel)="closeModal()"
-  />
+<app-confirmation-modal [title]="modalConfig()?.title || 'تأكيد'" [message]="modalConfig()?.message || 'هل أنت متأكد؟'"
+  [confirmText]="modalConfig()?.confirmText || 'تأكيد'" [cancelText]="modalConfig()?.cancelText || 'إلغاء'"
+  variant="danger" (confirm)="confirmAction()" (cancel)="closeModal()" />
 }

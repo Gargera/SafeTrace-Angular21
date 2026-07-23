@@ -1,5 +1,4 @@
-export enum CaseStatus 
-{
+export enum CaseStatus {
     Pending = 'Pending',
     Active = 'Active',
     Deleted = 'Deleted',
