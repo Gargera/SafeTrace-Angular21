@@ -27,94 +27,49 @@
 
   @if (dashboard(); as data) {
     <!-- Top-level Stat Cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-md">
-      <div class="glass-card p-md rounded-xl flex flex-col justify-between shadow-sm">
-        <div class="bg-primary/5 p-xs rounded-lg w-fit">
-          <span class="material-symbols-outlined text-primary">group</span>
-        </div>
-        <div class="mt-sm">
-          <p class="text-label-sm text-on-surface-variant">إجمالي المستخدمين</p>
-          <h2 class="text-headline-sm font-bold text-primary">{{ data.totalUsers }}</h2>
-        </div>
-      </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-9 gap-md">
+      @for (card of statCards(); track card.label) {
+        <div
+          class="relative glass-card p-md rounded-xl flex flex-col justify-between shadow-sm overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <!-- Colored top accent -->
+          <div class="absolute top-0 inset-x-0 h-1" [style.background-color]="card.color"></div>
 
-      <div class="glass-card p-md rounded-xl flex flex-col justify-between shadow-sm">
-        <div class="bg-primary/5 p-xs rounded-lg w-fit">
-          <span class="material-symbols-outlined text-primary">folder_shared</span>
-        </div>
-        <div class="mt-sm">
-          <p class="text-label-sm text-on-surface-variant">إجمالي الحالات</p>
-          <h2 class="text-headline-sm font-bold text-primary">{{ data.totalCases }}</h2>
-        </div>
-      </div>
+          <div class="relative w-fit p-xs rounded-lg" [style.background-color]="card.bg">
+            <span class="material-symbols-outlined" [style.color]="card.color">{{
+              card.icon
+            }}</span>
+            @if (card.pulse) {
+              <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                  [style.background-color]="card.color"
+                ></span>
+                <span
+                  class="relative inline-flex rounded-full h-2.5 w-2.5"
+                  [style.background-color]="card.color"
+                ></span>
+              </span>
+            }
+          </div>
 
-      <div class="glass-card p-md rounded-xl flex flex-col justify-between shadow-sm">
-        <div class="bg-tertiary-fixed/20 p-xs rounded-lg w-fit">
-          <span class="material-symbols-outlined text-on-tertiary-container">verified</span>
+          <div class="mt-sm">
+            <p class="text-label-sm text-on-surface-variant">{{ card.label }}</p>
+            <h2 class="text-headline-sm font-bold" [style.color]="card.color">{{ card.value }}</h2>
+          </div>
         </div>
-        <div class="mt-sm">
-          <p class="text-label-sm text-on-surface-variant">تم العثور عليها</p>
-          <h2 class="text-headline-sm font-bold text-primary">{{ data.totalFoundedCases }}</h2>
-        </div>
-      </div>
-
-      <div
-        class="glass-card p-md rounded-xl flex flex-col justify-between shadow-sm border-r-4 border-error"
-      >
-        <div class="bg-error-container p-xs rounded-lg w-fit">
-          <span class="material-symbols-outlined text-error">emergency</span>
-        </div>
-        <div class="mt-sm">
-          <p class="text-label-sm text-on-surface-variant">الحالات النشطة</p>
-          <h2 class="text-headline-sm font-bold text-error">{{ data.totalActiveCases }}</h2>
-        </div>
-      </div>
-
-      <div class="glass-card p-md rounded-xl flex flex-col justify-between shadow-sm">
-        <div class="bg-secondary-fixed/30 p-xs rounded-lg w-fit">
-          <span class="material-symbols-outlined text-secondary">pending_actions</span>
-        </div>
-        <div class="mt-sm">
-          <p class="text-label-sm text-on-surface-variant">قيد الانتظار</p>
-          <h2 class="text-headline-sm font-bold text-primary">{{ data.totalPendingCases }}</h2>
-        </div>
-      </div>
-
-      <div class="glass-card p-md rounded-xl flex flex-col justify-between shadow-sm">
-        <div class="bg-outline/10 p-xs rounded-lg w-fit">
-          <span class="material-symbols-outlined text-outline">block</span>
-        </div>
-        <div class="mt-sm">
-          <p class="text-label-sm text-on-surface-variant">مرفوضة</p>
-          <h2 class="text-headline-sm font-bold text-primary">{{ data.totalRejectedgCases }}</h2>
-        </div>
-      </div>
-
-      <div class="glass-card p-md rounded-xl flex flex-col justify-between shadow-sm">
-        <div class="bg-primary/5 p-xs rounded-lg w-fit">
-          <span class="material-symbols-outlined text-primary">hourglass_disabled</span>
-        </div>
-        <div class="mt-sm">
-          <p class="text-label-sm text-on-surface-variant">منتهية الصلاحية</p>
-          <h2 class="text-headline-sm font-bold text-primary">{{ data.totalExpiredCases }}</h2>
-        </div>
-      </div>
-
-      <div class="glass-card p-md rounded-xl flex flex-col justify-between shadow-sm">
-        <div class="bg-outline/10 p-xs rounded-lg w-fit">
-          <span class="material-symbols-outlined text-outline">delete</span>
-        </div>
-        <div class="mt-sm">
-          <p class="text-label-sm text-on-surface-variant">المحذوفة</p>
-          <h2 class="text-headline-sm font-bold text-primary">{{ data.totalDeletedCases }}</h2>
-        </div>
-      </div>
+      }
     </div>
 
-    <!-- Charts Row: Case Status Donut + Donations Donut -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-lg">
+    <!-- Charts Row: Case Status, Donations, and Complaints Donuts -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
       <!-- Case Status Donut -->
-      <div class="glass-card p-xl rounded-2xl shadow-sm flex flex-col">
+      <div
+        class="relative glass-card p-xl rounded-2xl shadow-sm flex flex-col overflow-hidden"
+        style="
+          background: radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.08), transparent 55%);
+        "
+      >
         <h3 class="text-headline-sm font-bold text-primary mb-lg">توزيع حالات الحالات</h3>
 
         @if (caseStatusDonut().length === 0) {
@@ -144,6 +99,7 @@
                     stroke-linecap="butt"
                     [attr.stroke-dasharray]="segment.dashArray"
                     [attr.stroke-dashoffset]="segment.dashOffset"
+                    class="drop-shadow-sm"
                   />
                 }
               </svg>
@@ -163,8 +119,9 @@
                     ></span>
                     <span class="text-on-surface">{{ segment.label }}</span>
                   </span>
-                  <span class="text-on-surface-variant tabular-nums">
-                    {{ segment.value }} ({{ segment.percent | number: '1.0-1' }}%)
+                  <span class="text-on-surface-variant tabular-nums font-bold">
+                    {{ segment.value }}
+                    <span class="font-normal">({{ segment.percent | number: '1.0-1' }}%)</span>
                   </span>
                 </li>
               }
@@ -174,12 +131,19 @@
       </div>
 
       <!-- Donations Donut -->
-      <div class="glass-card p-xl rounded-2xl shadow-sm flex flex-col">
+      <div
+        class="relative glass-card p-xl rounded-2xl shadow-sm flex flex-col overflow-hidden"
+        style="
+          background: radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.08), transparent 55%);
+        "
+      >
         <div class="flex items-center justify-between mb-lg">
           <h3 class="text-headline-sm font-bold text-primary">حالة التبرعات</h3>
           <div class="text-left">
             <p class="text-label-sm text-on-surface-variant">إجمالي المبالغ</p>
-            <p class="text-title-md font-bold text-primary">{{ formattedDonationsSum() }} ج.م</p>
+            <p class="text-title-md font-bold" [style.color]="statusColors.succeeded">
+              {{ formattedDonationsSum() }} ج.م
+            </p>
           </div>
         </div>
 
@@ -210,6 +174,7 @@
                     stroke-linecap="butt"
                     [attr.stroke-dasharray]="segment.dashArray"
                     [attr.stroke-dashoffset]="segment.dashOffset"
+                    class="drop-shadow-sm"
                   />
                 }
               </svg>
@@ -231,8 +196,78 @@
                     ></span>
                     <span class="text-on-surface">{{ segment.label }}</span>
                   </span>
-                  <span class="text-on-surface-variant tabular-nums">
-                    {{ segment.value }} ({{ segment.percent | number: '1.0-1' }}%)
+                  <span class="text-on-surface-variant tabular-nums font-bold">
+                    {{ segment.value }}
+                    <span class="font-normal">({{ segment.percent | number: '1.0-1' }}%)</span>
+                  </span>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+
+      <!-- Complaints Donut -->
+      <div
+        class="relative glass-card p-xl rounded-2xl shadow-sm flex flex-col overflow-hidden"
+        style="
+          background: radial-gradient(circle at 100% 0%, rgba(239, 68, 68, 0.06), transparent 55%);
+        "
+      >
+        <h3 class="text-headline-sm font-bold text-primary mb-lg">حالة الشكاوى</h3>
+
+        @if (complaintsDonut().length === 0) {
+          <p class="text-body-sm text-on-surface-variant py-lg text-center">
+            لا توجد بيانات لعرضها.
+          </p>
+        } @else {
+          <div class="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center gap-xl">
+            <div class="relative w-45 h-45 shrink-0">
+              <svg viewBox="0 0 160 160" class="w-full h-full -rotate-90">
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="60"
+                  fill="none"
+                  stroke="var(--color-surface-variant)"
+                  stroke-width="18"
+                />
+                @for (segment of complaintsDonut(); track segment.label) {
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="60"
+                    fill="none"
+                    [attr.stroke]="segment.color"
+                    stroke-width="18"
+                    stroke-linecap="butt"
+                    [attr.stroke-dasharray]="segment.dashArray"
+                    [attr.stroke-dashoffset]="segment.dashOffset"
+                    class="drop-shadow-sm"
+                  />
+                }
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="text-headline-sm font-bold text-primary">{{
+                  complaintsCountTotal()
+                }}</span>
+                <span class="text-label-sm text-on-surface-variant">شكوى</span>
+              </div>
+            </div>
+
+            <ul class="flex flex-col gap-sm w-full">
+              @for (segment of complaintsDonut(); track segment.label) {
+                <li class="flex items-center justify-between gap-md text-body-sm">
+                  <span class="flex items-center gap-sm">
+                    <span
+                      class="w-3 h-3 rounded-full shrink-0"
+                      [style.background-color]="segment.color"
+                    ></span>
+                    <span class="text-on-surface">{{ segment.label }}</span>
+                  </span>
+                  <span class="text-on-surface-variant tabular-nums font-bold">
+                    {{ segment.value }}
+                    <span class="font-normal">({{ segment.percent | number: '1.0-1' }}%)</span>
                   </span>
                 </li>
               }
@@ -256,42 +291,42 @@
           <span class="flex items-center gap-xs">
             <span
               class="w-2.5 h-2.5 rounded-full"
-              style="background-color: var(--color-error)"
+              [style.background-color]="statusColors.active"
             ></span>
             نشطة
           </span>
           <span class="flex items-center gap-xs">
             <span
               class="w-2.5 h-2.5 rounded-full"
-              style="background-color: var(--color-tertiary)"
+              [style.background-color]="statusColors.found"
             ></span>
             تم العثور عليها
           </span>
           <span class="flex items-center gap-xs">
             <span
               class="w-2.5 h-2.5 rounded-full"
-              style="background-color: var(--color-secondary)"
+              [style.background-color]="statusColors.pending"
             ></span>
             قيد الانتظار
           </span>
           <span class="flex items-center gap-xs">
             <span
               class="w-2.5 h-2.5 rounded-full"
-              style="background-color: var(--color-outline)"
+              [style.background-color]="statusColors.rejected"
             ></span>
             مرفوضة
           </span>
           <span class="flex items-center gap-xs">
             <span
               class="w-2.5 h-2.5 rounded-full"
-              style="background-color: var(--color-primary)"
+              [style.background-color]="statusColors.expired"
             ></span>
             منتهية
           </span>
           <span class="flex items-center gap-xs">
             <span
               class="w-2.5 h-2.5 rounded-full"
-              style="background-color: var(--color-on-surface-variant)"
+              [style.background-color]="statusColors.deleted"
             ></span>
             محذوفة
           </span>
@@ -312,7 +347,7 @@
                 @if (bar.activePercent > 0) {
                   <div
                     class="h-full"
-                    style="background-color: var(--color-error)"
+                    [style.background-color]="statusColors.active"
                     [style.width.%]="bar.activePercent"
                     [attr.title]="'نشطة: ' + bar.active"
                   ></div>
@@ -320,7 +355,7 @@
                 @if (bar.foundPercent > 0) {
                   <div
                     class="h-full"
-                    style="background-color: var(--color-tertiary)"
+                    [style.background-color]="statusColors.found"
                     [style.width.%]="bar.foundPercent"
                     [attr.title]="'تم العثور عليها: ' + bar.found"
                   ></div>
@@ -328,7 +363,7 @@
                 @if (bar.pendingPercent > 0) {
                   <div
                     class="h-full"
-                    style="background-color: var(--color-secondary)"
+                    [style.background-color]="statusColors.pending"
                     [style.width.%]="bar.pendingPercent"
                     [attr.title]="'قيد الانتظار: ' + bar.pending"
                   ></div>
@@ -336,7 +371,7 @@
                 @if (bar.rejectedPercent > 0) {
                   <div
                     class="h-full"
-                    style="background-color: var(--color-outline)"
+                    [style.background-color]="statusColors.rejected"
                     [style.width.%]="bar.rejectedPercent"
                     [attr.title]="'مرفوضة: ' + bar.rejected"
                   ></div>
@@ -344,7 +379,7 @@
                 @if (bar.expiredPercent > 0) {
                   <div
                     class="h-full"
-                    style="background-color: var(--color-primary)"
+                    [style.background-color]="statusColors.expired"
                     [style.width.%]="bar.expiredPercent"
                     [attr.title]="'منتهية: ' + bar.expired"
                   ></div>
@@ -352,7 +387,7 @@
                 @if (bar.deletedPercent > 0) {
                   <div
                     class="h-full"
-                    style="background-color: var(--color-on-surface-variant)"
+                    [style.background-color]="statusColors.deleted"
                     [style.width.%]="bar.deletedPercent"
                     [attr.title]="'محذوفة: ' + bar.deleted"
                   ></div>
@@ -389,13 +424,31 @@
               @for (row of data.caseTypes; track row.caseType) {
                 <tr class="hover:bg-surface-container-low transition-colors">
                   <td class="py-md font-bold">{{ row.caseType }}</td>
-                  <td class="py-md">{{ row.total }}</td>
-                  <td class="py-md text-error">{{ row.active }}</td>
-                  <td class="py-md">{{ row.found }}</td>
-                  <td class="py-md">{{ row.pending }}</td>
-                  <td class="py-md">{{ row.rejected }}</td>
-                  <td class="py-md">{{ row.expired }}</td>
-                  <td class="py-md text-on-surface-variant">{{ row.deleted }}</td>
+                  <td class="py-md tabular-nums">{{ row.total }}</td>
+                  <td class="py-md">
+                    <span
+                      class="px-sm py-2xs rounded-full text-label-sm font-bold tabular-nums"
+                      [style.color]="statusColors.active"
+                      [style.background-color]="'rgba(239,68,68,0.1)'"
+                      >{{ row.active }}</span
+                    >
+                  </td>
+                  <td class="py-md">
+                    <span
+                      class="px-sm py-2xs rounded-full text-label-sm font-bold tabular-nums"
+                      [style.color]="statusColors.found"
+                      [style.background-color]="'rgba(16,185,129,0.1)'"
+                      >{{ row.found }}</span
+                    >
+                  </td>
+                  <td class="py-md tabular-nums" [style.color]="statusColors.pending">
+                    {{ row.pending }}
+                  </td>
+                  <td class="py-md tabular-nums text-on-surface-variant">{{ row.rejected }}</td>
+                  <td class="py-md tabular-nums" [style.color]="statusColors.expired">
+                    {{ row.expired }}
+                  </td>
+                  <td class="py-md tabular-nums text-on-surface-variant">{{ row.deleted }}</td>
                 </tr>
               }
             </tbody>
