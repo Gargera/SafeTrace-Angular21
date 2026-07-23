@@ -36,18 +36,16 @@
       >
         <!-- Generic placeholder icon - ChatSummaryDto has no avatarUrl -->
         <!-- حاوية الصورة/الأيقونة -->
-<span class="w-12 h-12 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center shrink-0 overflow-hidden">
-  @if (chat.otherUserImage) {
-    <!-- إذا كانت الصورة موجودة -->
-    <img [src]="chatService.getImageUrl(chat.otherUserImage)" alt="صورة المستخدم" class="w-full h-full object-cover" />
-  } @else {
-    <!-- إذا لم تكن الصورة موجودة، تعرض الأيقونة الافتراضية -->
-    <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="8" r="3.5" />
-      <path d="M5 20a7 7 0 0 1 14 0" />
-    </svg>
-  }
-</span>
+        <span class="w-10 h-10 rounded-full bg-secondary text-on-secondary-container flex items-center justify-center shrink-0 overflow-hidden">
+          @if (chat.otherUserImage) {
+            <!-- إذا كانت الصورة موجودة -->
+            <img [src]="chatService.getImageUrl(chat.otherUserImage)" alt="صورة المستخدم" class="w-full h-full object-cover" />
+          } @else {
+            <!-- إذا لم تكن الصورة موجودة، تعرض الأيقونة الافتراضية -->
+            <span class="m-auto font-medium text-sm">{{ chat.otherUserName?.charAt(0) }}</span>
+
+          }
+        </span>
         <div class="flex-1 min-w-0">
           <!-- الكانتينر مرتب عمودياً للموبايل وأفقياً للشاشات الأكبر -->
           <div class="flex flex-col items-start gap-y-1 sm:flex-row sm:items-center sm:gap-x-xs mb-1">

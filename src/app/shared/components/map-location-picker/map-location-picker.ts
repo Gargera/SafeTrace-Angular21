@@ -40,16 +40,19 @@ export class MapLocationPickerComponent {
 
   constructor() {
     effect(() => {
-      const open = this.isOpen();
-      if (open) {
-        const container = this.mapContainerRef().nativeElement;
-        this.facade.initializeModal(
-          container,
-          this.initialLat(),
-          this.initialLng(),
-          this.initialAddress()
-        );
-        this.searchInputRef()?.nativeElement?.focus();
+      if (this.isOpen()) {
+        queueMicrotask(() => {
+          const container = this.mapContainerRef().nativeElement;
+
+          this.facade.initializeModal(
+            container,
+            this.initialLat(),
+            this.initialLng(),
+            this.initialAddress(),
+          );
+
+          this.searchInputRef()?.nativeElement?.focus();
+        });
       } else {
         this.facade.destroy();
       }

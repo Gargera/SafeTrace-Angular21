@@ -25,7 +25,7 @@ export class LeafletMapService {
   createMarker(
     map: L.Map,
     position: [number, number],
-    onDragEnd?: (pos: L.LatLng) => void
+    onDragEnd?: (pos: L.LatLng) => void,
   ): L.Marker {
     const marker = createCustomMarker(position);
     marker.addTo(map);
