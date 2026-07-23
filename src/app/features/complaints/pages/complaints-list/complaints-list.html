@@ -9,8 +9,9 @@
 </div>
 
 <!-- Statistics Cards -->
-@if (loadingStats()) {
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+<ng-container *hasPermission="Permissions.Complaints.GetComplaintsStatistics">
+  @if (loadingStats()) {
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
     @for (i of [1, 2, 3]; track i) {
       <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse">
         <div class="h-4 bg-surface-container-high rounded w-3/4 mb-2"></div>
@@ -43,6 +44,7 @@
     </app-card>
   </div>
 }
+</ng-container>
 
 <app-card extraClass="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg">
   <div class="grid grid-cols-1 md:grid-cols-3 gap-md items-end">
@@ -106,7 +108,9 @@
           <th class="px-lg py-md">تفاصيل الشكوى</th>
           <th class="px-lg py-md">كود الحالة</th>
           <th class="px-lg py-md">الحالة</th>
-          <th class="px-lg py-md text-center">الإجراءات</th>
+          <ng-container *hasPermission="complaintActionPermissions">
+            <th class="px-lg py-md text-center">الإجراءات</th>
+          </ng-container>
         </tr>
       </thead>
       <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
@@ -127,26 +131,30 @@
                 {{ complaint.complaintStatus === ComplaintStatusEnum.Solved ? 'محلولة' : 'غير محلولة' }}
               </span>
             </td>
-            <td class="px-lg py-md text-center">
-              <div class="flex items-center justify-center gap-2">
-                <app-button
-                  variant="primary"
-                  (onClick)="openDetails(complaint)"
-                  extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
-                >
-                  <span class="material-symbols-outlined text-[16px]">visibility</span>
-                  عرض
-                </app-button>
-                <app-button
-                  variant="danger"
-                  (onClick)="openDeleteModal(complaint)"
-                  extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200"
-                >
-                  <span class="material-symbols-outlined text-[16px]">delete</span>
-                  حذف
-                </app-button>
-              </div>
-            </td>
+            <ng-container *hasPermission="complaintActionPermissions">
+              <td class="px-lg py-md text-center">
+                <div class="flex items-center justify-center gap-2">
+                  <app-button
+                    *hasPermission="Permissions.Complaints.GetById"
+                    variant="primary"
+                    (onClick)="openDetails(complaint)"
+                    extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
+                  >
+                    <span class="material-symbols-outlined text-[16px]">visibility</span>
+                    عرض
+                  </app-button>
+                  <app-button
+                    *hasPermission="Permissions.Complaints.HardDelete"
+                    variant="danger"
+                    (onClick)="openDeleteModal(complaint)"
+                    extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200"
+                  >
+                    <span class="material-symbols-outlined text-[16px]">delete</span>
+                    حذف
+                  </app-button>
+                </div>
+              </td>
+            </ng-container>
           </tr>
         } @empty {
           @if (!isLoading()) {
@@ -237,16 +245,18 @@
         </div>
 
         @if (selectedComplaint()!.complaintStatus !== ComplaintStatusEnum.Solved) {
-          <div class="bg-surface-container-low p-4 rounded-xl border border-outline-variant/40">
-            <app-form-field
-              type="textarea"
-              label="رسالة الرد للمستخدم *"
-              placeholder="اكتب ردك هنا... سيصله عبر الإيميل والإشعارات"
-              [ngModel]="solutionMessage()"
-              (ngModelChange)="solutionMessage.set($event)"
-              [rows]="4"
-            ></app-form-field>
-          </div>
+          <ng-container *hasPermission="Permissions.Complaints.MarkAsSolved">
+            <div class="bg-surface-container-low p-4 rounded-xl border border-outline-variant/40">
+              <app-form-field
+                type="textarea"
+                label="رسالة الرد للمستخدم *"
+                placeholder="اكتب ردك هنا... سيصله عبر الإيميل والإشعارات"
+                [ngModel]="solutionMessage()"
+                (ngModelChange)="solutionMessage.set($event)"
+                [rows]="4"
+              ></app-form-field>
+            </div>
+          </ng-container>
         } @else {
           <div>
             <p class="text-sm font-medium text-on-surface-variant mb-2">رسالة الحل المرسلة</p>
@@ -264,7 +274,7 @@
         </app-button>
         <div class="flex-1"></div>
         @if (selectedComplaint()!.complaintStatus !== ComplaintStatusEnum.Solved) {
-          <app-button variant="primary" (onClick)="resolveComplaint()" [disabled]="isResolving()" extraClass="w-full sm:w-auto min-w-[140px]">
+          <app-button *hasPermission="Permissions.Complaints.MarkAsSolved" variant="primary" (onClick)="resolveComplaint()" [disabled]="isResolving()" extraClass="w-full sm:w-auto min-w-[140px]">
             <span class="material-symbols-outlined text-[18px]">check_circle</span>
             {{ isResolving() ? 'جاري الحل...' : 'اعتماد الحل' }}
           </app-button>

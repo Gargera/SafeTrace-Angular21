@@ -6,6 +6,9 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+import { Permissions } from '../../../../core/constants/Permissions';
+import { AuthService } from '../../../../core/services/auth.service';
 
 import {
   PERMISSION_GROUPS_AR,
@@ -29,11 +32,13 @@ interface PermissionGroup {
 @Component({
   selector: 'app-role-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent, LoadingSpinnerComponent, ConfirmationModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective],
   templateUrl: './role-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RoleManagement implements OnInit {
+  Permissions = Permissions;
+  private authService = inject(AuthService);
   private roleService = inject(RoleService);
   private fb = inject(FormBuilder);
   private snackbar = inject(SnackbarService);
@@ -80,7 +85,7 @@ export class RoleManagement implements OnInit {
 
   isReadOnly = computed(() => {
     const selectedRole = this.roles().find((r) => r.id === this.selectedRoleId());
-    return selectedRole?.name === 'Admin';
+    return selectedRole?.name === 'Admin' || !this.authService.hasPermission(this.Permissions.Roles.UpdateRolePermissions);
   });
 
   isDeletableRole = computed(() => {

@@ -57,13 +57,22 @@
                   <button
                     type="button"
                     (click)="switchTab(tab.id)"
-                    class="shrink-0 snap-start whitespace-nowrap px-lg py-sm rounded-t-lg text-body-sm font-medium transition-colors border-b-2"
+                    class="relative shrink-0 snap-start whitespace-nowrap px-lg py-sm rounded-t-lg text-body-sm font-medium transition-all duration-200 border-b-2 hover:bg-primary/10 hover:text-primary hover:border-primary/40"
+                    [class.bg-primary/10]="activeTab() === tab.id"
                     [class.border-primary]="activeTab() === tab.id"
                     [class.text-primary]="activeTab() === tab.id"
                     [class.border-transparent]="activeTab() !== tab.id"
                     [class.text-on-surface-variant]="activeTab() !== tab.id"
                   >
                     {{ tab.label }}
+
+                    @if (tab.id === 'notifications' && notificationService.unreadCount() > 0) {
+                      <span
+                        class="absolute top-0 right-18 bg-error min-w-4.5 h-4.5 px-1 rounded-full text-[10px] text-white flex items-center justify-center font-bold border border-surface shadow-sm"
+                      >
+                        {{ notificationService.unreadCount() }}
+                      </span>
+                    }
                   </button>
                 }
               </div>

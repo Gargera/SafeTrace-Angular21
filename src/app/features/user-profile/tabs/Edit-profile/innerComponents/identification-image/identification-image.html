@@ -31,9 +31,7 @@
           class="px-sm py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 focus-visible:ring-2 focus-visible:ring-secondary transition-all flex items-center gap-xs disabled:opacity-50 cursor-pointer"
         >
           @if (isSavingIdImage()) {
-            <span
-              class="material-symbols-outlined text-[14px] animate-spin"
-              aria-hidden="true"
+            <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
               >progress_activity</span
             >
           }
@@ -46,9 +44,7 @@
   <div class="flex items-center gap-md">
     <div class="relative w-24 h-24 shrink-0">
       @if (idImagePreview()) {
-        <div
-          class="w-24 h-24 rounded-lg overflow-hidden border-2 border-secondary shadow-sm"
-        >
+        <div class="w-24 h-24 rounded-lg overflow-hidden border-2 border-secondary shadow-sm">
           <img
             [src]="idImagePreview()!"
             alt="معاينة صورة الهوية"
@@ -81,6 +77,15 @@
 
     @if (isEditingIdImage()) {
       <div class="flex-1 flex flex-col gap-xs">
+        @if (!isVerified) {
+          <span class="text-[12px] font-bold text-on-surface-variant">
+            -يفضل رفع صورة واحده تحتوي على وجه وظهر الهوية.
+          </span>
+
+          <span class="text-[12px] font-bold text-on-surface-variant">
+            -او الوجه فقط على الاقل.</span
+          >
+        }
         <label
           aria-labelledby="id-photo-label"
           class="flex items-center gap-sm p-md bg-surface-container-low border border-dashed border-outline-variant rounded-lg hover:border-secondary hover:bg-surface-container focus-within:ring-2 focus-within:ring-secondary transition-all group"
@@ -96,11 +101,11 @@
             {{ isVerified ? 'verified' : 'add_photo_alternate' }}
           </span>
           <span class="text-label-sm text-on-surface-variant">
-            {{
-              isVerified
-                ? 'تم التحقق من الهوية'
-                : (idImagePreview() ? 'تغيير الصورة' : 'اختر صورة') + '  حتى 5MB'
-            }}
+            @if (isVerified) {
+              'تم التحقق من الهوية'
+            } @else {
+              {{ (idImagePreview() ? 'تغيير الصورة' : 'اختر صورة') + ' حتى 5MB' }}
+            }
           </span>
 
           <input
@@ -113,9 +118,7 @@
         </label>
       </div>
     } @else if (!idImagePreview()) {
-      <span class="text-label-sm text-on-surface-variant flex-1"
-        >لم يتم رفع صورة الهوية بعد</span
-      >
+      <span class="text-label-sm text-on-surface-variant flex-1">لم يتم رفع صورة الهوية بعد</span>
     }
   </div>
 </div>

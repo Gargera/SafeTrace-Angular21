@@ -5,13 +5,14 @@ import Swal from 'sweetalert2';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-ai-search',
   standalone: true,
-  imports: [CommonModule, CaseCardComponent, LoadingSpinnerComponent],
+  imports: [CommonModule, CaseCardComponent, LoadingSpinnerComponent, CaseHeaderComponent],
   templateUrl: './ai-search.html',
   styleUrl: './ai-search.css',
 })
