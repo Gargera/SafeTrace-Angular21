@@ -184,7 +184,17 @@
               <span class="text-outline">اضغط على الخريطة لتحديد الموقع</span>
             }
           </div>
-          @if (state.formattedCoordinates()) {
+          @if (readOnly()) {
+            <app-button
+              variant="primary"
+              type="button"
+              (onClick)="openDirections()"
+              extraClass="!h-9 px-4 text-xs gap-1.5 shrink-0"
+            >
+              <span class="material-symbols-outlined text-base">directions</span>
+              الاتجاهات
+            </app-button>
+          } @else if (state.formattedCoordinates()) {
             <span class="rounded-md bg-surface-container px-2.5 py-1 text-[11px] font-mono text-on-surface-variant font-medium shrink-0">
               {{ state.formattedCoordinates() }}
             </span>
