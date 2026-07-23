@@ -11,6 +11,7 @@ import {
   RECENTER_ZOOM,
   SEARCH_DEBOUNCE_MS,
   MAP_INIT_DELAY_MS,
+  MAP_RENDER_DELAY_MS,
 } from '../constants/location.constants';
 import { formatCoordinates } from '../utils/location.utils';
 
@@ -18,8 +19,6 @@ import { LeafletMapService } from '../services/leaflet-map.service';
 import { CurrentLocationService } from '../services/current-location.service';
 import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 import { LocationState } from '../state/location.state';
-
-const MAP_RENDER_DELAY_MS = 200;
 
 @Injectable()
 export class LocationFacade {
@@ -33,7 +32,7 @@ export class LocationFacade {
   private mapInstance: L.Map | null = null;
   private markerInstance: L.Marker | null = null;
   private mapResizeObserver?: ResizeObserver;
-  private modalInitializationTimer: any = null;
+  private modalInitializationTimer: ReturnType<typeof setTimeout> | null = null;
 
   private readonly searchSubject$ = new Subject<string>();
   private readonly reverseGeocodeSubject$ = new Subject<MapCoordinates>();
@@ -75,24 +74,31 @@ export class LocationFacade {
       .pipe(
         debounceTime(SEARCH_DEBOUNCE_MS),
         distinctUntilChanged(),
-        tap(() => this.state.setSearching(true)),
-        switchMap((searchQuery) =>
-          this.geocodingService.searchPlaces(searchQuery).pipe(
+        switchMap((searchQuery) => {
+          if (searchQuery.length < 2) {
+            return of([] as SearchResult[]);
+          }
+
+          this.state.setSearching(true);
+
+          return this.geocodingService.searchPlaces(searchQuery).pipe(
             catchError(() => of([] as SearchResult[]))
-          )
-        ),
+          );
+        }),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((searchResults) => {
         this.state.setSearchResults(searchResults);
         this.state.setSearching(false);
-        this.state.setHasSearched(true);
+        const wasRealSearch = this.state.searchQuery().trim().length >= 2;
+        this.state.setHasSearched(wasRealSearch);
       });
   }
 
   private initializeReverseGeocodePipeline(): void {
     this.reverseGeocodeSubject$
       .pipe(
+        distinctUntilChanged((a, b) => a.lat === b.lat && a.lng === b.lng),
         tap(() => this.state.setReverseGeocoding(true)),
         switchMap(({ lat, lng }) =>
           this.geocodingService.reverseGeocode(lat, lng).pipe(
@@ -128,7 +134,7 @@ export class LocationFacade {
     }
   }
 
-  initializeMap(containerElement: HTMLElement, latitude: number, longitude: number): void {
+  private initializeMap(containerElement: HTMLElement, latitude: number, longitude: number): void {
     this.mapInstance = this.leafletMapService.createMap(containerElement, [latitude, longitude], DEFAULT_ZOOM);
     this.markerInstance = this.leafletMapService.createMarker(
       this.mapInstance,
@@ -175,10 +181,11 @@ export class LocationFacade {
     this.state.setSearchQuery(searchQuery);
     this.state.setSelectedIndex(-1);
 
-    const trimmedQuery = searchQuery ? searchQuery.trim() : '';
+    const trimmedQuery = searchQuery?.trim() ?? '';
     if (trimmedQuery.length < 2) {
-      this.clearSearchState();
-      return;
+      this.state.setSearchResults([]);
+      this.state.setHasSearched(false);
+      this.state.setSearching(false);
     }
     this.searchSubject$.next(trimmedQuery);
   }
@@ -283,7 +290,7 @@ export class LocationFacade {
       clearTimeout(this.modalInitializationTimer);
       this.modalInitializationTimer = null;
     }
-    this.leafletMapService.destroy(this.mapInstance, this.markerInstance, this.mapResizeObserver);
+    this.leafletMapService.destroyMap(this.mapInstance, this.markerInstance, this.mapResizeObserver);
     this.mapInstance = null;
     this.markerInstance = null;
     this.mapResizeObserver = undefined;

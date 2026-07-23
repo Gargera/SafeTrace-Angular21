@@ -15,3 +15,4 @@ export const LOCATION_SAFETY_GUARD_MS = 10000;
 export const MAXIMUM_LOCATION_AGE_MS = 30000;
 export const MAP_RESIZE_DEBOUNCE_MS = 200;
 export const MAP_INIT_DELAY_MS = 120;
+export const MAP_RENDER_DELAY_MS = 200;
