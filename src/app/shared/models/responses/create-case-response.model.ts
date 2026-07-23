@@ -10,5 +10,7 @@ import { MatchedCaseResponse } from './matched-case.model';
 export interface CreateCaseResponse {
   id: number;
   isCreated: boolean;
+  isSameTypeDuplicate?: boolean;
   matchedCases?: MatchedCaseResponse[] | null;
+
 }

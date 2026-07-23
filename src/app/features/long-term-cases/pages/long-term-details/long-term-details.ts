@@ -1,3 +1,5 @@
+import { FormField } from '../../../../shared/components/form-field/form-field';
+import { CardComponent } from '../../../../shared/components/card/card';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -112,6 +114,7 @@ export class LongTermDetails implements OnInit {
               apiRes.data.photos.find((x) => x.isPrimary) ?? apiRes.data.photos[0];
 
             this.selectedMedia.set(primary);
+            this.selectedMedia.set(primary);
 
             this.currentIndex.set(
               apiRes.data.photos.findIndex((x) => x.id === primary.id)
@@ -198,6 +201,7 @@ export class LongTermDetails implements OnInit {
     if (!id) return;
 
     this.isFounding.set(true);
+    this.isFounding.set(true);
 
     this.longTermCaseService.markAsFound(id, data).subscribe({
       next: (res) => {
@@ -241,6 +245,7 @@ export class LongTermDetails implements OnInit {
     const id = this.caseDetails()?.id;
     if (!id) return;
 
+    this.deleting.set(true);
     this.deleting.set(true);
 
     this.longTermCaseService.deleteCase(id).subscribe({

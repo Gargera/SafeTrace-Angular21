@@ -1,6 +1,6 @@
  import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { UrgentCaseService } from '../../../features/urgent-cases/services/urgent-case.service';
 import { LongTermCaseService } from '../../../features/long-term-cases/services/long-term-case.service';
@@ -9,13 +9,15 @@ import { FoundedService } from '../../../features/founded/services/founded.servi
 import { CaseCardComponent } from '../cases-components/case-card/case-card.component';
 import { ComplaintsService } from '../../../features/complaints/services/complaints.service';
 import { SnackbarService } from '../../../core/services/toast.service';
-
-declare const Swal: any;
+import { ButtonComponent } from '../button/button';
+import { FormField } from '../form-field/form-field';
+import { CardComponent } from '../card/card';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, CaseCardComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, CaseCardComponent, ButtonComponent, FormField, CardComponent],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
@@ -32,7 +34,9 @@ export class Home implements OnInit {
   unknownCases = signal<any[]>([]);
   foundedCases = signal<any[]>([]);
 
-  complaintForm = { caseCode: '', contactType: '', message: '' };
+  private fb = inject(FormBuilder);
+  
+  complaintForm!: FormGroup;
   isSendingComplaint = signal(false);
 
   contactTypeOptions = [
@@ -44,6 +48,12 @@ export class Home implements OnInit {
   ];
 
   ngOnInit() {
+    this.complaintForm = this.fb.group({
+      caseCode: [''],
+      contactType: [''],
+      message: ['', [Validators.required]]
+    });
+
     this.urgentSvc.getAllCases({ pageNumber: 1, pageSize: 4 } as any).subscribe({
       next: (res: any) => {
         const items = res?.data?.items ?? res?.items ?? [];
@@ -74,32 +84,40 @@ export class Home implements OnInit {
   }
 
   submitComplaint() {
-    if (!this.complaintForm.message.trim()) {
-      Swal.fire({ icon: 'warning', title: 'تنبيه', text: 'يرجى كتابة نص الرسالة', confirmButtonText: 'حسناً' });
+    if (this.complaintForm.invalid) {
+      this.complaintForm.markAllAsTouched();
       return;
     }
     this.isSendingComplaint.set(true);
-    const message = this.complaintForm.contactType
-      ? `[${this.complaintForm.contactType}] ${this.complaintForm.message}`
-      : this.complaintForm.message;
+    const formValue = this.complaintForm.value;
+    const message = formValue.contactType
+      ? `[${formValue.contactType}] ${formValue.message}`
+      : formValue.message;
 
     this.complaintSvc.createComplaint({
-      caseCode: this.complaintForm.caseCode || undefined,
+      caseCode: formValue.caseCode || undefined,
       message
     }).subscribe({
       next: (res: any) => {
         if (res.success) {
-          Swal.fire({ icon: 'success', title: 'تم الإرسال!', text: 'تم إرسال رسالتك بنجاح، سيتواصل معك فريقنا قريباً', confirmButtonText: 'حسناً' });
-          this.complaintForm = { caseCode: '', contactType: '', message: '' };
+          this.snackbar.success('تم إرسال رسالتك بنجاح، سيتواصل معك فريقنا قريباً');
+          this.complaintForm.reset();
         }
         this.isSendingComplaint.set(false);
       },
-      error: () => {
-        Swal.fire({ icon: 'error', title: 'خطأ', text: 'حدث خطأ أثناء إرسال الرسالة، يرجى المحاولة مرة أخرى', confirmButtonText: 'حسناً' });
+      error: (err) => {
+        this.snackbar.error(err.error?.message || err.error?.detail || 'حدث خطأ أثناء إرسال الرسالة، يرجى المحاولة مرة أخرى');
         this.isSendingComplaint.set(false);
       }
     });
   }
+
+  getImageUrl(path: string | undefined): string {
+    if (!path) return '/images/defaultUser.jpg';
+    if (path.startsWith('http')) return path;
+    return `${environment.baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+  }
+
   onImgError(event: Event) {
   (event.target as HTMLImageElement).src = '/images/defaultUser.jpg';
 }

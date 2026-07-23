@@ -1,3 +1,5 @@
+import { FormField } from '../../../../shared/components/form-field/form-field';
+import { CardComponent } from '../../../../shared/components/card/card';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -33,6 +35,8 @@ import { UnknownCaseDetailResponse } from '../../models/response/UnknownCaseDeta
     CaseTypeBadgeDirective,
     AgeBadgeDirective,
     ConfirmationModalComponent,
+    FoundedPopupComponent,
+    ButtonComponent,
     FoundedPopupComponent,
     ButtonComponent,
   ],
@@ -106,6 +110,7 @@ export class UnknownDetails implements OnInit {
             const primary =
               apiRes.data.photos.find((x) => x.isPrimary) ?? apiRes.data.photos[0];
 
+            this.selectedMedia.set(primary);
             this.selectedMedia.set(primary);
 
             this.currentIndex.set(
@@ -203,7 +208,9 @@ export class UnknownDetails implements OnInit {
     const id = this.caseDetails()?.id;
 
     if (!id) return;
+    if (!id) return;
 
+    this.isFounding.set(true);
     this.isFounding.set(true);
 
     this.UnknownCaseService.markAsFound(id, data).subscribe({
@@ -252,7 +259,9 @@ export class UnknownDetails implements OnInit {
     const id = this.caseDetails()?.id;
 
     if (!id) return;
+    if (!id) return;
 
+    this.deleting.set(true);
     this.deleting.set(true);
 
     this.UnknownCaseService.deleteCase(id).subscribe({

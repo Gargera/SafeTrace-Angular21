@@ -23,6 +23,9 @@ import { UserStatisticsDto } from '../../models/User/UserStatisticsDto';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import { SnackbarService } from '../../../../core/services/toast.service';
 
+import { Permissions } from '../../../../core/constants/Permissions';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+
 @Component({
   selector: 'app-user-list',
   imports: [
@@ -38,6 +41,7 @@ import { SnackbarService } from '../../../../core/services/toast.service';
     EmptyStateComponent,
     LoadingSpinnerComponent,
     CaseHeaderComponent,
+    HasPermissionDirective,
   ],
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',
@@ -45,6 +49,7 @@ import { SnackbarService } from '../../../../core/services/toast.service';
 })
 export class UserList {
   public authService = inject(AuthService);
+  Permissions = Permissions;
   private userService = inject(UserService);
   private roleService = inject(RoleService);
   private readonly router = inject(Router);
@@ -67,7 +72,25 @@ export class UserList {
     isBlocked: '' as any,
   });
 
-  pagesArray = computed(() => Array.from({ length: this.totalPages() }, (_, i) => i + 1));
+  pagesArray = computed(() => {
+    const current = this.filter().pageNumber;
+    const total = this.totalPages();
+    const pages: number[] = [];
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, current + 2);
+
+    if (current <= 3) {
+      end = Math.min(total, 5);
+    }
+    if (current >= total - 2) {
+      start = Math.max(1, total - 4);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  });
 
   private searchSubject = new Subject<string>();
   VerificationStatusEnum = VerificationStatus;

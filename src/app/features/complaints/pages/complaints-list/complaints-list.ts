@@ -18,6 +18,8 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
+import { Permissions } from '../../../../core/constants/Permissions';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 
 @Component({
   selector: 'app-complaints-list',
@@ -33,7 +35,8 @@ import { ConfirmationModalComponent } from '../../../../shared/components/confir
     EmptyStateComponent,
     LoadingSpinnerComponent,
     CaseHeaderComponent,
-    ConfirmationModalComponent
+    ConfirmationModalComponent,
+    HasPermissionDirective
   ],
   templateUrl: './complaints-list.html',
   styleUrl: './complaints-list.css',
@@ -41,6 +44,11 @@ import { ConfirmationModalComponent } from '../../../../shared/components/confir
 })
 export class ComplaintsList implements OnInit {
   private svc = inject(ComplaintsService);
+  Permissions = Permissions;
+  complaintActionPermissions = [
+    Permissions.Complaints.GetById,
+    Permissions.Complaints.HardDelete
+  ];
   private toast = inject(SnackbarService);
 
   complaints = signal<ComplaintResponseDto[]>([]);
@@ -65,7 +73,25 @@ export class ComplaintsList implements OnInit {
     status: '' as any,
   });
 
-  pagesArray = computed(() => Array.from({ length: this.totalPages() }, (_, i) => i + 1));
+  pagesArray = computed(() => {
+    const current = this.filter().pageNumber;
+    const total = this.totalPages();
+    const pages: number[] = [];
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, current + 2);
+
+    if (current <= 3) {
+      end = Math.min(total, 5);
+    }
+    if (current >= total - 2) {
+      start = Math.max(1, total - 4);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  });
 
   ComplaintStatusEnum = ComplaintStatus;
   private searchSubject = new Subject<string>();

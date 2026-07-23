@@ -11,6 +11,7 @@ import { RegisterRequest } from '../../features/auth/models/RegisterRequest';
 import { ResetPasswordRequest } from '../../features/auth/models/ResetPasswordRequest';
 import { VerificationStatus } from '../../shared/enums/verification-status';
 import { UserRole } from '../../shared/enums/user-role';
+import { LocationTrackingService } from './LocationTracking.service';
 
 @Injectable({
   providedIn: 'root',
@@ -20,7 +21,7 @@ export class AuthService {
   private socialAuthService = inject(SocialAuthService);
   private router = inject(Router);
   private readonly baseUrl = `${environment.baseUrl}/api/Account`;
-
+  private locationTrackingService = inject(LocationTrackingService);
   private accessToken: string | null = null;
   private readonly userDataKey = 'user_data';
 
@@ -54,7 +55,8 @@ export class AuthService {
   private getDecodedToken(): any | null {
     const token = this.getToken();
     if (!token) return null;
-    
+
+
     try {
       const payload = token.split('.')[1];
       const decodedPayload = atob(payload);
@@ -67,16 +69,31 @@ export class AuthService {
   getCurrentUserId(): string | null {
     const decodedToken = this.getDecodedToken();
     if (!decodedToken) return null;
-    
-    return decodedToken['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || decodedToken.sub || null;
+
+    return (
+      decodedToken['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] ||
+      decodedToken.sub ||
+      null
+    );
+  }
+
+  getVerificationStatus(): VerificationStatus | undefined {
+    const userData = this.currentUser();
+    return userData ? userData.verificationStatus : undefined;
   }
 
   getUserRole(): string | null {
     const decodedToken = this.getDecodedToken();
     if (!decodedToken) return null;
 
-    const roleClaim = decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || decodedToken.role;
-    return typeof roleClaim === 'string' ? roleClaim : (Array.isArray(roleClaim) && roleClaim.length > 0 ? roleClaim[0] : null);
+    const roleClaim =
+      decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
+      decodedToken.role;
+    return typeof roleClaim === 'string'
+      ? roleClaim
+      : Array.isArray(roleClaim) && roleClaim.length > 0
+        ? roleClaim[0]
+        : null;
   }
 
   hasRole(role: string): boolean {
@@ -93,6 +110,12 @@ export class AuthService {
 
   isVerifiedUser(): boolean {
     return this.hasRole(UserRole.VerifiedUser);
+  }
+
+  hasPermission(permission: string): boolean {
+    const userData = this.currentUser();
+    if (!userData || !userData.permissions) return false;
+    return userData.permissions.includes(permission);
   }
 
   getToken(): string | null {
@@ -112,6 +135,8 @@ export class AuthService {
       fullName: response.fullName,
       profileImage: response.profileImage || null,
       isVerified: response.verificationStatus === VerificationStatus.Verified,
+      verificationStatus: response.verificationStatus,
+      permissions: response.permissions || []
     };
 
     localStorage.setItem(this.userDataKey, JSON.stringify(userData));
@@ -124,9 +149,11 @@ export class AuthService {
 
   handleSessionExpiration(): void {
     if (!this.isLoggedIn()) return; // Already cleared
-    
+
+
     this.clearSession();
-    
+
+
     import('sweetalert2').then((SwalModule) => {
       const Swal = SwalModule.default;
       Swal.fire({
@@ -137,8 +164,8 @@ export class AuthService {
         confirmButtonColor: '#091426',
         allowOutsideClick: false,
         customClass: {
-          popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl'
-        }
+          popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl',
+        },
       }).then(() => {
         this.router.navigate(['/auth']);
       });
@@ -146,6 +173,8 @@ export class AuthService {
   }
 
   clearSession(): void {
+    this.locationTrackingService.stopTrackingLocation();
+
     this.accessToken = null;
     localStorage.removeItem(this.userDataKey);
     localStorage.removeItem('refreshTokenExpiration');
@@ -162,29 +191,45 @@ export class AuthService {
     return this.http.post<ApiResponse<string>>(`${this.baseUrl}/register`, data);
   }
 
+  // login(data: LoginRequest): Observable<ApiResponse<AuthResponse>> {
+  //   return this.http
+  //     .post<ApiResponse<AuthResponse>>(`${this.baseUrl}/login`, data, { withCredentials: true })
+  //     .pipe(
+  //       tap((res) => {
+  //         if (res.success && res.data) this.setSession(res.data);
+  //       }),
+  //     );
+  // }
   login(data: LoginRequest): Observable<ApiResponse<AuthResponse>> {
     return this.http
-      .post<ApiResponse<AuthResponse>>(`${this.baseUrl}/login`, data, { withCredentials: true })
+      .post<ApiResponse<AuthResponse>>(`${this.baseUrl}/login`, data, {
+        withCredentials: true,
+      })
       .pipe(
         tap((res) => {
-          if (res.success && res.data) this.setSession(res.data);
+          if (res.success && res.data) {
+            this.setSession(res.data);
+
+            // ابدأ تتبع الموقع
+            this.locationTrackingService.startTrackingLocation();
+          }
         }),
       );
   }
-
   googleLogin(data: { providerToken: string }): Observable<ApiResponse<AuthResponse>> {
     return this.http
-      .post<
-        ApiResponse<AuthResponse>
-      >(`${this.baseUrl}/google-login`, data, { withCredentials: true })
+      .post<ApiResponse<AuthResponse>>(`${this.baseUrl}/google-login`, data, {
+        withCredentials: true,
+      })
       .pipe(
         tap((res) => {
-          if (res.success && res.data) this.setSession(res.data);
+          if (res.success && res.data) {
+            this.setSession(res.data);
+            this.locationTrackingService.startTrackingLocation();
+          }
         }),
       );
   }
-
-
 
   confirmEmail(email: string, otpCode: string): Observable<ApiResponse<string>> {
     return this.http.post<ApiResponse<string>>(
@@ -222,9 +267,11 @@ export class AuthService {
 
   refreshToken(): Observable<ApiResponse<AuthResponse>> {
     return this.http
-      .post<
-        ApiResponse<AuthResponse>
-      >(`${this.baseUrl}/refresh-token`, {}, { withCredentials: true })
+      .post<ApiResponse<AuthResponse>>(
+        `${this.baseUrl}/refresh-token`,
+        {},
+        { withCredentials: true },
+      )
       .pipe(
         tap((res) => {
           if (res.success && res.data) this.setSession(res.data);

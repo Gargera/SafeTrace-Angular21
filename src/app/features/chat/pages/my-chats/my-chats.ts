@@ -1,11 +1,11 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
-import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
 import { ChatService } from '../../services/chat.service';
 import { ChatAlertsService } from '../../services/chat-alert.service';
 import { ChatSummaryDto } from '../../models/chat.model';
-import { ButtonComponent } from '../../../../shared/components/button/button';
 import { SnackbarService } from '../../../../core/services/toast.service';
+import { ButtonComponent } from '../../../../shared/components/button/button';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 
 type ConversationFilter = 'all' | 'unread';
@@ -14,7 +14,7 @@ type ConversationFilter = 'all' | 'unread';
 
 @Component({
   selector: 'app-my-chats',
-  imports: [DatePipe, ButtonComponent,LoadingSpinnerComponent],
+  imports: [CommonModule, RouterModule, ButtonComponent, LoadingSpinnerComponent],
   templateUrl: './my-chats.html',
 })
 export class MyChats implements OnInit {

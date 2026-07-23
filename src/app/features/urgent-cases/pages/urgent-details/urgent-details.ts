@@ -1,3 +1,5 @@
+import { FormField } from '../../../../shared/components/form-field/form-field';
+import { CardComponent } from '../../../../shared/components/card/card';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -190,6 +192,7 @@ export class UrgentDetails implements OnInit {
     if (!id) return;
 
     this.isFounding.set(true);
+    this.isFounding.set(true);
 
     this.UrgentDetailsService.markAsFound(id, data).subscribe({
       next: (res) => {
@@ -234,6 +237,7 @@ export class UrgentDetails implements OnInit {
     const id = this.caseDetails()?.id;
     if (!id) return;
 
+    this.deleting.set(true);
     this.deleting.set(true);
 
     this.UrgentDetailsService.deleteCase(id).subscribe({

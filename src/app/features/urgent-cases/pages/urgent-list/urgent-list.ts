@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { Router, RouterModule } from '@angular/router';
+import { finalize, Subject } from 'rxjs';
 
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
@@ -12,14 +12,18 @@ import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-c
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
 
 import { UrgentCaseService } from '../../services/urgent-case.service';
-import { CasesFilterRequest } from '../../../../core/models/Cases.model';
+import { CasesFilterRequest, CaseType } from '../../../../core/models/Cases.model';
 import { UrgentCaseListItemResponse } from '../../models/response/UrgentCaseListItemResponse';
 import { UrgentCasesFilterRequest } from '../../models/request/UrgentCaseFilterRequest';
+import { CaseCreationFlowService } from '../../../../core/services/case-creation-flow.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-urgent-list',
   standalone: true,
   imports: [
+    CommonModule,
+    RouterModule,
     FormField,
     FormsModule,
     CaseHeaderComponent,
@@ -33,14 +37,17 @@ import { UrgentCasesFilterRequest } from '../../models/request/UrgentCaseFilterR
   styleUrls: ['./urgent-list.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class UrgentListComponent implements OnInit {
+export class UrgentListComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly urgentCaseService = inject(UrgentCaseService);
+  private readonly caseCreationFlowService = inject(CaseCreationFlowService);
+  private readonly destroy$ = new Subject<void>();
 
   private readonly defaultPageSize = 12;
 
   readonly cases = signal<UrgentCaseListItemResponse[]>([]);
   readonly loading = signal(true);
+  readonly hasError = signal(false);
 
   readonly currentPage = signal(1);
   readonly totalPages = signal(1);
@@ -55,8 +62,13 @@ export class UrgentListComponent implements OnInit {
     this.fetchCases();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   navigateToCreate(): void {
-    this.router.navigate(['/urgent/create']);
+    this.caseCreationFlowService.start(CaseType.Urgent);
   }
 
   onFilterChange(newFilter: CasesFilterRequest): void {

@@ -28,7 +28,7 @@
 
     <form [formGroup]="confirmForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
       <div class="flex flex-col gap-1">
-        <label class="text-label-md font-medium text-on-surface text-center mb-2">أدخل الرمز هنا</label>
+        <label class="text-label-md font-medium text-on-surface text-center mb-2">أدخل الرمز هنا <span class="text-error">*</span></label>
         <app-form-field 
           formControlName="otpCode" 
           type="text" 

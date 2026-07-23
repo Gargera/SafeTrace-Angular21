@@ -1,262 +1,208 @@
- <div class="home-wrapper" dir="rtl">
-
-  <!-- ===== Hero Section ===== -->
-  <section class="hero-section">
-    <div class="hero-img-wrap">
-      <img src="/images/hero-family.png" alt="عائلة سعيدة" class="hero-img" />
-      <!-- Floating cards -->
-      <div class="hero-float hero-float-tl">
-        <span class="material-symbols-outlined" style="color:#3B82F6;font-size:20px">verified</span>
-        <div>
-          <p style="font-size:11px;font-weight:700;margin:0;color:#1e293b">تحقق آمن</p>
-          <p style="font-size:10px;margin:0;color:#64748b">بيانات مشفّرة</p>
-        </div>
+<div class="max-w-7xl mx-auto space-y-xl px-4 md:px-8 py-12" dir="rtl">
+  
+  <!-- Hero Section -->
+  <section class="flex flex-col md:flex-row items-center gap-12 bg-surface-container-lowest p-8 md:p-12 rounded-3xl border border-outline-variant shadow-sm">
+    <div class="flex-1 space-y-6">
+      <div class="inline-flex items-center gap-2 bg-secondary/10 text-secondary px-4 py-2 rounded-full font-bold text-[16px]">
+        <span class="material-symbols-outlined text-[20px]">volunteer_activism</span>
+        <span>منصة إنسانية ذكية</span>
       </div>
-      <div class="hero-float hero-float-tr">
-        <span class="material-symbols-outlined" style="color:#3B82F6;font-size:20px">notifications</span>
-        <span class="hero-notif-badge">1</span>
-      </div>
-      <div class="hero-float hero-float-bl">
-        <span class="material-symbols-outlined" style="color:#3B82F6;font-size:18px">location_on</span>
-        <div class="hero-map-dots"></div>
-      </div>
-      <div class="hero-float hero-float-br">
-        <div class="hero-match">
-          <div class="hero-match-avatars">
-            <div class="hero-avatar"></div>
-            <div class="hero-avatar active"></div>
-            <div class="hero-avatar"></div>
-          </div>
-          <div class="hero-match-bar">
-            <div class="hero-match-fill"></div>
-          </div>
-          <span style="font-size:12px;font-weight:700;color:#3B82F6">96%</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="hero-text">
-      <span class="hero-badge">منصة إنسانية ذكية •</span>
-      <h1 class="hero-title">
+      <h1 class="text-[48px] md:text-[64px] font-black text-primary leading-tight">
         نعيد الروابط،<br>
-        <span class="hero-highlight">نحيي الأمل.</span>
+        <span class="text-secondary">نحيي الأمل.</span>
       </h1>
-      <p class="hero-desc">
+      <p class="text-[20px] text-on-surface-variant max-w-112.5 leading-relaxed">
         منصة لقاء تستخدم الذكاء الاصطناعي لمساعدتك في تتبع المفقودين وإعادة لمّ شمل العائلات. من خلال البحث بالصورة والتعاون المجتمعي.
       </p>
-      <div class="hero-btns">
-        <a routerLink="/aisearch" class="btn-primary-hero">
+      <div class="flex flex-wrap gap-4 pt-4">
+        <app-button routerLink="/aisearch" variant="primary" extraClass="px-8 py-4 font-bold text-[18px] rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
           <span class="material-symbols-outlined">photo_camera</span>
           ابدأ البحث الآن
-        </a>
-        <a routerLink="/about" class="btn-secondary-hero">
+        </app-button>
+        <app-button routerLink="/about" variant="secondary" extraClass="px-8 py-4 font-bold text-[18px] rounded-xl gap-2 text-primary border-outline-variant hover:bg-surface-container-low transition-all">
           تعرف على المنصة
           <span class="material-symbols-outlined">chevron_left</span>
-        </a>
+        </app-button>
       </div>
+    </div>
+    <div class="flex-1 w-full flex justify-center">
+      <img src="/images/hero-family.png" alt="عائلة سعيدة" class="w-full max-w-200 rounded-2xl object-cover" />
     </div>
   </section>
 
-  <!-- ===== Stats Bar ===== -->
-  <section class="stats-bar">
-    <div class="stat-item">
-      <span class="stat-icon">👥</span>
-      <div>
-        <p class="stat-num">+12,500</p>
-        <p class="stat-label">بلاغ تم استقباله</p>
-      </div>
-    </div>
-    <div class="stat-item">
-      <span class="stat-icon">🔍</span>
-      <div>
-        <p class="stat-num">+8,230</p>
-        <p class="stat-label">حالة تحت المتابعة</p>
-      </div>
-    </div>
-    <div class="stat-item">
-      <span class="stat-icon">💜</span>
-      <div>
-        <p class="stat-num">+6,500</p>
-        <p class="stat-label">عائلة تم لمّ شملها</p>
-      </div>
-    </div>
-    <div class="stat-item">
-      <span class="stat-icon">🛡️</span>
-      <div>
-        <p class="stat-num">99.7%</p>
-        <p class="stat-label">دقة في البحث</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== Section 2 — How It Works ===== -->
-  <section class="how-section">
-    <div class="how-text">
-      <h2 class="how-title">
+  <!-- How It Works Section -->
+  <section class="flex flex-col md:flex-row items-center gap-12 bg-surface-container-low p-8 md:p-12 rounded-3xl border border-outline-variant shadow-sm">
+    <div class="flex-1 space-y-6">
+      <h2 class="text-[36px] md:text-[48px] font-black text-primary leading-tight">
         كيف يستخدم<br>
-        <span class="how-highlight">لقاء الذكاء الاصطناعي؟</span>
+        <span class="text-secondary">لقاء الذكاء الاصطناعي؟</span>
       </h2>
-      <p class="how-subtitle">
+      <p class="text-[20px] text-on-surface-variant leading-relaxed">
         تعتمد منصة لقاء على تقنيات الذكاء الاصطناعي والرؤية الحاسوبية لمقارنة صور الأشخاص المفقودين مع البلاغات الجديدة، وتحليل البيانات بسرعة للمساعدة في الوصول الى نتائج دقيقة خلال وقت قصير.
       </p>
-      <div class="how-list">
-        <div class="how-list-item">
-          <span class="material-symbols-outlined how-check">check_circle</span>
+      <ul class="space-y-4">
+        <li class="flex items-center gap-3 text-[18px] text-primary font-medium">
+          <span class="material-symbols-outlined text-secondary text-[24px]">check_circle</span>
           <span>مطابقة ذكية للوجوه باستخدام الذكاء الاصطناعي</span>
-        </div>
-        <div class="how-list-item">
-          <span class="material-symbols-outlined how-check">check_circle</span>
+        </li>
+        <li class="flex items-center gap-3 text-[18px] text-primary font-medium">
+          <span class="material-symbols-outlined text-secondary text-[24px]">check_circle</span>
           <span>تحليل الصور حتى مع اختلاف الإضاءة أو زاوية التصوير</span>
-        </div>
-        <div class="how-list-item">
-          <span class="material-symbols-outlined how-check">check_circle</span>
+        </li>
+        <li class="flex items-center gap-3 text-[18px] text-primary font-medium">
+          <span class="material-symbols-outlined text-secondary text-[24px]">check_circle</span>
           <span>مقارنة فورية مع قاعدة بيانات البلاغات</span>
-        </div>
-        <div class="how-list-item">
-          <span class="material-symbols-outlined how-check">check_circle</span>
-          <span>إشعارات عند العثور على تطابق محتمل</span>
-        </div>
-        <div class="how-list-item">
-          <span class="material-symbols-outlined how-check">check_circle</span>
-          <span>حماية وأمان كامل لبيانات المستخدمين</span>
-        </div>
+        </li>
+      </ul>
+      <div class="pt-4">
+        <app-button routerLink="/aisearch" variant="primary" extraClass="px-8 py-4 font-bold text-[18px] rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
+          ابدأ البحث الآن
+          <span class="material-symbols-outlined">arrow_back</span>
+        </app-button>
       </div>
-      <a routerLink="/aisearch" class="how-btn">
-        ابدأ البحث الآن
-        <span class="material-symbols-outlined">arrow_back</span>
-      </a>
     </div>
-    <div class="how-img-wrap">
-      <img src="/images/section2.png" alt="الذكاء الاصطناعي" class="how-img"
-           onerror="this.style.display='none'" />
+    <div class="flex-1 w-full flex justify-center">
+      <img src="/images/section2.png" alt="الذكاء الاصطناعي" class="w-full max-w-160 rounded-2xl object-contain drop-shadow-xl" onerror="this.style.display='none'" />
     </div>
   </section>
 
-  <!-- ===== Urgent Cases ===== -->
-  <section class="cases-section">
-    <div class="section-header">
-      <h2 class="section-title">حالات عاجلة</h2>
-      <a routerLink="/urgent" class="view-all-link">
-        عرض جميع الحالات
-        <span class="material-symbols-outlined">arrow_back</span>
-      </a>
-    </div>
-    <div class="cases-grid">
-      @for (c of urgentCases(); track c.id) {
-        <app-case-card [caseItem]="c" [showUrgentTag]="true" [showContactButton]="false" />
-      } @empty {
-        <p class="empty-msg">لا توجد حالات عاجلة حالياً</p>
-      }
-    </div>
-  </section>
+  <!-- Urgent Cases -->
+  @if (urgentCases().length > 0) {
+    <section class="space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-[28px] md:text-[36px] font-bold text-primary flex items-center gap-2">
+          <span class="material-symbols-outlined text-error">emergency</span>
+          حالات عاجلة
+        </h2>
+        <a routerLink="/urgent" class="text-secondary font-bold hover:underline flex items-center gap-1">
+          عرض جميع الحالات
+          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        </a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        @for (c of urgentCases(); track c.id) {
+          <app-case-card [caseItem]="c" [showUrgentTag]="true" [showContactButton]="false" />
+        }
+      </div>
+    </section>
+  }
 
-  <!-- ===== Long Term Cases ===== -->
-  <section class="cases-section alt-bg">
-    <div class="section-header">
-      <h2 class="section-title">حالات طويلة المدى</h2>
-      <a routerLink="/long-term" class="view-all-link">
-        عرض جميع الحالات
-        <span class="material-symbols-outlined">arrow_back</span>
-      </a>
-    </div>
-    <div class="cases-grid">
-      @for (c of longTermCases(); track c.id) {
-        <app-case-card [caseItem]="c" [showContactButton]="false" />
-      } @empty {
-        <p class="empty-msg">لا توجد حالات طويلة المدى حالياً</p>
-      }
-    </div>
-  </section>
+  <!-- Long Term Cases -->
+  @if (longTermCases().length > 0) {
+    <section class="space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-[28px] md:text-[36px] font-bold text-primary flex items-center gap-2">
+          <span class="material-symbols-outlined text-tertiary">history_toggle_off</span>
+          حالات طويلة المدى
+        </h2>
+        <a routerLink="/long-term" class="text-secondary font-bold hover:underline flex items-center gap-1">
+          عرض جميع الحالات
+          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        </a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        @for (c of longTermCases(); track c.id) {
+          <app-case-card [caseItem]="c" [showContactButton]="false" />
+        }
+      </div>
+    </section>
+  }
 
-  <!-- ===== Unknown Cases ===== -->
-  <section class="cases-section">
-    <div class="section-header">
-      <h2 class="section-title">حالات مجهولة الهوية</h2>
-      <a routerLink="/unknown" class="view-all-link">
-        عرض جميع الحالات
-        <span class="material-symbols-outlined">arrow_back</span>
-      </a>
-    </div>
-    <div class="cases-grid">
-      @for (c of unknownCases(); track c.id) {
-        <app-case-card [caseItem]="c" [showContactButton]="false" />
-      } @empty {
-        <p class="empty-msg">لا توجد حالات مجهولة حالياً</p>
-      }
-    </div>
-  </section>
+  <!-- Unknown Cases -->
+  @if (unknownCases().length > 0) {
+    <section class="space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-[28px] md:text-[36px] font-bold text-primary flex items-center gap-2">
+          <span class="material-symbols-outlined text-outline">question_mark</span>
+          حالات مجهولة الهوية
+        </h2>
+        <a routerLink="/unknown" class="text-secondary font-bold hover:underline flex items-center gap-1">
+          عرض جميع الحالات
+          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        </a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        @for (c of unknownCases(); track c.id) {
+          <app-case-card [caseItem]="c" [showContactButton]="false" />
+        }
+      </div>
+    </section>
+  }
 
-  <!-- ===== Founded Cases ===== -->
-  <section class="cases-section alt-bg">
-    <div class="section-header">
-      <h2 class="section-title">✨ تم العثور عليهم بنجاح</h2>
-      <a routerLink="/founded" class="view-all-link">
-        عرض جميع الحالات
-        <span class="material-symbols-outlined">arrow_back</span>
-      </a>
+  <!-- Founded Cases -->
+  @if (foundedCases().length > 0) {
+    <section class="space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-[28px] md:text-[36px] font-bold text-primary flex items-center gap-2">
+          <span class="material-symbols-outlined text-[24px]" style="color: #16a34a">check_circle</span>
+          تم العثور عليهم بنجاح
+        </h2>
+        <a routerLink="/founded" class="text-secondary font-bold hover:underline flex items-center gap-1">
+          عرض جميع الحالات
+          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        </a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        @for (c of foundedCases(); track c.id) {
+          <app-card [routerLink]="['/founded', c.id]" extraClass="cursor-pointer hover:-translate-y-1 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+            <div class="relative">
+              <img [src]="getImageUrl(c.mainImage)" [alt]="c.fullName" class="w-full h-48 object-cover rounded-t-2xl" (error)="onImgError($event)" />
+              <div class="absolute bottom-2 right-2 bg-[#16a34a] text-white px-3 py-1 rounded-full text-[14px] font-bold shadow-md">
+                تم الإيجاد ✓
+              </div>
+            </div>
+            <div class="p-4 space-y-3 flex-1 flex flex-col">
+              <h3 class="font-bold text-[18px] text-primary line-clamp-1">{{ c.fullName }}</h3>
+              <p class="text-[14px] text-on-surface-variant flex-1">{{ c.age }}</p>
+              <app-button variant="primary" extraClass="w-full justify-center">عرض التفاصيل</app-button>
+            </div>
+          </app-card>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Complaint Form Section -->
+  <section class="flex flex-col md:flex-row items-center gap-12 bg-surface-container-highest p-8 md:p-12 rounded-3xl border border-outline-variant shadow-sm mt-12">
+    <div class="flex-1 w-full justify-center hidden md:flex">
+      <img src="/images/complaint.png" alt="تواصل معنا" class="w-full max-w-125 object-contain drop-shadow-xl" onerror="this.style.display='none'" />
     </div>
-    <div class="cases-grid">
-      @for (c of foundedCases(); track c.id) {
-        <div class="founded-card" [routerLink]="['/founded', c.id]">
-          <div class="founded-img-wrap">
-            <img
-              [src]="c.mainImage && c.mainImage !== '' ? c.mainImage : '/images/defaultUser.jpg'"
-              [alt]="c.fullName"
-              class="founded-img"
-              (error)="onImgError($event)"
-            />
-            <span class="founded-tag">تم الإيجاد ✓</span>
-          </div>
-          <div class="founded-info">
-            <p class="founded-name">{{ c.fullName }}</p>
-            <p class="founded-meta">{{ c.age }}</p>
-            <button class="founded-btn">عرض التفاصيل</button>
-          </div>
+    <div class="flex-1 w-full">
+      <app-card extraClass="p-8 space-y-6">
+        <div class="text-center space-y-2">
+          <span class="material-symbols-outlined text-[40px] text-secondary">support_agent</span>
+          <h2 class="text-[28px] md:text-[32px] font-bold text-primary">تواصل معنا أو أرسل تحديثاً</h2>
+          <p class="text-[14px] text-on-surface-variant">هل لديك معلومات عن حالة معينة؟ أو تواجه مشكلة تقنية؟ فريقنا متاح على مدار الساعة.</p>
         </div>
-      } @empty {
-        <p class="empty-msg">لا توجد حالات معثور عليها حالياً</p>
-      }
-    </div>
-  </section>
+        
+        <form [formGroup]="complaintForm" class="space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <app-form-field type="text" label="كود الحالة (اختياري)" placeholder="مثال: Case-12345" formControlName="caseCode"></app-form-field>
+            <app-form-field type="select" label="نوع التواصل" formControlName="contactType">
+              <option value="">اختر النوع...</option>
+              @for (opt of contactTypeOptions; track opt) {
+                <option [value]="opt">{{ opt }}</option>
+              }
+            </app-form-field>
+          </div>
 
-  <!-- ===== Complaint Form ===== -->
-  <section class="contact-section">
-    <div class="contact-img-wrap">
-      <img src="/images/complaint.png" alt="تواصل معنا" class="contact-img"
-           onerror="this.style.display='none'" />
-    </div>
-    <div class="contact-card">
-      <span class="material-symbols-outlined contact-icon">help</span>
-      <h2 class="contact-title">تواصل معنا أو أرسل تحديثاً</h2>
-      <p class="contact-desc">هل لديك معلومات عن حالة معينة؟ أو تواجه مشكلة تقنية؟ فريقنا متاح على مدار الساعة.</p>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">كود الحالة (اختياري)</label>
-          <input type="text" class="form-input" placeholder="مثال: Case-12345"
-                 [(ngModel)]="complaintForm.caseCode" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">نوع التواصل</label>
-          <select class="form-input" [(ngModel)]="complaintForm.contactType">
-            <option value="">اختر النوع...</option>
-            @for (opt of contactTypeOptions; track opt) {
-              <option [value]="opt">{{ opt }}</option>
+          <div>
+            <app-form-field type="textarea" label="نص الرسالة *" placeholder="اكتب تفاصيلك هنا..." formControlName="message"></app-form-field>
+            @if (complaintForm.get('message')?.invalid && (complaintForm.get('message')?.touched || complaintForm.get('message')?.dirty)) {
+              <span class="text-error text-[14px] font-medium mt-1 block">
+                @if (complaintForm.get('message')?.errors?.['required']) {
+                  هذا الحقل مطلوب.
+                }
+              </span>
             }
-          </select>
-        </div>
-      </div>
+          </div>
 
-      <div class="form-group" style="margin-bottom: 20px; text-align: right;">
-        <label class="form-label">نص الرسالة</label>
-        <textarea class="form-textarea" rows="4" placeholder="اكتب تفاصيلك هنا..."
-                  [(ngModel)]="complaintForm.message"></textarea>
-      </div>
-
-      <button class="btn-submit" (click)="submitComplaint()" [disabled]="isSendingComplaint()">
-        <span class="material-symbols-outlined">send</span>
-        {{ isSendingComplaint() ? 'جاري الإرسال...' : 'إرسال الرسالة' }}
-      </button>
+          <app-button (onClick)="submitComplaint()" [disabled]="isSendingComplaint()" [loading]="isSendingComplaint()" variant="primary" extraClass="w-full justify-center py-4 font-bold text-[18px] rounded-xl gap-2 shadow-md">
+            <span class="material-symbols-outlined">send</span>
+            {{ isSendingComplaint() ? 'جاري الإرسال...' : 'إرسال الرسالة' }}
+          </app-button>
+        </form>
+      </app-card>
     </div>
   </section>
 
