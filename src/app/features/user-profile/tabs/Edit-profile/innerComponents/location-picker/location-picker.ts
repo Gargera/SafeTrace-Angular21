@@ -16,7 +16,7 @@ import { GeocodingService } from '../../../../../../core/services/geocoding.serv
 import { SnackbarService } from '../../../../../../core/services/toast.service';
 import { GetUserInfoDTO, UpdateHomeLocationDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
-import { MapLocationPickerComponent } from '../../../../../../shared/components/map-location-picker/map-location-picker';
+import { MapLocationPickerComponent } from '../../../../../../shared/components/map-location-picker/components/map-location-picker';
 
 @Component({
   selector: 'app-location-picker',

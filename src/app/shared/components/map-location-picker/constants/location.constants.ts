@@ -1,4 +1,4 @@
-import { MapCoordinates } from './map-location-picker.types';
+import { MapCoordinates } from '../models/location.models';
 
 export const DEFAULT_MAP_CENTER: MapCoordinates = {
   lat: 30.0444,
