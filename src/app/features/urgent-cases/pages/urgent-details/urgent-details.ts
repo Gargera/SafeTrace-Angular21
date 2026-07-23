@@ -23,7 +23,7 @@ import { CaseStatus } from '../../../../shared/enums/case-status';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { UrgentCaseService } from '../../services/urgent-case.service';
 import { UrgentCaseDetailResponse } from '../../models/response/UrgentCaseDetailResponse';
-import { MapViewerComponent } from '../../../../shared/components/map-viewer/map-viewer';
+import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 
 @Component({
   selector: 'urgent-details',
@@ -38,7 +38,7 @@ import { MapViewerComponent } from '../../../../shared/components/map-viewer/map
     ConfirmationModalComponent,
     FoundedPopupComponent,
     ButtonComponent,
-    MapViewerComponent,
+    MapLocationPickerComponent,
   ],
   templateUrl: './urgent-details.html',
   styleUrls: ['./urgent-details.css'],
@@ -60,6 +60,7 @@ export class UrgentDetails implements OnInit {
   showFoundedPopup = signal(false);
   isFounding = signal(false);
   showPermanentDeleteConfirmation = signal(false);
+  showLocationModal = signal(false);
 
   caseDetails = signal<UrgentCaseDetailResponse | null>(null);
   loading = signal(true);
@@ -266,6 +267,14 @@ export class UrgentDetails implements OnInit {
     this.showPermanentDeleteConfirmation.set(false);
   }
 
+  openLocationModal(): void {
+    this.showLocationModal.set(true);
+  }
+
+  closeLocationModal(): void {
+    this.showLocationModal.set(false);
+  }
+
   confirmPermanentDelete(): void {
     const id = this.caseDetails()?.id;
     if (!id) return;
@@ -305,8 +314,6 @@ export class UrgentDetails implements OnInit {
         return AgeCategories.Young;
       case 'Adult':
         return AgeCategories.Adult;
-      // case 'Mid Adult':
-      //   return AgeCategories.MidAdult;
       case 'Late Adult':
         return AgeCategories.LateAdult;
       default:

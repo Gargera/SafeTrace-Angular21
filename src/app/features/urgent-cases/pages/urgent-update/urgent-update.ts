@@ -7,7 +7,7 @@ import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
 import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
-import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/map-location-picker';
+import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
@@ -23,7 +23,7 @@ import { validEnum } from '../../../../shared/validators/enum.validator';
 import { CommonModule } from '@angular/common';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 
-import { GeocodingService } from '../../../../core/services/geocoding.service';
+import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 
 type Step = 1 | 2 | 3;
 

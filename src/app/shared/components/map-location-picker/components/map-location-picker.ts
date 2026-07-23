@@ -11,26 +11,29 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ButtonComponent } from '../button/button';
-import { LocationResult } from './map-location-picker.types';
-import { MapLocationFacade } from './map-location.facade';
+import { ButtonComponent } from '../../button/button';
+import { LocationResult } from '../models/location.models';
+import { LocationFacade } from '../facade/location.facade';
+import { LocationState } from '../state/location.state';
 
 @Component({
   selector: 'app-map-location-picker',
   standalone: true,
   imports: [CommonModule, FormsModule, ButtonComponent],
-  providers: [MapLocationFacade],
+  providers: [LocationState, LocationFacade],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './map-location-picker.html',
   styleUrl: './map-location-picker.css',
 })
 export class MapLocationPickerComponent {
-  readonly facade = inject(MapLocationFacade);
+  readonly facade = inject(LocationFacade);
+  readonly state = inject(LocationState);
 
   readonly isOpen = input<boolean>(false);
   readonly initialLat = input<number | null>(null);
   readonly initialLng = input<number | null>(null);
   readonly initialAddress = input<string>('');
+  readonly readOnly = input<boolean>(false);
 
   readonly confirmLocation = output<LocationResult>();
   readonly cancel = output<void>();
@@ -41,22 +44,33 @@ export class MapLocationPickerComponent {
   constructor() {
     effect(() => {
       if (this.isOpen()) {
-        queueMicrotask(() => {
-          const container = this.mapContainerRef().nativeElement;
-
-          this.facade.initializeModal(
-            container,
-            this.initialLat(),
-            this.initialLng(),
-            this.initialAddress(),
-          );
-
-          this.searchInputRef()?.nativeElement?.focus();
-        });
+        this.initializeModal();
       } else {
         this.facade.destroy();
       }
     });
+  }
+
+  private initializeModal(): void {
+    queueMicrotask(() => {
+      const containerElement = this.mapContainerRef().nativeElement;
+
+      this.facade.initializeModal(
+        containerElement,
+        this.initialLat(),
+        this.initialLng(),
+        this.initialAddress(),
+        this.readOnly()
+      );
+
+      if (!this.readOnly()) {
+        this.focusSearchInput();
+      }
+    });
+  }
+
+  private focusSearchInput(): void {
+    this.searchInputRef()?.nativeElement?.focus();
   }
 
   @HostListener('window:keydown.escape')
@@ -66,15 +80,15 @@ export class MapLocationPickerComponent {
     }
   }
 
-  onSearchInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.facade.onSearchInput(value);
+  onSearchInput(inputEvent: Event): void {
+    const inputValue = (inputEvent.target as HTMLInputElement).value;
+    this.facade.onSearchInput(inputValue);
   }
 
   onConfirm(): void {
-    const result = this.facade.getConfirmResult();
-    if (result) {
-      this.confirmLocation.emit(result);
+    const selectedLocationResult = this.facade.getConfirmResult();
+    if (selectedLocationResult) {
+      this.confirmLocation.emit(selectedLocationResult);
     }
   }
 
@@ -82,7 +96,7 @@ export class MapLocationPickerComponent {
     this.cancel.emit();
   }
 
-  onBackdropClick(event: MouseEvent): void {
+  onBackdropClick(mouseEvent: MouseEvent): void {
     this.onCancel();
   }
 }

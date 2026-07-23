@@ -16,7 +16,7 @@ import { catchError, finalize, of } from 'rxjs';
 import { environment } from '../../../../environments/environment.development';
 import { UserRole } from '../../enums/user-role';
 import { ApiResponse } from '../../models/responses/api-response.model';
-import { GeocodingService } from '../../../core/services/geocoding.service';
+import { GeocodingService } from '../../../core/services/geocoding/geocoding.service';
 import { ChatService } from '../../../features/chat/services/chat.service';
 
 
