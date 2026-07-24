@@ -1,8 +1,8 @@
 <div class="max-w-5xl mx-auto space-y-lg pb-12">
-  <div class="flex flex-col gap-xs">
-    <h1 class="text-headline-lg font-bold text-primary">إدارة الأدوار والصلاحيات</h1>
+  <section class="space-y-3 pb-2">
+    <app-case-header title="إدارة الأدوار والصلاحيات"></app-case-header>
     <p class="text-body-md text-on-surface-variant">قم بإنشاء الأدوار وتخصيص الصلاحيات لمختلف مستويات المستخدمين في النظام.</p>
-  </div>
+  </section>
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-lg">
     <app-card extraClass="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant flex flex-col gap-4 h-full">
@@ -59,9 +59,9 @@
         @if (createRoleForm.get('roleName')?.touched && createRoleForm.get('roleName')?.invalid) {
           <span class="text-error text-xs font-medium px-2">
             @if (createRoleForm.get('roleName')?.errors?.['pattern']) {
-              يجب كتابة اسم الدور باللغة الإنجليزية فقط لضمان توافقه مع النظام.
+              يجب كتابة اسم الدور باللغة العربية فقط (بدون مسافات، أرقام، أو رموز خاصة).
             } @else {
-              اسم الدور مطلوب ولا يجب أن يتجاوز 100 حرف.
+              اسم الدور مطلوب ولا يجب أن يقل عن حرفين أو يتجاوز 50 حرف.
             }
           </span>
         }

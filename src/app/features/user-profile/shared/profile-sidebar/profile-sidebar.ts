@@ -4,7 +4,7 @@ import { VerificationStatus } from '../../../../shared/enums/verification-status
 import { UserRole } from '../../../../shared/enums/user-role';
 import { RoleBadgeDirective } from '../../../../shared/directives/role-badge-directive';
 import { VerificationBadgeDirective } from '../../../../shared/directives/verification-badge-directive';
-import { GeocodingService } from '../../../../core/services/geocoding.service';
+import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 
 @Component({
   selector: 'app-profile-sidebar',

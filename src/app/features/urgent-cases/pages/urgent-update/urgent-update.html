@@ -137,18 +137,20 @@
           </div>
         </div>
 
-        <!-- Relation -->
-        <div>
-          <app-form-field label="صلة القرابة بك (اختياري)" type="select" formControlName="relation"
-            [extraClass]="isInvalid('relation') ? 'border-error' : ''">
-            <option value="" disabled>اختر صلة القرابة بالشخص المفقود</option>
-            @for (opt of relationOptions; track opt.value) {
-            <option [value]="opt.value">{{ opt.label }}</option>
-            }
-          </app-form-field>
-          @if (isInvalid('relation')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
-            getFieldError('relation') }}</p> }
-        </div>
+          <!-- Relation -->
+          <!-- FIX: [ngValue] instead of [value] — RelationType values must be
+               matched by reference/type, not coerced to string in the DOM
+               (this is what caused it to look empty even when a value was set). -->
+          <div>
+            <app-form-field label="صلة القرابة بك (اختياري)" type="select" formControlName="relation"
+              [extraClass]="isInvalid('relation') ? 'border-error' : ''">
+              <option [ngValue]="null" disabled>اختر صلة القرابة بالشخص المفقود</option>
+              @for (opt of relationOptions; track opt.value) {
+              <option [ngValue]="opt.value">{{ opt.label }}</option>
+              }
+            </app-form-field>
+            @if (isInvalid('relation')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('relation') }}</p> }
+          </div>
 
         <!-- Communication Phone -->
         <div>

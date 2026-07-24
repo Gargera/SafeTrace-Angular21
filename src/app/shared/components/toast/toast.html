@@ -12,13 +12,16 @@
       [class.bg-surface-container-high]="msg.type === 'info'"
       [class.text-on-surface]="msg.type === 'info'"
       [class.border-outline-variant]="msg.type === 'info'"
+      [class.bg-yellow-100]="msg.type === 'warning'"
+      [class.text-yellow-800]="msg.type === 'warning'"
+      [class.border-yellow-300]="msg.type === 'warning'"
     >
       <span
         class="material-symbols-outlined text-2xl shrink-0"
         style="font-variation-settings: 'FILL' 1"
         aria-hidden="true"
       >
-        {{ msg.type === 'success' ? 'check_circle' : msg.type === 'error' ? 'error' : 'info' }}
+        {{ msg.type === 'success' ? 'check_circle' : msg.type === 'error' ? 'error' : msg.type === 'warning' ? 'warning' : 'info' }}
       </span>
 
       <span class="flex-1 text-sm font-medium leading-5 wrap-break-word">

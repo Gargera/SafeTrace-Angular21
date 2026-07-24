@@ -1,12 +1,15 @@
 import { Component, input, output } from '@angular/core';
 
+export type ButtonVariant = 'primary' | 'secondary' | 'text' | 'icon' | 'danger' | 'success' | 'outline';
+
 @Component({
   selector: 'app-button',
   standalone: true,
   templateUrl: './button.html',
 })
 export class ButtonComponent {
-  variant = input<'primary' | 'secondary' | 'text' | 'icon' | 'danger' | 'success'>('primary');
+  // 1. أضفنا 'outline' هنا
+  variant = input<ButtonVariant>('primary');
   type = input<'button' | 'submit' | 'reset'>('button');
   disabled = input(false);
   extraClass = input('');
@@ -19,11 +22,15 @@ export class ButtonComponent {
     const common =
       'inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold transition-all duration-200 active:scale-95 disabled:pointer-events-none disabled:opacity-50';
 
-    const variants = {
+    const variants: Record<string, string> = {
       primary: 'bg-secondary text-on-secondary shadow-sm hover:opacity-90 hover:shadow',
 
       secondary:
         'border border-outline-variant bg-surface-container-low text-on-surface hover:bg-surface-container-high',
+
+      // 2. أضفنا ستايل الـ outline هنا (مكافئ لـ Tailwind / Material Design)
+      outline:
+        'border border-outline text-primary bg-transparent hover:bg-surface-container-low active:bg-surface-container',
 
       danger: 'bg-error text-on-error shadow-sm hover:opacity-90 hover:shadow',
 
@@ -39,7 +46,7 @@ export class ButtonComponent {
     }
 
     return `${common} ${
-      variants[this.variant() as keyof typeof variants] ?? ''
+      variants[this.variant()] ?? ''
     } ${this.extraClass()}`;
   }
 }

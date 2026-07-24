@@ -16,7 +16,7 @@ import { catchError, finalize, of } from 'rxjs';
 import { environment } from '../../../../environments/environment.development';
 import { UserRole } from '../../enums/user-role';
 import { ApiResponse } from '../../models/responses/api-response.model';
-import { GeocodingService } from '../../../core/services/geocoding.service';
+import { GeocodingService } from '../../../core/services/geocoding/geocoding.service';
 import { ChatService } from '../../../features/chat/services/chat.service';
 
 
@@ -31,6 +31,7 @@ export interface VisitUserDTO {
 }
 
 const ROLE_LABELS: Record<UserRole, string> = {
+  SuperAdmin: 'مدير النظام',
   Admin: 'مسؤول',
   Moderator: 'مشرف',
   VerifiedUser: 'حساب موثّق',
@@ -41,6 +42,10 @@ const ROLE_LABELS: Record<UserRole, string> = {
 // source, so this lookup must spell every class out in full — no
 // `bg-${role}` string-building.
 const ROLE_STYLES: Record<UserRole, { badge: string; dot: string }> = {
+  SuperAdmin: {
+    badge: 'bg-black text-white', 
+    dot: 'bg-gray-300',
+  },
   Admin: {
     badge: 'bg-secondary-container text-on-secondary',
     dot: 'bg-secondary',

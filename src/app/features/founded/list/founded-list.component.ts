@@ -15,6 +15,7 @@ import { CasesFilterRequest, CaseListItemResponse } from '../../../core/models/C
 import { CaseStatus } from '../../../shared/enums/case-status';
 import { CaseCardComponent } from '../../../shared/components/cases-components/case-card/case-card.component';
 import { FoundedHeaderQueryDTO, FoundPersonListItemDto } from '../models/founded.models';
+import { FoundedFilterState } from '../../../shared/helper/cases-filter-state';
 
 @Component({
   selector: 'app-founded-list',
@@ -37,19 +38,15 @@ export class FoundedListComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   public readonly environment = environment;
 
+  readonly filterState = new FoundedFilterState(12);
+
   // State signals
   items = signal<FoundPersonListItemDto[]>([]);
-  totalCount = signal(0);
-  currentPage = signal(1);
-  pageSize = signal(12);
-  isLoading = signal(false);
-  hasError = signal(false);
-
-  // Filter state — updated from app-case-filters output
-  private searchValue = '';
-  private selectedGender: Gender | null = null;
-  private selectedAgeCategory = 0;
-  private selectedCaseType: CaseType | null = null;
+  totalCount = this.filterState.totalItems;
+  currentPage = this.filterState.currentPage;
+  pageSize = this.filterState.pageSize;
+  isLoading = this.filterState.loading;
+  hasError = this.filterState.hasError;
 
   totalPages = computed(() => Math.ceil(this.totalCount() / this.pageSize()));
 
@@ -64,34 +61,22 @@ export class FoundedListComponent implements OnInit, OnDestroy {
 
   // ----- Filter handlers -----
 
-  onFilterChange(filter: CasesFilterRequest): void {
-    this.searchValue = filter.fullName ?? '';
-    this.selectedGender = filter.gender !== null ? (filter.gender as unknown as Gender) : null;
-    this.selectedAgeCategory = filter.ageCategory !== null ? Number(filter.ageCategory) : 0;
-    this.selectedCaseType = filter.caseType;
-    this.currentPage.set(1);
-    this.load();
+  onFilterChange(newFilter: CasesFilterRequest): void {
+    this.filterState.onFilterChange(newFilter, () => this.load());
   }
 
   onFilterReset(): void {
-    this.searchValue = '';
-    this.selectedGender = null;
-    this.selectedAgeCategory = 0;
-    this.selectedCaseType = null;
-    this.currentPage.set(1);
-    this.load();
+    this.filterState.onFilterReset(() => this.load());
   }
 
   // ----- Pagination handlers -----
 
   onPageChange(page: number): void {
-    if (page === this.currentPage()) return;
-    this.currentPage.set(page);
-    this.load();
+    this.filterState.onPageChange(page, () => this.load());
   }
 
   retry(): void {
-    this.currentPage.set(1);
+    this.filterState.currentPage.set(1);
     this.load();
   }
 
@@ -112,25 +97,27 @@ export class FoundedListComponent implements OnInit, OnDestroy {
       tName: null,
       lName: null,
       gender: Gender.Male,
-      age: parseInt(person.age) || 0,
+      age: person.age,
       city: '',
       government: '',
       createdAt: person.foundDate,
-      mainPhoto: person.mainImage
+      mainPhoto: person.mainImage,
     };
   }
 
-  // ----- Data loading — unchanged -----
+  // ----- Data loading -----
 
   private load(): void {
     this.isLoading.set(true);
     this.hasError.set(false);
 
+    const f = this.filterState.filter();
+
     const query: FoundedHeaderQueryDTO = {
-      search: this.searchValue || undefined,
-      gender: this.selectedGender,
-      ageCategory: this.selectedAgeCategory,
-      caseType: this.selectedCaseType,
+      search: f.fullName || undefined,
+      gender: f.gender,
+      ageCategory: f.ageCategory !== null && f.ageCategory !== undefined ? Number(f.ageCategory) : 0,
+      caseType: f.caseType,
       page: this.currentPage(),
       pageSize: this.pageSize(),
     };
@@ -141,7 +128,6 @@ export class FoundedListComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (res) => {
           this.items.set(res.items);
-          console.log('Total Count:', res); // Debugging line
           this.totalCount.set(res.totalCount);
           this.isLoading.set(false);
         },

@@ -59,7 +59,19 @@ export class IdentificationImage {
   }
 
   get isVerified(): boolean {
-    return this.userInfo()?.verificationStatus === VerificationStatus.Verified;
+    const info = this.userInfo();
+    if (!info) return false;
+    return info.verificationStatus === VerificationStatus.Verified || (info.role && info.role !== 'User');
+  }
+
+  get isPending(): boolean {
+    const info = this.userInfo();
+    if (!info) return false;
+    return info.verificationStatus === VerificationStatus.Pending && info.role === 'User';
+  }
+
+  get canEdit(): boolean {
+    return !this.isVerified && !this.isPending;
   }
 
   // ── ID image: select → validate → crop ─────────────────────────────────────

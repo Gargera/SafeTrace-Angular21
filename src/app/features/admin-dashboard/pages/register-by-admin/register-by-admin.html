@@ -24,26 +24,26 @@
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div class="flex flex-col gap-1.5">
-        <app-form-field formControlName="fName" label="الاسم الأول" placeholder="أحمد"></app-form-field>
+        <app-form-field formControlName="fName" label="الاسم الأول *" placeholder="أحمد"></app-form-field>
         @if (registerForm.get('fName')?.touched && registerForm.get('fName')?.invalid) {
           <span class="text-error text-xs font-medium">
-            @if (registerForm.get('fName')?.errors?.['serverError']) { {{ registerForm.get('fName')?.errors?.['serverError'] }} } @else if (registerForm.get('fName')?.errors?.['pattern']) { الاسم الأول يجب أن يكون كلمة واحدة فقط من الحروف العربية أو الإنجليزية. } @else { الاسم الأول مطلوب ويجب ألا يزيد عن 100 حرف. }
+            @if (registerForm.get('fName')?.errors?.['serverError']) { {{ registerForm.get('fName')?.errors?.['serverError'] }} } @else if (registerForm.get('fName')?.errors?.['pattern']) { الاسم الأول يجب أن يكون كلمة واحدة فقط من الحروف العربية أو الإنجليزية. } @else if (registerForm.get('fName')?.errors?.['minlength']) { الاسم الأول لا يجب أن يقل عن حرفين. } @else { الاسم الأول مطلوب ويجب ألا يزيد عن 100 حرف. }
           </span>
         }
       </div>
 
       <div class="flex flex-col gap-1.5">
-        <app-form-field formControlName="lName" label="اسم العائلة" placeholder="محمد"></app-form-field>
+        <app-form-field formControlName="lName" label="اسم العائلة *" placeholder="محمد"></app-form-field>
         @if (registerForm.get('lName')?.touched && registerForm.get('lName')?.invalid) {
           <span class="text-error text-xs font-medium">
-            @if (registerForm.get('lName')?.errors?.['serverError']) { {{ registerForm.get('lName')?.errors?.['serverError'] }} } @else if (registerForm.get('lName')?.errors?.['pattern']) { اسم العائلة يجب أن يحتوي على حروف عربية أو إنجليزية ومسافة واحدة بين الكلمات. } @else { اسم العائلة مطلوب ويجب ألا يزيد عن 100 حرف. }
+            @if (registerForm.get('lName')?.errors?.['serverError']) { {{ registerForm.get('lName')?.errors?.['serverError'] }} } @else if (registerForm.get('lName')?.errors?.['pattern']) { اسم العائلة يجب أن يحتوي على حروف عربية أو إنجليزية ومسافة واحدة بين الكلمات. } @else if (registerForm.get('lName')?.errors?.['minlength']) { اسم العائلة لا يجب أن يقل عن حرفين. } @else { اسم العائلة مطلوب ويجب ألا يزيد عن 100 حرف. }
           </span>
         }
       </div>
     </div>
 
     <div class="flex flex-col gap-1.5">
-      <app-form-field type="email" formControlName="email" label="البريد الإلكتروني" placeholder="example@email.com"></app-form-field>
+      <app-form-field type="email" formControlName="email" label="البريد الإلكتروني *" placeholder="example@email.com"></app-form-field>
       @if (registerForm.get('email')?.touched && registerForm.get('email')?.invalid) {
         <span class="text-error text-xs font-medium">
           @if (registerForm.get('email')?.errors?.['serverError']) { {{ registerForm.get('email')?.errors?.['serverError'] }} } @else { صيغة البريد الإلكتروني غير صحيحة. }
@@ -62,7 +62,7 @@
       </div>
 
       <div class="flex flex-col gap-1.5">
-        <app-form-field type="select" formControlName="role" label="الدور الإداري (Role)">
+        <app-form-field type="select" formControlName="role" label="الدور الإداري (Role) *">
           <option value="" disabled selected>اختر الدور المناسب</option>
           @for (role of roles(); track role.id) {
             <option [value]="role.name">{{ getRoleName(role.name) }}</option>
@@ -74,23 +74,7 @@
       </div>
     </div>
 
-    <div class="flex flex-col gap-1.5">
-      <app-form-field [type]="isPasswordVisible() ? 'text' : 'password'" formControlName="password" label="كلمة المرور المؤقتة" placeholder="••••••••" [suffix]="true">
-        <button suffix type="button" (click)="togglePasswordVisibility()" class="flex items-center text-on-surface-variant hover:text-secondary transition-colors focus:outline-none">
-          @if (isPasswordVisible()) {
-            <span class="material-symbols-outlined text-[20px]">visibility_off</span>
-          } @else {
-            <span class="material-symbols-outlined text-[20px]">visibility</span>
-          }
-        </button>
-      </app-form-field>
 
-      @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
-        <span class="text-error text-xs font-medium">
-          @if (registerForm.get('password')?.errors?.['serverError']) { {{ registerForm.get('password')?.errors?.['serverError'] }} } @else if (registerForm.get('password')?.errors?.['required']) { كلمة المرور مطلوبة. } @else { يجب أن تتكون كلمة المرور من 8 أحرف على الأقل، وتتضمن حرفًا كبيرًا، وحرفًا صغيرًا، ورقمًا، ورمزًا خاصًا، وبدون مسافات. }
-        </span>
-      }
-    </div>
 
     <div class="flex justify-end mt-4 pt-4 border-t border-outline-variant">
       <app-button type="submit" [loading]="isLoading()" variant="primary" extraClass="gap-sm px-10 h-14 rounded-full font-bold shadow-md hover:bg-secondary-container transition-all duration-200">

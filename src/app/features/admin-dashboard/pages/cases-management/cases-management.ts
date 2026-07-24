@@ -33,6 +33,7 @@ import { CasesManagementService } from '../../services/cases-management.service'
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { AuthService } from '../../../../core/services/auth.service';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 
 const FILTER_DEBOUNCE_MS = 400;
 
@@ -53,6 +54,7 @@ const FILTER_DEBOUNCE_MS = 400;
     CaseHeaderComponent,
     CaseFiltersComponent,
     HasPermissionDirective,
+    PaginationComponent,
   ],
   templateUrl: './cases-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -110,23 +112,6 @@ export class CasesManagement implements OnInit, OnDestroy {
 
   // -------- UNIFIED FILTER --------
   public baseFilter = signal<CasesFilterRequest>(this.getDefaultFilter());
-
-  // Pagination array
-  pagesArray = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const pages: number[] = [];
-    const maxVisible = 5;
-    let start = Math.max(1, current - Math.floor(maxVisible / 2));
-    let end = Math.min(total, start + maxVisible - 1);
-    if (end - start < maxVisible - 1) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  });
 
   private getDefaultFilter(): CasesFilterRequest {
     return {

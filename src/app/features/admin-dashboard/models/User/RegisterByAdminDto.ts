@@ -3,6 +3,5 @@ export interface RegisterByAdminDto {
   lName: string;
   email: string;
   phoneNumber?: string;
-  password: string;
   role: string;
 }

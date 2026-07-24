@@ -25,6 +25,7 @@ import { SnackbarService } from '../../../../core/services/toast.service';
 
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 
 @Component({
   selector: 'app-user-list',
@@ -42,6 +43,7 @@ import { HasPermissionDirective } from '../../../../shared/directives/has-permis
     LoadingSpinnerComponent,
     CaseHeaderComponent,
     HasPermissionDirective,
+    PaginationComponent
   ],
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',
@@ -70,26 +72,6 @@ export class UserList {
     verificationStatus: '' as any,
     roleId: '' as any,
     isBlocked: '' as any,
-  });
-
-  pagesArray = computed(() => {
-    const current = this.filter().pageNumber;
-    const total = this.totalPages();
-    const pages: number[] = [];
-    let start = Math.max(1, current - 2);
-    let end = Math.min(total, current + 2);
-
-    if (current <= 3) {
-      end = Math.min(total, 5);
-    }
-    if (current >= total - 2) {
-      start = Math.max(1, total - 4);
-    }
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
   });
 
   private searchSubject = new Subject<string>();
