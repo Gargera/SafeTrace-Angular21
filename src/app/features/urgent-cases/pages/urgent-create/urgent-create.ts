@@ -9,11 +9,11 @@ import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
 import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
-import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/map-location-picker';
+import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
-import { GeocodingService } from '../../../../core/services/geocoding.service';
+import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 
@@ -73,6 +73,8 @@ export class UrgentCreate {
   selectedLat = signal<number | null>(null);
   selectedLng = signal<number | null>(null);
   selectedAddress = signal<string>('');
+  externalLocation = signal<{ lat: number; lng: number } | null>(null);
+  isMapModalOpen = signal(false);
 
   isLocating = signal(false);
   locationError = signal<string | null>(null);
@@ -157,6 +159,22 @@ export class UrgentCreate {
     this.selectedAddress.set(loc.address);
   }
 
+  openMapModal(): void {
+    this.isMapModalOpen.set(true);
+  }
+
+  closeMapModal(): void {
+    this.isMapModalOpen.set(false);
+  }
+
+  onMapLocationConfirmed(loc: { lat: number; lng: number; address: string }): void {
+    this.selectedLat.set(loc.lat);
+    this.selectedLng.set(loc.lng);
+    this.selectedAddress.set(loc.address);
+    this.externalLocation.set({ lat: loc.lat, lng: loc.lng });
+    this.isMapModalOpen.set(false);
+  }
+
   useCurrentLocation(): void {
     if (!navigator.geolocation) {
       this.locationError.set('المتصفح لا يدعم تحديد الموقع الجغرافي.');
@@ -198,7 +216,7 @@ export class UrgentCreate {
             this.locationError.set('حدث خطأ أثناء تحديد الموقع.');
         }
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 },
     );
   }
 

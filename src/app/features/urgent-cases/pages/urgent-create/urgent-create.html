@@ -215,26 +215,30 @@
             @if (isInvalid('eventDate')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('eventDate') }}</p> }
           </div>
 
-          <!-- Map Location Picker -->
+          <!-- Map Location Picker Section -->
           <div class="flex flex-col gap-3 rounded-2xl border border-outline-variant/40 bg-surface-bright p-5 shadow-2xs">
             <label class="text-sm font-medium text-on-surface-variant">
               حدد موقع الحادث بالضبط على الخريطة <span class="mr-0.5 text-error">*</span>
             </label>
 
-            <app-button variant="secondary" type="button" extraClass="w-fit gap-2" (onClick)="useCurrentLocation()" [disabled]="isLocating()">
-              @if (isLocating()) {
-              <span class="material-symbols-outlined animate-spin text-lg">progress_activity</span> جاري تحديد موقعك...
-              } @else {
-              <span class="material-symbols-outlined text-lg">my_location</span> استخدام موقعي الحالي
-              }
-            </app-button>
+            <div class="flex flex-wrap items-center gap-3">
+              <app-button variant="primary" type="button" extraClass="gap-2" (onClick)="openMapModal()">
+                <span class="material-symbols-outlined text-lg">map</span>
+                اختر الموقع على الخريطة
+              </app-button>
+
+              <app-button variant="secondary" type="button" extraClass="gap-2" (onClick)="useCurrentLocation()" [disabled]="isLocating()">
+                @if (isLocating()) {
+                <span class="material-symbols-outlined animate-spin text-lg">progress_activity</span> جاري تحديد موقعك...
+                } @else {
+                <span class="material-symbols-outlined text-lg">my_location</span> استخدام موقعي الحالي
+                }
+              </app-button>
+            </div>
+
             @if (locationError()) {
             <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ locationError() }}</p>
             }
-
-            <app-map-location-picker [externalLocation]="{ lat: selectedLat()!, lng: selectedLng()! }"
-              (locationChange)="onLocationChange($event)">
-            </app-map-location-picker>
 
             @if (selectedAddress()) {
             <p class="flex items-center gap-1 text-xs text-on-surface-variant/80">
@@ -428,5 +432,16 @@
     (forceCreate)="onForceCreateConfirm()">
   </app-force-create-popup>
   }
+
+  <!-- Location Picker Map Modal -->
+  <app-map-location-picker
+    [isOpen]="isMapModalOpen()"
+    [initialLat]="selectedLat()"
+    [initialLng]="selectedLng()"
+    [initialAddress]="selectedAddress()"
+    (confirmLocation)="onMapLocationConfirmed($event)"
+    (cancel)="closeMapModal()"
+  >
+  </app-map-location-picker>
 
 </div>

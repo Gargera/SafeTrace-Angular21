@@ -6,8 +6,8 @@
 <!-- 2. Statistics Cards -->
 <ng-container *hasPermission="Permissions.Chat.GetChatStatistics">
   @if (isLoadingStats()) {
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
-    @for (i of [1, 2, 3, 4, 5]; track i) {
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+    @for (i of [1, 2, 3, 4, 5,6]; track i) {
     <app-card
       extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse">
       <div class="h-4 bg-surface-container-high rounded w-3/4 mb-2"></div>
@@ -16,7 +16,7 @@
     }
   </div>
   } @else {
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
   <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
     <div class="flex items-center justify-between">
       <span class="text-sm font-medium text-on-surface-variant">الإجمالي</span>
@@ -56,6 +56,21 @@
     </div>
     <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.deletedByBoth ?? 0 }}</p>
   </app-card>
+  
+  <app-card extraClass="p-4 rounded-xl bg-error-container shadow-sm border border-outline-variant">
+  <div class="flex items-center justify-between">
+    <span class="text-sm font-medium text-on-error-container">
+      رسائل غير مقروءة 
+    </span>
+    <span class="material-symbols-outlined text-on-error-container">
+      mark_chat_unread
+    </span>
+  </div>
+
+  <p class="mt-1 text-2xl font-bold text-on-error-container">
+    {{statistics()?.totalUnreadMessages ?? 0}}
+  </p>
+</app-card>
 </div>
   }
 </ng-container>
@@ -119,60 +134,58 @@
           </div>
 
           <!-- التاريخ من -->
-          <div class="flex flex-col gap-xs">
-            <label class="text-xs font-medium text-on-surface-variant">من تاريخ</label>
-            <input
-              type="date"
-              class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-sm text-sm outline-none focus:border-primary"
-              [value]="fromDate()"
-              (input)="fromDate.set($any($event.target).value)"
-            />
-          </div>
+          <app-form-field
+            label="من تاريخ"
+            type="date"
+            [ngModel]="fromDate()"
+            (ngModelChange)="fromDate.set($event)">
+          </app-form-field>
 
           <!-- التاريخ إلى -->
-          <div class="flex flex-col gap-xs">
-            <label class="text-xs font-medium text-on-surface-variant">إلى تاريخ</label>
-            <input
-              type="date"
-              class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-sm text-sm outline-none focus:border-primary"
-              [value]="toDate()"
-              (input)="toDate.set($any($event.target).value)"
-            />
-          </div>
+          <app-form-field
+            label="إلى تاريخ"
+            type="date"
+            [ngModel]="toDate()"
+            (ngModelChange)="toDate.set($event)">
+          </app-form-field>
 
           <!-- حذف من المرسل -->
-          <div class="flex flex-col gap-xs">
-            <label class="text-xs font-medium text-on-surface-variant">محذوفة من المرسل</label>
-            <select
-              class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-sm text-sm outline-none focus:border-primary"
-              [value]="isDeletedBySender() === undefined ? '' : isDeletedBySender()"
-              (change)="isDeletedBySender.set($any($event.target).value === '' ? undefined : $any($event.target).value === 'true')"
-            >
-              <option value="">الكل</option>
-              <option value="true">محذوفة</option>
-              <option value="false">غير محذوفة</option>
-            </select>
-          </div>
+          <app-form-field
+            label="محذوفة من المرسل"
+            type="select"
+            [ngModel]="isDeletedBySender() === undefined ? '' : isDeletedBySender()"
+            (ngModelChange)="
+              isDeletedBySender.set(
+                $event === '' ? undefined : $event === 'true'
+              )
+            "
+          >
+            <option value="">الكل</option>
+            <option value="true">محذوفة</option>
+            <option value="false">غير محذوفة</option>
+          </app-form-field>
 
           <!-- حذف من المستقبل -->
-          <div class="flex flex-col gap-xs">
-            <label class="text-xs font-medium text-on-surface-variant">محذوفة من المستقبل</label>
-            <select
-              class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-sm text-sm outline-none focus:border-primary"
-              [value]="isDeletedByReceiver() === undefined ? '' : isDeletedByReceiver()"
-              (change)="isDeletedByReceiver.set($any($event.target).value === '' ? undefined : $any($event.target).value === 'true')"
-            >
-              <option value="">الكل</option>
-              <option value="true">محذوفة</option>
-              <option value="false">غير محذوفة</option>
-            </select>
-          </div>
+          <app-form-field
+            label="محذوفة من المستقبل"
+            type="select"
+            [ngModel]="isDeletedByReceiver() === undefined ? '' : isDeletedByReceiver()"
+            (ngModelChange)="
+              isDeletedByReceiver.set(
+                $event === '' ? undefined : $event === 'true'
+              )
+            "
+          >
+            <option value="">الكل</option>
+            <option value="true">محذوفة</option>
+            <option value="false">غير محذوفة</option>
+          </app-form-field>
 
           <div class="flex justify-end gap-2 pt-2 border-t border-outline-variant">
-            <app-button variant="text" (onClick)="resetFilters()" extraClass="px-3 py-1.5 text-sm">
+            <app-button variant="text" (onClick)="resetFilters()" extraClass="px-3 py-1.5 text-sm cursor-pointer">
               مسح الكل
             </app-button>
-            <app-button variant="primary" (onClick)="applyFilters()" extraClass="px-4 py-1.5 rounded-lg text-sm font-bold">
+            <app-button variant="primary" (onClick)="applyFilters()" extraClass="px-4 py-1.5 rounded-lg text-sm font-bold cursor-pointer">
               تطبيق
             </app-button>
           </div>

@@ -4,4 +4,5 @@ export interface AdminChatStatisticsDto {
   deletedBySenderOnly: number;
   deletedByReceiverOnly: number;
   deletedByBoth: number;
+  totalUnreadMessages: number;
 }
