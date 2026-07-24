@@ -172,7 +172,8 @@ export class UserDetails implements OnInit {
     this.roleService.getAllRoles().subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          this.roles.set(res.data);
+          const filteredRoles = res.data.filter(r => r.name !== 'SuperAdmin');
+          this.roles.set(filteredRoles);
         }
       }
     });
