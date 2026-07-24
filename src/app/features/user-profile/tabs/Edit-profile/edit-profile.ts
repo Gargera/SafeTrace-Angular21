@@ -46,7 +46,6 @@ import { Password } from './innerComponents/password/password';
 import { Phone } from './innerComponents/phone/phone';
 import { PersonalInfo } from './innerComponents/personal-info/personal-info';
 import { LocationPicker } from './innerComponents/location-picker/location-picker';
-import { RoleBadgeDirective } from '../../../../shared/directives/role-badge-directive';
 
 @Component({
   selector: 'app-edit-profile',
@@ -61,7 +60,6 @@ import { RoleBadgeDirective } from '../../../../shared/directives/role-badge-dir
     Phone,
     PersonalInfo,
     LocationPicker,
-    RoleBadgeDirective,
   ],
   templateUrl: './edit-profile.html',
 })
