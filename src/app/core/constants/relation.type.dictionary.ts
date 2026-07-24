@@ -14,10 +14,11 @@ export function getRelationTypeTranslationAr(relation?: RelationType | null): st
   return RELATION_TYPE_TRANSLATIONS_AR[relation] ?? '';
 }
 
+// FIX: RelationType is now a STRING enum (see relation-type.ts), so Object.values()
+// returns only the string values directly — no reverse-mapping filter needed
+// (that filter was only necessary for numeric enums).
 export const RELATION_TYPE_OPTIONS: { value: RelationType; label: string }[] =
-  Object.values(RelationType)
-    .filter((v): v is RelationType => typeof v === 'number')
-    .map((value) => ({ 
-      value, 
-      label: RELATION_TYPE_TRANSLATIONS_AR[value] ?? 'غير محدد' 
-    }));
+  Object.values(RelationType).map((value) => ({
+    value,
+    label: RELATION_TYPE_TRANSLATIONS_AR[value] ?? 'غير محدد',
+  }));
