@@ -22,6 +22,7 @@ import { RolePermissionDto } from '../../models/Role/RolePermissionDto';
 import { RoleService } from '../../services/role.service';
 import { RoleDto } from '../../models/Role/RoleDto';
 import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
+import { UserRole } from '../../../../shared/enums/user-role';
 
 interface PermissionGroup {
   groupName: string;
@@ -86,13 +87,13 @@ export class RoleManagement implements OnInit {
 
   isReadOnly = computed(() => {
     const selectedRole = this.roles().find((r) => r.id === this.selectedRoleId());
-    return selectedRole?.name === 'Admin' || !this.authService.hasPermission(this.Permissions.Roles.UpdateRolePermissions);
+    return selectedRole?.name === UserRole.SuperAdmin || !this.authService.hasPermission(this.Permissions.Roles.UpdateRolePermissions);
   });
 
   isDeletableRole = computed(() => {
     const selectedRole = this.roles().find((r) => r.id === this.selectedRoleId());
     if (!selectedRole) return false;
-    const coreRoles = ['Admin', 'User', 'VerifiedUser', 'Moderator'];
+    const coreRoles = [UserRole.Admin, UserRole.Moderator, UserRole.SuperAdmin, UserRole.User, UserRole.VerifiedUser];
     return !coreRoles.includes(selectedRole.name);
   });
 

@@ -54,8 +54,8 @@ export class RegisterByAdmin implements OnInit {
   roles = signal<RoleDto[]>([]);
 
   registerForm: FormGroup = this.fb.group({
-    fName: ['', [Validators.required, Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+$')]],
-    lName: ['', [Validators.required, Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+( [a-zA-Z\u0600-\u06FF]+)*$')]],
+    fName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+$')]],
+    lName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+( [a-zA-Z\u0600-\u06FF]+)*$')]],
     email: ['', [Validators.required, Validators.email, Validators.pattern('^\\S+$')]],
     phoneNumber: ['', [Validators.pattern('^01[0125][0-9]{8}$')]],
     password: [
