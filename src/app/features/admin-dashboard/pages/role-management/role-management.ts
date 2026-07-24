@@ -9,6 +9,7 @@ import { ConfirmationModalComponent } from '../../../../shared/components/confir
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { AuthService } from '../../../../core/services/auth.service';
+import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 
 import {
   PERMISSION_GROUPS_AR,
@@ -32,7 +33,7 @@ interface PermissionGroup {
 @Component({
   selector: 'app-role-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective, CaseHeaderComponent],
   templateUrl: './role-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -60,7 +61,7 @@ export class RoleManagement implements OnInit {
   apiErrorMessage = signal<string>('');
 
   createRoleForm: FormGroup = this.fb.group({
-    roleName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+    roleName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50), Validators.pattern(/^[\u0600-\u06FF]+$/)]],
   });
 
   showConfirmModal = signal(false);

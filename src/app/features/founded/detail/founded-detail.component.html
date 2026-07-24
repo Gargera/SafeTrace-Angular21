@@ -1,182 +1,149 @@
-<!-- Back Nav -->
-<div class="bg-surface-container border-b border-outline-variant/30">
-  <div class="max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop py-4">
-    <button
-      (click)="goBack()"
-      class="flex items-center gap-2 text-secondary hover:text-secondary-container font-medium transition-colors"
-    >
-      <span class="material-symbols-outlined text-xl">arrow_forward</span>
-      <span>العودة إلى القائمة</span>
-    </button>
+<div class="min-h-screen bg-background">
+  <div class="mx-auto max-w-7xl space-y-6 px-4 py-6">
+
+    <section class="space-y-3 pb-2">
+      <app-case-header title="تفاصيل حالة العثور"></app-case-header>
+    </section>
+
+    @if (isLoading()) {
+      <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-12 text-center">
+        <p class="text-on-surface-variant">جاري تحميل بيانات الحالة...</p>
+      </div>
+    }
+
+    @if (hasError() && !isLoading()) {
+      <div class="flex flex-col items-center justify-center py-12 text-center px-4 rounded-xl border border-outline-variant bg-surface-container-lowest">
+        <span class="material-symbols-outlined text-6xl text-outline mb-4">error_outline</span>
+        <h3 class="text-xl font-bold text-primary mb-2">تعذر تحميل البيانات</h3>
+        <p class="text-on-surface-variant mb-6">حدث خطأ أثناء جلب تفاصيل هذه الحالة</p>
+        <app-button
+          (onClick)="goBack()"
+          variant="primary"
+          extraClass="bg-secondary text-on-secondary px-6 py-3 rounded-lg font-bold hover:bg-secondary-container transition-colors"
+        >
+          العودة
+        </app-button>
+      </div>
+    }
+
+    <!-- Detail Content -->
+    @if (!isLoading() && !hasError() && person(); as p) {
+      <div class="max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop py-12 mb-16 md:mb-0">
+        <!-- Top Section: Image + Info Cards -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
+          <!-- Image -->
+          <div class="relative rounded-2xl overflow-hidden bg-surface-container-high shadow-lg aspect-4/3">
+            @if (!imageLoaded()) {
+              <div class="absolute inset-0 animate-pulse bg-surface-container-high"></div>
+            }
+            <img
+              [src]="environment.baseUrl + p.mainImage"
+              [alt]="p.fullName"
+              (load)="onImageLoad()"
+              class="w-full h-full object-cover transition-opacity duration-500"
+              [class.opacity-0]="!imageLoaded()"
+              [class.opacity-100]="imageLoaded()"
+            />
+            <!-- Overlay gradient -->
+            <div class="absolute bottom-0 inset-x-0 h-24 bg-linear-to-t from-black/40 to-transparent"></div>
+            <div class="absolute bottom-4 right-4">
+              <span class="bg-tertiary-fixed text-on-tertiary px-3 py-1.5 rounded-full text-sm font-semibold shadow">
+                تم العثور عليه
+              </span>
+            </div>
+          </div>
+
+          <!-- Info Panel -->
+          <div class="flex flex-col justify-center space-y-6">
+            <div>
+              <p class="text-sm font-medium text-secondary uppercase tracking-widest mb-1">
+                حالة مُعرَّفة
+              </p>
+              <h1 class="text-4xl font-bold text-primary leading-tight">{{ p.fullName }}</h1>
+            </div>
+
+            <!-- Info Grid -->
+            <div class="grid grid-cols-2 gap-4">
+              <!-- Age -->
+              <div class="bg-surface-container rounded-xl p-4 border border-outline-variant/20">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="material-symbols-outlined text-secondary text-xl">cake</span>
+                  <span class="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">العمر</span>
+                </div>
+                <p class="text-xl font-bold text-primary">{{ p.age }}</p>
+              </div>
+
+              <!-- Gender -->
+              <div class="bg-surface-container rounded-xl p-4 border border-outline-variant/20">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="material-symbols-outlined text-secondary text-xl">person</span>
+                  <span class="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">الجنس</span>
+                </div>
+                <p class="text-xl font-bold text-primary">{{ p.gender }}</p>
+              </div>
+
+              <!-- Found Location -->
+              <div class="bg-surface-container rounded-xl p-4 border border-outline-variant/20">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="material-symbols-outlined text-secondary text-xl">location_on</span>
+                  <span class="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">مكان العثور</span>
+                </div>
+                <p class="text-base font-semibold text-primary leading-snug">{{ p.foundLocation }}</p>
+              </div>
+
+              <!-- Missing Location -->
+              <div class="bg-surface-container rounded-xl p-4 border border-outline-variant/20">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="material-symbols-outlined text-secondary text-xl">explore</span>
+                  <span class="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">مكان الاختفاء</span>
+                </div>
+                <p class="text-base font-semibold text-primary leading-snug">{{ p.missingLocation }}</p>
+              </div>
+              <!-- Found Date -->
+              <div class="bg-surface-container rounded-xl p-4 border border-outline-variant/20">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="material-symbols-outlined text-secondary text-xl">event</span>
+                  <span class="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">تاريخ العثور</span>
+                </div>
+                <p class="text-xl font-bold text-primary">{{ p.founedDate | date: 'longDate' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="border-t border-outline-variant/30 mb-12"></div>
+
+        <!-- Descriptions Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <!-- Found Description -->
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <div class="w-1 h-6 bg-tertiary-fixed rounded-full"></div>
+              <h2 class="text-xl font-bold text-primary">تفاصيل العثور</h2>
+            </div>
+            <div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/20">
+              <p class="text-base text-on-surface leading-relaxed">
+                {{ p.foundDescription }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Missing Description -->
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <div class="w-1 h-6 bg-secondary rounded-full"></div>
+              <h2 class="text-xl font-bold text-primary">تفاصيل الاختفاء</h2>
+            </div>
+            <div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/20">
+              <p class="text-base text-on-surface leading-relaxed">
+                {{ p.missingDescription }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
   </div>
 </div>
-
-<!-- Loading Skeleton -->
-@if (isLoading()) {
-  <div class="max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop py-12 animate-pulse">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-      <div class="rounded-2xl bg-surface-container-high h-[480px]"></div>
-      <div class="space-y-6">
-        <div class="h-8 bg-surface-container-high rounded w-2/3"></div>
-        <div class="grid grid-cols-2 gap-4">
-          @for (i of [1, 2, 3, 4]; track i) {
-            <div class="h-20 bg-surface-container rounded-xl"></div>
-          }
-        </div>
-        <div class="h-4 bg-surface-container rounded w-full"></div>
-        <div class="h-4 bg-surface-container rounded w-5/6"></div>
-        <div class="h-4 bg-surface-container rounded w-4/6"></div>
-      </div>
-    </div>
-  </div>
-}
-
-<!-- Error State -->
-@if (hasError() && !isLoading()) {
-  <div class="flex flex-col items-center justify-center py-32 text-center px-4">
-    <span class="material-symbols-outlined text-6xl text-outline mb-4">error_outline</span>
-    <h3 class="text-xl font-bold text-primary mb-2">تعذر تحميل البيانات</h3>
-    <p class="text-on-surface-variant mb-6">حدث خطأ أثناء جلب تفاصيل هذه الحالة</p>
-    <button
-      (click)="goBack()"
-      class="bg-secondary text-on-secondary px-6 py-3 rounded-lg font-bold hover:bg-secondary-container transition-colors"
-    >
-      العودة
-    </button>
-  </div>
-}
-
-<!-- Detail Content -->
-@if (!isLoading() && !hasError() && person(); as p) {
-  <div class="max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop py-12 mb-16 md:mb-0">
-    <!-- Top Section: Image + Info Cards -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
-      <!-- Image -->
-      <div
-        class="relative rounded-2xl overflow-hidden bg-surface-container-high shadow-lg aspect-[4/3]"
-      >
-        @if (!imageLoaded()) {
-          <div class="absolute inset-0 animate-pulse bg-surface-container-high"></div>
-        }
-        <img
-          [src]="environment.baseUrl + p.mainImage"
-          [alt]="p.fullName"
-          (load)="onImageLoad()"
-          class="w-full h-full object-cover transition-opacity duration-500"
-          [class.opacity-0]="!imageLoaded()"
-          [class.opacity-100]="imageLoaded()"
-        />
-        <!-- Overlay gradient -->
-        <div
-          class="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-black/40 to-transparent"
-        ></div>
-        <div class="absolute bottom-4 right-4">
-          <span
-            class="bg-tertiary-fixed text-on-tertiary px-3 py-1.5 rounded-full text-sm font-semibold shadow"
-          >
-            تم العثور عليه
-          </span>
-        </div>
-      </div>
-
-      <!-- Info Panel -->
-      <div class="flex flex-col justify-center space-y-6">
-        <div>
-          <p class="text-sm font-medium text-secondary uppercase tracking-widest mb-1">
-            حالة مُعرَّفة
-          </p>
-          <h1 class="text-4xl font-bold text-primary leading-tight">{{ p.fullName }}</h1>
-        </div>
-
-        <!-- Info Grid -->
-        <div class="grid grid-cols-2 gap-4">
-          <!-- Age -->
-          <div class="bg-surface-container rounded-xl p-4 border border-outline-variant/20">
-            <div class="flex items-center gap-2 mb-2">
-              <span class="material-symbols-outlined text-secondary text-xl">cake</span>
-              <span class="text-xs font-semibold text-on-surface-variant uppercase tracking-wide"
-                >العمر</span
-              >
-            </div>
-            <p class="text-xl font-bold text-primary">{{ p.age }}</p>
-          </div>
-
-          <!-- Gender -->
-          <div class="bg-surface-container rounded-xl p-4 border border-outline-variant/20">
-            <div class="flex items-center gap-2 mb-2">
-              <span class="material-symbols-outlined text-secondary text-xl">person</span>
-              <span class="text-xs font-semibold text-on-surface-variant uppercase tracking-wide"
-                >الجنس</span
-              >
-            </div>
-            <p class="text-xl font-bold text-primary">{{ p.gender }}</p>
-          </div>
-
-          <!-- Found Location -->
-          <div class="bg-surface-container rounded-xl p-4 border border-outline-variant/20">
-            <div class="flex items-center gap-2 mb-2">
-              <span class="material-symbols-outlined text-secondary text-xl">location_on</span>
-              <span class="text-xs font-semibold text-on-surface-variant uppercase tracking-wide"
-                >مكان العثور</span
-              >
-            </div>
-            <p class="text-base font-semibold text-primary leading-snug">{{ p.foundLocation }}</p>
-          </div>
-
-          <!-- Missing Location -->
-          <div class="bg-surface-container rounded-xl p-4 border border-outline-variant/20">
-            <div class="flex items-center gap-2 mb-2">
-              <span class="material-symbols-outlined text-secondary text-xl">explore</span>
-              <span class="text-xs font-semibold text-on-surface-variant uppercase tracking-wide"
-                >مكان الاختفاء</span
-              >
-            </div>
-            <p class="text-base font-semibold text-primary leading-snug">{{ p.missingLocation }}</p>
-          </div>
-          <!-- Found Date -->
-          <div class="bg-surface-container rounded-xl p-4 border border-outline-variant/20">
-            <div class="flex items-center gap-2 mb-2">
-              <span class="material-symbols-outlined text-secondary text-xl">event</span>
-              <span class="text-xs font-semibold text-on-surface-variant uppercase tracking-wide"
-                >تاريخ العثور</span
-              >
-            </div>
-            <p class="text-xl font-bold text-primary">{{ p.founedDate | date: 'longDate' }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Divider -->
-    <div class="border-t border-outline-variant/30 mb-12"></div>
-
-    <!-- Descriptions Section -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <!-- Found Description -->
-      <div class="space-y-3">
-        <div class="flex items-center gap-3">
-          <div class="w-1 h-6 bg-tertiary-fixed rounded-full"></div>
-          <h2 class="text-xl font-bold text-primary">تفاصيل العثور</h2>
-        </div>
-        <div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/20">
-          <p class="text-base text-on-surface leading-relaxed">
-            {{ p.foundDescription }}
-          </p>
-        </div>
-      </div>
-
-      <!-- Missing Description -->
-      <div class="space-y-3">
-        <div class="flex items-center gap-3">
-          <div class="w-1 h-6 bg-secondary rounded-full"></div>
-          <h2 class="text-xl font-bold text-primary">تفاصيل الاختفاء</h2>
-        </div>
-        <div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/20">
-          <p class="text-base text-on-surface leading-relaxed">
-            {{ p.missingDescription }}
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-}

@@ -1,7 +1,8 @@
 import { UserRole } from '../../shared/enums/user-role';
 
 export const ROLE_TRANSLATIONS_AR: Record<UserRole, string> = {
-  [UserRole.Admin]: 'مدير النظام',
+  [UserRole.SuperAdmin]: 'مدير النظام',
+  [UserRole.Admin]: 'مسؤول',
   [UserRole.Moderator]: 'مشرف',
   [UserRole.VerifiedUser]: 'مستخدم موثق',
   [UserRole.User]: 'مستخدم غير موثق'

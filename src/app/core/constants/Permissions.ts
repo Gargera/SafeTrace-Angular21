@@ -6,8 +6,6 @@ export const Permissions = {
   UrgentCases: {
     GetById: 'UrgentCases.GetById',
     HardDelete: 'UrgentCases.HardDelete',
-    Reject: 'UrgentCases.Reject',
-    Approve: 'UrgentCases.Approve',
     MarkAsFounded: 'UrgentCases.MarkAsFounded',
   },
 
@@ -36,6 +34,7 @@ export const Permissions = {
   Dashboard: {
     GetStatistics: 'Dashboard.GetStatistics',
     GetCasesStatistics: 'Dashboard.GetCasesStatistics',
+    GetAuditLogs: 'Dashboard.GetAuditLogs',
   },
 
   AiMatching: {
