@@ -6,24 +6,25 @@
     </section>
 
     @if (loading()) {
-      <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-12 text-center">
-        <p class="text-on-surface-variant">جاري تحميل بيانات الحالة...</p>
-      </div>
+    <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-12 text-center">
+      <p class="text-on-surface-variant">جاري تحميل بيانات الحالة...</p>
+    </div>
     }
 
     @else if (caseDetails()) {
-      <div class="flex flex-col lg:flex-row items-start gap-6">
+    <div class="flex flex-col lg:flex-row items-start gap-6">
 
-        <!-- ================= اليمين: الميديا وصور الحالة + الأزرار ================= -->
-        <div class="w-full lg:w-5/12 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
-          
-          <!-- Main Media -->
-          <div class="relative">
-            <button
-              class="absolute left-4 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-2xl text-white transition hover:bg-black/70"
-              (click)="previousMedia()">
-              ❮
-            </button>
+      <!-- ================= اليمين: الميديا وصور الحالة + الأزرار ================= -->
+      <div
+        class="w-full lg:w-5/12 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
+
+        <!-- Main Media -->
+        <div class="relative">
+          <button
+            class="absolute left-4 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-2xl text-white transition hover:bg-black/70"
+            (click)="previousMedia()">
+            ❮
+          </button>
 
             @if(selectedMedia()?.type === 'Video'){
               <video controls class="h-137.5 w-full rounded-xl border border-outline-variant object-cover">
@@ -36,12 +37,12 @@
                 (click)="openLightbox(currentIndex())">
             }
 
-            <button
-              class="absolute right-4 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-2xl text-white transition hover:bg-black/70"
-              (click)="nextMedia()">
-              ❯
-            </button>
-          </div>
+          <button
+            class="absolute right-4 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-2xl text-white transition hover:bg-black/70"
+            (click)="nextMedia()">
+            ❯
+          </button>
+        </div>
 
           <!-- Gallery -->
           @if(caseDetails()?.photos?.length){
@@ -102,8 +103,8 @@
             </div>
           }
 
-          <!-- ================= أزرار الأدمن والـ Moderator (Admin Buttons) ================= -->
-          @let status = caseDetails()?.status;
+        <!-- ================= أزرار الأدمن والـ Moderator (Admin Buttons) ================= -->
+        @let status = caseDetails()?.status;
 
           @if (isAdminPage()) {
             <div class="flex flex-wrap items-center gap-3 mt-6 pt-4 border-t border-outline-variant">
@@ -128,86 +129,87 @@
                 </app-button>
               }
 
-            </div>
-          }
-
         </div>
+        }
 
-        <!-- ================= اليسار: تفاصيل الحالة والخرائط والبيانات ================= -->
-        <div class="w-full lg:w-7/12 space-y-6">
-          
-          <!-- كارت البيانات الأساسية -->
-          <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm space-y-6">
-            <div>
-              <h1 class="text-3xl font-bold text-on-background">
-                {{caseDetails()?.fName}} {{caseDetails()?.sName}} {{caseDetails()?.tName}} {{caseDetails()?.lName}}
-              </h1>
-              <p class="mt-2 text-on-surface-variant">
-                {{caseDetails()?.government}} - {{caseDetails()?.city}} - {{caseDetails()?.street}}
-              </p>
-            </div>
+      </div>
 
-            <div class="flex flex-wrap gap-2">
-              <span [appCaseStatusBadgeDirective]="caseDetails()!.status"></span>
-              <span [appCaseTypeBadgeDirective]="caseDetails()!.caseType"></span>
-              <span [appGenderBadgeDirective]="caseDetails()!.gender"></span>
-            </div>
+      <!-- ================= اليسار: تفاصيل الحالة والخرائط والبيانات ================= -->
+      <div class="w-full lg:w-7/12 space-y-6">
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div class="rounded-lg border border-outline-variant p-4">
-                <p class="text-sm text-on-surface-variant">العمر</p>
-                <h3 class="mt-2 text-lg font-semibold">{{caseDetails()?.age}}</h3>
-              </div>
-
-              <div class="rounded-lg border border-outline-variant p-4">
-                <p class="text-sm text-on-surface-variant">تاريخ الإضافة</p>
-                <h3 class="mt-2 font-semibold">{{caseDetails()?.createdAt | date:'dd/MM/yyyy'}}</h3>
-              </div>
-
-              <div class="rounded-lg border border-outline-variant p-4">
-                <p class="text-sm text-on-surface-variant">الفئة العمرية</p>
-                <div class="mt-2">
-                  <span [appAgeBadgeDirective]="getAgeCategoryEnum()"></span>
-                </div>
-              </div>
-
-              <div class="rounded-lg border border-outline-variant p-4">
-                <p class="text-sm text-on-surface-variant">رقم التواصل</p>
-                <h3 class="mt-2 font-semibold">{{caseDetails()?.communicationPhone || '-'}}</h3>
-              </div>
-
-              <div class="rounded-lg border border-outline-variant p-4 sm:col-span-2">
-                <p class="text-sm text-on-surface-variant">تاريخ الاختفاء</p>
-                <h3 class="mt-2 font-semibold">{{caseDetails()?.eventDate | date:'dd/MM/yyyy'}}</h3>
-              </div>
-            </div>
-          </div>
-
-          <!-- كارت الوصف الملون -->
-          <div class="rounded-xl bg-surface-container p-5">
-            <h3 class="mb-3 text-lg font-bold text-on-surface">الوصف</h3>
-            <p class="leading-8 text-on-surface-variant whitespace-pre-line">
-              {{caseDetails()?.description || 'لا يوجد وصف'}}
+        <!-- كارت البيانات الأساسية -->
+        <div
+          class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm space-y-6">
+          <div>
+            <h1 class="text-3xl font-bold text-on-background">
+              {{caseDetails()?.fName}} {{caseDetails()?.sName}} {{caseDetails()?.tName}} {{caseDetails()?.lName}}
+            </h1>
+            <p class="mt-2 text-on-surface-variant">
+              {{caseDetails()?.government}} - {{caseDetails()?.city}} - {{caseDetails()?.street}}
             </p>
           </div>
 
-          <!-- كارت الخريطة -->
-          @if(caseDetails()?.latitude && caseDetails()?.longitude){
-            <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
-              <h3 class="mb-4 text-lg font-bold">آخر موقع تم رصده</h3>
-              <app-map-viewer [lat]="caseDetails()!.latitude!" [lng]="caseDetails()!.longitude!"></app-map-viewer>
+          <div class="flex flex-wrap gap-2">
+            <span [appCaseStatusBadgeDirective]="caseDetails()!.status"></span>
+            <span [appCaseTypeBadgeDirective]="caseDetails()!.caseType"></span>
+            <span [appGenderBadgeDirective]="caseDetails()!.gender"></span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-outline-variant p-4">
+              <p class="text-sm text-on-surface-variant">العمر</p>
+              <h3 class="mt-2 text-lg font-semibold">{{caseDetails()?.age}}</h3>
             </div>
-          }
+
+            <div class="rounded-lg border border-outline-variant p-4">
+              <p class="text-sm text-on-surface-variant">تاريخ الإضافة</p>
+              <h3 class="mt-2 font-semibold">{{caseDetails()?.createdAt | date:'dd/MM/yyyy'}}</h3>
+            </div>
+
+            <div class="rounded-lg border border-outline-variant p-4">
+              <p class="text-sm text-on-surface-variant">الفئة العمرية</p>
+              <div class="mt-2">
+                <span [appAgeBadgeDirective]="getAgeCategoryEnum()"></span>
+              </div>
+            </div>
+
+            <div class="rounded-lg border border-outline-variant p-4">
+              <p class="text-sm text-on-surface-variant">رقم التواصل</p>
+              <h3 class="mt-2 font-semibold">{{caseDetails()?.communicationPhone || '-'}}</h3>
+            </div>
+
+            <div class="rounded-lg border border-outline-variant p-4 sm:col-span-2">
+              <p class="text-sm text-on-surface-variant">تاريخ الاختفاء</p>
+              <h3 class="mt-2 font-semibold">{{caseDetails()?.eventDate | date:'dd/MM/yyyy'}}</h3>
+            </div>
+          </div>
         </div>
 
+        <!-- كارت الوصف الملون -->
+        <div class="rounded-xl bg-surface-container p-5">
+          <h3 class="mb-3 text-lg font-bold text-on-surface">الوصف</h3>
+          <p class="leading-8 text-on-surface-variant whitespace-pre-line">
+            {{caseDetails()?.description || 'لا يوجد وصف'}}
+          </p>
+        </div>
+
+        <!-- كارت الخريطة -->
+        @if(caseDetails()?.latitude && caseDetails()?.longitude){
+        <app-button (click)="openLocationModal()" class="w-full">
+          <span class="material-symbols-outlined text-lg">open_in_full</span>
+          عرض الموقع على الخريطة
+        </app-button>
+        }
       </div>
+
+    </div>
     }
 
     @else {
-      <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-12 text-center">
-        <h2 class="mb-2 text-xl font-bold">الحالة غير موجودة</h2>
-        <p class="text-on-surface-variant">لم يتم العثور على بيانات هذه الحالة.</p>
-      </div>
+    <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-12 text-center">
+      <h2 class="mb-2 text-xl font-bold">الحالة غير موجودة</h2>
+      <p class="text-on-surface-variant">لم يتم العثور على بيانات هذه الحالة.</p>
+    </div>
     }
   </div>
 
@@ -215,55 +217,50 @@
 
   <!-- موديول بوب أب الحذف العادي -->
   @if(showDeleteConfirmation()){
-    <app-confirmation-modal
-      title="حذف الحالة"
-      message="هل أنت متأكد أنك تريد حذف هذه الحالة؟ لا يمكن التراجع عن هذا الإجراء."
-      confirmText="حذف"
-      cancelText="إلغاء"
-      icon="delete"
-      variant="danger"
-      (confirm)="confirmDelete()"
-      (cancel)="cancelDelete()">
-    </app-confirmation-modal>
+  <app-confirmation-modal title="حذف الحالة"
+    message="هل أنت متأكد أنك تريد حذف هذه الحالة؟ لا يمكن التراجع عن هذا الإجراء." confirmText="حذف" cancelText="إلغاء"
+    icon="delete" variant="danger" (confirm)="confirmDelete()" (cancel)="cancelDelete()">
+  </app-confirmation-modal>
   }
 
   <!-- موديول بوب أب الحذف النهائي للأدمن -->
   @if(showPermanentDeleteConfirmation()){
-    <app-confirmation-modal
-      title="حذف نهائي"
-      message="هل أنت متأكد أنك تريد حذف هذه الحالة نهائياً من النظام؟ هذا الإجراء لا يمكن التراجع عنه."
-      confirmText="حذف نهائي"
-      cancelText="إلغاء"
-      variant="danger"
-      (confirm)="confirmPermanentDelete()"
-      (cancel)="cancelPermanentDelete()">
-    </app-confirmation-modal>
+  <app-confirmation-modal title="حذف نهائي"
+    message="هل أنت متأكد أنك تريد حذف هذه الحالة نهائياً من النظام؟ هذا الإجراء لا يمكن التراجع عنه."
+    confirmText="حذف نهائي" cancelText="إلغاء" variant="danger" (confirm)="confirmPermanentDelete()"
+    (cancel)="cancelPermanentDelete()">
+  </app-confirmation-modal>
   }
 
   <!-- موديول بوب أب تم العثور عليه -->
   @if(showFoundedPopup()){
-    <app-founded-popup
-      (confirmed)="confirmFounded($event)"
-      (cancel)="cancelFounded()">
-    </app-founded-popup>
+  <app-founded-popup (confirmed)="confirmFounded($event)" (cancel)="cancelFounded()">
+  </app-founded-popup>
+  }
+
+  <!-- موديول عرض الموقع للقراءة فقط -->
+  @if(showLocationModal()){
+  <app-map-location-picker [isOpen]="showLocationModal()" [readOnly]="true" [initialLat]="caseDetails()!.latitude!"
+    [initialLng]="caseDetails()!.longitude!" [initialAddress]="''" (cancel)="closeLocationModal()">
+  </app-map-location-picker>
   }
 
   <!-- موديول الـ Lightbox لتكبير الصور -->
   @if(lightboxVisible()){
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
-      <button class="absolute right-6 top-6 text-4xl text-white" (click)="closeLightbox()">✕</button>
-      <button class="absolute left-5 text-5xl text-white" (click)="previousMedia()">❮</button>
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
+    <button class="absolute right-6 top-6 text-4xl text-white" (click)="closeLightbox()">✕</button>
+    <button class="absolute left-5 text-5xl text-white" (click)="previousMedia()">❮</button>
 
-      @if(selectedMedia()?.type === FileType.Video){
-        <video controls autoplay class="max-h-[90vh] max-w-[90vw] rounded-xl">
-          <source [src]="getImageUrl(selectedMedia()?.imagePath)" type="video/mp4">
-        </video>
-      } @else {
-        <img class="max-h-[90vh] max-w-[90vw] rounded-xl" [src]="getImageUrl(selectedMedia()?.imagePath)">
-      }
+    @if(selectedMedia()?.type === FileType.Video){
+    <video controls autoplay class="max-h-[90vh] max-w-[90vw] rounded-xl">
+      <source [src]="getImageUrl(selectedMedia()?.imagePath)" type="video/mp4">
+    </video>
+    } @else {
+    <img class="max-h-[90vh] max-w-[90vw] rounded-xl" [src]="getImageUrl(selectedMedia()?.imagePath)">
+    }
 
-      <button class="absolute right-5 text-5xl text-white" (click)="nextMedia()">❯</button>
-    </div>
+    <button class="absolute right-5 text-5xl text-white" (click)="nextMedia()">❯</button>
+  </div>
   }
 
 </div>

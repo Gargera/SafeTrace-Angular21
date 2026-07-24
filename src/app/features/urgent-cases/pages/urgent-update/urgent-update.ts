@@ -1,13 +1,14 @@
 import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { environment } from '../../../../../environments/environment'; 
 import { UrgentCaseService } from '../../services/urgent-case.service';
 import { UrgentCaseUpdateRequest } from '../../models/request/UrgentCaseUpdateRequest';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
 import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
-import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/map-location-picker';
+import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
@@ -23,7 +24,7 @@ import { validEnum } from '../../../../shared/validators/enum.validator';
 import { CommonModule } from '@angular/common';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 
-import { GeocodingService } from '../../../../core/services/geocoding.service';
+import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 
 type Step = 1 | 2 | 3;
 
@@ -147,6 +148,18 @@ export class UrgentUpdate implements OnInit {
     this.loadCase();
   }
 
+  /**
+   * The backend (local FileStorageService) returns RELATIVE paths only
+   * (e.g. "/Images/UrgentCase/xxx.jpg"). Without prefixing environment.baseUrl,
+   * <img src> resolves against the Angular app's own origin instead of the API.
+   * Kept forward-compatible: an already-absolute URL (e.g. future S3) passes through.
+   */
+  private resolveMediaUrl(path: string | null | undefined): string | null {
+    if (!path) return null;
+    if (/^https?:\/\//i.test(path)) return path;
+    return `${environment.baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+  }
+
   private loadCase(): void {
     this.isLoading.set(true);
     this.service.getCaseById(this.caseId).subscribe({
@@ -178,10 +191,16 @@ export class UrgentUpdate implements OnInit {
           });
         }
 
-        const files: CaseFileResponse[] = c.files ?? c.caseFiles ?? [];
+        // FIX: backend's CaseDetailBaseDto exposes the property as "Photos"
+        // (camelCase JSON: "photos"), NOT "files"/"caseFiles".
+        const rawFiles: CaseFileResponse[] = c.photos ?? c.files ?? c.caseFiles ?? [];
+        const files: CaseFileResponse[] = rawFiles.map((f) => ({
+          ...f,
+          imagePath: this.resolveMediaUrl(f.imagePath) ?? f.imagePath,
+        }));
         this.existingPhotos.set(files);
         this.primaryPhotoId.set(files.find((f) => f.isPrimary)?.id ?? null);
-        this.existingVideoUrl.set(c.video ?? c.videoPath ?? null);
+        this.existingVideoUrl.set(this.resolveMediaUrl(c.video ?? c.videoPath ?? null));
 
         this.isLoading.set(false);
       },
@@ -393,7 +412,7 @@ export class UrgentUpdate implements OnInit {
       next: () => {
         this.isSubmitting.set(false);
         this.snackbar.success('تم تحديث بيانات الحالة بنجاح.');
-        this.router.navigate(['/urgent-cases', this.caseId]);
+        this.router.navigate(['/urgent', this.caseId]);
       },
       error: (err) => {
         this.isSubmitting.set(false);

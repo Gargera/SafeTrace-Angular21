@@ -4,23 +4,12 @@ export interface LocationResult {
   address: string;
 }
 
-export interface SelectedLocation {
-  lat: number;
-  lng: number;
-}
-
 export interface MapCoordinates {
   lat: number;
   lng: number;
 }
 
 export interface SearchResult {
-  lat: number;
-  lng: number;
-  displayName: string;
-}
-
-export interface NominatimSearchResult {
   lat: number;
   lng: number;
   displayName: string;
