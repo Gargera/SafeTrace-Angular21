@@ -198,36 +198,11 @@
       إجمالي التبرعات: <span class="font-bold text-primary">{{ totalCount() }}</span>
     </span>
 
-    <div class="flex gap-xs" dir="ltr">
-      <button
-        [disabled]="pageNumber() === 1"
-        (click)="changePage(pageNumber() - 1)"
-        class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <span class="material-symbols-outlined text-md">chevron_left</span>
-      </button>
-
-      @for (page of pagesArray(); track page) {
-        <button
-          (click)="changePage(page)"
-          [class.bg-secondary]="page === pageNumber()"
-          [class.text-white]="page === pageNumber()"
-          [class.bg-white]="page !== pageNumber()"
-          [class.text-primary]="page !== pageNumber()"
-          class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant font-bold text-label-sm hover:bg-secondary-fixed-dim transition-all"
-        >
-          {{ page }}
-        </button>
-      }
-
-      <button
-        [disabled]="pageNumber() === totalPages()"
-        (click)="changePage(pageNumber() + 1)"
-        class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <span class="material-symbols-outlined text-md">chevron_right</span>
-      </button>
-    </div>
+    <app-pagination
+      [currentPage]="pageNumber()"
+      [totalPages]="totalPages()"
+      (pageChange)="changePage($event)"
+    />
   </div>
   }
 </section>

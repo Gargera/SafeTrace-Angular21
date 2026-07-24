@@ -18,6 +18,7 @@ import {TruncatePipe} from '../../../../shared/pipes/truncate-pipe';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 const PAGE_SIZE = 10;
 
 @Component({
@@ -35,7 +36,8 @@ const PAGE_SIZE = 10;
     CaseHeaderComponent,
     CaseTypeBadgeDirective,
     TruncatePipe,
-    HasPermissionDirective
+    HasPermissionDirective,
+    PaginationComponent
   ],
   templateUrl: './admin-chats.html',
 })
@@ -78,11 +80,6 @@ export class AdminChats implements OnInit {
   );
   // حسابات الـ Pagination تلقائياً بناءً على الـ Signals
   totalPages = computed(() => Math.ceil(this.totalCount() / PAGE_SIZE));
-  
-  pagesArray = computed(() => {
-    const total = this.totalPages();
-    return Array.from({ length: total }, (_, i) => i + 1);
-  });
 
   statistics = signal<AdminChatStatisticsDto | null>(null);
   isLoadingStats = signal(true);

@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 
-export type SnackbarType = 'success' | 'error' | 'info';
+export type SnackbarType = 'success' | 'error' | 'info' | 'warning';
 
 export interface SnackbarMessage {
   id: number;
@@ -52,6 +52,10 @@ export class SnackbarService {
 
   info(text: string, durationMs = 3500): void {
     this.show(text, 'info', durationMs);
+  }
+
+  warning(text: string, durationMs = 4000): void {
+    this.show(text, 'warning', durationMs);
   }
 
   dismiss(): void {

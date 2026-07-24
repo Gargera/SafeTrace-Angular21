@@ -1,13 +1,14 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AiMatchingService, AiMatchedCase } from '../../services/ai-search.service';
-import Swal from 'sweetalert2';
+
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Router } from '@angular/router';
+import { Permissions } from '../../../../core/constants/Permissions';
 
 @Component({
   selector: 'app-ai-search',
@@ -72,20 +73,7 @@ export class AiSearch implements OnInit {
 
   handleFile(file: File) {
     if (!this.authService.isLoggedIn()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'عذراً!',
-        text: 'يجب تسجيل الدخول أولاً لتتمكن من استخدام تقنية البحث بالذكاء الاصطناعي.',
-        confirmButtonText: 'تسجيل الدخول',
-        showCancelButton: true,
-        cancelButtonText: 'إلغاء',
-        confirmButtonColor: '#0058be',
-        customClass: { popup: 'rounded-xl font-body-md' }
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.router.navigate(['/auth/login']);
-        }
-      });
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/ai-search' } });
       return;
     }
 
@@ -93,20 +81,12 @@ export class AiSearch implements OnInit {
     const maxSizeBytes = 5 * 1024 * 1024; // 5MB
 
     if (!validExtensions.includes(file.type)) {
-      Swal.fire({
-        icon: 'error',
-        title: 'صيغة غير مدعومة',
-        text: 'يرجى رفع صورة بصيغة JPG, JPEG أو PNG فقط.',
-      });
+      this.toast.error('يرجى رفع صورة بصيغة JPG, JPEG أو PNG فقط.');
       return;
     }
 
     if (file.size > maxSizeBytes) {
-      Swal.fire({
-        icon: 'error',
-        title: 'حجم الصورة كبير',
-        text: 'يجب ألا يتعدى حجم الصورة 5 ميجابايت.',
-      });
+      this.toast.error('يجب ألا يتعدى حجم الصورة 5 ميجابايت.');
       return;
     }
     this.selectedImage.set(file);
@@ -124,11 +104,12 @@ export class AiSearch implements OnInit {
   startSearch() {
     const file = this.selectedImage();
     if (!file) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'تنبيه',
-        text: 'الرجاء اختيار صورة أولاً',
-      });
+      this.toast.warning('الرجاء اختيار صورة أولاً');
+      return;
+    }
+
+    if (!this.authService.hasPermission(Permissions.AiMatching.Search)) {
+      this.toast.warning('ليس لديك الصلاحيات الكافية لتنفيذ هذا الإجراء.');
       return;
     }
 
@@ -142,11 +123,7 @@ export class AiSearch implements OnInit {
           this.results.set(res.data);
           this.aiMatchingService.cachedResults.set(res.data);
           if (res.data.length === 0) {
-            Swal.fire({
-              icon: 'info',
-              title: 'لم يتم العثور على نتائج',
-              text: 'لم يتم العثور على أي تطابق في قاعدة البيانات',
-            });
+            this.toast.info('لم يتم العثور على أي تطابق في قاعدة البيانات');
           }
         } else {
           this.toast.error(res.message || 'حدث خطأ أثناء البحث');

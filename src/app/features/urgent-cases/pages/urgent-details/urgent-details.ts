@@ -24,6 +24,8 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
 import { UrgentCaseService } from '../../services/urgent-case.service';
 import { UrgentCaseDetailResponse } from '../../models/response/UrgentCaseDetailResponse';
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+import { Permissions } from '../../../../core/constants/Permissions';
 
 @Component({
   selector: 'urgent-details',
@@ -37,8 +39,9 @@ import { MapLocationPickerComponent } from '../../../../shared/components/map-lo
     AgeBadgeDirective,
     ConfirmationModalComponent,
     FoundedPopupComponent,
-    ButtonComponent,
     MapLocationPickerComponent,
+    HasPermissionDirective,
+    ButtonComponent,
   ],
   templateUrl: './urgent-details.html',
   styleUrls: ['./urgent-details.css'],
@@ -53,6 +56,7 @@ export class UrgentDetails implements OnInit {
   readonly apiUrl = environment.baseUrl;
   readonly FileType = FileType;
   readonly CaseStatus = CaseStatus;
+  readonly Permissions = Permissions;
 
   // Signals
   showDeleteConfirmation = signal(false);
@@ -74,7 +78,9 @@ export class UrgentDetails implements OnInit {
   currentIndex = signal(0);
 
   ngOnInit(): void {
-    this.isAdminPage.set(this.router.url.startsWith('/admin'));
+    this.route.data.subscribe(data => {
+      this.isAdminPage.set(data['mode'] === 'dashboard');
+    });
 
     this.route.paramMap.subscribe((params) => {
       const id = Number(params.get('id'));
@@ -120,6 +126,8 @@ export class UrgentDetails implements OnInit {
       error: (err) => {
         console.error(err);
         this.loading.set(false);
+        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء تحميل البيانات';
+        this.snackbar.error(errorMessage);
       },
     });
   }
@@ -211,10 +219,11 @@ export class UrgentDetails implements OnInit {
           });
         }
       },
-      error: () => {
+      error: (err) => {
         this.isFounding.set(false);
         this.showFoundedPopup.set(false);
-        this.snackbar.error('حدث خطأ أثناء تحديث الحالة');
+        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء تحديث الحالة';
+        this.snackbar.error(errorMessage);
       },
     });
   }
@@ -251,10 +260,11 @@ export class UrgentDetails implements OnInit {
           this.router.navigate(['/urgent']);
         }
       },
-      error: () => {
+      error: (err) => {
         this.deleting.set(false);
         this.showDeleteConfirmation.set(false);
-        this.snackbar.error('حدث خطأ أثناء حذف الحالة');
+        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء حذف الحالة';
+        this.snackbar.error(errorMessage);
       },
     });
   }
@@ -284,22 +294,15 @@ export class UrgentDetails implements OnInit {
         this.showPermanentDeleteConfirmation.set(false);
         if (res.success) {
           this.snackbar.success('تم حذف الحالة نهائياً');
-          this.router.navigate(['/urgent']);
+          this.router.navigate(['/admin/cases-management']);
         }
       },
-      error: () => {
+      error: (err) => {
         this.showPermanentDeleteConfirmation.set(false);
-        this.snackbar.error('حدث خطأ أثناء الحذف النهائي');
+        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء الحذف النهائي';
+        this.snackbar.error(errorMessage);
       }
     });
-  }
-
-  isAdmin(): boolean {
-    return this.authService.isAdmin();
-  }
-
-  isModerator(): boolean {
-    return this.authService.isModerator();
   }
 
   getAgeCategoryEnum(): AgeCategories {

@@ -1,6 +1,7 @@
 import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { environment } from '../../../../../environments/environment' ;
 import { UnknownCaseService } from '../../services/unknown-case.service';
 import { UnknownCaseUpdateRequest } from '../../models/request/UnknownCaseUpdateRequest';
 import { Gender } from '../../../../shared/enums/gender';
@@ -129,6 +130,18 @@ export class UnknownUpdate implements OnInit {
     this.loadCase();
   }
 
+  /**
+   * The backend (local FileStorageService) returns RELATIVE paths only
+   * (e.g. "/Images/UnknownCase/xxx.jpg"). Without prefixing environment.baseUrl,
+   * <img src> resolves against the Angular app's own origin instead of the API.
+   * Kept forward-compatible: an already-absolute URL (e.g. future S3) passes through.
+   */
+  private resolveMediaUrl(path: string | null | undefined): string | null {
+    if (!path) return null;
+    if (/^https?:\/\//i.test(path)) return path;
+    return `${environment.baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+  }
+
   private loadCase(): void {
     this.isLoading.set(true);
     this.service.getCaseById(this.caseId).subscribe({
@@ -149,10 +162,16 @@ export class UnknownUpdate implements OnInit {
           eventDate: c.eventDate ? String(c.eventDate).split('T')[0] : '',
         });
 
-        const files: CaseFileResponse[] = c.files ?? c.caseFiles ?? [];
+        // FIX: backend's CaseDetailBaseDto exposes the property as "Photos"
+        // (camelCase JSON: "photos"), NOT "files"/"caseFiles".
+        const rawFiles: CaseFileResponse[] = c.photos ?? c.files ?? c.caseFiles ?? [];
+        const files: CaseFileResponse[] = rawFiles.map((f) => ({
+          ...f,
+          imagePath: this.resolveMediaUrl(f.imagePath) ?? f.imagePath,
+        }));
         this.existingPhotos.set(files);
         this.primaryPhotoId.set(files.find((f) => f.isPrimary)?.id ?? null);
-        this.existingVideoUrl.set(c.video ?? c.videoPath ?? null);
+        this.existingVideoUrl.set(this.resolveMediaUrl(c.video ?? c.videoPath ?? null));
 
         this.isLoading.set(false);
       },
@@ -291,7 +310,7 @@ export class UnknownUpdate implements OnInit {
       next: () => {
         this.isSubmitting.set(false);
         this.snackbar.success('تم تحديث بيانات الحالة بنجاح.');
-        this.router.navigate(['/unknown-cases', this.caseId]);
+        this.router.navigate(['/unknown']);
       },
       error: (err) => {
         this.isSubmitting.set(false);
@@ -303,6 +322,6 @@ export class UnknownUpdate implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/unknown', this.caseId]);
+    this.router.navigate(['/unknown']);
   }
 }
