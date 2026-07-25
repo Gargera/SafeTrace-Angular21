@@ -74,6 +74,13 @@
 
           <!-- ================= Details ================= -->
           <div class="space-y-6 p-6">
+            <app-rejection-reason-card
+              [isOwner]="isOwner()"
+              [isAdmin]="isAdminPage()"
+              [status]="caseDetails()?.status"
+              [rejectionReason]="caseDetails()?.rejectionReason">
+            </app-rejection-reason-card>
+
             <div>
               <h1 class="text-3xl font-bold text-on-background">
                 {{caseDetails()?.fName}}
@@ -276,15 +283,12 @@
   }
 
   @if(showRejectConfirmation()){
-    <app-confirmation-modal
-      title="رفض الحالة"
-      message="هل أنت متأكد أنك تريد رفض هذه الحالة؟"
-      confirmText="رفض"
-      cancelText="إلغاء"
-      variant="danger"
-      (confirm)="confirmReject()"
+    <app-reject-case-popup
+      [isSubmitting]="isRejecting()"
+      [apiError]="rejectApiError()"
+      (confirm)="confirmReject($event)"
       (cancel)="cancelReject()">
-    </app-confirmation-modal>
+    </app-reject-case-popup>
   }
 
   @if(showPermanentDeleteConfirmation()){

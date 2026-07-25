@@ -106,6 +106,7 @@ export interface CaseDetailResponse {
   ageCategory: AgeCategoryResponse | null;
   user: UserResponse | null;
   photos: CasePhotoResponse[];
+  rejectionReason: string | null;
 }
 
 export interface CaseListItemResponse {

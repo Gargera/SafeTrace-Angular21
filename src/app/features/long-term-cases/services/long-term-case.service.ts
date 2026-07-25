@@ -109,8 +109,12 @@ export class LongTermCaseService extends ApiService {
    * Reject a long-term case
    * PUT: /api/LongTermCase/Reject/{id}
    */
-  rejectCase(id: number): Observable<ApiResponse<string>> {
-    return this.put<ApiResponse<string>>(`${this.baseUrl}/Reject/${id}`, {});
+  rejectCase(id: number, rejectionReason: string): Observable<ApiResponse<string>> {
+    return this.put<ApiResponse<string>>(
+      `${this.baseUrl}/Reject/${id}`,
+      JSON.stringify(rejectionReason),
+      { headers: { 'Content-Type': 'application/json' } },
+    );
   }
 
   /**
