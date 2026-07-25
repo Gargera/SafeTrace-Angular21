@@ -31,17 +31,23 @@ download(response: HttpResponse<Blob>): void {
 
     let fileName = 'download';
 
-    const contentDisposition =
-      response.headers.get('Content-Disposition');
+  const contentDisposition =
+    response.headers.get('Content-Disposition');
 
-    if (contentDisposition) {
-      const match =
-        contentDisposition.match(/filename="?([^"]+)"?/);
+  if (contentDisposition) {
 
-      if (match) {
-        fileName = match[1];
-      }
+    const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/);
+
+    const normalMatch = contentDisposition.match(/filename="?([^";]+)"?/);
+
+    if (utf8Match) {
+      fileName = decodeURIComponent(utf8Match[1]);
     }
+    else if (normalMatch) {
+      fileName = normalMatch[1];
+    }
+  }
+
 
     const url = URL.createObjectURL(blob);
 

@@ -177,8 +177,20 @@ export class UserList {
   }
 
  downloadReport(): void {
+
+  const currentFilter = this.filter();
+
+  const reportFilter = {
+  pageNumber: this.filter().pageNumber,
+  pageSize: this.filter().pageSize,
+  searchTerm: this.filter().searchTerm || undefined,
+  verificationStatus: this.filter().verificationStatus || undefined,
+  roleId: this.filter().roleId || undefined,
+  isBlocked: this.filter().isBlocked || undefined
+};
+  console.log(reportFilter);
   this.reportService
-    .generateUsersPdfReport(this.filter())
+    .generateUsersPdfReport(reportFilter)
     .subscribe(response => {
       this.reportService.download(response);
     });
