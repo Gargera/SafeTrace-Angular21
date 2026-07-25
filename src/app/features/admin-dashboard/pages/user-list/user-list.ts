@@ -22,6 +22,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 import { UserStatisticsDto } from '../../models/User/UserStatisticsDto';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import { SnackbarService } from '../../../../core/services/toast.service';
+import { ReportService } from '../../services/report.service';
 
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
@@ -54,6 +55,7 @@ export class UserList {
   private roleService = inject(RoleService);
   private readonly router = inject(Router);
   private toast = inject(SnackbarService);
+  private reportService = inject(ReportService);
 
   users = signal<GetUserDto[]>([]);
   roles = signal<RoleDto[]>([]);
@@ -191,4 +193,12 @@ export class UserList {
   navigateToRegister() {
     this.router.navigate(['/admin/users/registerByAdmin']);
   }
+
+ downloadReport(): void {
+  this.reportService
+    .generateUsersPdfReport(this.filter())
+    .subscribe(response => {
+      this.reportService.download(response);
+    });
+}
 }

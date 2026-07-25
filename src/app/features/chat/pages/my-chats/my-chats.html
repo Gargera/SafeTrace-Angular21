@@ -42,7 +42,7 @@
             <img [src]="chatService.getImageUrl(chat.otherUserImage)" alt="صورة المستخدم" class="w-full h-full object-cover" />
           } @else {
             <!-- إذا لم تكن الصورة موجودة، تعرض الأيقونة الافتراضية -->
-            <span class="m-auto font-medium text-sm">{{ chat.otherUserName?.charAt(0) }}</span>
+            <span class="m-auto font-medium text-sm">{{ chat.otherUserName.charAt(0) }}</span>
 
           }
         </span>
