@@ -81,8 +81,6 @@ export const routes: Routes = [
       {
         path: 'aisearch',
         title: 'البحث الذكي | لقاء',
-        canActivate: [permissionGuard],
-        data: { requiredPermission: Permissions.AiMatching.Search },
         loadChildren: () => import('./features/ai-search/ai.routes').then((m) => m.AiSearch_ROUTES),
       },
       {

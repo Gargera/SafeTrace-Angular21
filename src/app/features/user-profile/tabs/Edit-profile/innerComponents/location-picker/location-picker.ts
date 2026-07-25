@@ -12,11 +12,11 @@ import { CommonModule } from '@angular/common';
 import { Subject, of } from 'rxjs';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { GeocodingService } from '../../../../../../core/services/geocoding.service';
+import { GeocodingService } from '../../../../../../core/services/geocoding/geocoding.service';
 import { SnackbarService } from '../../../../../../core/services/toast.service';
 import { GetUserInfoDTO, UpdateHomeLocationDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
-import { MapLocationPickerComponent } from '../../../../../../shared/components/map-location-picker/map-location-picker';
+import { MapLocationPickerComponent } from '../../../../../../shared/components/map-location-picker/components/map-location-picker';
 
 @Component({
   selector: 'app-location-picker',
@@ -62,11 +62,11 @@ export class LocationPicker implements OnChanges {
       .pipe(
         tap(() => this.isResolvingAddress.set(true)),
         switchMap(({ lat, lng }) =>
-          this.#geocodingService.reverseGeocode(lat, lng).pipe(
-            catchError(() => of(`${lat.toFixed(4)}, ${lng.toFixed(4)}`))
-          )
+          this.#geocodingService
+            .reverseGeocode(lat, lng)
+            .pipe(catchError(() => of(`${lat.toFixed(4)}, ${lng.toFixed(4)}`))),
         ),
-        takeUntilDestroyed(this.#destroyRef)
+        takeUntilDestroyed(this.#destroyRef),
       )
       .subscribe((address) => {
         this.resolvedAddress.set(address);
@@ -109,7 +109,7 @@ export class LocationPicker implements OnChanges {
         this.isLocating.set(false);
         this.#snackbar.error('تعذر تحديد موقعك الحالي');
       },
-      { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 },
     );
   }
 

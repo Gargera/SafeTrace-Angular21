@@ -46,7 +46,7 @@
                 class="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover ring-2 ring-primary/40 shrink-0">
             } @else {
               <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-secondary text-on-secondary-container flex items-center justify-center shrink-0 ring-2 ring-primary/40">
-                <span class="m-auto font-medium text-sm">{{ adminSenderName?.charAt(0) }}</span>
+                <span class="m-auto font-medium text-sm">{{ adminSenderName.charAt(0) }}</span>
               </span>
             }
             <div class="leading-tight min-w-0">
@@ -70,7 +70,7 @@
                 class="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover ring-2 ring-secondary/40 shrink-0">
             } @else {
               <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-secondary text-on-secondary-container flex items-center justify-center shrink-0 ring-2 ring-secondary/40">
-                <span class="m-auto font-medium text-sm">{{ adminReceiverName?.charAt(0) }}</span>
+                <span class="m-auto font-medium text-sm">{{ adminReceiverName.charAt(0) }}</span>
               </span>
             }
           </div>
@@ -111,7 +111,7 @@
       }
       <div class="text-[10px] sm:text-xs leading-tight min-w-0 cursor-pointer flex items-center gap-1.5" (click)="goToCaseDetails(c.caseId, c.caseType)">
         <span class="text-on-surface-variant font-medium">شأن الحالة:</span>
-        <span class="font-semibold text-on-surface truncate max-w-[200px] sm:max-w-[120px]">{{ c.caseTitle }}</span>
+        <span class="font-semibold text-on-surface truncate max-w-50 sm:max-w-30">{{ c.caseTitle }}</span>
       </div>
     </div>
 
@@ -163,7 +163,7 @@
               } @else {
               <span
                 class="w-6 h-6 rounded-full bg-secondary text-on-secondary-container flex items-center justify-center shrink-0">
-                <span class="m-auto font-medium text-sm">{{ adminSenderName?.charAt(0) }}</span>
+                <span class="m-auto font-medium text-sm">{{ adminSenderName.charAt(0) }}</span>
               </span>
               }
               } @else if (message.senderId === chat()?.receiverId) {
@@ -173,7 +173,7 @@
               } @else {
               <span
                 class="w-6 h-6 rounded-full bg-secondary text-on-secondary-container flex items-center justify-center shrink-0">
-                <span class="m-auto font-medium text-sm">{{ adminReceiverName?.charAt(0) }}</span>
+                <span class="m-auto font-medium text-sm">{{ adminReceiverName.charAt(0) }}</span>
               </span>
               }
               }
@@ -197,7 +197,7 @@
 
               <!-- النص -->
               @if (message.content) {
-              <div dir="rtl" class="px-3.5 py-2 rounded-2xl break-words w-fit text-sm"
+              <div dir="rtl" class="px-3.5 py-2 rounded-2xl wrap-break-word w-fit text-sm"
                 [class.bg-primary]="isMessageOnRightSide(message)"
                 [class.text-on-primary]="isMessageOnRightSide(message)"
                 [class.bg-surface-container-high]="!isMessageOnRightSide(message)"
@@ -212,13 +212,13 @@
               <!-- الصورة المرفقة -->
               @if (message.fileType === FileType.Image && attachmentUrl(message); as url) {
               <img [src]="url"
-                class="rounded-xl mt-1.5 border border-outline-variant max-w-[240px] sm:max-w-[320px] w-fit">
+                class="rounded-xl mt-1.5 border border-outline-variant max-w-60 sm:max-w-80 w-fit">
               }
 
               <!-- الفيديو المرفق -->
               @if (message.fileType === FileType.Video && attachmentUrl(message); as url) {
               <video controls [src]="url"
-                class="rounded-xl mt-1.5 border border-outline-variant max-w-[240px] sm:max-w-[320px] w-fit"></video>
+                class="rounded-xl mt-1.5 border border-outline-variant max-w-60 sm:max-w-80 w-fit"></video>
               }
             </div>
           </div>

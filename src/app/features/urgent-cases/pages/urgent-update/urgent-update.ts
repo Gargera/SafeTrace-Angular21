@@ -1,13 +1,15 @@
 import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { environment } from '../../../../../environments/environment'; 
 import { UrgentCaseService } from '../../services/urgent-case.service';
 import { UrgentCaseUpdateRequest } from '../../models/request/UrgentCaseUpdateRequest';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
 import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
-import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/map-location-picker';
+import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
+import { LocationResult } from '../../../../shared/components/map-location-picker/models/location.models';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
@@ -22,8 +24,6 @@ import { validEnum } from '../../../../shared/validators/enum.validator';
 
 import { CommonModule } from '@angular/common';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
-
-import { GeocodingService } from '../../../../core/services/geocoding.service';
 
 type Step = 1 | 2 | 3;
 
@@ -49,7 +49,6 @@ export class UrgentUpdate implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private snackbar = inject(SnackbarService);
-  private geocoding = inject(GeocodingService);
 
   caseId!: number;
   currentStep: Step = 1;
@@ -74,12 +73,8 @@ export class UrgentUpdate implements OnInit {
   selectedLat = signal<number | null>(null);
   selectedLng = signal<number | null>(null);
   selectedAddress = signal<string>('');
-  /** initial coords passed to the map picker so it centers on the existing location */
-  initialMapCenter = signal<{ lat: number; lng: number } | null>(null);
-  isMapModalOpen = signal(false);
-
-  isLocating = signal(false);
-  locationError = signal<string | null>(null);
+  /** controls the map-picker modal visibility (it's a modal, not an inline element) */
+  isMapOpen = signal(false);
 
   readonly genders = Gender;
   readonly relationOptions = RELATION_TYPE_OPTIONS;
@@ -147,6 +142,18 @@ export class UrgentUpdate implements OnInit {
     this.loadCase();
   }
 
+  /**
+   * The backend (local FileStorageService) returns RELATIVE paths only
+   * (e.g. "/Images/UrgentCase/xxx.jpg"). Without prefixing environment.baseUrl,
+   * <img src> resolves against the Angular app's own origin instead of the API.
+   * Kept forward-compatible: an already-absolute URL (e.g. future S3) passes through.
+   */
+  private resolveMediaUrl(path: string | null | undefined): string | null {
+    if (!path) return null;
+    if (/^https?:\/\//i.test(path)) return path;
+    return `${environment.baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+  }
+
   private loadCase(): void {
     this.isLoading.set(true);
     this.service.getCaseById(this.caseId).subscribe({
@@ -171,17 +178,18 @@ export class UrgentUpdate implements OnInit {
         if (c.latitude != null && c.longitude != null) {
           this.selectedLat.set(c.latitude);
           this.selectedLng.set(c.longitude);
-          this.initialMapCenter.set({ lat: c.latitude, lng: c.longitude });
-          this.geocoding.reverseGeocode(c.latitude, c.longitude).subscribe({
-            next: (addr) => this.selectedAddress.set(addr),
-            error: () => this.selectedAddress.set(`${c.latitude.toFixed(4)}, ${c.longitude.toFixed(4)}`),
-          });
         }
 
-        const files: CaseFileResponse[] = c.files ?? c.caseFiles ?? [];
+        // FIX: backend's CaseDetailBaseDto exposes the property as "Photos"
+        // (camelCase JSON: "photos"), NOT "files"/"caseFiles".
+        const rawFiles: CaseFileResponse[] = c.photos ?? c.files ?? c.caseFiles ?? [];
+        const files: CaseFileResponse[] = rawFiles.map((f) => ({
+          ...f,
+          imagePath: this.resolveMediaUrl(f.imagePath) ?? f.imagePath,
+        }));
         this.existingPhotos.set(files);
         this.primaryPhotoId.set(files.find((f) => f.isPrimary)?.id ?? null);
-        this.existingVideoUrl.set(c.video ?? c.videoPath ?? null);
+        this.existingVideoUrl.set(this.resolveMediaUrl(c.video ?? c.videoPath ?? null));
 
         this.isLoading.set(false);
       },
@@ -192,71 +200,19 @@ export class UrgentUpdate implements OnInit {
     });
   }
 
-  onLocationChange(loc: { lat: number; lng: number; address: string }): void {
-    this.selectedLat.set(loc.lat);
-    this.selectedLng.set(loc.lng);
-    this.selectedAddress.set(loc.address);
+  openMap(): void {
+    this.isMapOpen.set(true);
   }
 
-  openMapModal(): void {
-    this.isMapModalOpen.set(true);
+  closeMap(): void {
+    this.isMapOpen.set(false);
   }
 
-  closeMapModal(): void {
-    this.isMapModalOpen.set(false);
-  }
-
-  onMapLocationConfirmed(loc: { lat: number; lng: number; address: string }): void {
-    this.selectedLat.set(loc.lat);
-    this.selectedLng.set(loc.lng);
-    this.selectedAddress.set(loc.address);
-    this.initialMapCenter.set({ lat: loc.lat, lng: loc.lng });
-    this.isMapModalOpen.set(false);
-  }
-
-  useCurrentLocation(): void {
-    if (!navigator.geolocation) {
-      this.locationError.set('المتصفح لا يدعم تحديد الموقع الجغرافي.');
-      return;
-    }
-
-    this.isLocating.set(true);
-    this.locationError.set(null);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-
-        this.geocoding.reverseGeocode(lat, lng).subscribe({
-          next: (address) => {
-            this.onLocationChange({ lat, lng, address });
-            this.isLocating.set(false);
-          },
-          error: () => {
-            this.onLocationChange({ lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
-            this.isLocating.set(false);
-          },
-        });
-      },
-      (error: GeolocationPositionError) => {
-        this.isLocating.set(false);
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            this.locationError.set('تم رفض إذن الوصول لموقعك. من فضلك فعّل صلاحية الموقع من إعدادات المتصفح.');
-            break;
-          case error.POSITION_UNAVAILABLE:
-            this.locationError.set('تعذر تحديد موقعك الحالي.');
-            break;
-          case error.TIMEOUT:
-            this.locationError.set('انتهت مهلة تحديد الموقع، حاول مرة أخرى.');
-            break;
-          default:
-            this.locationError.set('حدث خطأ أثناء تحديد الموقع.');
-        }
-      },
-      { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 },
-    );
+  onLocationConfirm(result: LocationResult): void {
+    this.selectedLat.set(result.lat);
+    this.selectedLng.set(result.lng);
+    this.selectedAddress.set(result.address);
+    this.isMapOpen.set(false);
   }
 
   nextStep(): void {
@@ -393,7 +349,7 @@ export class UrgentUpdate implements OnInit {
       next: () => {
         this.isSubmitting.set(false);
         this.snackbar.success('تم تحديث بيانات الحالة بنجاح.');
-        this.router.navigate(['/urgent-cases', this.caseId]);
+        this.router.navigate(['/urgent', this.caseId]);
       },
       error: (err) => {
         this.isSubmitting.set(false);

@@ -9,11 +9,12 @@ import { GetUserInfoDTO } from '../../../features/user-profile/model/profile.mod
 import { UserRole } from '../../enums/user-role';
 import { Permissions } from '../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../directives/has-permission.directive';
+import { CaseNotificationModalComponent } from '../cases-components/case-notification-modal/case-notification-modal';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterModule, HasPermissionDirective],
+  imports: [RouterModule, HasPermissionDirective, CaseNotificationModalComponent],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
 })
@@ -82,22 +83,8 @@ export class Navbar implements OnInit {
   }
 
   onNotificationClick(n: GetUserNotificationsDTO): void {
-    if (!n.isRead) {
-      this.notificationService.markAsRead(n.id);
-    }
-
-    if (!n.notificationDirectLink) return;
-
     this.isNotificationDropdownOpen.set(false);
-
-    if (
-      n.notificationDirectLink.startsWith('http://') ||
-      n.notificationDirectLink.startsWith('https://')
-    ) {
-      window.open(n.notificationDirectLink, '_blank');
-    } else {
-      this.router.navigateByUrl(n.notificationDirectLink);
-    }
+    this.notificationService.handleNotificationClick(n, this.router);
   }
 
   getProfileImageUrl(): string {

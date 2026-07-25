@@ -80,7 +80,6 @@
         >الحالات المعثور عليها</a
       >
       <a
-        *hasPermission="Permissions.AiMatching.Search"
         routerLink="/aisearch"
         routerLinkActive="text-secondary border-b-2 border-secondary font-medium"
         class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 gap-1 transition-colors duration-200"
@@ -374,7 +373,6 @@
         >الحالات المعثور عليها</a
       >
       <a
-        *hasPermission="Permissions.AiMatching.Search"
         routerLink="/aisearch"
         (click)="isMobileMenuOpen.set(false)"
         class="px-margin-mobile py-4 border-b border-outline-variant text-on-surface hover:bg-surface-container-low font-medium"
@@ -395,3 +393,4 @@
     </div>
   }
 </nav>
+<app-case-notification-modal />

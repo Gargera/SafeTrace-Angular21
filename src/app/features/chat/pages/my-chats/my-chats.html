@@ -69,7 +69,7 @@
             <span class="text-xs text-on-surface-variant">{{ formatLastMessageDate(chat.lastMessageDate)  }}</span>
           }
           @if (chat.unreadCount > 0) {
-            <span class="min-w-[20px] h-5 px-1 rounded-full bg-secondary text-on-secondary text-xs flex items-center justify-center">
+            <span class="min-w-5 h-5 px-1 rounded-full bg-secondary text-on-secondary text-xs flex items-center justify-center">
               {{ chat.unreadCount }}
             </span>
           }
@@ -77,7 +77,7 @@
 
         <button
           type="button"
-          class="text-on-surface-variant hover:text-error shrink-1"
+          class="text-on-surface-variant hover:text-error shrink"
           (click)="$event.stopPropagation(); deleteChat(chat)"
           aria-label="حذف المحادثة"
         >

@@ -205,16 +205,9 @@ export class ForceCreatePopupComponent {
     return Math.round(resolvedValue);
   }
 
-  onContact(m: MatchedCaseDto): void {
-    this.router.navigate(['/chat'], {
-      queryParams: {
-        caseId: m.id,
-        caseType: mapCaseTypeToCardType(m.caseType),
-        reporterId: m.userId,
-      },
-    });
-  }
-
+onContact(m: MatchedCaseDto): void {
+  this.router.navigate(['/chat/start', m.id]);
+}
   onBackdropClick(event: MouseEvent): void {
     if ((event.target as HTMLElement) === event.currentTarget) this.cancel.emit();
   }
