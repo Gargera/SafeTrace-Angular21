@@ -1,0 +1,43 @@
+<app-confirmation-modal
+  title="رفض الحالة"
+  message="يرجى كتابة سبب رفض هذه الحالة وتأكيد القرار."
+  confirmText="رفض"
+  cancelText="إلغاء"
+  variant="danger"
+  icon="block"
+  [confirmDisabled]="form.invalid || isSubmitting()"
+  [confirmLoading]="isSubmitting()"
+  (confirm)="onConfirm()"
+  (cancel)="onCancel()"
+>
+  <form [formGroup]="form" (ngSubmit)="onConfirm()" class="mt-4 w-full text-right px-2">
+    <div class="flex flex-col gap-2">
+      <label for="rejectionReason" class="text-sm font-semibold text-on-surface">
+        سبب الرفض <span class="text-error">*</span>
+      </label>
+
+      <textarea
+        id="rejectionReason"
+        formControlName="rejectionReason"
+        placeholder="اكتب سبب رفض الحالة..."
+        rows="4"
+        class="w-full rounded-2xl border border-outline-variant/30 bg-surface-container-lowest p-3.5 text-sm text-on-surface placeholder:text-outline/70 focus:border-error focus:outline-none transition-all duration-200 resize-none shadow-inner"
+        [class.border-error]="showErrors"
+      ></textarea>
+
+      @if (errorMessage) {
+        <span class="text-xs text-error font-medium flex items-center gap-1 animate-fade-in">
+          <span class="material-symbols-outlined text-sm">error</span>
+          {{ errorMessage }}
+        </span>
+      }
+    </div>
+
+    @if (apiError()) {
+      <div class="mt-4 p-3.5 rounded-xl bg-error/10 border border-error/20 text-error text-xs font-medium flex items-center gap-2 text-right animate-fade-in">
+        <span class="material-symbols-outlined text-base shrink-0">report_problem</span>
+        <span>{{ apiError() }}</span>
+      </div>
+    }
+  </form>
+</app-confirmation-modal>

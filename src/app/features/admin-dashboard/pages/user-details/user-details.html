@@ -1,17 +1,17 @@
 <main class="w-full max-w-7xl mx-auto space-y-lg pb-12" dir="rtl">
   
   <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-xl">
-    <div>
-        <h1 class="text-headline-lg font-bold text-primary">ملف المستخدم</h1>
+    <section class="space-y-3 pb-2">
+        <app-case-header title="ملف المستخدم"></app-case-header>
         <p class="text-body-md text-on-surface-variant mt-1">عرض وإدارة بيانات، وحالة، وصلاحيات المستخدم في النظام.</p>
-    </div>
+    </section>
     <app-button (onClick)="goBack()" variant="primary" extraClass="gap-sm px-8 h-12 rounded-full font-bold shadow-md hover:bg-secondary-container transition-all duration-200">
         <span class="material-symbols-outlined">arrow_forward</span>
         العودة للقائمة
     </app-button>
   </header>
 
-  @if (isLoading()) {
+  @if (isUserLoading()) {
     <div class="flex justify-center items-center h-64">
       <app-loading-spinner title="جارِ تحميل بيانات المستخدم..."></app-loading-spinner>
     </div>
@@ -102,17 +102,17 @@
             
             <div>
               <span class="block mb-3 text-label-md font-bold text-on-surface-variant">صورة إثبات الهوية</span>
-              @if (isInternalRole()) {
-                <div class="aspect-[1.6/1] bg-surface-variant/30 rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center text-outline">
-                  <span class="material-symbols-outlined text-[32px] mb-2">admin_panel_settings</span>
-                  <span class="text-label-sm">إثبات الهوية غير مطلوب لإدارة النظام</span>
-                </div>
-              } @else if (user()?.identificationImage) {
+              @if (user()?.identificationImage) {
                 <div class="relative aspect-[1.6/1] bg-surface-container rounded-xl border-2 border-dashed border-outline-variant overflow-hidden hover:border-secondary transition-colors group cursor-zoom-in" (click)="openImageZoom(user()?.identificationImage)">
                   <img [src]="getImageUrl(user()!.identificationImage!)" class="w-full h-full object-cover">
                   <div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <span class="material-symbols-outlined text-white text-[32px]">zoom_in</span>
                   </div>
+                </div>
+              } @else if (isInternalRole()) {
+                <div class="aspect-[1.6/1] bg-surface-variant/30 rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center text-outline">
+                  <span class="material-symbols-outlined text-[32px] mb-2">verified_user</span>
+                  <span class="text-label-sm">هذا الحساب موثق ولا يتطلب إثبات هوية</span>
                 </div>
               } @else {
                 <div class="aspect-[1.6/1] bg-surface-variant/30 rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center text-outline">
@@ -192,32 +192,37 @@
 
       <div class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-50">
         
-        <div class="divide-y divide-outline-variant">
-          
-          <div class="bg-surface-variant/30 p-md">
-            <div class="flex items-center gap-md">
-              <app-button variant="icon" (onClick)="toggleRootExpanded()" extraClass="w-8 h-8 rounded-full border-none hover:bg-surface-container-highest transition-all">
-                <span class="material-symbols-outlined transition-transform duration-300" [class.rotate-180]="isRootExpanded()">expand_more</span>
-              </app-button>
-              <div class="flex items-center gap-3">
-                <input type="checkbox" 
-                       class="w-5 h-5 rounded border-outline-variant text-secondary focus:ring-secondary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                       [checked]="isAllChecked()"
-                       [indeterminate]="isAllIndeterminate()"
-                       [disabled]="!canManageUser()"
-                       (change)="toggleAllPermissions($event)">
-                <span class="material-symbols-outlined text-secondary text-[22px]">hub</span>
-                <span class="text-body-lg font-bold text-primary">كل صلاحيات النظام</span>
-                
-                @if (hasChanges() && canManageUser()) {
-                  <app-button (onClick)="resetAll()" variant="text" extraClass="mr-4 text-error bg-error-container/30 hover:bg-error hover:text-white px-3 py-1 rounded-lg transition-colors flex items-center gap-1 text-label-sm font-bold border border-error/20">
-                    <span class="material-symbols-outlined text-[16px]">undo</span>
-                    إلغاء التعديلات
-                  </app-button>
-                }
+        @if (isPermissionsLoading()) {
+          <div class="flex justify-center items-center h-48">
+            <app-loading-spinner title="جارِ تحميل الصلاحيات..."></app-loading-spinner>
+          </div>
+        } @else {
+          <div class="divide-y divide-outline-variant">
+            
+            <div class="bg-surface-variant/30 p-md">
+              <div class="flex items-center gap-md">
+                <app-button variant="icon" (onClick)="toggleRootExpanded()" extraClass="w-8 h-8 rounded-full border-none hover:bg-surface-container-highest transition-all">
+                  <span class="material-symbols-outlined transition-transform duration-300" [class.rotate-180]="isRootExpanded()">expand_more</span>
+                </app-button>
+                <div class="flex items-center gap-3">
+                  <input type="checkbox" 
+                         class="w-5 h-5 rounded border-outline-variant text-secondary focus:ring-secondary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                         [checked]="isAllChecked()"
+                         [indeterminate]="isAllIndeterminate()"
+                         [disabled]="!canManageUser()"
+                         (change)="toggleAllPermissions($event)">
+                  <span class="material-symbols-outlined text-secondary text-[22px]">hub</span>
+                  <span class="text-body-lg font-bold text-primary">كل صلاحيات النظام</span>
+                  
+                  @if (hasChanges() && canManageUser()) {
+                    <app-button (onClick)="resetAll()" variant="text" extraClass="mr-4 text-error bg-error-container/30 hover:bg-error hover:text-white px-3 py-1 rounded-lg transition-colors flex items-center gap-1 text-label-sm font-bold border border-error/20">
+                      <span class="material-symbols-outlined text-[16px]">undo</span>
+                      إلغاء التعديلات
+                    </app-button>
+                  }
+                </div>
               </div>
             </div>
-          </div>
 
           @if (isRootExpanded()) {
             <div class="divide-y divide-outline-variant pr-8 bg-white">
@@ -274,6 +279,7 @@
             </div>
           }
         </div>
+        }
       </div>
 
       @if (canManageUser()) {

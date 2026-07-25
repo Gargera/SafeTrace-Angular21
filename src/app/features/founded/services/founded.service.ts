@@ -10,6 +10,7 @@ import {
 } from '../models/founded.models';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
+import { getAgeCategory } from '../../../shared/helper/age-category.helper';
 
 @Injectable({ providedIn: 'root' })
 export class FoundedService {
@@ -48,7 +49,7 @@ export class FoundedService {
       fullName: item.name,
       mainImage: item.image,
       age: item.age,
-      ageCategory: item.age,
+      ageCategory: getAgeCategory(item.age),
       foundDate: item.foundedAt,
     };
   }

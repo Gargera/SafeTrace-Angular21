@@ -102,12 +102,12 @@ export abstract class ApiService {
     return this.http.get<T>(`${url}/${id}`);
   }
 
-  protected post<T>(url: string, body: unknown): Observable<T> {
-    return this.http.post<T>(url, body);
+  protected post<T>(url: string, body: unknown, options?: object): Observable<T> {
+    return this.http.post<T>(url, body, options);
   }
 
-  protected put<T>(url: string, body: unknown): Observable<T> {
-    return this.http.put<T>(url, body);
+  protected put<T>(url: string, body: unknown, options?: object): Observable<T> {
+    return this.http.put<T>(url, body, options);
   }
 
   protected delete<T>(url: string): Observable<T> {
@@ -117,7 +117,7 @@ export abstract class ApiService {
   protected postFormData<T>(url: string, request: any, params?: any): Observable<T> {
     const httpParams = params ? this.buildParams(params) : undefined;
     const body = this.buildFormData(request);
-    
+
     return this.http.post<T>(url, body, {
       params: httpParams
     });

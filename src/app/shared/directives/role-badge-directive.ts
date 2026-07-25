@@ -21,22 +21,31 @@ export class RoleBadgeDirective {
 
       const roleValue = this.role() as UserRole;
 
-      if (roleValue === UserRole.Admin) {
+      if (roleValue === UserRole.SuperAdmin) {
         this.renderer.addClass(el, 'bg-error');
         this.renderer.addClass(el, 'text-white');
+      } else if (roleValue === UserRole.Admin) {
+        this.renderer.addClass(el, 'bg-primary');
+        this.renderer.addClass(el, 'text-on-primary');
       } else if (roleValue === UserRole.Moderator) {
-        this.renderer.addClass(el, 'bg-secondary-fixed');
-        this.renderer.addClass(el, 'text-on-secondary-fixed');
+        this.renderer.addClass(el, 'bg-secondary-container');
+        this.renderer.addClass(el, 'text-on-secondary-container');
       } else if (roleValue === UserRole.VerifiedUser) {
         this.renderer.addClass(el, 'bg-tertiary-fixed-dim');
         this.renderer.addClass(el, 'text-tertiary');
-      } else {
-        this.renderer.addClass(el, 'bg-surface-container-highest');
+      } else if (roleValue === UserRole.User) {
+        this.renderer.addClass(el, 'bg-surface-variant');
         this.renderer.addClass(el, 'text-on-surface-variant');
+      } else {
+        // Any new future role (e.g. Organization)
+        this.renderer.addClass(el, 'bg-indigo-600');
+        this.renderer.addClass(el, 'text-white');
+        this.renderer.addClass(el, 'border');
+        this.renderer.addClass(el, 'border-indigo-400');
       }
 
       const translatedRole = getRoleTranslationAr(roleValue);
-      el.innerText = translatedRole || ROLE_TRANSLATIONS_AR[UserRole.User] || this.role();
+      el.innerText = translatedRole || this.role() || 'مستخدم غير موثق';
     });
   }
 }

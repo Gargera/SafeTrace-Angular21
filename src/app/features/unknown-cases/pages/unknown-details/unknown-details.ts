@@ -23,6 +23,11 @@ import { CaseStatus } from '../../../../shared/enums/case-status';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { UnknownCaseService } from '../../services/unknown-case.service';
 import { UnknownCaseDetailResponse } from '../../models/response/UnknownCaseDetailResponse';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+import { Permissions } from '../../../../core/constants/Permissions';
+
+import { RejectCasePopupComponent } from '../../../../shared/components/cases-components/reject-case-popup/reject-case-popup';
+import { RejectionReasonCardComponent } from '../../../../shared/components/cases-components/rejection-reason-card/rejection-reason-card';
 
 @Component({
   selector: 'app-unknown-details',
@@ -36,9 +41,10 @@ import { UnknownCaseDetailResponse } from '../../models/response/UnknownCaseDeta
     AgeBadgeDirective,
     ConfirmationModalComponent,
     FoundedPopupComponent,
+    HasPermissionDirective,
     ButtonComponent,
-    FoundedPopupComponent,
-    ButtonComponent,
+    RejectCasePopupComponent,
+    RejectionReasonCardComponent,
   ],
   templateUrl: './unknown-details.html',
   styleUrls: ['./unknown-details.css'],
@@ -53,6 +59,7 @@ export class UnknownDetails implements OnInit {
   readonly apiUrl = environment.baseUrl;
   readonly FileType = FileType;
   readonly CaseStatus = CaseStatus;
+  readonly Permissions = Permissions;
 
   // Modals signals
   showDeleteConfirmation = signal(false);
@@ -62,6 +69,8 @@ export class UnknownDetails implements OnInit {
 
   showApproveConfirmation = signal(false);
   showRejectConfirmation = signal(false);
+  isRejecting = signal(false);
+  rejectApiError = signal<string | null>(null);
   showPermanentDeleteConfirmation = signal(false);
 
   caseDetails = signal<UnknownCaseDetailResponse | null>(null);
@@ -76,7 +85,9 @@ export class UnknownDetails implements OnInit {
   isAdminPage = signal(false);
 
   ngOnInit(): void {
-    this.isAdminPage.set(this.router.url.startsWith('/admin'));
+    this.route.data.subscribe(data => {
+      this.isAdminPage.set(data['mode'] === 'dashboard');
+    });
 
     this.route.paramMap.subscribe((params) => {
       const id = Number(params.get('id'));
@@ -125,6 +136,8 @@ export class UnknownDetails implements OnInit {
       error: (err) => {
         console.error(err);
         this.loading.set(false);
+        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء تحميل البيانات';
+        this.snackbar.error(errorMessage);
       },
     });
   }
@@ -232,9 +245,10 @@ export class UnknownDetails implements OnInit {
         }
       },
 
-      error: () => {
+      error: (err) => {
         this.isFounding.set(false);
-        this.snackbar.error('حدث خطأ أثناء تحديث الحالة');
+        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء تحديث الحالة';
+        this.snackbar.error(errorMessage);
       },
     });
   }
@@ -259,9 +273,7 @@ export class UnknownDetails implements OnInit {
     const id = this.caseDetails()?.id;
 
     if (!id) return;
-    if (!id) return;
 
-    this.deleting.set(true);
     this.deleting.set(true);
 
     this.UnknownCaseService.deleteCase(id).subscribe({
@@ -275,10 +287,11 @@ export class UnknownDetails implements OnInit {
         }
       },
 
-      error: () => {
+      error: (err) => {
         this.deleting.set(false);
         this.showDeleteConfirmation.set(false);
-        this.snackbar.error('حدث خطأ أثناء حذف الحالة');
+        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء حذف الحالة';
+        this.snackbar.error(errorMessage);
       },
     });
   }
@@ -289,14 +302,6 @@ export class UnknownDetails implements OnInit {
     } else {
       this.router.navigate(['/unknown', id]);
     }
-  }
-
-  isAdmin(): boolean {
-    return this.authService.isAdmin();
-  }
-
-  isModerator(): boolean {
-    return this.authService.isModerator();
   }
 
   getAgeCategoryEnum(): AgeCategories {
@@ -341,38 +346,66 @@ export class UnknownDetails implements OnInit {
           this.fetchCase(id);
         }
       },
-      error: () => {
+      error: (err) => {
         this.showApproveConfirmation.set(false);
-        this.snackbar.error('حدث خطأ أثناء قبول الحالة');
+        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء قبول الحالة';
+        this.snackbar.error(errorMessage);
       }
     });
   }
 
   openRejectConfirmation(): void {
+    this.rejectApiError.set(null);
     this.showRejectConfirmation.set(true);
   }
 
   cancelReject(): void {
     this.showRejectConfirmation.set(false);
+    this.rejectApiError.set(null);
   }
 
-  confirmReject(): void {
+  confirmReject(reason: string): void {
     const id = this.caseDetails()?.id;
     if (!id) return;
 
-    this.UnknownCaseService.rejectCase(id).subscribe({
+    this.isRejecting.set(true);
+    this.rejectApiError.set(null);
+
+    this.UnknownCaseService.rejectCase(id, reason).subscribe({
       next: (res) => {
-        this.showRejectConfirmation.set(false);
+        this.isRejecting.set(false);
         if (res.success) {
-          this.snackbar.success('تم رفض الحالة');
+          this.showRejectConfirmation.set(false);
+          const successMessage = res.message || 'تم رفض الحالة بنجاح';
+          this.snackbar.success(successMessage);
           this.fetchCase(id);
+        } else {
+          this.rejectApiError.set(res.message || 'حدث خطأ أثناء رفض الحالة');
         }
       },
-      error: () => {
-        this.showRejectConfirmation.set(false);
-        this.snackbar.error('حدث خطأ أثناء رفض الحالة');
+      error: (err) => {
+        this.isRejecting.set(false);
+        const errorMessage = this.extractErrorMessage(err, 'حدث خطأ أثناء رفض الحالة');
+        this.rejectApiError.set(errorMessage);
       }
     });
+  }
+
+  private extractErrorMessage(err: any, fallback: string): string {
+    if (err?.error?.errors && typeof err.error.errors === 'object') {
+      const messages: string[] = [];
+      Object.values(err.error.errors).forEach((val: any) => {
+        if (Array.isArray(val)) {
+          messages.push(...val);
+        } else if (typeof val === 'string') {
+          messages.push(val);
+        }
+      });
+      if (messages.length > 0) {
+        return messages.join(' - ');
+      }
+    }
+    return err?.error?.detail || err?.error?.message || (typeof err?.error === 'string' ? err.error : null) || fallback;
   }
 
   openPermanentDeleteConfirmation(): void {
@@ -392,12 +425,13 @@ export class UnknownDetails implements OnInit {
         this.showPermanentDeleteConfirmation.set(false);
         if (res.success) {
           this.snackbar.success('تم حذف الحالة نهائياً');
-          this.router.navigate(['/unknown']);
+          this.router.navigate(['/admin/cases-management']);
         }
       },
-      error: () => {
+      error: (err) => {
         this.showPermanentDeleteConfirmation.set(false);
-        this.snackbar.error('حدث خطأ أثناء الحذف النهائي');
+        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء الحذف النهائي';
+        this.snackbar.error(errorMessage);
       }
     });
   }

@@ -145,24 +145,11 @@
     <span class="text-label-sm text-on-surface-variant font-medium">
       إجمالي عدد الحالات: <span class="font-bold">{{ totalCount() }}</span>
     </span>
-    <div class="flex gap-xs" dir="ltr">
-      <button [disabled]="currentPage() === 1" (click)="changePage(currentPage() - 1)"
-        class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-        <span class="material-symbols-outlined text-md">chevron_left</span>
-      </button>
-      @for (page of pagesArray(); track page) {
-      <button (click)="changePage(page)" [class.bg-secondary]="page === currentPage()"
-        [class.text-white]="page === currentPage()" [class.bg-white]="page !== currentPage()"
-        [class.text-primary]="page !== currentPage()"
-        class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant font-bold text-label-sm hover:bg-secondary-fixed-dim transition-all">
-        {{ page }}
-      </button>
-      }
-      <button [disabled]="currentPage() === totalPages()" (click)="changePage(currentPage() + 1)"
-        class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-        <span class="material-symbols-outlined text-md">chevron_right</span>
-      </button>
-    </div>
+    <app-pagination
+      [currentPage]="currentPage()"
+      [totalPages]="totalPages()"
+      (pageChange)="changePage($event)"
+    />
   </div>
   }
 </section>
