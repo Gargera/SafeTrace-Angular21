@@ -1,8 +1,8 @@
 import { Component, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { NotificationService } from '../../../core/services/notification.service';
-import { ButtonComponent } from '../button/button';
+import { NotificationService } from '../../../../core/services/notification.service';
+import { ButtonComponent } from '../../button/button';
 
 @Component({
   selector: 'app-case-notification-modal',

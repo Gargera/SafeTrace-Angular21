@@ -9,7 +9,7 @@ import { GetUserInfoDTO } from '../../../features/user-profile/model/profile.mod
 import { UserRole } from '../../enums/user-role';
 import { Permissions } from '../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../directives/has-permission.directive';
-import { CaseNotificationModalComponent } from '../case-notification-modal/case-notification-modal';
+import { CaseNotificationModalComponent } from '../cases-components/case-notification-modal/case-notification-modal';
 
 @Component({
   selector: 'app-navbar',
