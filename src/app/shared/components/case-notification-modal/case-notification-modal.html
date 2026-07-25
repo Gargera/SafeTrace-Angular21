@@ -1,0 +1,95 @@
+@if (activeNotification; as n) {
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-md p-4 animate-fade-in"
+  dir="rtl" (click)="closeModal()">
+  <div
+    class="w-full max-w-3xl rounded-3xl border border-outline-variant/30 bg-surface shadow-2xl animate-scale-in flex flex-col overflow-hidden text-on-surface"
+    (click)="$event.stopPropagation()">
+    <!-- Modal Header & Icon -->
+    <div class="px-6 pt-8 pb-4 flex flex-col items-center text-center">
+      @if (n.kind === 'approved') {
+      <div
+        class="w-18 h-18 rounded-full flex items-center justify-center mb-4 bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
+        <span class="material-symbols-outlined text-[42px]"
+          style="font-variation-settings: 'FILL' 1">check_circle</span>
+      </div>
+
+      <h2 class="text-2xl font-bold text-on-surface mb-2">
+        تمت الموافقة على الحالة
+      </h2>
+
+      <p class="text-body-md leading-relaxed text-on-surface-variant px-2">
+        تهانينا! تمت مراجعة واستيفاء بيانات الحالة والموافقة عليها بنجاح.
+      </p>
+
+      <!-- Highlighted Case Code Card -->
+      <div class="w-full mt-5 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 text-center">
+
+        <div class="flex items-center justify-center gap-2 text-emerald-700">
+          <span class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1">
+            verified
+          </span>
+          <span class="text-sm font-semibold">
+            كود الحالة
+          </span>
+        </div>
+
+        <div class="mt-4 rounded-xl bg-white border border-emerald-200 px-6 py-4 shadow-sm">
+
+          <span class="font-mono text-3xl font-bold tracking-[0.25em] select-all">
+            {{ n.caseCode }}
+          </span>
+
+        </div>
+
+        <p class="mt-3 text-xs text-on-surface-variant">
+          احتفظ بهذا الكود لمتابعة الحالة لاحقًا.
+        </p>
+
+      </div>
+      } @else {
+      <div
+        class="w-18 h-18 rounded-full flex items-center justify-center mb-4 bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400">
+        <span class="material-symbols-outlined text-[42px]" style="font-variation-settings: 'FILL' 1">cancel</span>
+      </div>
+
+      <h2 class="text-2xl font-bold text-on-surface mb-2">
+        تم رفض الحالة
+      </h2>
+
+      <p class="text-body-md leading-relaxed text-on-surface-variant px-2">
+        نأسف لعدم الموافقة على الحالة بالبيانات الحالية. يمكنك الاطلاع على سبب الرفض أدناه وتعديل البيانات لتحديث
+        الحالة.
+      </p>
+
+      <!-- Rejection Reason Card (Scrollable if long) -->
+      <div
+        class="w-full mt-5 p-4 rounded-2xl bg-error-container/20 border border-error/30 text-right flex flex-col gap-2 shadow-inner max-h-48 overflow-y-auto">
+        <div class="flex items-center gap-2 text-error font-bold text-sm">
+          <span class="material-symbols-outlined text-[20px]">info</span>
+          <span>سبب الرفض:</span>
+        </div>
+        <p class="text-body-sm text-on-surface leading-relaxed whitespace-pre-wrap">
+          {{ n.rejectionReason || n.fullMessage }}
+        </p>
+      </div>
+      }
+    </div>
+
+    <!-- Footer Buttons -->
+    <div
+      class="flex justify-between items-center gap-4 bg-surface-container-lowest px-6 py-5 border-t border-outline-variant/15">
+      <app-button [variant]="n.kind === 'approved' ? 'primary' : 'danger'"
+        extraClass="min-w-[140px] px-6 h-12 rounded-xl flex items-center justify-center font-bold text-base shadow-md cursor-pointer"
+        (onClick)="onPrimaryAction()">
+        {{ n.kind === 'approved' ? 'عرض التفاصيل' : 'تحديث الحالة' }}
+      </app-button>
+
+      <app-button variant="secondary"
+        extraClass="min-w-[120px] px-6 h-12 rounded-xl flex items-center justify-center font-bold text-base cursor-pointer"
+        (onClick)="closeModal()">
+        إلغاء
+      </app-button>
+    </div>
+  </div>
+</div>
+}
