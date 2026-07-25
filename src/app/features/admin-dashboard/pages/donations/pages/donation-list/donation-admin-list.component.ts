@@ -18,6 +18,7 @@ import { PaymentStatusBadgeDirective } from '../../../../../../shared/directives
 import { AdminDonationStatisticsDto } from '../../models/admin-donation-statistics.dto';
 import { Permissions } from '../../../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../../../shared/directives/has-permission.directive';
+import { PaginationComponent } from '../../../../../../shared/components/pagination/pagination';
 
 @Component({
   selector: 'app-donation-admin-list',
@@ -34,6 +35,7 @@ import { HasPermissionDirective } from '../../../../../../shared/directives/has-
     FormField,
     PaymentStatusBadgeDirective,
     HasPermissionDirective,
+    PaginationComponent
   ],
   templateUrl: './donation-admin-list.component.html',
 })
@@ -67,25 +69,6 @@ export class DonationAdminListComponent implements OnInit {
   totalCount = signal(0);
   totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize)));
 
-  pagesArray = computed(() => {
-    const current = this.pageNumber();
-    const total = this.totalPages();
-    const pages: number[] = [];
-    let start = Math.max(1, current - 2);
-    let end = Math.min(total, current + 2);
-
-    if (current <= 3) {
-      end = Math.min(total, 5);
-    }
-    if (current >= total - 2) {
-      start = Math.max(1, total - 4);
-    }
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  });
 
   ngOnInit(): void {
     this.loadStatistics();

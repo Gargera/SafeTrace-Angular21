@@ -1,9 +1,9 @@
 export const PERMISSION_GROUPS_AR: Record<string, { title: string, icon: string }> = {
   'Cases': { title: 'إدارة الحالات', icon: 'cases' },
   'UrgentCases': { title: 'البلاغات العاجلة', icon: 'emergency' },
-  'LongTermCases': { title: 'حالات المفقودين (طويلة المدى)', icon: 'manage_search' },
+  'LongTermCases': { title: 'حالات طويلة المدى', icon: 'manage_search' },
   'UnknownCases': { title: 'حالات غير معروفة', icon: 'question_mark' },
-  'Dashboard': { title: 'لوحة الإحصائيات', icon: 'dashboard' },
+  'Dashboard': { title: 'لوحة التحكم', icon: 'dashboard' },
   'AiMatching': { title: 'البحث الذكي (AI)', icon: 'center_focus_strong' },
   'Complaints': { title: 'إدارة الشكاوى', icon: 'report_problem' },
   'Roles': { title: 'إدارة الأدوار والصلاحيات', icon: 'admin_panel_settings' },
@@ -42,15 +42,16 @@ export const PERMISSION_ACTIONS_AR: Record<string, string> = {
   'DeleteMessageForEveryone': 'مسح رسالة (من الطرفين)',
   'GetDonations': 'عرض التبرعات',
   'GetChatStatistics': 'عرض إحصائيات المحادثات',
-  'GetDonationStatistics': 'عرض إحصائيات التبرعات'
+  'GetDonationStatistics': 'عرض إحصائيات التبرعات',
+  'GetAuditLogs': 'عرض سجلات النظام'
 };
 
 export const ALL_SYSTEM_PERMISSIONS = [
   "Cases.GetAll",
-  "UrgentCases.GetById", "UrgentCases.HardDelete", "UrgentCases.Reject", "UrgentCases.Approve", "UrgentCases.MarkAsFounded",
+  "UrgentCases.GetById", "UrgentCases.HardDelete", "UrgentCases.MarkAsFounded",
   "LongTermCases.GetById", "LongTermCases.Create", "LongTermCases.Update", "LongTermCases.SoftDelete", "LongTermCases.HardDelete", "LongTermCases.Reject", "LongTermCases.Approve", "LongTermCases.MarkAsFounded",
   "UnknownCases.GetById", "UnknownCases.Create", "UnknownCases.Update", "UnknownCases.SoftDelete", "UnknownCases.HardDelete", "UnknownCases.Reject", "UnknownCases.Approve", "UnknownCases.MarkAsFounded",
-  "Dashboard.GetStatistics", "Dashboard.GetCasesStatistics",
+  "Dashboard.GetStatistics", "Dashboard.GetCasesStatistics", "Dashboard.GetAuditLogs",
   "AiMatching.Search",
   "Complaints.GetAll", "Complaints.GetById", "Complaints.HardDelete", "Complaints.MarkAsSolved", "Complaints.GetComplaintsStatistics",
   "Donations.GetDonations", "Donations.GetDonationStatistics",

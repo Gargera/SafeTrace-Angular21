@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ConfirmationModalComponent } from '../confirmation-modal/confirmation-modal';
-import { CaseCreationFlowService, CreateCaseDialogType } from '../../../core/services/case-creation-flow.service';
+import { ConfirmationModalComponent } from '../../confirmation-modal/confirmation-modal';
+import { CaseCreationFlowService, CreateCaseDialogType } from '../../../../core/services/case-creation-flow.service';
 
 @Component({
   selector: 'app-case-creation-flow',

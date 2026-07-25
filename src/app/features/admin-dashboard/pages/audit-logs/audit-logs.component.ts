@@ -14,6 +14,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import { AuditOperationBadgeDirective } from '../../../../shared/directives/audit-operation-badge.directive';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 
 @Component({
   selector: 'app-audit-logs',
@@ -28,7 +29,8 @@ import { AuditOperationBadgeDirective } from '../../../../shared/directives/audi
     LoadingSpinnerComponent,
     CaseHeaderComponent,
     AuditOperationBadgeDirective,
-    DatePipe
+    DatePipe,
+    PaginationComponent
   ],
   templateUrl: './audit-logs.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,27 +53,6 @@ export class AuditLogsComponent implements OnInit {
   });
 
   selectedLog = signal<AuditLogDto | null>(null);
-
-  pagesArray = computed(() => {
-    const current = this.filter().pageNumber;
-    let total = this.totalPages();
-    if (total === 0) total = 1;
-    const pages: number[] = [];
-    let start = Math.max(1, current - 2);
-    let end = Math.min(total, current + 2);
-
-    if (current <= 3) {
-      end = Math.min(total, 5);
-    }
-    if (current >= total - 2) {
-      start = Math.max(1, total - 4);
-    }
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  });
 
   private searchSubject = new Subject<string>();
 

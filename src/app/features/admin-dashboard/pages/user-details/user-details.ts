@@ -24,6 +24,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 interface PermissionGroup {
   groupName: string;
   groupTitle: string;
@@ -34,7 +35,7 @@ interface PermissionGroup {
 @Component({
   selector: 'app-user-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, FormField, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, FormField, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective, CaseHeaderComponent],
   templateUrl: './user-details.html',
   styleUrl: './user-details.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -59,7 +60,8 @@ export class UserDetails implements OnInit {
   expandedGroups = signal<Record<string, boolean>>({});
   isRootExpanded = signal<boolean>(true);
   
-  isLoading = signal<boolean>(true);
+  isUserLoading = signal<boolean>(true);
+  isPermissionsLoading = signal<boolean>(true);
   isSavingPerms = signal<boolean>(false);
   loadingAction = signal<string | null>(null);
   selectedZoomImage = signal<string | null>(null);
@@ -92,7 +94,7 @@ export class UserDetails implements OnInit {
 
   isInternalRole = computed(() => {
     const role = this.user()?.role;
-    return role === 'Admin' || role === 'Moderator';
+    return role !== 'User';
   });
 
   canManageUser = computed(() => {
@@ -170,28 +172,32 @@ export class UserDetails implements OnInit {
     this.roleService.getAllRoles().subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          this.roles.set(res.data);
+          const filteredRoles = res.data.filter(r => r.name !== 'SuperAdmin');
+          this.roles.set(filteredRoles);
         }
       }
     });
   }
 
   loadUserData() {
-    this.isLoading.set(true);
+    this.isUserLoading.set(true);
+    this.isPermissionsLoading.set(true);
     
     this.userService.getUserById(this.userId()).subscribe({
       next: (res) => {
         if (res.success) {
           this.user.set(res.data);
           this.selectedRole.set(res.data?.role || '');
-          this.loadUserPermissions();
         }
+        this.isUserLoading.set(false);
       },
       error: (err) => {
-        this.isLoading.set(false);
+        this.isUserLoading.set(false);
         this.snackbar.error(err.error?.detail || 'فشل في تحميل بيانات المستخدم.');
       }
     });
+
+    this.loadUserPermissions();
   }
 
   loadUserPermissions() {
@@ -201,9 +207,9 @@ export class UserDetails implements OnInit {
           this.permissionsList.set(res.data.permissions);
           this.originalPermissionsList.set(this.permissionsList().map(p => ({...p})));
         }
-        this.isLoading.set(false);
+        this.isPermissionsLoading.set(false);
       },
-      error: () => this.isLoading.set(false)
+      error: () => this.isPermissionsLoading.set(false)
     });
   }
 
