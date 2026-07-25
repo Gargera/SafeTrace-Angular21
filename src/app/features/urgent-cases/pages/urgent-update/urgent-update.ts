@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { environment } from '../../../../../environments/environment'; 
@@ -19,6 +19,7 @@ import { CardComponent } from '../../../../shared/components/card/card';
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { pastDate } from '../../../../shared/validators/past-date.validator';
+import { urgentEventDate, toDatetimeLocalString } from '../../../../shared/validators/urgent-event-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
 
 import { CommonModule } from '@angular/common';
@@ -46,6 +47,18 @@ type Step = 1 | 2 | 3;
 })
 export class UrgentUpdate implements OnInit {
   private fb = inject(FormBuilder);
+
+  // Allowed datetime range for urgent cases (last 6 hours)
+  readonly minEventDate = computed(() => {
+    const now = new Date();
+    const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+    return toDatetimeLocalString(sixHoursAgo);
+  });
+
+  readonly maxEventDate = computed(() => {
+    const now = new Date();
+    return toDatetimeLocalString(now);
+  });
   private service = inject(UrgentCaseService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -115,7 +128,7 @@ export class UrgentUpdate implements OnInit {
     government: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
     city: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
     street: ['', [Validators.required, Validators.maxLength(200)]],
-    eventDate: ['', [Validators.required, pastDate()]],
+    eventDate: ['', [Validators.required, urgentEventDate()]],
   });
 
   // ─────────────────────────────────────────────────────────────
@@ -132,7 +145,9 @@ export class UrgentUpdate implements OnInit {
     if (e['min']) return `يجب أن لا تقل القيمة عن ${e['min'].min}`;
     if (e['max']) return `يجب أن لا تتجاوز القيمة ${e['max'].max}`;
     if (e['egyptianPhone']) return 'أدخل رقم هاتف مصري صحيح (مثال: 01xxxxxxxxx)';
-    if (e['pastDate']) return 'لا يمكن أن يكون التاريخ في المستقبل';
+    if (e['futureDate']) return 'لا يمكن أن يكون تاريخ ووقت الحادث في المستقبل';
+    if (e['urgentTooOld']) return 'يجب أن يكون تاريخ ووقت الحادث خلال الـ 6 ساعات الماضية';
+    if (e['pastDate'] || e['urgentEventDate']) return 'تاريخ ووقت الحادث غير صحيح';
     if (e['description']) return 'لا يمكن أن يتجاوز الوصف 2000 حرف';
     if (e['validEnum']) return 'اختر قيمة صحيحة';
     return 'قيمة غير صحيحة';
@@ -178,7 +193,7 @@ export class UrgentUpdate implements OnInit {
           government: c.government ?? '',
           city: c.city ?? '',
           street: c.street ?? '',
-          eventDate: c.eventDate ? String(c.eventDate).split('T')[0] : '',
+          eventDate: c.eventDate ? toDatetimeLocalString(new Date(c.eventDate)) : '',
         });
 
         if (c.latitude != null && c.longitude != null) {
@@ -398,7 +413,7 @@ export class UrgentUpdate implements OnInit {
       government: v.government!,
       city: v.city!,
       street: v.street!,
-      eventDate: v.eventDate!,
+      eventDate: v.eventDate ? new Date(v.eventDate).toISOString() : v.eventDate!,
       primaryImage: this.newPrimaryImage(),
       newPhotos: this.newPhotos().length ? this.newPhotos() : null,
       deletedPhotoIds: this.deletedPhotoIds().length ? this.deletedPhotoIds() : null,

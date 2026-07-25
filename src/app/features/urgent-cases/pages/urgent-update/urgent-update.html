@@ -225,7 +225,8 @@
 
         <!-- Event Date -->
         <div>
-          <app-form-field label="تاريخ ووقت الحادث *" formControlName="eventDate" type="date"
+          <app-form-field label="تاريخ ووقت الحادث *" formControlName="eventDate" type="datetime-local"
+            [min]="minEventDate()" [max]="maxEventDate()"
             [extraClass]="isInvalid('eventDate') ? 'border-error' : ''"></app-form-field>
           @if (isInvalid('eventDate')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
             getFieldError('eventDate') }}</p> }
