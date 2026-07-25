@@ -83,10 +83,11 @@ export class UnknownDetails implements OnInit {
   lightboxVisible = signal(false);
   currentIndex = signal(0);
   isAdminPage = signal(false);
-
+ isMyCasePage = signal(false);
   ngOnInit(): void {
     this.route.data.subscribe(data => {
       this.isAdminPage.set(data['mode'] === 'dashboard');
+      this.isMyCasePage.set(data['mode'] === 'my-case');
     });
 
     this.route.paramMap.subscribe((params) => {
@@ -101,9 +102,15 @@ export class UnknownDetails implements OnInit {
   private fetchCase(id: number): void {
     this.loading.set(true);
 
-    const request = this.isAdminPage()
-      ? this.UnknownCaseService.adminGetCaseById(id)
-      : this.UnknownCaseService.getCaseById(id);
+ let request;
+
+if (this.isAdminPage()) {
+  request = this.UnknownCaseService.adminGetCaseById(id);
+} else if (this.isMyCasePage()) {
+  request = this.UnknownCaseService.getMyCaseById(id);
+} else {
+  request = this.UnknownCaseService.getCaseById(id);
+}
 
     request.subscribe({
       next: (apiRes) => {

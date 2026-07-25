@@ -87,10 +87,12 @@ export class LongTermDetails implements OnInit {
   lightboxVisible = signal(false);
   currentIndex = signal(0);
   isAdminPage = signal(false);
+  isMyCasePage = signal(false);
 
   ngOnInit(): void {
     this.route.data.subscribe(data => {
       this.isAdminPage.set(data['mode'] === 'dashboard');
+      this.isMyCasePage.set(data['mode'] === 'my-case');
     });
 
     this.route.paramMap.subscribe((params) => {
@@ -106,9 +108,19 @@ export class LongTermDetails implements OnInit {
   private fetchCase(id: number): void {
     this.loading.set(true);
 
-    const request = this.isAdminPage()
-      ? this.longTermCaseService.adminGetCaseById(id)
-      : this.longTermCaseService.getCaseById(id);
+    // const request = this.isAdminPage()
+    //   ? this.longTermCaseService.adminGetCaseById(id)
+    //   : this.longTermCaseService.getCaseById(id);
+
+ let request;
+
+if (this.isAdminPage()) {
+  request = this.longTermCaseService.adminGetCaseById(id);
+} else if (this.isMyCasePage()) {
+  request = this.longTermCaseService.getMyCaseById(id);
+} else {
+  request = this.longTermCaseService.getCaseById(id);
+}
 
     request.subscribe({
       next: (apiRes) => {

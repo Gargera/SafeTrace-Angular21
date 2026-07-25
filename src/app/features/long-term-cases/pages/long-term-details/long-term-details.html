@@ -141,37 +141,44 @@
             </div>
 
             <!-- ================= Owner Buttons ================= -->
-            @if(isOwner() && !isAdminPage()){
-              <div class="flex flex-wrap items-center gap-3 pt-2">
-                @if(caseDetails()?.status !== CaseStatus.Rejected){
-                  <app-button 
-                    *hasPermission="Permissions.LongTermCases.MarkAsFounded"
-                    (onClick)="openFoundedPopup()" 
-                    variant="primary"
-                    extraClass="flex items-center gap-2 rounded-2xl !bg-[#009688] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#00796b]">
-                    <span class="material-symbols-outlined text-[20px]">beenhere</span>
-                    <span>تم العثور</span>
-                  </app-button>
-                }
+           @if (
+  isOwner() &&
+  !isAdminPage() &&
+  caseDetails()?.status !== CaseStatus.Found
+) {
+  <div class="flex flex-wrap items-center gap-3 pt-2">
 
-                <app-button 
-                  *hasPermission="Permissions.LongTermCases.Update"
-                  (onClick)="editCase()" 
-                  variant="primary"
-                  extraClass="flex items-center gap-2 rounded-2xl !bg-[#0265DC] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#0252b5]">
-                  <span class="material-symbols-outlined text-[20px]">edit</span>
-                  <span>تعديل</span>
-                </app-button>
+    @if(caseDetails()?.status !== CaseStatus.Rejected){
+      <app-button
+        *hasPermission="Permissions.LongTermCases.MarkAsFounded"
+        (onClick)="openFoundedPopup()"
+        variant="primary"
+        extraClass="flex items-center gap-2 rounded-2xl !bg-[#009688] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#00796b]">
+        <span class="material-symbols-outlined text-[20px]">beenhere</span>
+        <span>تم العثور</span>
+      </app-button>
+    }
 
-                <app-button 
-                  *hasPermission="Permissions.LongTermCases.SoftDelete"
-                  (onClick)="deleteCase()" 
-                  variant="primary"
-                  extraClass="flex items-center gap-2 rounded-2xl !bg-[#C61A1A] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
-                  <span class="material-symbols-outlined text-[20px]">delete</span>
-                  <span>حذف</span>
-                </app-button>
-              </div>
+    <app-button
+      *hasPermission="Permissions.LongTermCases.Update"
+      (onClick)="editCase()"
+      variant="primary"
+      extraClass="flex items-center gap-2 rounded-2xl !bg-[#0265DC] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#0252b5]">
+      <span class="material-symbols-outlined text-[20px]">edit</span>
+      <span>تعديل</span>
+    </app-button>
+
+    <app-button
+      *hasPermission="Permissions.LongTermCases.SoftDelete"
+      (onClick)="deleteCase()"
+      variant="primary"
+      extraClass="flex items-center gap-2 rounded-2xl !bg-[#C61A1A] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
+      <span class="material-symbols-outlined text-[20px]">delete</span>
+      <span>حذف</span>
+    </app-button>
+
+  </div>
+
             }
 
             <!-- ================= Admin Buttons ================= -->
