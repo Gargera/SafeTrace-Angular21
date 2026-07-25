@@ -12,8 +12,12 @@
 
     <!-- 1. Header -->
     <div class="px-6 md:px-8 pt-6 md:pt-8">
-      <app-case-header title="تعديل بيانات البلاغ العاجل" [subtitle]="stepTitle" [showBackButton]="true"
-        (backAction)="goBack()">
+      <app-case-header
+        title="تعديل بيانات البلاغ العاجل"
+        [subtitle]="stepTitle"
+        [showBackButton]="true"
+        (backAction)="goBack()"
+      >
       </app-case-header>
     </div>
 
@@ -31,14 +35,16 @@
             [ngClass]="{
               'border-secondary bg-secondary/5 shadow-xs': currentStep === s.num,
               'border-outline-variant/30': currentStep !== s.num
-            }">
+            }"
+          >
             <!-- Inner Circle (32px x 32px) -->
             <div
               class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors duration-200"
               [ngClass]="{
                 'bg-secondary text-on-secondary shadow-2xs': currentStep >= s.num,
                 'bg-surface-container text-on-surface-variant/70': currentStep < s.num
-              }">
+              }"
+            >
               @if (currentStep > s.num) {
               <span class="material-symbols-outlined text-sm">check</span>
               } @else { {{ s.num }} }
@@ -46,417 +52,395 @@
           </div>
 
           <!-- Step Label (11px) -->
-          <div class="mt-2 text-center text-[11px] font-medium leading-tight transition-colors duration-200" [ngClass]="{
+          <div
+            class="mt-2 text-center text-[11px] font-medium leading-tight transition-colors duration-200"
+            [ngClass]="{
               'text-secondary font-semibold': currentStep === s.num,
               'text-on-surface-variant/70': currentStep !== s.num
-            }">
+            }"
+          >
             {{ s.label }}
           </div>
         </div>
 
         <!-- Connector Line (2px Thin, 12px Spacing) -->
-        @if (i < steps.length - 1) { <div class="mb-5 mx-3 h-0.5 flex-1 rounded-full transition-colors duration-200"
-          [ngClass]="currentStep > s.num ? 'bg-secondary' : 'bg-outline-variant/30'">
+        @if (i < steps.length - 1) {
+        <div
+          class="mb-5 mx-3 h-0.5 flex-1 rounded-full transition-colors duration-200"
+          [ngClass]="currentStep > s.num ? 'bg-secondary' : 'bg-outline-variant/30'"
+        ></div>
+        }
+        }
       </div>
-      }
-      }
-    </div>
 
-    <!-- Divider between Stepper & Form -->
-    <div class="h-px w-full bg-outline-variant/20"></div>
+      <!-- Divider between Stepper & Form -->
+      <div class="h-px w-full bg-outline-variant/20"></div>
 
-    <!-- 3. Form Content (all steps) -->
-    <form [formGroup]="form">
-      @if (currentStep === 1) {
-      <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+      <!-- 3. Form Content (all steps) -->
+      <form [formGroup]="form">
+        @if (currentStep === 1) {
+        <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+          
+          <!-- Section Header (Step 1) -->
+          <div class="mb-2 rounded-2xl border border-secondary/15 bg-secondary/5 p-5">
+            <div class="flex items-center gap-3">
+              <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-on-secondary shadow-sm">
+                <span class="material-symbols-outlined text-2xl">person</span>
+              </div>
 
-        <!-- Section Header (Step 1) -->
-        <div class="mb-2 rounded-2xl border border-secondary/15 bg-secondary/5 p-5">
-          <div class="flex items-center gap-3">
-            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-on-secondary shadow-sm">
-              <span class="material-symbols-outlined text-2xl">person</span>
-            </div>
-
-            <div class="flex-1">
-              <h2 class="text-lg font-bold text-on-surface">
-                بيانات الشخص المفقود
-              </h2>
-              <p class="mt-1 text-sm text-on-surface-variant">
-                أدخل البيانات الأساسية للشخص المفقود للمساعدة في التعرف عليه.
-              </p>
+              <div class="flex-1">
+                <h2 class="text-lg font-bold text-on-surface">
+                  بيانات الشخص المفقود
+                </h2>
+                <p class="mt-1 text-sm text-on-surface-variant">
+                  أدخل البيانات الأساسية للشخص المفقود للمساعدة في التعرف عليه.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Name Fields (2 inputs in first row, 2 inputs in second row) -->
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <app-form-field label="الاسم الأول *" formControlName="fName" type="text" placeholder="مثال: أحمد"
-              [extraClass]="isInvalid('fName') ? 'border-error' : ''"></app-form-field>
-            @if (isInvalid('fName')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
-              getFieldError('fName') }}</p> }
+          <!-- Name Fields (2 inputs in first row, 2 inputs in second row) -->
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <app-form-field label="الاسم الأول *" formControlName="fName" type="text" placeholder="مثال: أحمد"
+                [extraClass]="isInvalid('fName') ? 'border-error' : ''"></app-form-field>
+              @if (isInvalid('fName')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('fName') }}</p> }
+            </div>
+            <div>
+              <app-form-field label="اسم الأب" formControlName="sName" type="text" placeholder="مثال: محمد"
+                [extraClass]="isInvalid('sName') ? 'border-error' : ''"></app-form-field>
+              @if (isInvalid('sName')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('sName') }}</p> }
+            </div>
+            <div>
+              <app-form-field label="اسم الجد" formControlName="tName" type="text" placeholder="مثال: محمود"
+                [extraClass]="isInvalid('tName') ? 'border-error' : ''"></app-form-field>
+              @if (isInvalid('tName')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('tName') }}</p> }
+            </div>
+            <div>
+              <app-form-field label="اسم العائلة *" formControlName="lName" type="text" placeholder="مثال: السعيد"
+                [extraClass]="isInvalid('lName') ? 'border-error' : ''"></app-form-field>
+              @if (isInvalid('lName')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('lName') }}</p> }
+            </div>
           </div>
-          <div>
-            <app-form-field label="اسم الأب" formControlName="sName" type="text" placeholder="مثال: محمد"
-              [extraClass]="isInvalid('sName') ? 'border-error' : ''"></app-form-field>
-            @if (isInvalid('sName')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
-              getFieldError('sName') }}</p> }
-          </div>
-          <div>
-            <app-form-field label="اسم الجد" formControlName="tName" type="text" placeholder="مثال: محمود"
-              [extraClass]="isInvalid('tName') ? 'border-error' : ''"></app-form-field>
-            @if (isInvalid('tName')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
-              getFieldError('tName') }}</p> }
-          </div>
-          <div>
-            <app-form-field label="اسم العائلة *" formControlName="lName" type="text" placeholder="مثال: السعيد"
-              [extraClass]="isInvalid('lName') ? 'border-error' : ''"></app-form-field>
-            @if (isInvalid('lName')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
-              getFieldError('lName') }}</p> }
-          </div>
-        </div>
 
-        <!-- Age & Gender Row -->
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <app-form-field label="العمر *" formControlName="age" type="number" min="0" max="120"
-              placeholder="أدخل العمر بالسنوات (مثال: 25)"
-              [extraClass]="isInvalid('age') ? 'border-error' : ''"></app-form-field>
-            @if (isInvalid('age')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('age')
-              }}</p> }
+          <!-- Age & Gender Row -->
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <app-form-field label="العمر *" formControlName="age" type="number" min="0" max="120" placeholder="أدخل العمر بالسنوات (مثال: 25)"
+                [extraClass]="isInvalid('age') ? 'border-error' : ''"></app-form-field>
+              @if (isInvalid('age')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('age') }}</p> }
+            </div>
+            <div>
+              <app-form-field label="الجنس *" type="select" formControlName="gender"
+                [extraClass]="isInvalid('gender') ? 'border-error' : ''">
+                <option value="" disabled>اختر الجنس</option>
+                <option [value]="genders.Male">ذكر</option>
+                <option [value]="genders.Female">أنثى</option>
+              </app-form-field>
+              @if (isInvalid('gender')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('gender') }}</p> }
+            </div>
           </div>
-          <div>
-            <app-form-field label="الجنس *" type="select" formControlName="gender"
-              [extraClass]="isInvalid('gender') ? 'border-error' : ''">
-              <option value="" disabled>اختر الجنس</option>
-              <option [value]="genders.Male">ذكر</option>
-              <option [value]="genders.Female">أنثى</option>
-            </app-form-field>
-            @if (isInvalid('gender')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
-              getFieldError('gender') }}</p> }
-          </div>
-        </div>
 
           <!-- Relation -->
-          <!-- FIX: [ngValue] instead of [value] — RelationType values must be
-               matched by reference/type, not coerced to string in the DOM
-               (this is what caused it to look empty even when a value was set). -->
+          <!-- FIX #2: reverted to plain [value] (not [ngValue]). The shared
+               FormField wraps its <select> and projects <option> tags via
+               <ng-content>, which breaks Angular's NgSelectOption <-> select
+               accessor coordination that [ngValue] depends on (they end up in
+               different injector contexts). Since RelationType is now a
+               STRING enum matching the API's string values 1:1, plain [value]
+               works correctly via the native DOM value-matching fallback —
+               exactly like Gender already does. -->
           <div>
             <app-form-field label="صلة القرابة بك (اختياري)" type="select" formControlName="relation"
               [extraClass]="isInvalid('relation') ? 'border-error' : ''">
-              <option [ngValue]="null" disabled>اختر صلة القرابة بالشخص المفقود</option>
+              <option value="" disabled>اختر صلة القرابة بالشخص المفقود</option>
               @for (opt of relationOptions; track opt.value) {
-              <option [ngValue]="opt.value">{{ opt.label }}</option>
+              <option [value]="opt.value">{{ opt.label }}</option>
               }
             </app-form-field>
             @if (isInvalid('relation')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('relation') }}</p> }
           </div>
 
-        <!-- Communication Phone -->
-        <div>
-          <app-form-field label="رقم تواصل عاجل (اختياري)" formControlName="communicationPhone" type="tel"
-            placeholder="أدخل رقم تواصل إضافي (مثال: 01012345678)"
-            [extraClass]="isInvalid('communicationPhone') ? 'border-error' : ''"></app-form-field>
-          @if (isInvalid('communicationPhone')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
-            getFieldError('communicationPhone') }}</p> }
-        </div>
-
-        <!-- Description -->
-        <div>
-          <app-form-field label="وصف الشخص" type="textarea" formControlName="description"
-            placeholder="أدخل أي تفاصيل تساعد في التعرف عليه (مثل العلامات المميزة، الطول، الملابس، أو الحالة الصحية)"></app-form-field>
-          <div class="mt-1 text-left text-[11px] text-on-surface-variant/70">{{ form.get('description')?.value?.length
-            ?? 0 }} / 2000</div>
-          @if (isInvalid('description')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
-            getFieldError('description') }}</p> }
-        </div>
-      </div>
-      }
-
-      @if (currentStep === 2) {
-      <div class="flex flex-col gap-6 animate-in fade-in duration-200">
-
-        <!-- Section Header (Step 2) -->
-        <div class="mb-2 rounded-2xl border border-secondary/15 bg-secondary/5 p-5">
-          <div class="flex items-center gap-3">
-            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-on-secondary shadow-sm">
-              <span class="material-symbols-outlined text-2xl">location_on</span>
-            </div>
-
-            <div class="flex-1">
-              <h2 class="text-lg font-bold text-on-surface">
-                موقع الحادث والمعالم
-              </h2>
-              <p class="mt-1 text-sm text-on-surface-variant">
-                حدد المحافظة والمدينة والشارع وتاريخ ووقت الحادث بدقة.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Government & City -->
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <!-- Communication Phone -->
           <div>
-            <app-form-field label="المحافظة *" type="select" formControlName="government"
-              [extraClass]="isInvalid('government') ? 'border-error' : ''">
-              <option value="" disabled>اختر المحافظة</option>
-              @for (g of governorates; track g) { <option [value]="g">{{ g }}</option> }
-            </app-form-field>
-            @if (isInvalid('government')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
-              getFieldError('government') }}</p> }
+            <app-form-field label="رقم تواصل عاجل (اختياري)" formControlName="communicationPhone" type="tel" placeholder="أدخل رقم تواصل إضافي (مثال: 01012345678)"
+              [extraClass]="isInvalid('communicationPhone') ? 'border-error' : ''"></app-form-field>
+            @if (isInvalid('communicationPhone')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('communicationPhone') }}</p> }
           </div>
+
+          <!-- Description -->
           <div>
-            <app-form-field label="المدينة / المركز *" formControlName="city" type="text"
-              placeholder="أدخل اسم المدينة أو المركز (مثال: مدينة نصر)"
-              [extraClass]="isInvalid('city') ? 'border-error' : ''"></app-form-field>
-            @if (isInvalid('city')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
-              getFieldError('city') }}</p> }
-          </div>
-        </div>
-
-        <!-- Street -->
-        <div>
-          <app-form-field label="الشارع / المنطقة *" formControlName="street" type="text"
-            placeholder="أدخل الشارع أو المنطقة وأي معالم قريبة (مثال: شارع التحرير، بجوار مسجد السلام)"
-            [extraClass]="isInvalid('street') ? 'border-error' : ''"></app-form-field>
-          @if (isInvalid('street')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
-            getFieldError('street') }}</p> }
-        </div>
-
-        <!-- Event Date -->
-        <div>
-          <app-form-field label="تاريخ ووقت الحادث *" formControlName="eventDate" type="date"
-            [extraClass]="isInvalid('eventDate') ? 'border-error' : ''"></app-form-field>
-          @if (isInvalid('eventDate')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
-            getFieldError('eventDate') }}</p> }
-        </div>
-
-        <!-- Map Location Picker Section -->
-        <div class="flex flex-col gap-3 rounded-2xl border border-outline-variant/40 bg-surface-bright p-5 shadow-2xs">
-          <label class="text-sm font-medium text-on-surface-variant">
-            تعديل موقع الحادث على الخريطة <span class="mr-0.5 text-error">*</span>
-          </label>
-
-          <div class="flex flex-wrap items-center gap-3">
-            <app-button variant="primary" type="button" extraClass="gap-2" (onClick)="openMapModal()">
-              <span class="material-symbols-outlined text-lg">map</span>
-              تعديل الموقع على الخريطة
-            </app-button>
-
-            <app-button variant="secondary" type="button" extraClass="gap-2" (onClick)="useCurrentLocation()"
-              [disabled]="isLocating()">
-              @if (isLocating()) {
-              <span class="material-symbols-outlined animate-spin text-lg">progress_activity</span> جاري تحديد موقعك...
-              } @else {
-              <span class="material-symbols-outlined text-lg">my_location</span> استخدام موقعي الحالي
-              }
-            </app-button>
-          </div>
-
-          @if (locationError()) {
-          <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ locationError() }}</p>
-          }
-
-          @if (selectedAddress()) {
-          <p class="flex items-center gap-1 text-xs text-on-surface-variant/80">
-            <span class="material-symbols-outlined text-sm">place</span>
-            {{ selectedAddress() }}
-          </p>
-          }
-        </div>
-      </div>
-      }
-
-      @if (currentStep === 3) {
-      <div class="flex flex-col gap-6 animate-in fade-in duration-200">
-
-        <!-- Section Header (Step 3) -->
-        <div class="mb-2 rounded-2xl border border-secondary/15 bg-secondary/5 p-5">
-          <div class="flex items-center gap-3">
-            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-on-secondary shadow-sm">
-              <span class="material-symbols-outlined text-2xl">photo_library</span>
-            </div>
-
-            <div class="flex-1">
-              <h2 class="text-lg font-bold text-on-surface">
-                صور وفيديو
-              </h2>
-              <p class="mt-1 text-sm text-on-surface-variant">
-                تعديل الصور الحالية، إضافة صور جديدة أو رفع فيديو.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Existing Photos -->
-        @if (existingPhotos().length > 0) {
-        <div>
-          <label class="mb-2 block text-sm font-medium text-on-surface-variant">الصور الحالية</label>
-          <div class="flex flex-wrap gap-3">
-            @for (photo of existingPhotos(); track photo.id) {
-            <div
-              class="relative h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
-              <img [src]="photo.imagePath" alt="صورة" class="h-full w-full object-cover" />
-              @if (primaryPhotoId() === photo.id) {
-              <span
-                class="absolute top-1 right-1 rounded-md bg-secondary px-1.5 py-0.5 text-[10px] text-on-secondary font-medium shadow-xs">أساسية</span>
-              } @else {
-              <button type="button" (click)="setExistingAsPrimary(photo)"
-                class="absolute top-1 right-1 rounded-md border border-outline-variant bg-surface px-1.5 py-0.5 text-[10px] text-on-surface hover:bg-surface-container-high transition">
-                اجعلها أساسية
-              </button>
-              }
-              <button type="button" (click)="removeExistingPhoto(photo)"
-                class="absolute bottom-1 left-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110">
-                <span class="material-symbols-outlined text-xs">close</span>
-              </button>
-            </div>
-            }
+            <app-form-field label="وصف الشخص" type="textarea" formControlName="description"
+              placeholder="أدخل أي تفاصيل تساعد في التعرف عليه (مثل العلامات المميزة، الطول، الملابس، أو الحالة الصحية)"></app-form-field>
+            <div class="mt-1 text-left text-[11px] text-on-surface-variant/70">{{ form.get('description')?.value?.length ?? 0 }} / 2000</div>
+            @if (isInvalid('description')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('description') }}</p> }
           </div>
         </div>
         }
 
-        <!-- Replace Primary Photo -->
-        <div>
-          <label class="mb-2 block text-sm font-medium text-on-surface-variant">
-            استبدال الصورة الأساسية <span class="font-normal text-on-surface-variant/70">(اختياري)</span>
-          </label>
-          <div
-            class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
-            [class.border-secondary]="!!newPrimaryImage()" [class.bg-surface-container-low]="!!newPrimaryImage()"
-            (click)="newPrimaryInput.click()">
-            <input #newPrimaryInput type="file" accept="image/jpeg,image/png,image/webp" class="hidden"
-              (change)="onNewPrimarySelected($event)" />
-            <div
-              class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
-              <span class="material-symbols-outlined text-3xl"
-                [ngClass]="newPrimaryImage() ? 'text-secondary' : 'text-outline'">add_photo_alternate</span>
+        @if (currentStep === 2) {
+        <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+          
+          <!-- Section Header (Step 2) -->
+          <div class="mb-2 rounded-2xl border border-secondary/15 bg-secondary/5 p-5">
+            <div class="flex items-center gap-3">
+              <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-on-secondary shadow-sm">
+                <span class="material-symbols-outlined text-2xl">location_on</span>
+              </div>
+
+              <div class="flex-1">
+                <h2 class="text-lg font-bold text-on-surface">
+                  موقع الحادث والمعالم
+                </h2>
+                <p class="mt-1 text-sm text-on-surface-variant">
+                  حدد المحافظة والمدينة والشارع وتاريخ ووقت الحادث بدقة.
+                </p>
+              </div>
             </div>
-            <p class="text-sm font-bold text-on-surface">{{ newPrimaryImage() ? 'تم اختيار صورة أساسية جديدة' : 'اضغط
-              لاختيار صورة أساسية جديدة' }}</p>
           </div>
-          @if (newPrimaryPreview()) {
-          <div
-            class="relative mt-3 h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
-            <img [src]="newPrimaryPreview()" alt="صورة أساسية جديدة" class="h-full w-full object-cover" />
-            <button type="button" (click)="clearNewPrimary()"
-              class="absolute top-1 right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110">
-              <span class="material-symbols-outlined text-xs">close</span>
-            </button>
+
+          <!-- Government & City -->
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <app-form-field label="المحافظة *" type="select" formControlName="government"
+                [extraClass]="isInvalid('government') ? 'border-error' : ''">
+                <option value="" disabled>اختر المحافظة</option>
+                @for (g of governorates; track g) { <option [value]="g">{{ g }}</option> }
+              </app-form-field>
+              @if (isInvalid('government')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('government') }}</p> }
+            </div>
+            <div>
+              <app-form-field label="المدينة / المركز *" formControlName="city" type="text" placeholder="أدخل اسم المدينة أو المركز (مثال: مدينة نصر)"
+                [extraClass]="isInvalid('city') ? 'border-error' : ''"></app-form-field>
+              @if (isInvalid('city')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('city') }}</p> }
+            </div>
+          </div>
+
+          <!-- Street -->
+          <div>
+            <app-form-field label="الشارع / المنطقة *" formControlName="street" type="text" placeholder="أدخل الشارع أو المنطقة وأي معالم قريبة (مثال: شارع التحرير، بجوار مسجد السلام)"
+              [extraClass]="isInvalid('street') ? 'border-error' : ''"></app-form-field>
+            @if (isInvalid('street')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('street') }}</p> }
+          </div>
+
+          <!-- Event Date -->
+          <div>
+            <app-form-field label="تاريخ ووقت الحادث *" formControlName="eventDate" type="date"
+              [extraClass]="isInvalid('eventDate') ? 'border-error' : ''"></app-form-field>
+            @if (isInvalid('eventDate')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('eventDate') }}</p> }
+          </div>
+
+          <!-- Map Picker (modal-based component, not inline) -->
+          <div class="flex flex-col gap-3 rounded-2xl border border-outline-variant/40 bg-surface-bright p-5 shadow-2xs">
+            <label class="text-sm font-medium text-on-surface-variant">موقع الحادث</label>
+
+            @if (selectedLat() !== null && selectedLng() !== null) {
+            <div class="flex items-center justify-between gap-3 rounded-xl border border-secondary/20 bg-surface-container-low p-4 text-sm">
+              <div class="flex items-center gap-2 text-on-surface">
+                <span class="material-symbols-outlined text-secondary">location_on</span>
+                <span>{{ selectedAddress() || (selectedLat() + ', ' + selectedLng()) }}</span>
+              </div>
+              <button type="button" (click)="openMap()" class="shrink-0 text-xs font-semibold text-secondary underline">
+                تعديل الموقع
+              </button>
+            </div>
+            } @else {
+            <app-button variant="secondary" type="button" (onClick)="openMap()">
+              <span class="material-symbols-outlined text-lg">location_on</span> تحديد موقع الحادث على الخريطة
+            </app-button>
+            }
+
+            <app-map-location-picker
+              [isOpen]="isMapOpen()"
+              [initialLat]="selectedLat()"
+              [initialLng]="selectedLng()"
+              [initialAddress]="selectedAddress()"
+              (confirmLocation)="onLocationConfirm($event)"
+              (cancel)="closeMap()"
+            ></app-map-location-picker>
+          </div>
+        </div>
+        }
+
+        @if (currentStep === 3) {
+        <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+          
+          <!-- Section Header (Step 3) -->
+          <div class="mb-2 rounded-2xl border border-secondary/15 bg-secondary/5 p-5">
+            <div class="flex items-center gap-3">
+              <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-on-secondary shadow-sm">
+                <span class="material-symbols-outlined text-2xl">photo_library</span>
+              </div>
+
+              <div class="flex-1">
+                <h2 class="text-lg font-bold text-on-surface">
+                  صور وفيديو
+                </h2>
+                <p class="mt-1 text-sm text-on-surface-variant">
+                  تعديل الصور الحالية، إضافة صور جديدة أو رفع فيديو.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Existing Photos -->
+          @if (existingPhotos().length > 0) {
+          <div>
+            <label class="mb-2 block text-sm font-medium text-on-surface-variant">الصور الحالية</label>
+            <div class="flex flex-wrap gap-3">
+              @for (photo of existingPhotos(); track photo.id) {
+              <div class="relative h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
+                <img [src]="photo.imagePath" alt="صورة" class="h-full w-full object-cover" />
+                @if (primaryPhotoId() === photo.id) {
+                <span class="absolute top-1 right-1 rounded-md bg-secondary px-1.5 py-0.5 text-[10px] text-on-secondary font-medium shadow-xs">أساسية</span>
+                } @else {
+                <button type="button" (click)="setExistingAsPrimary(photo)"
+                  class="absolute top-1 right-1 rounded-md border border-outline-variant bg-surface px-1.5 py-0.5 text-[10px] text-on-surface hover:bg-surface-container-high transition">
+                  اجعلها أساسية
+                </button>
+                }
+                <button type="button" (click)="removeExistingPhoto(photo)"
+                  class="absolute bottom-1 left-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110">
+                  <span class="material-symbols-outlined text-xs">close</span>
+                </button>
+              </div>
+              }
+            </div>
           </div>
           }
-        </div>
 
-        <!-- New Additional Photos -->
-        <div>
-          <label class="mb-2 block text-sm font-medium text-on-surface-variant">إضافة صور جديدة</label>
-          <div
-            class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
-            (click)="newPhotosInput.click()">
-            <input #newPhotosInput type="file" accept="image/jpeg,image/png,image/webp" multiple class="hidden"
-              (change)="onNewPhotosSelected($event)" />
+          <!-- Replace Primary Photo -->
+          <div>
+            <label class="mb-2 block text-sm font-medium text-on-surface-variant">
+              استبدال الصورة الأساسية <span class="font-normal text-on-surface-variant/70">(اختياري)</span>
+            </label>
             <div
-              class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
-              <span class="material-symbols-outlined text-2xl">add_photo_alternate</span>
+              class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
+              [class.border-secondary]="!!newPrimaryImage()"
+              [class.bg-surface-container-low]="!!newPrimaryImage()"
+              (click)="newPrimaryInput.click()"
+            >
+              <input #newPrimaryInput type="file" accept="image/jpeg,image/png,image/webp" class="hidden"
+                (change)="onNewPrimarySelected($event)" />
+              <div class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
+                <span class="material-symbols-outlined text-3xl"
+                  [ngClass]="newPrimaryImage() ? 'text-secondary' : 'text-outline'">add_photo_alternate</span>
+              </div>
+              <p class="text-sm font-bold text-on-surface">{{ newPrimaryImage() ? 'تم اختيار صورة أساسية جديدة' : 'اضغط لاختيار صورة أساسية جديدة' }}</p>
             </div>
-            <p class="text-xs text-on-surface-variant/70">JPG / PNG / WebP — حتى 5MB لكل صورة</p>
-          </div>
-          @if (newPhotosError()) { <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ newPhotosError() }}
-          </p> }
-
-          @if (newPhotoPreviews().length > 0) {
-          <div class="mt-3.5 flex flex-wrap gap-3">
-            @for (preview of newPhotoPreviews(); track preview; let i = $index) {
-            <div
-              class="relative h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
-              <img [src]="preview" alt="صورة جديدة" class="h-full w-full object-cover" />
-              <button type="button" (click)="removeNewPhoto(i)"
+            @if (newPrimaryPreview()) {
+            <div class="relative mt-3 h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
+              <img [src]="newPrimaryPreview()" alt="صورة أساسية جديدة" class="h-full w-full object-cover" />
+              <button type="button" (click)="clearNewPrimary()"
                 class="absolute top-1 right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110">
                 <span class="material-symbols-outlined text-xs">close</span>
               </button>
             </div>
             }
           </div>
-          }
-        </div>
 
-        <!-- Video -->
-        <div>
-          <label class="mb-2 block text-sm font-medium text-on-surface-variant">
-            فيديو <span class="font-normal text-on-surface-variant/70">(اختياري)</span>
-          </label>
-          @if (existingVideoUrl() && !videoFile()) {
-          <div
-            class="mb-3 flex items-center gap-2 rounded-2xl border border-secondary/20 bg-surface-container-low p-4 text-xs font-medium text-on-secondary-fixed-variant shadow-2xs">
-            <span class="material-symbols-outlined text-secondary">videocam</span>
-            <span>يوجد فيديو مرفوع بالفعل. اختر ملف جديد لاستبداله.</span>
-          </div>
-          }
-          <div
-            class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
-            [class.border-secondary]="!!videoFile()" [class.bg-surface-container-low]="!!videoFile()"
-            (click)="videoInput.click()">
-            <input #videoInput type="file" accept="video/*" class="hidden" (change)="onVideoSelected($event)" />
+          <!-- New Additional Photos -->
+          <div>
+            <label class="mb-2 block text-sm font-medium text-on-surface-variant">إضافة صور جديدة</label>
             <div
-              class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
-              <span class="material-symbols-outlined text-3xl"
-                [ngClass]="videoFile() ? 'text-secondary' : 'text-outline'">videocam</span>
+              class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
+              (click)="newPhotosInput.click()"
+            >
+              <input #newPhotosInput type="file" accept="image/jpeg,image/png,image/webp" multiple class="hidden"
+                (change)="onNewPhotosSelected($event)" />
+              <div class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
+                <span class="material-symbols-outlined text-2xl">add_photo_alternate</span>
+              </div>
+              <p class="text-xs text-on-surface-variant/70">JPG / PNG / WebP — حتى 5MB لكل صورة</p>
             </div>
-            <p class="text-sm font-bold text-on-surface">{{ videoFile()?.name ?? 'رفع فيديو' }}</p>
+            @if (newPhotosError()) { <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ newPhotosError() }}</p> }
+
+            @if (newPhotoPreviews().length > 0) {
+            <div class="mt-3.5 flex flex-wrap gap-3">
+              @for (preview of newPhotoPreviews(); track preview; let i = $index) {
+              <div class="relative h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
+                <img [src]="preview" alt="صورة جديدة" class="h-full w-full object-cover" />
+                <button type="button" (click)="removeNewPhoto(i)"
+                  class="absolute top-1 right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110">
+                  <span class="material-symbols-outlined text-xs">close</span>
+                </button>
+              </div>
+              }
+            </div>
+            }
+          </div>
+
+          <!-- Video -->
+          <div>
+            <label class="mb-2 block text-sm font-medium text-on-surface-variant">
+              فيديو <span class="font-normal text-on-surface-variant/70">(اختياري)</span>
+            </label>
+            @if (existingVideoUrl() && !videoFile()) {
+            <div class="mb-3 flex items-center gap-2 rounded-2xl border border-secondary/20 bg-surface-container-low p-4 text-xs font-medium text-on-secondary-fixed-variant shadow-2xs">
+              <span class="material-symbols-outlined text-secondary">videocam</span>
+              <span>يوجد فيديو مرفوع بالفعل. اختر ملف جديد لاستبداله.</span>
+            </div>
+            }
+            <div
+              class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
+              [class.border-secondary]="!!videoFile()"
+              [class.bg-surface-container-low]="!!videoFile()"
+              (click)="videoInput.click()"
+            >
+              <input #videoInput type="file" accept="video/*" class="hidden" (change)="onVideoSelected($event)" />
+              <div class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
+                <span class="material-symbols-outlined text-3xl"
+                  [ngClass]="videoFile() ? 'text-secondary' : 'text-outline'">videocam</span>
+              </div>
+              <p class="text-sm font-bold text-on-surface">{{ videoFile()?.name ?? 'رفع فيديو' }}</p>
+            </div>
           </div>
         </div>
-      </div>
-      }
+        }
 
-      <!-- Form Global Error -->
-      @if (errorMsg()) {
-      <div
-        class="mt-4 flex items-center gap-2.5 rounded-2xl border border-error/30 bg-error-container/30 p-4 text-xs font-medium text-on-error-container shadow-2xs">
-        <span class="material-symbols-outlined text-lg">error</span>
-        {{ errorMsg() }}
-      </div>
-      }
-    </form>
-</div>
-
-<!-- Divider before Footer -->
-<div class="h-px w-full bg-outline-variant/20"></div>
-
-<!-- 4. Footer Buttons -->
-<div class="flex items-center justify-between bg-surface-bright/50 px-6 py-4.5 md:px-8">
-  <app-button variant="secondary" type="button" [extraClass]="currentStep === 1 ? 'invisible' : ''"
-    (onClick)="prevStep()">
-    <span class="material-symbols-outlined text-lg">arrow_forward</span> السابق
-  </app-button>
-
-  <div class="flex gap-2">
-    @for (s of steps; track s.num) {
-    <div class="h-2.5 w-2.5 rounded-full transition-all duration-300"
-      [ngClass]="currentStep === s.num ? 'bg-secondary ring-2 ring-secondary/30 scale-110' : 'bg-outline-variant/40'">
+        <!-- Form Global Error -->
+        @if (errorMsg()) {
+        <div class="mt-4 flex items-center gap-2.5 rounded-2xl border border-error/30 bg-error-container/30 p-4 text-xs font-medium text-on-error-container shadow-2xs">
+          <span class="material-symbols-outlined text-lg">error</span>
+          {{ errorMsg() }}
+        </div>
+        }
+      </form>
     </div>
-    }
-  </div>
 
-  @if (currentStep < 3) { <app-button variant="primary" type="button" (onClick)="nextStep()">
-    التالي <span class="material-symbols-outlined text-lg">arrow_back</span>
-    </app-button>
-    } @else {
-    <app-button variant="primary" type="button" [disabled]="isSubmitting()" (onClick)="onSubmit()">
-      @if (isSubmitting()) {
-      <span class="material-symbols-outlined animate-spin text-lg">progress_activity</span> جاري الحفظ...
+    <!-- Divider before Footer -->
+    <div class="h-px w-full bg-outline-variant/20"></div>
+
+    <!-- 4. Footer Buttons -->
+    <div class="flex items-center justify-between bg-surface-bright/50 px-6 py-4.5 md:px-8">
+      <app-button variant="secondary" type="button" [extraClass]="currentStep === 1 ? 'invisible' : ''" (onClick)="prevStep()">
+        <span class="material-symbols-outlined text-lg">arrow_forward</span> السابق
+      </app-button>
+
+      <div class="flex gap-2">
+        @for (s of steps; track s.num) {
+        <div
+          class="h-2.5 w-2.5 rounded-full transition-all duration-300"
+          [ngClass]="currentStep === s.num ? 'bg-secondary ring-2 ring-secondary/30 scale-110' : 'bg-outline-variant/40'"
+        ></div>
+        }
+      </div>
+
+      @if (currentStep < 3) {
+      <app-button variant="primary" type="button" (onClick)="nextStep()">
+        التالي <span class="material-symbols-outlined text-lg">arrow_back</span>
+      </app-button>
       } @else {
-      <span class="material-symbols-outlined text-lg">check_circle</span> حفظ التعديلات
+      <app-button variant="primary" type="button" [disabled]="isSubmitting()" (onClick)="onSubmit()">
+        @if (isSubmitting()) {
+        <span class="material-symbols-outlined animate-spin text-lg">progress_activity</span> جاري الحفظ...
+        } @else {
+        <span class="material-symbols-outlined text-lg">check_circle</span> حفظ التعديلات
+        }
+      </app-button>
       }
-    </app-button>
+    </div>
+
     }
-</div>
-
-}
-</app-card>
-
-<!-- Location Picker Map Modal -->
-<app-map-location-picker [isOpen]="isMapModalOpen()" [initialLat]="selectedLat()" [initialLng]="selectedLng()"
-  [initialAddress]="selectedAddress()" (confirmLocation)="onMapLocationConfirmed($event)" (cancel)="closeMapModal()">
-</app-map-location-picker>
-
+  </app-card>
 </div>
