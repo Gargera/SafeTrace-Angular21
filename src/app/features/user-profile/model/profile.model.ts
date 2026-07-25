@@ -82,4 +82,5 @@ export interface MyCaseListItemResponse {
   caseType: CaseType;
   createdAt: string;
   mainImageUrl: string | null;
+  foundPersonInfoId?: number | null;
 }
