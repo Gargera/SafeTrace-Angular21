@@ -148,4 +148,10 @@ createLongTermCase(data: FormData): Observable<ApiResponse<CreateCaseResponse>> 
     data
   );
 }
+getMyCaseById(id: number) {
+  return this.http.get<ApiResponse<LongTermCaseDetailResponse>>(
+    `${environment.baseUrl}/api/LongTermCase/MyCaseDetails/${id}`
+  );
+}
+
 }

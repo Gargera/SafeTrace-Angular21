@@ -68,11 +68,12 @@
 
             <div class="grid grid-cols-1 gap-3">
               @for (caseItem of group.cases; track caseItem.id) {
-                <app-case-card-compact
-                  [caseItem]="caseItem"
-                  (onDelete)="requestDelete($event, caseItem.caseType)"
-                  (onMarkAsFound)="requestMarkAsFound($event, caseItem.caseType)"
-                />
+<app-case-card-compact
+  [caseItem]="caseItem"
+  [isMyCase]="true"
+  (onDelete)="requestDelete($event, caseItem.caseType)"
+  (onMarkAsFound)="requestMarkAsFound($event, caseItem.caseType)">
+</app-case-card-compact>
               }
             </div>
           </section>

@@ -46,7 +46,8 @@ export class CaseCardCompactComponent {
 
   // Reactive image error state
   private imageHasError = signal(false);
-
+ //
+ readonly isMyCase = input(false);
   // ----- Computed Signals -----
 
   /** Age category derived from the case item's age using the provided helper */
@@ -67,21 +68,26 @@ export class CaseCardCompactComponent {
     return [item.city, item.government].filter(Boolean).join(' ، ') || 'غير محدد';
   });
 
-  /** Router link for the detail page based on case type */
-  readonly detailRoute = computed(() => {
-    const item = this.caseItem();
-    switch (item.caseType) {
-      case CaseType.Urgent:
-        return ['/urgent', item.id];
-      case CaseType.LongTerm:
-        return ['/long-term', item.id];
-      case CaseType.Unknown:
-        return ['/unknown', item.id];
-      default:
-        return ['/cases', item.id];
-    }
-  });
+readonly detailRoute = computed(() => {
+  const item = this.caseItem();
 
+  switch (item.caseType) {
+    case CaseType.Urgent:
+      return this.isMyCase()
+        ? ['/urgent/my', item.id]
+        : ['/urgent', item.id];
+
+    case CaseType.LongTerm:
+      return this.isMyCase()
+        ? ['/long-term/my', item.id]
+        : ['/long-term', item.id];
+
+    case CaseType.Unknown:
+      return this.isMyCase()
+        ? ['/unknown/my', item.id]
+        : ['/unknown', item.id];
+  }
+});
   // ----- Event Handlers -----
 
   onImageError(): void {
