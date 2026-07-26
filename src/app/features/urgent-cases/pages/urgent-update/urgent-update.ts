@@ -13,7 +13,6 @@ import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.
 import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
-import { LocationResult } from '../../../../shared/components/map-location-picker/models/location.models';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
@@ -30,6 +29,8 @@ import { validateImageFile } from '../../../user-profile/tabs/Edit-profile/utili
 
 import { CommonModule } from '@angular/common';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+
+import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 
 type Step = 1 | 2 | 3;
 
@@ -68,6 +69,7 @@ export class UrgentUpdate implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private snackbar = inject(SnackbarService);
+  private geocoding = inject(GeocodingService);
 
   caseId!: number;
   currentStep: Step = 1;
@@ -92,8 +94,12 @@ export class UrgentUpdate implements OnInit {
   selectedLat = signal<number | null>(null);
   selectedLng = signal<number | null>(null);
   selectedAddress = signal<string>('');
-  /** controls the map-picker modal visibility (it's a modal, not an inline element) */
-  isMapOpen = signal(false);
+  /** initial coords passed to the map picker so it centers on the existing location */
+  initialMapCenter = signal<{ lat: number; lng: number } | null>(null);
+  isMapModalOpen = signal(false);
+
+  isLocating = signal(false);
+  locationError = signal<string | null>(null);
 
   readonly genders = Gender;
   readonly relationOptions = RELATION_TYPE_OPTIONS;
@@ -232,12 +238,18 @@ export class UrgentUpdate implements OnInit {
       });
   }
 
-  openMap(): void {
-    this.isMapOpen.set(true);
+  onLocationChange(loc: { lat: number; lng: number; address: string }): void {
+    this.selectedLat.set(loc.lat);
+    this.selectedLng.set(loc.lng);
+    this.selectedAddress.set(loc.address);
   }
 
-  closeMap(): void {
-    this.isMapOpen.set(false);
+  openMapModal(): void {
+    this.isMapModalOpen.set(true);
+  }
+
+  closeMapModal(): void {
+    this.isMapModalOpen.set(false);
   }
 
   onMapLocationConfirmed(loc: { lat: number; lng: number; address: string }): void {
