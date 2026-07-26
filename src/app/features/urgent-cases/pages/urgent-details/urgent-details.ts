@@ -72,7 +72,7 @@ export class UrgentDetails implements OnInit {
 
   selectedMedia = signal<any | null>(null);
   isAdminPage = signal(false);
-
+ isMyCasePage = signal(false);
   // Lightbox
   lightboxVisible = signal(false);
   currentIndex = signal(0);
@@ -80,6 +80,7 @@ export class UrgentDetails implements OnInit {
   ngOnInit(): void {
     this.route.data.subscribe(data => {
       this.isAdminPage.set(data['mode'] === 'dashboard');
+      this.isMyCasePage.set(data['mode'] === 'my-case');
     });
 
     this.route.paramMap.subscribe((params) => {
@@ -95,10 +96,15 @@ export class UrgentDetails implements OnInit {
   private fetchCase(id: number): void {
     this.loading.set(true);
 
-    const request = this.isAdminPage()
-      ? this.UrgentDetailsService.adminGetCaseById(id)
-      : this.UrgentDetailsService.getCaseById(id);
+    let request;
 
+if (this.isAdminPage()) {
+  request = this.UrgentDetailsService.adminGetCaseById(id);
+} else if (this.isMyCasePage()) {
+  request = this.UrgentDetailsService.getMyCaseById(id);
+} else {
+  request = this.UrgentDetailsService.getCaseById(id);
+}
     request.subscribe({
       next: (apiRes) => {
         if (apiRes.success && apiRes.data) {

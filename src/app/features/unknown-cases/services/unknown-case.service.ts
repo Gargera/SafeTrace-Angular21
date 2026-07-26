@@ -107,8 +107,12 @@ export class UnknownCaseService extends ApiService {
    * Reject an unknown case
    * PUT: /api/UnknownCase/Reject/{id}
    */
-  rejectCase(id: number): Observable<ApiResponse<string>> {
-    return this.put<ApiResponse<string>>(`${this.baseUrl}/Reject/${id}`, {});
+  rejectCase(id: number, rejectionReason: string): Observable<ApiResponse<string>> {
+    return this.put<ApiResponse<string>>(
+      `${this.baseUrl}/Reject/${id}`,
+      JSON.stringify(rejectionReason),
+      { headers: { 'Content-Type': 'application/json' } },
+    );
   }
 
   /**
@@ -133,5 +137,10 @@ export class UnknownCaseService extends ApiService {
    */
   permanentDelete(id: number): Observable<ApiResponse<string>> {
     return this.delete<ApiResponse<string>>(`${this.baseUrl}/PermanentDeletion/${id}`);
+  }
+  getMyCaseById(id: number) {
+    return this.http.get<ApiResponse<UnknownCaseDetailResponse>>(
+      `${environment.baseUrl}/api/UnknownCase/MyCaseDetails/${id}`
+    );
   }
 }

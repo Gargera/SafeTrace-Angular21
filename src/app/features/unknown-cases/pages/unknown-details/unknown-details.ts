@@ -26,6 +26,9 @@ import { UnknownCaseDetailResponse } from '../../models/response/UnknownCaseDeta
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { Permissions } from '../../../../core/constants/Permissions';
 
+import { RejectCasePopupComponent } from '../../../../shared/components/cases-components/reject-case-popup/reject-case-popup';
+import { RejectionReasonCardComponent } from '../../../../shared/components/cases-components/rejection-reason-card/rejection-reason-card';
+
 @Component({
   selector: 'app-unknown-details',
   standalone: true,
@@ -40,6 +43,8 @@ import { Permissions } from '../../../../core/constants/Permissions';
     FoundedPopupComponent,
     HasPermissionDirective,
     ButtonComponent,
+    RejectCasePopupComponent,
+    RejectionReasonCardComponent,
   ],
   templateUrl: './unknown-details.html',
   styleUrls: ['./unknown-details.css'],
@@ -64,6 +69,8 @@ export class UnknownDetails implements OnInit {
 
   showApproveConfirmation = signal(false);
   showRejectConfirmation = signal(false);
+  isRejecting = signal(false);
+  rejectApiError = signal<string | null>(null);
   showPermanentDeleteConfirmation = signal(false);
 
   caseDetails = signal<UnknownCaseDetailResponse | null>(null);
@@ -76,10 +83,11 @@ export class UnknownDetails implements OnInit {
   lightboxVisible = signal(false);
   currentIndex = signal(0);
   isAdminPage = signal(false);
-
+ isMyCasePage = signal(false);
   ngOnInit(): void {
     this.route.data.subscribe(data => {
       this.isAdminPage.set(data['mode'] === 'dashboard');
+      this.isMyCasePage.set(data['mode'] === 'my-case');
     });
 
     this.route.paramMap.subscribe((params) => {
@@ -94,9 +102,15 @@ export class UnknownDetails implements OnInit {
   private fetchCase(id: number): void {
     this.loading.set(true);
 
-    const request = this.isAdminPage()
-      ? this.UnknownCaseService.adminGetCaseById(id)
-      : this.UnknownCaseService.getCaseById(id);
+ let request;
+
+if (this.isAdminPage()) {
+  request = this.UnknownCaseService.adminGetCaseById(id);
+} else if (this.isMyCasePage()) {
+  request = this.UnknownCaseService.getMyCaseById(id);
+} else {
+  request = this.UnknownCaseService.getCaseById(id);
+}
 
     request.subscribe({
       next: (apiRes) => {
@@ -348,31 +362,57 @@ export class UnknownDetails implements OnInit {
   }
 
   openRejectConfirmation(): void {
+    this.rejectApiError.set(null);
     this.showRejectConfirmation.set(true);
   }
 
   cancelReject(): void {
     this.showRejectConfirmation.set(false);
+    this.rejectApiError.set(null);
   }
 
-  confirmReject(): void {
+  confirmReject(reason: string): void {
     const id = this.caseDetails()?.id;
     if (!id) return;
 
-    this.UnknownCaseService.rejectCase(id).subscribe({
+    this.isRejecting.set(true);
+    this.rejectApiError.set(null);
+
+    this.UnknownCaseService.rejectCase(id, reason).subscribe({
       next: (res) => {
-        this.showRejectConfirmation.set(false);
+        this.isRejecting.set(false);
         if (res.success) {
-          this.snackbar.success('تم رفض الحالة');
+          this.showRejectConfirmation.set(false);
+          const successMessage = res.message || 'تم رفض الحالة بنجاح';
+          this.snackbar.success(successMessage);
           this.fetchCase(id);
+        } else {
+          this.rejectApiError.set(res.message || 'حدث خطأ أثناء رفض الحالة');
         }
       },
       error: (err) => {
-        this.showRejectConfirmation.set(false);
-        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء رفض الحالة';
-        this.snackbar.error(errorMessage);
+        this.isRejecting.set(false);
+        const errorMessage = this.extractErrorMessage(err, 'حدث خطأ أثناء رفض الحالة');
+        this.rejectApiError.set(errorMessage);
       }
     });
+  }
+
+  private extractErrorMessage(err: any, fallback: string): string {
+    if (err?.error?.errors && typeof err.error.errors === 'object') {
+      const messages: string[] = [];
+      Object.values(err.error.errors).forEach((val: any) => {
+        if (Array.isArray(val)) {
+          messages.push(...val);
+        } else if (typeof val === 'string') {
+          messages.push(val);
+        }
+      });
+      if (messages.length > 0) {
+        return messages.join(' - ');
+      }
+    }
+    return err?.error?.detail || err?.error?.message || (typeof err?.error === 'string' ? err.error : null) || fallback;
   }
 
   openPermanentDeleteConfirmation(): void {

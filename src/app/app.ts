@@ -3,7 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { Toast } from './shared/components/toast/toast';
 import { AuthService } from './core/services/auth.service';
 import { LocationTrackingService } from './core/services/LocationTracking.service';
-import { CaseCreationFlowComponent } from './shared/components/case-creation-flow/case-creation-flow.component';
+import { CaseCreationFlowComponent } from './shared/components/cases-components/case-creation-flow/case-creation-flow.component';
 
 @Component({
   selector: 'app-root',

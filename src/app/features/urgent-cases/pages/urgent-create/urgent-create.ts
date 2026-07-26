@@ -349,6 +349,7 @@ export class UrgentCreate {
       request = this.pendingRequest;
     } else {
       const v = this.form.getRawValue();
+
       const formattedDate = v.eventDate ? new Date(v.eventDate).toISOString() : new Date().toISOString();
 
       request = {
@@ -358,7 +359,7 @@ export class UrgentCreate {
         tName: v.tName || '',
         gender: v.gender as Gender,
         age: Number(v.age!),
-        relation: Number(v.relation) as unknown as RelationType,
+        relation: v.relation!,
         communicationPhone: v.communicationPhone!,
         description: v.description || '',
         government: v.government!,

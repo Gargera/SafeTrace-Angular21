@@ -1,4 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { GetUserNotificationsDTO } from '../../../../core/models/notification.model';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { NotificationType } from '../../../../shared/enums/Notification-Type';
@@ -12,8 +13,17 @@ import { NotificationType } from '../../../../shared/enums/Notification-Type';
 })
 export class NotificationsTab implements OnInit {
   readonly notificationService = inject(NotificationService);
+  private readonly router = inject(Router);
 
   readonly NotificationType = NotificationType;
+
+  onNotificationClick(n: GetUserNotificationsDTO, event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.notificationService.handleNotificationClick(n, this.router);
+  }
 
   ngOnInit(): void {
     // If SignalR is not connected, fall back to HTTP load

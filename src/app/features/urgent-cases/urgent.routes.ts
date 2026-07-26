@@ -22,6 +22,16 @@ export const URGENT_ROUTES: Routes = [
       import('./pages/urgent-update/urgent-update')
         .then(c => c.UrgentUpdate)
   },
+      {
+  path: 'my/:id',
+  title: 'تفاصيل حالتي | لقاء',
+  canActivate: [authGuard],
+  data: { mode: 'my-case' },
+  loadComponent: () =>
+    import('./pages/urgent-details/urgent-details')
+      .then(c => c.UrgentDetails)
+},
+
   {
     path: ':id',
     title: 'تفاصيل الحالة | لقاء',
