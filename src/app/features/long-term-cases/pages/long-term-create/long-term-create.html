@@ -265,7 +265,7 @@
               <span class="material-symbols-outlined text-3xl">add_photo_alternate</span>
             </div>
             <p class="text-sm font-bold text-on-surface">اضغط لإضافة الصورة الأساسية وتحديد الوجه</p>
-            <p class="mt-1 text-xs text-on-surface-variant/70">JPEG / PNG / WebP — حتى 5 MB</p>
+            <p class="mt-1 text-xs text-on-surface-variant/70">JPG / JPEG / PNG / WebP — حتى 5 MB</p>
           </div>
           @if (primaryPhotoError()) { <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{
             primaryPhotoError() }}</p> }
@@ -342,7 +342,7 @@
         <!-- Police Report -->
         <div>
           <label class="mb-2 block text-sm font-medium text-on-surface-variant">
-            بلاغ الشرطة <span class="font-normal text-on-surface-variant/70">(اختياري — JPEG/PNG/WebP، حتى 10 MB)</span>
+            بلاغ الشرطة <span class="font-normal text-on-surface-variant/70">(اختياري — JPG/JPEG/PNG/WebP، حتى 10 MB)</span>
           </label>
           <div
             class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
@@ -356,7 +356,7 @@
                 [ngClass]="policeReportFile() ? 'text-secondary' : 'text-outline'">description</span>
             </div>
             <p class="text-sm font-bold text-on-surface">{{ policeReportFile()?.name ?? 'رفع صورة بلاغ الشرطة' }}</p>
-            <p class="mt-0.5 text-xs text-on-surface-variant/70">JPEG / PNG / WebP — حتى 10 MB</p>
+            <p class="mt-0.5 text-xs text-on-surface-variant/70">JPG / JPEG / PNG / WebP — حتى 10 MB</p>
           </div>
           @if (policeReportError()) { <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{
             policeReportError() }}</p> }

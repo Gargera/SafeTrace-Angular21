@@ -70,7 +70,7 @@ export class LongTermCreate {
   additionalPhotoPreviews = signal<string[]>([]);
   additionalPhotosError = signal<string | null>(null);
 
-  // Police report (optional — JPEG/PNG/WebP, max 10 MB)
+  // Police report (optional — JPG/JPEG/PNG/WebP, max 10 MB)
   policeReportFile = signal<File | null>(null);
   policeReportError = signal<string | null>(null);
 
@@ -203,7 +203,7 @@ export class LongTermCreate {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Additional photos — max 4, JPEG/PNG/WebP, max 5 MB each
+  // Additional photos — max 4, JPG/JPEG/PNG/WebP, max 5 MB each
   // ─────────────────────────────────────────────────────────────
   onAdditionalPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
@@ -229,7 +229,7 @@ export class LongTermCreate {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Police report — optional, JPEG/PNG/WebP, max 10 MB
+  // Police report — optional, JPG/JPEG/PNG/WebP, max 10 MB
   // ─────────────────────────────────────────────────────────────
   onPoliceReportSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;

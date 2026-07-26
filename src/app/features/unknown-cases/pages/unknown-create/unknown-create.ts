@@ -198,7 +198,7 @@ export class UnknownCreate {
     this.primaryFile.set(null);
   }
 
-  // Additional photos — max 4, JPEG/PNG/WebP, max 5 MB each
+  // Additional photos — max 4, JPG/JPEG/PNG/WebP, max 5 MB each
   onAdditionalPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
     for (const f of files) {

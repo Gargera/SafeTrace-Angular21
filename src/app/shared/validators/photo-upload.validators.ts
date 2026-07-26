@@ -9,7 +9,7 @@ function toFileArray(value: unknown): File[] | null {
     return null;
 }
 
-/** Ensures every uploaded file is JPEG, PNG, or WebP. */
+/** Ensures every uploaded file is JPG, JPEG, PNG, or WebP. */
 export function allowedFileTypes(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const files = toFileArray(control.value);
