@@ -27,10 +27,17 @@ import { getAgeRange } from '../../../helper/age-category.helper';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 
+import { Gender } from '../../../../shared/enums/gender';
 import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
 import { searchRadiusValidator } from '../../../../shared/validators/search-radius.validator';
 import { dateRangeValidator } from '../../../../shared/validators/date-range.validator';
+import { pastDate } from '../../../../shared/validators/past-date.validator';
+import { validEnum } from '../../../../shared/validators/enum.validator';
+import { arabicText } from '../../../../shared/validators/arabic-text.validator';
+import { fullNameOrCaseCodeValidator } from '../../../../shared/validators/full-name-or-case-code.validator';
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
+import { AgeSort } from '../../../enums/age-sort';
+import { DateSort } from '../../../enums/date-sort';
 
 @Component({
   selector: 'app-case-filters',
@@ -169,19 +176,24 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
 
   // ---------- Lifecycle ----------
   ngOnInit(): void {
+    const searchValidator =
+      this.searchMode() === 'name-only'
+        ? [arabicText(), Validators.maxLength(243)]
+        : [fullNameOrCaseCodeValidator()];
+
     this.filterForm = this.fb.group(
       {
-        fullName: ['', [Validators.maxLength(100)]],
-        gender: [''],
-        ageCategory: [''],
-        government: [''],
-        city: [''],
-        fromDate: [''],
-        toDate: [''],
-        ageSort: [''],
-        dateSort: [''],
-        caseType: [''],
-        status: [''],
+        fullName: ['', searchValidator],
+        gender: ['', [validEnum(Gender)]],
+        ageCategory: ['', [validEnum(AgeCategories)]],
+        government: ['', [arabicText(), Validators.maxLength(100)]],
+        city: ['', [arabicText(), Validators.maxLength(100)]],
+        fromDate: ['', [pastDate()]],
+        toDate: ['', [pastDate()]],
+        ageSort: ['', [validEnum(AgeSort)]],
+        dateSort: ['', [validEnum(DateSort)]],
+        caseType: ['', [validEnum(CaseType)]],
+        status: ['', [validEnum(CaseStatus)]],
         radiusInMeters: ['', [searchRadiusValidator(100, 50000)]],
       },
       { validators: dateRangeValidator('fromDate', 'toDate') },
@@ -209,6 +221,8 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
       .subscribe(() => {
         if (this.filterForm.valid) {
           this.emitFilterChange();
+        } else {
+          this.filterForm.markAllAsTouched();
         }
       });
   }
@@ -222,6 +236,8 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     // Emit initial value safely
     if (this.filterForm.valid) {
       this.emitFilterChange(true);
+    } else {
+      this.filterForm.markAllAsTouched();
     }
   }
 
@@ -236,6 +252,8 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
         .subscribe(() => {
           if (this.filterForm.valid) {
             this.emitFilterChange();
+          } else {
+            this.filterForm.markAllAsTouched();
           }
         });
 
@@ -353,7 +371,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
       } else {
         // If the search value contains only english letters, numbers, and hyphens,
         // AND contains at least one digit, treat it as a case code.
-        const isCaseCode = /^[a-zA-Z0-9-]+$/.test(searchValue) && /\d/.test(searchValue);
+        const isCaseCode = /^(URG|LNG|UNK)-\d+$/.test(searchValue.toUpperCase());
         if (isCaseCode) {
           caseCode = searchValue;
         } else {

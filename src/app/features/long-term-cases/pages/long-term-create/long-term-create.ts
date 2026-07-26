@@ -26,6 +26,7 @@ import { arabicText } from '../../../../shared/validators/arabic-text.validator'
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
+import { validateImageFile } from '../../../user-profile/tabs/Edit-profile/utilies/image-validation.util';
 
 type Step = 1 | 2 | 3;
 
@@ -157,12 +158,6 @@ export class LongTermCreate {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // File validation constants
-  // ─────────────────────────────────────────────────────────────
-  private readonly ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  private readonly MAX_PHOTO_BYTES = 5 * 1024 * 1024;       // 5 MB
-  private readonly MAX_POLICE_BYTES = 10 * 1024 * 1024;     // 10 MB
-
   // ─────────────────────────────────────────────────────────────
   // Primary photo with Cropper
   // ─────────────────────────────────────────────────────────────
@@ -170,14 +165,13 @@ export class LongTermCreate {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
-    if (!this.ALLOWED_TYPES.includes(file.type.toLowerCase())) {
-      this.primaryPhotoError.set('نوع الملف غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+
+    const validation = validateImageFile(file, 5);
+    if (!validation.valid) {
+      this.primaryPhotoError.set(validation.errorMessage ?? null);
       return;
     }
-    if (file.size > this.MAX_PHOTO_BYTES) {
-      this.primaryPhotoError.set('حجم الصورة يتجاوز الحد المسموح (5 MB)');
-      return;
-    }
+
     this.primaryPhotoError.set(null);
     this.cropImageEvent.set(event);
   }
@@ -213,15 +207,12 @@ export class LongTermCreate {
   // ─────────────────────────────────────────────────────────────
   onAdditionalPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
-    const invalidType = files.find(f => !this.ALLOWED_TYPES.includes(f.type.toLowerCase()));
-    if (invalidType) {
-      this.additionalPhotosError.set('أحد الملفات من نوع غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
-      return;
-    }
-    const oversized = files.find(f => f.size > this.MAX_PHOTO_BYTES);
-    if (oversized) {
-      this.additionalPhotosError.set('أحد الملفات يتجاوز الحد المسموح (5 MB لكل صورة)');
-      return;
+    for (const f of files) {
+      const validation = validateImageFile(f, 5);
+      if (!validation.valid) {
+        this.additionalPhotosError.set(validation.errorMessage ?? null);
+        return;
+      }
     }
     this.additionalPhotosError.set(null);
     this.additionalPhotos.update((p) => [...p, ...files].slice(0, 4));
@@ -243,14 +234,13 @@ export class LongTermCreate {
   onPoliceReportSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     if (!file) return;
-    if (!this.ALLOWED_TYPES.includes(file.type.toLowerCase())) {
-      this.policeReportError.set('نوع الملف غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+
+    const validation = validateImageFile(file, 10);
+    if (!validation.valid) {
+      this.policeReportError.set(validation.errorMessage ?? null);
       return;
     }
-    if (file.size > this.MAX_POLICE_BYTES) {
-      this.policeReportError.set('حجم الملف يتجاوز الحد المسموح (10 MB)');
-      return;
-    }
+
     this.policeReportError.set(null);
     this.policeReportFile.set(file);
   }

@@ -20,6 +20,7 @@ import { arabicText } from '../../../../shared/validators/arabic-text.validator'
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
+import { validateImageFile } from '../../../user-profile/tabs/Edit-profile/utilies/image-validation.util';
 
 type Step = 1 | 2 | 3;
 
@@ -155,25 +156,18 @@ export class UnknownCreate {
     if (this.currentStep > 1) this.currentStep = (this.currentStep - 1) as Step;
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // File validation constants
-  // ─────────────────────────────────────────────────────────────
-  private readonly ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  private readonly MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5 MB
-
   // Primary photo with Cropper — validate type/size first
   onPrimaryPhotoSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
-    if (!this.ALLOWED_TYPES.includes(file.type.toLowerCase())) {
-      this.primaryPhotoError.set('نوع الملف غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+
+    const validation = validateImageFile(file, 5);
+    if (!validation.valid) {
+      this.primaryPhotoError.set(validation.errorMessage ?? null);
       return;
     }
-    if (file.size > this.MAX_PHOTO_BYTES) {
-      this.primaryPhotoError.set('حجم الصورة يتجاوز الحد المسموح (5 MB)');
-      return;
-    }
+
     this.primaryPhotoError.set(null);
     this.cropImageEvent.set(event);
   }
@@ -207,15 +201,12 @@ export class UnknownCreate {
   // Additional photos — max 4, JPEG/PNG/WebP, max 5 MB each
   onAdditionalPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
-    const invalidType = files.find(f => !this.ALLOWED_TYPES.includes(f.type.toLowerCase()));
-    if (invalidType) {
-      this.additionalPhotosError.set('أحد الملفات من نوع غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
-      return;
-    }
-    const oversized = files.find(f => f.size > this.MAX_PHOTO_BYTES);
-    if (oversized) {
-      this.additionalPhotosError.set('أحد الملفات يتجاوز الحد المسموح (5 MB لكل صورة)');
-      return;
+    for (const f of files) {
+      const validation = validateImageFile(f, 5);
+      if (!validation.valid) {
+        this.additionalPhotosError.set(validation.errorMessage ?? null);
+        return;
+      }
     }
     this.additionalPhotosError.set(null);
     this.additionalPhotos.update((p) => [...p, ...files].slice(0, 4));
