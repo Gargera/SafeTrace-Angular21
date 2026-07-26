@@ -63,6 +63,8 @@
       <input
         [type]="type()"
         [value]="value"
+        [min]="min() ?? null"
+        [max]="max() ?? null"
         [disabled]="disabled"
         [placeholder]="placeholder()"
         (input)="handleInput($event)"
