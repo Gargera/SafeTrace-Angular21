@@ -3,6 +3,7 @@ import { environment } from '../../../../environments/environment';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { UserFilterDto } from '../models/User/UserFilterDto';
+import { ComplaintFilterDto } from '../../complaints/models/complaint-filter.model';
 
 @Injectable({
   providedIn: 'root',
@@ -23,6 +24,18 @@ export class ReportService {
     }
   );
 }
+
+generateComplaintPdfReport(filter: ComplaintFilterDto): Observable<HttpResponse<Blob>>{
+  return this.http.post(
+    `${this.baseUrl}/Complaints/report/pdf`,
+    filter,
+    {
+      responseType: 'blob',
+      observe: 'response'
+    }
+  )
+}
+
 download(response: HttpResponse<Blob>): void {
 
     const blob = response.body;

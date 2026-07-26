@@ -178,8 +178,6 @@ export class UserList {
 
  downloadReport(): void {
 
-  const currentFilter = this.filter();
-
   const reportFilter = {
   pageNumber: this.filter().pageNumber,
   pageSize: this.filter().pageSize,
