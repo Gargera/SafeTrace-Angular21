@@ -138,20 +138,15 @@
         </div>
 
         <!-- Relation -->
-        <!-- FIX #2: reverted to plain [value] (not [ngValue]). The shared
-               FormField wraps its <select> and projects <option> tags via
-               <ng-content>, which breaks Angular's NgSelectOption <-> select
-               accessor coordination that [ngValue] depends on (they end up in
-               different injector contexts). Since RelationType is now a
-               STRING enum matching the API's string values 1:1, plain [value]
-               works correctly via the native DOM value-matching fallback —
-               exactly like Gender already does. -->
+        <!-- FIX: [ngValue] instead of [value] — RelationType values must be
+               matched by reference/type, not coerced to string in the DOM
+               (this is what caused it to look empty even when a value was set). -->
         <div>
           <app-form-field label="صلة القرابة بك (اختياري)" type="select" formControlName="relation"
             [extraClass]="isInvalid('relation') ? 'border-error' : ''">
-            <option value="" disabled>اختر صلة القرابة بالشخص المفقود</option>
+            <option [ngValue]="null" disabled>اختر صلة القرابة بالشخص المفقود</option>
             @for (opt of relationOptions; track opt.value) {
-            <option [value]="opt.value">{{ opt.label }}</option>
+            <option [ngValue]="opt.value">{{ opt.label }}</option>
             }
           </app-form-field>
           @if (isInvalid('relation')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
@@ -240,30 +235,38 @@
             getFieldError('eventDate') }}</p> }
         </div>
 
-        <!-- Map Picker (modal-based component, not inline) -->
+        <!-- Map Location Picker Section -->
         <div class="flex flex-col gap-3 rounded-2xl border border-outline-variant/40 bg-surface-bright p-5 shadow-2xs">
-          <label class="text-sm font-medium text-on-surface-variant">موقع الحادث</label>
+          <label class="text-sm font-medium text-on-surface-variant">
+            تعديل موقع الحادث على الخريطة <span class="mr-0.5 text-error">*</span>
+          </label>
 
-          @if (selectedLat() !== null && selectedLng() !== null) {
-          <div
-            class="flex items-center justify-between gap-3 rounded-xl border border-secondary/20 bg-surface-container-low p-4 text-sm">
-            <div class="flex items-center gap-2 text-on-surface">
-              <span class="material-symbols-outlined text-secondary">location_on</span>
-              <span>{{ selectedAddress() || (selectedLat() + ', ' + selectedLng()) }}</span>
-            </div>
-            <button type="button" (click)="openMap()" class="shrink-0 text-xs font-semibold text-secondary underline">
-              تعديل الموقع
-            </button>
+          <div class="flex flex-wrap items-center gap-3">
+            <app-button variant="primary" type="button" extraClass="gap-2" (onClick)="openMapModal()">
+              <span class="material-symbols-outlined text-lg">map</span>
+              تعديل الموقع على الخريطة
+            </app-button>
+
+            <app-button variant="secondary" type="button" extraClass="gap-2" (onClick)="useCurrentLocation()"
+              [disabled]="isLocating()">
+              @if (isLocating()) {
+              <span class="material-symbols-outlined animate-spin text-lg">progress_activity</span> جاري تحديد موقعك...
+              } @else {
+              <span class="material-symbols-outlined text-lg">my_location</span> استخدام موقعي الحالي
+              }
+            </app-button>
           </div>
-          } @else {
-          <app-button variant="secondary" type="button" (onClick)="openMap()">
-            <span class="material-symbols-outlined text-lg">location_on</span> تحديد موقع الحادث على الخريطة
-          </app-button>
+
+          @if (locationError()) {
+          <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ locationError() }}</p>
           }
 
-          <app-map-location-picker [isOpen]="isMapOpen()" [initialLat]="selectedLat()" [initialLng]="selectedLng()"
-            [initialAddress]="selectedAddress()" (confirmLocation)="onLocationConfirm($event)"
-            (cancel)="closeMap()"></app-map-location-picker>
+          @if (selectedAddress()) {
+          <p class="flex items-center gap-1 text-xs text-on-surface-variant/80">
+            <span class="material-symbols-outlined text-sm">place</span>
+            {{ selectedAddress() }}
+          </p>
+          }
         </div>
       </div>
       }
@@ -454,4 +457,10 @@
 
 }
 </app-card>
+
+<!-- Location Picker Map Modal -->
+<app-map-location-picker [isOpen]="isMapModalOpen()" [initialLat]="selectedLat()" [initialLng]="selectedLng()"
+  [initialAddress]="selectedAddress()" (confirmLocation)="onMapLocationConfirmed($event)" (cancel)="closeMapModal()">
+</app-map-location-picker>
+
 </div>
