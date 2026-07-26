@@ -1,4 +1,6 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -8,7 +10,8 @@ import { UrgentCaseCreateRequest } from '../../models/request/UrgentCaseCreateRe
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
-import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
+import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
+import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
@@ -49,6 +52,7 @@ type Step = 1 | 2 | 3;
 })
 export class UrgentCreate {
   private fb = inject(FormBuilder);
+  private destroyRef = inject(DestroyRef);
 
   // Allowed datetime range for urgent cases (last 6 hours)
   readonly minEventDate = computed(() => {
@@ -71,7 +75,7 @@ export class UrgentCreate {
   errorMsg = signal<string | null>(null);
 
   // خاصيات الـ Cropper والصورة الأساسية
-  cropImageEvent = signal<any>(null);
+  cropImageEvent = signal<Event | null>(null);
   croppedPrimaryImagePreview = signal<string | null>(null);
   tempCroppedBlob = signal<Blob | null>(null);
   primaryFile = signal<File | null>(null);
@@ -144,34 +148,34 @@ export class UrgentCreate {
   // ─────────────────────────────────────────────────────────────
   // Error message helper
   // ─────────────────────────────────────────────────────────────
+
   getFieldError(field: string): string | null {
-    const control = this.form.get(field);
-    if (!control || !control.errors || !(control.touched || control.dirty)) return null;
-    const e = control.errors;
-    if (e['required']) return 'هذا الحقل مطلوب';
-    if (e['arabicText']) return 'يجب كتابة النص بالحروف العربية فقط';
-    if (e['minlength']) return `الحد الأدنى ${e['minlength'].requiredLength} أحرف`;
-    if (e['maxlength']) return `الحد الأقصى ${e['maxlength'].requiredLength} حرفاً`;
-    if (e['min']) return `يجب أن لا تقل القيمة عن ${e['min'].min}`;
-    if (e['max']) return `يجب أن لا تتجاوز القيمة ${e['max'].max}`;
-    if (e['egyptianPhone']) return 'أدخل رقم هاتف مصري صحيح (مثال: 01xxxxxxxxx)';
-    if (e['futureDate']) return 'لا يمكن أن يكون تاريخ ووقت الحادث في المستقبل';
-    if (e['urgentTooOld']) return 'يجب أن يكون تاريخ ووقت الحادث خلال الـ 6 ساعات الماضية';
-    if (e['pastDate'] || e['urgentEventDate']) return 'تاريخ ووقت الحادث غير صحيح';
-    if (e['description']) return 'لا يمكن أن يتجاوز الوصف 2000 حرف';
-    if (e['validEnum']) return 'اختر قيمة صحيحة';
-    return 'قيمة غير صحيحة';
+    return getFormFieldError(this.form, field);
   }
 
   isInvalid(field: string): boolean {
-    const c = this.form.get(field);
-    return !!(c?.invalid && (c?.touched || c?.dirty));
+    return isFieldInvalid(this.form, field);
   }
 
   onLocationChange(loc: { lat: number; lng: number; address: string }): void {
     this.selectedLat.set(loc.lat);
     this.selectedLng.set(loc.lng);
     this.selectedAddress.set(loc.address);
+  }
+
+  availableCities = signal<string[]>([]);
+
+  ngOnInit(): void {
+    this.form.get('government')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((gov) => {
+        const cities = getCitiesForGovernorate(gov);
+        this.availableCities.set(cities);
+        const currentCity = this.form.get('city')?.value;
+        if (currentCity && !cities.includes(currentCity)) {
+          this.form.get('city')?.setValue('');
+        }
+      });
   }
 
   openMapModal(): void {
@@ -204,16 +208,19 @@ export class UrgentCreate {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
 
-        this.geocoding.reverseGeocode(lat, lng).subscribe({
-          next: (address) => {
-            this.onLocationChange({ lat, lng, address });
-            this.isLocating.set(false);
-          },
-          error: () => {
-            this.onLocationChange({ lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
-            this.isLocating.set(false);
-          },
-        });
+        this.geocoding
+          .reverseGeocode(lat, lng)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: (address) => {
+              this.onLocationChange({ lat, lng, address });
+              this.isLocating.set(false);
+            },
+            error: () => {
+              this.onLocationChange({ lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
+              this.isLocating.set(false);
+            },
+          });
       },
       (error: GeolocationPositionError) => {
         this.isLocating.set(false);
@@ -341,6 +348,7 @@ export class UrgentCreate {
   // Submit
   // ─────────────────────────────────────────────────────────────
   onSubmit(forceCreate = false): void {
+    if (this.isSubmitting()) return;
     const primary = this.primaryFile();
 
     if (
@@ -390,38 +398,41 @@ export class UrgentCreate {
       this.pendingRequest = request;
     }
 
-    this.service.createCase(request, forceCreate).subscribe({
-      next: (res) => {
-        this.isSubmitting.set(false);
-        const data = res.data;
+    this.service
+      .createCase(request, forceCreate)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.isSubmitting.set(false);
+          const data = res.data;
 
-        // في حالة التكرار وعدم الإنشـاء
-        if (data && (data.isCreated === false || data.isCreated === undefined)) {
-          if (data.matchedCases) {
-            this.matchedCases.set(data.matchedCases.map(mapMatchedCaseResponseToDto));
-          } else {
-            this.matchedCases.set([]);
+          // في حالة التكرار وعدم الإنشـاء
+          if (data && (data.isCreated === false || data.isCreated === undefined)) {
+            if (data.matchedCases) {
+              this.matchedCases.set(data.matchedCases.map(mapMatchedCaseResponseToDto));
+            } else {
+              this.matchedCases.set([]);
+            }
+
+            const rawData = (data as unknown) as Record<string, unknown>;
+            const isSameType = rawData['isSameTypeDuplicate'] ?? rawData['IsSameTypeDuplicate'] ?? false;
+
+            this.isBlockedDuplicate.set(Boolean(isSameType));
+            this.showForceCreatePopup.set(true);
+            return;
           }
 
-          const rawData = data as any;
-          const isSameType = rawData.isSameTypeDuplicate ?? rawData.IsSameTypeDuplicate ?? false;
-
-          this.isBlockedDuplicate.set(Boolean(isSameType));
-          this.showForceCreatePopup.set(true);
-          return;
-        }
-
-        this.showForceCreatePopup.set(false);
-        this.snackbar.success('تم إرسال بلاغ الحالة بنجاح، هيتم مراجعته من الإدارة قريبًا.');
-        this.router.navigate(['/urgent']);
-      },
-      error: (err) => {
-        this.isSubmitting.set(false);
-        const msg = err?.error?.message ?? 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.';
-        this.errorMsg.set(msg);
-        this.snackbar.error(msg);
-      },
-    });
+          this.showForceCreatePopup.set(false);
+          this.snackbar.success('تم إرسال بلاغ الحالة بنجاح، هيتم مراجعته من الإدارة قريبًا.');
+          this.router.navigate(['/urgent']);
+        },
+        error: (err: unknown) => {
+          this.isSubmitting.set(false);
+          const msg = extractErrorMessage(err, 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.');
+          this.errorMsg.set(msg);
+          this.snackbar.error(msg);
+        },
+      });
   }
 
   onForceCreateCancel(): void {

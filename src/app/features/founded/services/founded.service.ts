@@ -23,7 +23,8 @@ export class FoundedService {
       .set('pageSize', query.pageSize.toString());
 
     if (query.search) params = params.set('search', query.search);
-    if (query.ageCategory) params = params.set('ageCategory', query.ageCategory.toString());
+    if (query.minAge !== undefined && query.minAge !== null) params = params.set('minAge', query.minAge.toString());
+    if (query.maxAge !== undefined && query.maxAge !== null) params = params.set('maxAge', query.maxAge.toString());
     if (query.caseType !== null && query.caseType !== undefined)
       params = params.set('caseType', query.caseType.toString());
     if (query.gender !== null && query.gender !== undefined)

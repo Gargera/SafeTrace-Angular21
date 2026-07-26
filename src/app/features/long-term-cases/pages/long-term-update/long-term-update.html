@@ -184,8 +184,11 @@
               @if (isInvalid('government')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('government') }}</p> }
             </div>
             <div>
-              <app-form-field label="المدينة / المركز *" formControlName="city" type="text" placeholder="أدخل اسم المدينة أو المركز (مثال: مدينة نصر)"
-                [extraClass]="isInvalid('city') ? 'border-error' : ''"></app-form-field>
+              <app-form-field label="المدينة / المركز *" type="select" formControlName="city"
+                [extraClass]="isInvalid('city') ? 'border-error' : ''">
+                <option value="" disabled>اختر المدينة / المركز</option>
+                @for (c of availableCities(); track c) { <option [value]="c">{{ c }}</option> }
+              </app-form-field>
               @if (isInvalid('city')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('city') }}</p> }
             </div>
           </div>

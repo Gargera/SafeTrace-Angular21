@@ -27,7 +27,7 @@ export class LongTermCaseService extends ApiService {
   ): Observable<ApiResponse<PaginationResponse<LongTermCaseListItemResponse>>> {
     return this.get<ApiResponse<PaginationResponse<LongTermCaseListItemResponse>>>(
       `${this.baseUrl}/GetCases`,
-      filter as Record<string, any>,
+      (filter as unknown) as Record<string, unknown>,
     );
   }
 
@@ -40,7 +40,7 @@ export class LongTermCaseService extends ApiService {
   ): Observable<ApiResponse<PaginationResponse<LongTermCaseDetailResponse>>> {
     return this.get<ApiResponse<PaginationResponse<LongTermCaseDetailResponse>>>(
       `${this.baseUrl}/Admin/GetCases`,
-      filter as Record<string, any>,
+      (filter as unknown) as Record<string, unknown>,
     );
   }
 

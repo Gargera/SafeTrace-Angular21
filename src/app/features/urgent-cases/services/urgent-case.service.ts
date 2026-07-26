@@ -36,7 +36,7 @@ export class UrgentCaseService extends ApiService {
   ): Observable<ApiResponse<PaginationResponse<UrgentCaseListItemResponse>>> {
     return this.get<ApiResponse<PaginationResponse<UrgentCaseListItemResponse>>>(
       `${this.baseUrl}/GetCases`,
-      filter as Record<string, any>,
+      (filter as unknown) as Record<string, unknown>,
     );
   }
 
@@ -49,7 +49,7 @@ export class UrgentCaseService extends ApiService {
   ): Observable<ApiResponse<PaginationResponse<UrgentCaseDetailResponse>>> {
     return this.get<ApiResponse<PaginationResponse<UrgentCaseDetailResponse>>>(
       `${this.baseUrl}/Admin/GetCases`,
-      filter as Record<string, any>,
+      (filter as unknown) as Record<string, unknown>,
     );
   }
 

@@ -1,4 +1,6 @@
-import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgClass } from '@angular/common';
@@ -7,10 +9,12 @@ import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { environment } from '../../../../../environments/environment'; 
 import { LongTermCaseService } from '../../services/long-term-case.service';
 import { LongTermCaseUpdateRequest } from '../../models/request/LongTermCaseUpdateRequest';
+import { LongTermCaseDetailResponse } from '../../models/response/LongTermCaseDetailResponse';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
-import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
+import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
+import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
 
@@ -49,6 +53,7 @@ export class LongTermUpdate implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private snackbar = inject(SnackbarService);
+  private destroyRef = inject(DestroyRef);
 
   caseId!: number;
   currentStep: Step = 1;
@@ -62,7 +67,7 @@ export class LongTermUpdate implements OnInit {
   primaryPhotoId = signal<number | null>(null);
 
   // Inline Cropper & New Primary photo state (Matching Create structure)
-  cropImageEvent = signal<any>(null);
+  cropImageEvent = signal<Event | null>(null);
   tempCroppedBlob = signal<Blob | null>(null);
   newPrimaryImage = signal<File | null>(null);
   newPrimaryPreview = signal<string | null>(null);
@@ -124,79 +129,81 @@ export class LongTermUpdate implements OnInit {
   // Error message helpers
   // ─────────────────────────────────────────────────────────────
   getFieldError(field: string): string | null {
-    const control = this.form.get(field);
-    if (!control || !control.errors || !(control.touched || control.dirty)) return null;
-    const e = control.errors;
-    if (e['required']) return 'هذا الحقل مطلوب';
-    if (e['arabicText']) return 'يجب كتابة النص بالحروف العربية فقط';
-    if (e['minlength']) return `الحد الأدنى ${e['minlength'].requiredLength} أحرف`;
-    if (e['maxlength']) return `الحد الأقصى ${e['maxlength'].requiredLength} حرفاً`;
-    if (e['min']) return `يجب أن لا تقل القيمة عن ${e['min'].min}`;
-    if (e['max']) return `يجب أن لا تتجاوز القيمة ${e['max'].max}`;
-    if (e['egyptianPhone']) return 'أدخل رقم هاتف مصري صحيح (مثال: 01xxxxxxxxx)';
-    if (e['pastDate']) return 'لا يمكن أن يكون التاريخ في المستقبل';
-    if (e['description']) return 'لا يمكن أن يتجاوز الوصف 2000 حرف';
-    if (e['validEnum']) return 'اختر قيمة صحيحة';
-    return 'قيمة غير صحيحة';
+    return getFormFieldError(this.form, field);
   }
 
   isInvalid(field: string): boolean {
-    const c = this.form.get(field);
-    return !!(c?.invalid && (c?.touched || c?.dirty));
+    return isFieldInvalid(this.form, field);
   }
+
+  availableCities = signal<string[]>([]);
 
   ngOnInit(): void {
     this.caseId = Number(this.route.snapshot.paramMap.get('id'));
+
+    this.form.get('government')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((gov) => {
+        const cities = getCitiesForGovernorate(gov);
+        this.availableCities.set(cities);
+        const currentCity = this.form.get('city')?.value;
+        if (currentCity && !cities.includes(currentCity)) {
+          this.form.get('city')?.setValue('');
+        }
+      });
+
     this.loadCase();
   }
 
   private loadCase(): void {
     this.isLoading.set(true);
-    this.service.getCaseById(this.caseId).subscribe({
-      next: (res) => {
-        const c = res.data as any;
-        const relValue = c.relation !== undefined && c.relation !== null ? c.relation : (c.relationType ?? null);
+    this.service
+      .getCaseById(this.caseId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          const c = res.data as LongTermCaseDetailResponse & Record<string, unknown>;
+          const gov = (c as Record<string, unknown>)['government'] as string ?? '';
+          this.availableCities.set(getCitiesForGovernorate(gov));
+          const relValue = (c as Record<string, unknown>)['relation'] !== undefined && (c as Record<string, unknown>)['relation'] !== null ? (c as Record<string, unknown>)['relation'] : ((c as Record<string, unknown>)['relationType'] ?? null);
 
-        this.form.patchValue({
-          fName: c.fName ?? '',
-          sName: c.sName ?? '',
-          tName: c.tName ?? '',
-          lName: c.lName ?? '',
-          age: c.age ?? null,
-          gender: c.gender ?? '',
-          relation: relValue,
-          communicationPhone: c.communicationPhone ?? '',
-          description: c.description ?? '',
-          government: c.government ?? '',
-          city: c.city ?? '',
-          street: c.street ?? '',
-          eventDate: c.eventDate ? String(c.eventDate).split('T')[0] : '',
-        });
+          this.form.patchValue({
+            fName: c.fName ?? '',
+            sName: c.sName ?? '',
+            tName: c.tName ?? '',
+            lName: c.lName ?? '',
+            age: c.age ?? null,
+            gender: c.gender ?? '',
+            relation: relValue as RelationType,
+            communicationPhone: (c as Record<string, unknown>)['communicationPhone'] as string ?? '',
+            description: (c as Record<string, unknown>)['description'] as string ?? '',
+            government: (c as Record<string, unknown>)['government'] as string ?? '',
+            city: (c as Record<string, unknown>)['city'] as string ?? '',
+            street: (c as Record<string, unknown>)['street'] as string ?? '',
+            eventDate: (c as Record<string, unknown>)['eventDate'] ? String((c as Record<string, unknown>)['eventDate']).split('T')[0] : '',
+          });
 
-        // FIX: the backend's CaseDetailBaseDto exposes the property as "Photos"
-        // (camelCase JSON: "photos"), NOT "files"/"caseFiles". Those never existed
-        // in the response, so existingPhotos was always [] and no photo ever showed
-        // up on the edit form.
-        const rawFiles: CaseFileResponse[] = c.photos ?? c.files ?? c.caseFiles ?? [];
-        const files: CaseFileResponse[] = rawFiles.map((f) => ({
-          ...f,
-          imagePath: this.resolveMediaUrl(f.imagePath) ?? f.imagePath,
-        }));
-        this.existingPhotos.set(files);
+          const rawFiles: CaseFileResponse[] = c.photos ?? [];
+          const files: CaseFileResponse[] = rawFiles.map((f) => ({
+            ...f,
+            imagePath: this.resolveMediaUrl(f.imagePath) ?? f.imagePath,
+          }));
+          this.existingPhotos.set(files);
 
-        const primary = files.find((f) => f.isPrimary);
-        this.primaryPhotoId.set(primary ? primary.id : (files[0]?.id ?? null));
+          const primary = files.find((f) => f.isPrimary);
+          this.primaryPhotoId.set(primary ? primary.id : (files[0]?.id ?? null));
 
-        this.existingPoliceReportUrl.set(this.resolveMediaUrl(c.policeReportImage ?? c.policeReportImagePath ?? null));
-        this.existingVideoUrl.set(this.resolveMediaUrl(c.video ?? c.videoPath ?? null));
+          this.existingPoliceReportUrl.set(this.resolveMediaUrl((c as Record<string, unknown>)['policeReportImage'] as string ?? (c as Record<string, unknown>)['policeReportImagePath'] as string ?? null));
+          this.existingVideoUrl.set(this.resolveMediaUrl((c as Record<string, unknown>)['video'] as string ?? (c as Record<string, unknown>)['videoPath'] as string ?? null));
 
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.isLoading.set(false);
-        this.errorMsg.set(err?.error?.message ?? 'تعذر تحميل بيانات الحالة.');
-      },
-    });
+          this.isLoading.set(false);
+        },
+        error: (err: unknown) => {
+          this.isLoading.set(false);
+          const msg = extractErrorMessage(err, 'تعذر تحميل بيانات الحالة.');
+          this.errorMsg.set(msg);
+        },
+      });
   }
 
   nextStep(): void {
@@ -409,6 +416,7 @@ export class LongTermUpdate implements OnInit {
   // Submit
   // ─────────────────────────────────────────────────────────────
   onSubmit(): void {
+    if (this.isSubmitting()) return;
     const hasAtLeastOnePhoto = this.existingPhotos().length > 0 || !!this.newPrimaryImage() || this.newPhotos().length > 0;
 
     if (this.form.invalid || !hasAtLeastOnePhoto) {
@@ -446,19 +454,22 @@ export class LongTermUpdate implements OnInit {
       policeReportImage: this.policeReportFile(),
     };
 
-    this.service.updateCase(this.caseId, request).subscribe({
-      next: () => {
-        this.isSubmitting.set(false);
-        this.snackbar.success('تم تحديث بيانات الحالة بنجاح.');
-        this.router.navigate(['/long-term']);
-      },
-      error: (err) => {
-        this.isSubmitting.set(false);
-        const msg = err?.error?.message ?? 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.';
-        this.errorMsg.set(msg);
-        this.snackbar.error(msg);
-      },
-    });
+    this.service
+      .updateCase(this.caseId, request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.isSubmitting.set(false);
+          this.snackbar.success('تم تحديث بيانات الحالة بنجاح.');
+          this.router.navigate(['/long-term']);
+        },
+        error: (err: unknown) => {
+          this.isSubmitting.set(false);
+          const msg = extractErrorMessage(err, 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.');
+          this.errorMsg.set(msg);
+          this.snackbar.error(msg);
+        },
+      });
   }
 
   goBack(): void {

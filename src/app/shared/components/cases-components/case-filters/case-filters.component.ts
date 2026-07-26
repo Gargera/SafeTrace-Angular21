@@ -13,7 +13,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, AbstractControl, ValidationErrors, Validators } from '@angular/forms';
 import { NgModel } from '@angular/forms';
 import { Subscription, debounceTime, distinctUntilChanged, map, merge } from 'rxjs';
 import { NgTemplateOutlet } from '@angular/common';
@@ -27,6 +27,11 @@ import { getAgeRange } from '../../../helper/age-category.helper';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 
+import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
+import { searchRadiusValidator } from '../../../../shared/validators/search-radius.validator';
+import { dateRangeValidator } from '../../../../shared/validators/date-range.validator';
+import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
+
 @Component({
   selector: 'app-case-filters',
   standalone: true,
@@ -35,6 +40,9 @@ import { CaseStatus } from '../../../../shared/enums/case-status';
   styleUrls: ['./case-filters.component.css'],
 })
 export class CaseFiltersComponent implements OnInit, AfterContentInit {
+  // ---------- Search mode input ----------
+  searchMode = input<'auto' | 'name-only'>('auto');
+
   // ---------- Required signal inputs (used in template) ----------
   genders = input<number[]>([0, 1]);
   ageSorts = input<number[]>([0, 1]);
@@ -52,6 +60,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   showToDate = input(true);
   showAgeSort = input(true);
   showDateSort = input(true);
+  showRadius = input(false);
 
   // ---------- Placement inputs ----------
   searchInAdvanced = input(false);
@@ -65,6 +74,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   toDateInAdvanced = input(true);
   ageSortInAdvanced = input(true);
   dateSortInAdvanced = input(false);
+  radiusInAdvanced = input(true);
 
   // ---------- Layout inputs ----------
   gridTemplate = input<string | null>(null);
@@ -74,6 +84,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   reset = output<void>();
 
   // ---------- Public fields ----------
+  readonly governorateOptions = EGYPT_GOVERNORATES;
   readonly ageCategories = Object.values(AgeCategories);
   readonly caseTypeOptions = [CaseType.Urgent, CaseType.LongTerm, CaseType.Unknown];
   readonly statusOptions = Object.values(CaseStatus) as CaseStatus[];
@@ -154,11 +165,13 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   private lastEmittedString: string | null = null;
   private hasEmittedInitialRequest = false;
 
+  availableCities = signal<string[]>([]);
+
   // ---------- Lifecycle ----------
   ngOnInit(): void {
     this.filterForm = this.fb.group(
       {
-        fullName: [''],
+        fullName: ['', [Validators.maxLength(100)]],
         gender: [''],
         ageCategory: [''],
         government: [''],
@@ -169,9 +182,21 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
         dateSort: [''],
         caseType: [''],
         status: [''],
+        radiusInMeters: ['', [searchRadiusValidator(100, 50000)]],
       },
-      { validators: this.dateRangeValidator },
+      { validators: dateRangeValidator('fromDate', 'toDate') },
     );
+
+    this.filterForm.get('government')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((gov) => {
+        const cities = getCitiesForGovernorate(gov);
+        this.availableCities.set(cities);
+        const currentCity = this.filterForm.get('city')?.value;
+        if (currentCity && !cities.includes(currentCity)) {
+          this.filterForm.get('city')?.setValue('', { emitEvent: true });
+        }
+      });
 
     // Unified reactive flow
     this.filterForm.valueChanges
@@ -220,22 +245,30 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     });
   }
 
-  // ---------- Validators ----------
-  private dateRangeValidator(group: AbstractControl): ValidationErrors | null {
-    const from = group.get('fromDate')?.value;
-    const to = group.get('toDate')?.value;
-    if (from && to) {
-      const fromDate = new Date(from);
-      const toDate = new Date(to);
-      if (fromDate > toDate) {
-        return { dateRangeInvalid: true };
-      }
-    }
-    return null;
+  // ---------- Validators & Error Helpers ----------
+  getFieldError(field: string): string | null {
+    return getFormFieldError(this.filterForm, field);
+  }
+
+  isInvalid(field: string): boolean {
+    return isFieldInvalid(this.filterForm, field);
   }
 
   // ---------- Emit helpers ----------
+  onSubmit(event?: Event): void {
+    if (event) event.preventDefault();
+    if (this.filterForm.invalid) {
+      this.filterForm.markAllAsTouched();
+      return;
+    }
+    this.emitFilterChange();
+  }
+
   private emitFilterChange(isInitial = false): void {
+    if (this.filterForm.invalid) {
+      this.filterForm.markAllAsTouched();
+      return;
+    }
     if (isInitial && this.hasEmittedInitialRequest) {
       return;
     }
@@ -271,6 +304,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     if (this.toDateInAdvanced()) advancedKeys.push('toDate');
     if (this.ageSortInAdvanced()) advancedKeys.push('ageSort');
     if (this.dateSortInAdvanced()) advancedKeys.push('dateSort');
+    if (this.radiusInAdvanced()) advancedKeys.push('radiusInMeters');
 
     return advancedKeys.filter(
       (key) => raw[key] !== null && raw[key] !== undefined && raw[key] !== '',
@@ -282,6 +316,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   }
 
   resetFilters(): void {
+    this.availableCities.set([]);
     this.filterForm.reset(
       {
         fullName: '',
@@ -295,6 +330,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
         dateSort: '',
         caseType: '',
         status: '',
+        radiusInMeters: '',
       },
       { emitEvent: true } // This will trigger the valueChanges pipeline
     );
@@ -312,13 +348,17 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     let caseCode = null;
 
     if (searchValue) {
-      // If the search value contains only english letters, numbers, and hyphens,
-      // AND contains at least one digit, treat it as a case code.
-      const isCaseCode = /^[a-zA-Z0-9-]+$/.test(searchValue) && /\d/.test(searchValue);
-      if (isCaseCode) {
-        caseCode = searchValue;
-      } else {
+      if (this.searchMode() === 'name-only') {
         fullName = searchValue;
+      } else {
+        // If the search value contains only english letters, numbers, and hyphens,
+        // AND contains at least one digit, treat it as a case code.
+        const isCaseCode = /^[a-zA-Z0-9-]+$/.test(searchValue) && /\d/.test(searchValue);
+        if (isCaseCode) {
+          caseCode = searchValue;
+        } else {
+          fullName = searchValue;
+        }
       }
     }
 
@@ -337,13 +377,14 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
       ageSort: raw.ageSort,
       dateSort: raw.dateSort,
       caseType: raw.caseType,
+      radiusInMeters: this.toNumberOrNull(raw.radiusInMeters),
       page: 1,
       pageSize: 12,
     });
   }
 
   // ---------- Normalization ----------
-  private normalizeFilterRequest(request: CasesFilterRequest): CasesFilterRequest {
+  private normalizeFilterRequest(request: CasesFilterRequest & { radiusInMeters?: number | null }): CasesFilterRequest {
     return {
       ...request,
       status: this.toEnumOrNull(request.status),
@@ -360,9 +401,10 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
       toDate: this.toStringOrNull(request.toDate),
       ageSort: this.toNumberOrNull(request.ageSort),
       dateSort: this.toNumberOrNull(request.dateSort),
+      radiusInMeters: this.toNumberOrNull(request.radiusInMeters),
       page: request.page ?? 1,
       pageSize: request.pageSize ?? 12,
-    };
+    } as CasesFilterRequest;
   }
 
   // ---------- Type helpers ----------

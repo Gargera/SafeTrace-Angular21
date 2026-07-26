@@ -1,13 +1,17 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { environment } from '../../../../../environments/environment'; 
 import { UrgentCaseService } from '../../services/urgent-case.service';
 import { UrgentCaseUpdateRequest } from '../../models/request/UrgentCaseUpdateRequest';
+import { UrgentCaseDetailResponse } from '../../models/response/UrgentCaseDetailResponse';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
-import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
+import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
+import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
@@ -47,6 +51,7 @@ type Step = 1 | 2 | 3;
 })
 export class UrgentUpdate implements OnInit {
   private fb = inject(FormBuilder);
+  private destroyRef = inject(DestroyRef);
 
   // Allowed datetime range for urgent cases (last 6 hours)
   readonly minEventDate = computed(() => {
@@ -135,31 +140,29 @@ export class UrgentUpdate implements OnInit {
   // Error message helper
   // ─────────────────────────────────────────────────────────────
   getFieldError(field: string): string | null {
-    const control = this.form.get(field);
-    if (!control || !control.errors || !(control.touched || control.dirty)) return null;
-    const e = control.errors;
-    if (e['required']) return 'هذا الحقل مطلوب';
-    if (e['arabicText']) return 'يجب كتابة النص بالحروف العربية فقط';
-    if (e['minlength']) return `الحد الأدنى ${e['minlength'].requiredLength} أحرف`;
-    if (e['maxlength']) return `الحد الأقصى ${e['maxlength'].requiredLength} حرفاً`;
-    if (e['min']) return `يجب أن لا تقل القيمة عن ${e['min'].min}`;
-    if (e['max']) return `يجب أن لا تتجاوز القيمة ${e['max'].max}`;
-    if (e['egyptianPhone']) return 'أدخل رقم هاتف مصري صحيح (مثال: 01xxxxxxxxx)';
-    if (e['futureDate']) return 'لا يمكن أن يكون تاريخ ووقت الحادث في المستقبل';
-    if (e['urgentTooOld']) return 'يجب أن يكون تاريخ ووقت الحادث خلال الـ 6 ساعات الماضية';
-    if (e['pastDate'] || e['urgentEventDate']) return 'تاريخ ووقت الحادث غير صحيح';
-    if (e['description']) return 'لا يمكن أن يتجاوز الوصف 2000 حرف';
-    if (e['validEnum']) return 'اختر قيمة صحيحة';
-    return 'قيمة غير صحيحة';
+    return getFormFieldError(this.form, field);
   }
 
   isInvalid(field: string): boolean {
-    const c = this.form.get(field);
-    return !!(c?.invalid && (c?.touched || c?.dirty));
+    return isFieldInvalid(this.form, field);
   }
+
+  availableCities = signal<string[]>([]);
 
   ngOnInit(): void {
     this.caseId = Number(this.route.snapshot.paramMap.get('id'));
+
+    this.form.get('government')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((gov) => {
+        const cities = getCitiesForGovernorate(gov);
+        this.availableCities.set(cities);
+        const currentCity = this.form.get('city')?.value;
+        if (currentCity && !cities.includes(currentCity)) {
+          this.form.get('city')?.setValue('');
+        }
+      });
+
     this.loadCase();
   }
 
@@ -177,53 +180,61 @@ export class UrgentUpdate implements OnInit {
 
   private loadCase(): void {
     this.isLoading.set(true);
-    this.service.getCaseById(this.caseId).subscribe({
-      next: (res) => {
-        const c = res.data as any; // adjust to your exact UrgentCaseDetailResponse shape
-        this.form.patchValue({
-          fName: c.fName ?? '',
-          sName: c.sName ?? '',
-          tName: c.tName ?? '',
-          lName: c.lName ?? '',
-          age: c.age ?? null,
-          gender: c.gender ?? '',
-          relation: c.relation ?? null,
-          communicationPhone: c.communicationPhone ?? '',
-          description: c.description ?? '',
-          government: c.government ?? '',
-          city: c.city ?? '',
-          street: c.street ?? '',
-          eventDate: c.eventDate ? toDatetimeLocalString(new Date(c.eventDate)) : '',
-        });
+    this.service
+      .getCaseById(this.caseId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          const c = res.data as UrgentCaseDetailResponse & Record<string, unknown>;
+          const gov = (c as Record<string, unknown>)['government'] as string ?? '';
+          this.availableCities.set(getCitiesForGovernorate(gov));
 
-        if (c.latitude != null && c.longitude != null) {
-          this.selectedLat.set(c.latitude);
-          this.selectedLng.set(c.longitude);
-          this.initialMapCenter.set({ lat: c.latitude, lng: c.longitude });
-          this.geocoding.reverseGeocode(c.latitude, c.longitude).subscribe({
-            next: (addr) => this.selectedAddress.set(addr),
-            error: () => this.selectedAddress.set(`${c.latitude.toFixed(4)}, ${c.longitude.toFixed(4)}`),
+          this.form.patchValue({
+            fName: c.fName ?? '',
+            sName: c.sName ?? '',
+            tName: c.tName ?? '',
+            lName: c.lName ?? '',
+            age: c.age ?? null,
+            gender: c.gender ?? '',
+            relation: (c as Record<string, unknown>)['relation'] as RelationType ?? null,
+            communicationPhone: (c as Record<string, unknown>)['communicationPhone'] as string ?? '',
+            description: (c as Record<string, unknown>)['description'] as string ?? '',
+            government: (c as Record<string, unknown>)['government'] as string ?? '',
+            city: (c as Record<string, unknown>)['city'] as string ?? '',
+            street: (c as Record<string, unknown>)['street'] as string ?? '',
+            eventDate: (c as Record<string, unknown>)['eventDate'] ? toDatetimeLocalString(new Date(String((c as Record<string, unknown>)['eventDate']))) : '',
           });
-        }
 
-        // FIX: backend's CaseDetailBaseDto exposes the property as "Photos"
-        // (camelCase JSON: "photos"), NOT "files"/"caseFiles".
-        const rawFiles: CaseFileResponse[] = c.photos ?? c.files ?? c.caseFiles ?? [];
-        const files: CaseFileResponse[] = rawFiles.map((f) => ({
-          ...f,
-          imagePath: this.resolveMediaUrl(f.imagePath) ?? f.imagePath,
-        }));
-        this.existingPhotos.set(files);
-        this.primaryPhotoId.set(files.find((f) => f.isPrimary)?.id ?? null);
-        this.existingVideoUrl.set(this.resolveMediaUrl(c.video ?? c.videoPath ?? null));
+          if (c.latitude != null && c.longitude != null) {
+            this.selectedLat.set(c.latitude);
+            this.selectedLng.set(c.longitude);
+            this.initialMapCenter.set({ lat: c.latitude, lng: c.longitude });
+            this.geocoding
+              .reverseGeocode(c.latitude, c.longitude)
+              .pipe(takeUntilDestroyed(this.destroyRef))
+              .subscribe({
+                next: (addr) => this.selectedAddress.set(addr),
+                error: () => this.selectedAddress.set(`${c.latitude!.toFixed(4)}, ${c.longitude!.toFixed(4)}`),
+              });
+          }
 
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.isLoading.set(false);
-        this.errorMsg.set(err?.error?.message ?? 'تعذر تحميل بيانات الحالة.');
-      },
-    });
+          const rawFiles: CaseFileResponse[] = c.photos ?? [];
+          const files: CaseFileResponse[] = rawFiles.map((f) => ({
+            ...f,
+            imagePath: this.resolveMediaUrl(f.imagePath) ?? f.imagePath,
+          }));
+          this.existingPhotos.set(files);
+          this.primaryPhotoId.set(files.find((f) => f.isPrimary)?.id ?? null);
+          this.existingVideoUrl.set(this.resolveMediaUrl((c as Record<string, unknown>)['video'] as string ?? null));
+
+          this.isLoading.set(false);
+        },
+        error: (err: unknown) => {
+          this.isLoading.set(false);
+          const msg = extractErrorMessage(err, 'تعذر تحميل بيانات الحالة.');
+          this.errorMsg.set(msg);
+        },
+      });
   }
 
   onLocationChange(loc: { lat: number; lng: number; address: string }): void {
@@ -262,16 +273,19 @@ export class UrgentUpdate implements OnInit {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
 
-        this.geocoding.reverseGeocode(lat, lng).subscribe({
-          next: (address) => {
-            this.onLocationChange({ lat, lng, address });
-            this.isLocating.set(false);
-          },
-          error: () => {
-            this.onLocationChange({ lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
-            this.isLocating.set(false);
-          },
-        });
+        this.geocoding
+          .reverseGeocode(lat, lng)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: (address) => {
+              this.onLocationChange({ lat, lng, address });
+              this.isLocating.set(false);
+            },
+            error: () => {
+              this.onLocationChange({ lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
+              this.isLocating.set(false);
+            },
+          });
       },
       (error: GeolocationPositionError) => {
         this.isLocating.set(false);
@@ -387,6 +401,7 @@ export class UrgentUpdate implements OnInit {
   }
 
   onSubmit(): void {
+    if (this.isSubmitting()) return;
     const noPhotoLeft = this.existingPhotos().length === 0 && !this.newPrimaryImage() && this.newPhotos().length === 0;
     if (this.form.invalid || noPhotoLeft || this.selectedLat() === null) {
       this.form.markAllAsTouched();
@@ -423,19 +438,22 @@ export class UrgentUpdate implements OnInit {
       longitude: this.selectedLng()!,
     };
 
-    this.service.updateCase(this.caseId, request).subscribe({
-      next: () => {
-        this.isSubmitting.set(false);
-        this.snackbar.success('تم تحديث بيانات الحالة بنجاح.');
-        this.router.navigate(['/urgent', this.caseId]);
-      },
-      error: (err) => {
-        this.isSubmitting.set(false);
-        const msg = err?.error?.message ?? 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.';
-        this.errorMsg.set(msg);
-        this.snackbar.error(msg);
-      },
-    });
+    this.service
+      .updateCase(this.caseId, request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.isSubmitting.set(false);
+          this.snackbar.success('تم تحديث بيانات الحالة بنجاح.');
+          this.router.navigate(['/urgent', this.caseId]);
+        },
+        error: (err: unknown) => {
+          this.isSubmitting.set(false);
+          const msg = extractErrorMessage(err, 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.');
+          this.errorMsg.set(msg);
+          this.snackbar.error(msg);
+        },
+      });
   }
 
   goBack(): void {

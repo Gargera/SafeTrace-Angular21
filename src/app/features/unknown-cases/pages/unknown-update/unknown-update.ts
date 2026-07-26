@@ -1,11 +1,15 @@
-import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { environment } from '../../../../../environments/environment' ;
 import { UnknownCaseService } from '../../services/unknown-case.service';
 import { UnknownCaseUpdateRequest } from '../../models/request/UnknownCaseUpdateRequest';
+import { UnknownCaseDetailResponse } from '../../models/response/UnknownCaseDetailResponse';
 import { Gender } from '../../../../shared/enums/gender';
-import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
+import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
+import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
@@ -44,6 +48,7 @@ export class UnknownUpdate implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private snackbar = inject(SnackbarService);
+  private destroyRef = inject(DestroyRef);
 
   caseId!: number;
   currentStep: Step = 1;
@@ -109,24 +114,29 @@ export class UnknownUpdate implements OnInit {
   // Error message helper
   // ─────────────────────────────────────────────────────────────
   getFieldError(field: string): string | null {
-    const control = this.form.get(field);
-    if (!control || !control.errors || !(control.touched || control.dirty)) return null;
-    const e = control.errors;
-    if (e['required']) return 'هذا الحقل مطلوب';
-    if (e['arabicText']) return 'يجب كتابة النص بالحروف العربية فقط';
-    if (e['minlength']) return `الحد الأدنى ${e['minlength'].requiredLength} أحرف`;
-    if (e['maxlength']) return `الحد الأقصى ${e['maxlength'].requiredLength} حرفاً`;
-    if (e['min']) return `يجب أن لا تقل القيمة عن ${e['min'].min}`;
-    if (e['max']) return `يجب أن لا تتجاوز القيمة ${e['max'].max}`;
-    if (e['egyptianPhone']) return 'أدخل رقم هاتف مصري صحيح (مثال: 01xxxxxxxxx)';
-    if (e['pastDate']) return 'لا يمكن أن يكون التاريخ في المستقبل';
-    if (e['description']) return 'لا يمكن أن يتجاوز الوصف 2000 حرف';
-    if (e['validEnum']) return 'اختر قيمة صحيدة';
-    return 'قيمة غير صحيحة';
+    return getFormFieldError(this.form, field);
   }
+
+  isInvalid(field: string): boolean {
+    return isFieldInvalid(this.form, field);
+  }
+
+  availableCities = signal<string[]>([]);
 
   ngOnInit(): void {
     this.caseId = Number(this.route.snapshot.paramMap.get('id'));
+
+    this.form.get('government')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((gov) => {
+        const cities = getCitiesForGovernorate(gov);
+        this.availableCities.set(cities);
+        const currentCity = this.form.get('city')?.value;
+        if (currentCity && !cities.includes(currentCity)) {
+          this.form.get('city')?.setValue('');
+        }
+      });
+
     this.loadCase();
   }
 
@@ -144,48 +154,49 @@ export class UnknownUpdate implements OnInit {
 
   private loadCase(): void {
     this.isLoading.set(true);
-    this.service.getCaseById(this.caseId).subscribe({
-      next: (res) => {
-        const c = res.data as any; // adjust to your exact UnknownCaseDetailResponse shape
-        this.form.patchValue({
-          fName: c.fName ?? '',
-          sName: c.sName ?? '',
-          tName: c.tName ?? '',
-          lName: c.lName ?? '',
-          age: c.age ?? null,
-          gender: c.gender ?? '',
-          communicationPhone: c.communicationPhone ?? '',
-          description: c.description ?? '',
-          government: c.government ?? '',
-          city: c.city ?? '',
-          street: c.street ?? '',
-          eventDate: c.eventDate ? String(c.eventDate).split('T')[0] : '',
-        });
+    this.service
+      .getCaseById(this.caseId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          const c = res.data as UnknownCaseDetailResponse & Record<string, unknown>;
+          const gov = (c as Record<string, unknown>)['government'] as string ?? '';
+          this.availableCities.set(getCitiesForGovernorate(gov));
+          this.form.patchValue({
+            fName: c.fName ?? '',
+            sName: c.sName ?? '',
+            tName: c.tName ?? '',
+            lName: c.lName ?? '',
+            age: c.age ?? null,
+            gender: c.gender ?? '',
+            communicationPhone: (c as Record<string, unknown>)['communicationPhone'] as string ?? '',
+            description: (c as Record<string, unknown>)['description'] as string ?? '',
+            government: (c as Record<string, unknown>)['government'] as string ?? '',
+            city: (c as Record<string, unknown>)['city'] as string ?? '',
+            street: (c as Record<string, unknown>)['street'] as string ?? '',
+            eventDate: (c as Record<string, unknown>)['eventDate'] ? String((c as Record<string, unknown>)['eventDate']).split('T')[0] : '',
+          });
 
-        // FIX: backend's CaseDetailBaseDto exposes the property as "Photos"
-        // (camelCase JSON: "photos"), NOT "files"/"caseFiles".
-        const rawFiles: CaseFileResponse[] = c.photos ?? c.files ?? c.caseFiles ?? [];
-        const files: CaseFileResponse[] = rawFiles.map((f) => ({
-          ...f,
-          imagePath: this.resolveMediaUrl(f.imagePath) ?? f.imagePath,
-        }));
-        this.existingPhotos.set(files);
-        this.primaryPhotoId.set(files.find((f) => f.isPrimary)?.id ?? null);
-        this.existingVideoUrl.set(this.resolveMediaUrl(c.video ?? c.videoPath ?? null));
+          const rawFiles: CaseFileResponse[] = c.photos ?? [];
+          const files: CaseFileResponse[] = rawFiles.map((f) => ({
+            ...f,
+            imagePath: this.resolveMediaUrl(f.imagePath) ?? f.imagePath,
+          }));
+          this.existingPhotos.set(files);
+          this.primaryPhotoId.set(files.find((f) => f.isPrimary)?.id ?? null);
+          this.existingVideoUrl.set(this.resolveMediaUrl((c as Record<string, unknown>)['video'] as string ?? null));
 
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.isLoading.set(false);
-        this.errorMsg.set(err?.error?.message ?? 'تعذر تحميل بيانات الحالة.');
-      },
-    });
+          this.isLoading.set(false);
+        },
+        error: (err: unknown) => {
+          this.isLoading.set(false);
+          const msg = extractErrorMessage(err, 'تعذر تحميل بيانات الحالة.');
+          this.errorMsg.set(msg);
+        },
+      });
   }
 
-  isInvalid(field: string): boolean {
-    const c = this.form.get(field);
-    return !!(c?.invalid && (c?.touched || c?.dirty));
-  }
+
 
   nextStep(): void {
     const stepFields: Record<number, string[]> = {
@@ -273,6 +284,7 @@ export class UnknownUpdate implements OnInit {
   }
 
   onSubmit(): void {
+    if (this.isSubmitting()) return;
     if (this.form.invalid || (this.existingPhotos().length === 0 && !this.newPrimaryImage() && this.newPhotos().length === 0)) {
       this.form.markAllAsTouched();
       if (this.existingPhotos().length === 0 && !this.newPrimaryImage() && this.newPhotos().length === 0) {
@@ -306,19 +318,22 @@ export class UnknownUpdate implements OnInit {
       video: this.videoFile(),
     };
 
-    this.service.updateCase(this.caseId, request).subscribe({
-      next: () => {
-        this.isSubmitting.set(false);
-        this.snackbar.success('تم تحديث بيانات الحالة بنجاح.');
-        this.router.navigate(['/unknown']);
-      },
-      error: (err) => {
-        this.isSubmitting.set(false);
-        const msg = err?.error?.message ?? 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.';
-        this.errorMsg.set(msg);
-        this.snackbar.error(msg);
-      },
-    });
+    this.service
+      .updateCase(this.caseId, request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.isSubmitting.set(false);
+          this.snackbar.success('تم تحديث بيانات الحالة بنجاح.');
+          this.router.navigate(['/unknown']);
+        },
+        error: (err: unknown) => {
+          this.isSubmitting.set(false);
+          const msg = extractErrorMessage(err, 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.');
+          this.errorMsg.set(msg);
+          this.snackbar.error(msg);
+        },
+      });
   }
 
   goBack(): void {
