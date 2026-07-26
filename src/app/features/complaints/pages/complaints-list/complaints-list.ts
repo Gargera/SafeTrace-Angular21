@@ -21,6 +21,7 @@ import { ConfirmationModalComponent } from '../../../../shared/components/confir
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
+import { ReportService } from '../../../admin-dashboard/services/report.service';
 
 @Component({
   selector: 'app-complaints-list',
@@ -52,6 +53,7 @@ export class ComplaintsList implements OnInit {
     Permissions.Complaints.HardDelete
   ];
   private toast = inject(SnackbarService);
+  private reportService = inject(ReportService);
 
   complaints = signal<ComplaintResponseDto[]>([]);
   totalCount = signal<number>(0);
@@ -223,4 +225,13 @@ export class ComplaintsList implements OnInit {
       }
     });
   }
+ downloadReport(): void {
+
+  this.reportService
+    .generateComplaintPdfReport(this.filter())
+    .subscribe(response => {
+      this.reportService.download(response);
+    });
+}
+
 }
