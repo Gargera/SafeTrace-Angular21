@@ -1,8 +1,8 @@
-import { FormField } from '../../../../shared/components/form-field/form-field';
-import { CardComponent } from '../../../../shared/components/card/card';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { catchError, EMPTY, switchMap } from 'rxjs';
 
 import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -18,7 +18,7 @@ import { FileType } from '../../../../shared/enums/file-type';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup';
-import { FoundPersonInfoRequest } from '../../../../core/models/Cases.model';
+import { CasePhotoResponse, FoundPersonInfoRequest } from '../../../../core/models/Cases.model';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { UrgentCaseService } from '../../services/urgent-case.service';
@@ -26,6 +26,7 @@ import { UrgentCaseDetailResponse } from '../../models/response/UrgentCaseDetail
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { Permissions } from '../../../../core/constants/Permissions';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 
 @Component({
   selector: 'urgent-details',
@@ -52,6 +53,7 @@ export class UrgentDetails implements OnInit {
   private readonly router = inject(Router);
   private readonly UrgentDetailsService = inject(UrgentCaseService);
   private readonly snackbar = inject(SnackbarService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly apiUrl = environment.baseUrl;
   readonly FileType = FileType;
@@ -68,74 +70,66 @@ export class UrgentDetails implements OnInit {
 
   caseDetails = signal<UrgentCaseDetailResponse | null>(null);
   loading = signal(true);
-  isOwner = signal(false);
 
-  selectedMedia = signal<any | null>(null);
+  readonly isOwner = computed(() => {
+    const currentUserEmail = this.authService.currentUser()?.email?.toLowerCase();
+    const caseOwnerEmail = this.caseDetails()?.user?.email?.toLowerCase();
+    return !!currentUserEmail && currentUserEmail === caseOwnerEmail;
+  });
+
+  selectedMedia = signal<CasePhotoResponse | null>(null);
   isAdminPage = signal(false);
- isMyCasePage = signal(false);
+  isMyCasePage = signal(false);
   // Lightbox
   lightboxVisible = signal(false);
   currentIndex = signal(0);
 
   ngOnInit(): void {
-    this.route.data.subscribe(data => {
-      this.isAdminPage.set(data['mode'] === 'dashboard');
-      this.isMyCasePage.set(data['mode'] === 'my-case');
-    });
+    this.isAdminPage.set(this.route.snapshot.data['mode'] === 'dashboard');
 
-    this.route.paramMap.subscribe((params) => {
-      const id = Number(params.get('id'));
-      if (id) {
-        this.fetchCase(id);
-      } else {
-        this.loading.set(false);
-      }
-    });
-  }
-
-  private fetchCase(id: number): void {
-    this.loading.set(true);
-
-    let request;
-
-if (this.isAdminPage()) {
-  request = this.UrgentDetailsService.adminGetCaseById(id);
-} else if (this.isMyCasePage()) {
-  request = this.UrgentDetailsService.getMyCaseById(id);
-} else {
-  request = this.UrgentDetailsService.getCaseById(id);
-}
-    request.subscribe({
-      next: (apiRes) => {
-        if (apiRes.success && apiRes.data) {
-          this.caseDetails.set(apiRes.data);
-
-          const currentUserEmail = this.authService.currentUser()?.email?.toLowerCase();
-          const caseOwnerEmail = apiRes.data.user?.email?.toLowerCase();
-
-          this.isOwner.set(
-            !!currentUserEmail && currentUserEmail === caseOwnerEmail
-          );
-
-          if (apiRes.data.photos?.length) {
-            const primary =
-              apiRes.data.photos.find((x) => x.isPrimary) ?? apiRes.data.photos[0];
-
-            this.selectedMedia.set(primary);
-            this.currentIndex.set(
-              apiRes.data.photos.findIndex((x) => x.id === primary.id)
-            );
+    this.route.paramMap
+      .pipe(
+        switchMap((params) => {
+          const id = Number(params.get('id'));
+          if (!id) {
+            this.loading.set(false);
+            return EMPTY;
           }
-        }
-        this.loading.set(false);
-      },
-      error: (err) => {
-        console.error(err);
-        this.loading.set(false);
-        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء تحميل البيانات';
-        this.snackbar.error(errorMessage);
-      },
-    });
+
+          this.loading.set(true);
+          const req$ = this.isAdminPage()
+            ? this.UrgentDetailsService.adminGetCaseById(id)
+            : this.UrgentDetailsService.getCaseById(id);
+
+          return req$.pipe(
+            catchError((err: unknown) => {
+              this.loading.set(false);
+              const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء تحميل البيانات');
+              this.snackbar.error(errorMessage);
+              return EMPTY;
+            }),
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (apiRes) => {
+          if (apiRes.success && apiRes.data) {
+            this.caseDetails.set(apiRes.data);
+
+            if (apiRes.data.photos?.length) {
+              const primary =
+                apiRes.data.photos.find((x) => x.isPrimary) ?? apiRes.data.photos[0];
+
+              this.selectedMedia.set(primary);
+              this.currentIndex.set(
+                apiRes.data.photos.findIndex((x) => x.id === primary.id),
+              );
+            }
+          }
+          this.loading.set(false);
+        },
+      });
   }
 
   getImageUrl(path?: string): string {
@@ -148,7 +142,7 @@ if (this.isAdminPage()) {
     return `${this.apiUrl}${path}`;
   }
 
-  changeMedia(media: any): void {
+  changeMedia(media: CasePhotoResponse): void {
     this.selectedMedia.set(media);
     const index =
       this.caseDetails()?.photos.findIndex((x) => x.id === media.id) ?? 0;
@@ -203,35 +197,37 @@ if (this.isAdminPage()) {
   }
 
   confirmFounded(data: FoundPersonInfoRequest): void {
+    if (this.isFounding()) return;
     const id = this.caseDetails()?.id;
     if (!id) return;
 
     this.isFounding.set(true);
-    this.isFounding.set(true);
 
-    this.UrgentDetailsService.markAsFound(id, data).subscribe({
-      next: (res) => {
-        this.isFounding.set(false);
-        this.showFoundedPopup.set(false);
+    this.UrgentDetailsService.markAsFound(id, data)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.isFounding.set(false);
+          this.showFoundedPopup.set(false);
 
-        if (res.success) {
-          this.snackbar.success('تم تحديث الحالة إلى تم العثور عليه');
-          this.caseDetails.update((current) => {
-            if (!current) return current;
-            return {
-              ...current,
-              status: CaseStatus.Found,
-            };
-          });
-        }
-      },
-      error: (err) => {
-        this.isFounding.set(false);
-        this.showFoundedPopup.set(false);
-        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء تحديث الحالة';
-        this.snackbar.error(errorMessage);
-      },
-    });
+          if (res.success) {
+            this.snackbar.success('تم تحديث الحالة إلى تم العثور عليه');
+            this.caseDetails.update((current) => {
+              if (!current) return current;
+              return {
+                ...current,
+                status: CaseStatus.Found,
+              };
+            });
+          }
+        },
+        error: (err: unknown) => {
+          this.isFounding.set(false);
+          this.showFoundedPopup.set(false);
+          const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء تحديث الحالة');
+          this.snackbar.error(errorMessage);
+        },
+      });
   }
 
   editCase(): void {
@@ -250,29 +246,31 @@ if (this.isAdminPage()) {
   }
 
   confirmDelete(): void {
+    if (this.deleting()) return;
     const id = this.caseDetails()?.id;
     if (!id) return;
 
     this.deleting.set(true);
-    this.deleting.set(true);
 
-    this.UrgentDetailsService.deleteCase(id).subscribe({
-      next: (res) => {
-        this.deleting.set(false);
-        this.showDeleteConfirmation.set(false);
+    this.UrgentDetailsService.deleteCase(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.deleting.set(false);
+          this.showDeleteConfirmation.set(false);
 
-        if (res.success) {
-          this.snackbar.success('تم حذف الحالة بنجاح');
-          this.router.navigate(['/urgent']);
-        }
-      },
-      error: (err) => {
-        this.deleting.set(false);
-        this.showDeleteConfirmation.set(false);
-        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء حذف الحالة';
-        this.snackbar.error(errorMessage);
-      },
-    });
+          if (res.success) {
+            this.snackbar.success('تم حذف الحالة بنجاح');
+            this.router.navigate(['/urgent']);
+          }
+        },
+        error: (err: unknown) => {
+          this.deleting.set(false);
+          this.showDeleteConfirmation.set(false);
+          const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء حذف الحالة');
+          this.snackbar.error(errorMessage);
+        },
+      });
   }
 
   openPermanentDeleteConfirmation(): void {
@@ -295,20 +293,22 @@ if (this.isAdminPage()) {
     const id = this.caseDetails()?.id;
     if (!id) return;
 
-    this.UrgentDetailsService.permanentDelete(id).subscribe({
-      next: (res) => {
-        this.showPermanentDeleteConfirmation.set(false);
-        if (res.success) {
-          this.snackbar.success('تم حذف الحالة نهائياً');
-          this.router.navigate(['/admin/cases-management']);
-        }
-      },
-      error: (err) => {
-        this.showPermanentDeleteConfirmation.set(false);
-        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء الحذف النهائي';
-        this.snackbar.error(errorMessage);
-      }
-    });
+    this.UrgentDetailsService.permanentDelete(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.showPermanentDeleteConfirmation.set(false);
+          if (res.success) {
+            this.snackbar.success('تم حذف الحالة نهائياً');
+            this.router.navigate(['/admin/cases-management']);
+          }
+        },
+        error: (err: unknown) => {
+          this.showPermanentDeleteConfirmation.set(false);
+          const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء الحذف النهائي');
+          this.snackbar.error(errorMessage);
+        },
+      });
   }
 
   getAgeCategoryEnum(): AgeCategories {

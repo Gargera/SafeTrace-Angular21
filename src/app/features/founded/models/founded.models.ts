@@ -4,7 +4,8 @@ import { Gender } from '../../../shared/enums/gender';
 
 export interface FoundedHeaderQueryDTO {
   search?: string;
-  ageCategory?: number;
+  minAge?: number;
+  maxAge?: number;
   caseType?: CaseType | null;
   gender?: Gender | null;
   page: number;

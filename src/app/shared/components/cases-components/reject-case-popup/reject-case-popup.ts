@@ -10,6 +10,8 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ConfirmationModalComponent } from '../../confirmation-modal/confirmation-modal';
 import { rejectionReasonValidator } from '../../../validators/rejection-reason.validator';
 
+import { getFormFieldError, isFieldInvalid } from '../../../helper/form-validation.helper';
+
 @Component({
   selector: 'app-reject-case-popup',
   standalone: true,
@@ -34,18 +36,12 @@ export class RejectCasePopupComponent {
     return this.form.controls.rejectionReason;
   }
 
-  get showErrors(): boolean {
-    return this.reasonControl.invalid && (this.reasonControl.touched || this.reasonControl.dirty);
+  isInvalid(field = 'rejectionReason'): boolean {
+    return isFieldInvalid(this.form, field);
   }
 
-  get errorMessage(): string | null {
-    if (!this.showErrors) return null;
-    const errors = this.reasonControl.errors;
-    if (!errors) return null;
-    if (errors['required']) return 'سبب الرفض مطلوب';
-    if (errors['minlength']) return 'يجب ألا يقل سبب الرفض عن 10 حروف';
-    if (errors['maxlength']) return 'يجب ألا يتجاوز سبب الرفض 500 حرف';
-    return 'قيمة غير صحيحة';
+  getFieldError(field = 'rejectionReason'): string | null {
+    return getFormFieldError(this.form, field);
   }
 
   onConfirm(): void {

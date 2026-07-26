@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal, computed } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { catchError, EMPTY, Subject, switchMap, tap } from 'rxjs';
 import { FoundedService } from '../services/founded.service';
 import { CaseType } from '../../../shared/enums/case-type';
 import { Gender } from '../../../shared/enums/gender';
@@ -16,6 +17,8 @@ import { CaseStatus } from '../../../shared/enums/case-status';
 import { CaseCardComponent } from '../../../shared/components/cases-components/case-card/case-card.component';
 import { FoundedHeaderQueryDTO, FoundPersonListItemDto } from '../models/founded.models';
 import { FoundedFilterState } from '../../../shared/helper/cases-filter-state';
+import { SnackbarService } from '../../../core/services/toast.service';
+import { extractErrorMessage } from '../../../shared/helper/case-error.helper';
 
 @Component({
   selector: 'app-founded-list',
@@ -32,11 +35,14 @@ import { FoundedFilterState } from '../../../shared/helper/cases-filter-state';
   ],
   templateUrl: './founded-list.component.html',
 })
-export class FoundedListComponent implements OnInit, OnDestroy {
+export class FoundedListComponent implements OnInit {
   private readonly foundedService = inject(FoundedService);
   private readonly router = inject(Router);
-  private readonly destroy$ = new Subject<void>();
+  private readonly snackbar = inject(SnackbarService);
+  private readonly destroyRef = inject(DestroyRef);
   public readonly environment = environment;
+
+  private readonly loadTrigger$ = new Subject<void>();
 
   readonly filterState = new FoundedFilterState(12);
 
@@ -51,12 +57,8 @@ export class FoundedListComponent implements OnInit, OnDestroy {
   totalPages = computed(() => Math.ceil(this.totalCount() / this.pageSize()));
 
   ngOnInit(): void {
-    // Initial load is driven by app-case-filters emitting on init
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    this.setupLoadPipeline();
+    this.load();
   }
 
   // ----- Filter handlers -----
@@ -108,31 +110,45 @@ export class FoundedListComponent implements OnInit, OnDestroy {
   // ----- Data loading -----
 
   private load(): void {
-    this.isLoading.set(true);
-    this.hasError.set(false);
+    this.loadTrigger$.next();
+  }
 
-    const f = this.filterState.filter();
+  private setupLoadPipeline(): void {
+    this.loadTrigger$
+      .pipe(
+        tap(() => {
+          this.isLoading.set(true);
+          this.hasError.set(false);
+        }),
+        switchMap(() => {
+          const f = this.filterState.filter();
 
-    const query: FoundedHeaderQueryDTO = {
-      search: f.fullName || undefined,
-      gender: f.gender,
-      ageCategory: f.ageCategory !== null && f.ageCategory !== undefined ? Number(f.ageCategory) : 0,
-      caseType: f.caseType,
-      page: this.currentPage(),
-      pageSize: this.pageSize(),
-    };
+          const query: FoundedHeaderQueryDTO = {
+            search: f.fullName || f.caseCode || undefined,
+            gender: f.gender,
+            minAge: f.minAge ?? undefined,
+            maxAge: f.maxAge ?? undefined,
+            caseType: f.caseType,
+            page: this.currentPage(),
+            pageSize: this.pageSize(),
+          };
 
-    this.foundedService
-      .getAll(query)
-      .pipe(takeUntil(this.destroy$))
+          return this.foundedService.getAll(query).pipe(
+            catchError((err: unknown) => {
+              this.hasError.set(true);
+              this.isLoading.set(false);
+              const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء تحميل البيانات');
+              this.snackbar.error(errorMessage);
+              return EMPTY;
+            }),
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
         next: (res) => {
           this.items.set(res.items);
           this.totalCount.set(res.totalCount);
-          this.isLoading.set(false);
-        },
-        error: () => {
-          this.hasError.set(true);
           this.isLoading.set(false);
         },
       });

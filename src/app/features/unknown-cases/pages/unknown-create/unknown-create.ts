@@ -1,13 +1,16 @@
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { UnknownCaseService } from '../../services/unknown-case.service';
 import { UnknownCaseCreateRequest } from '../../models/request/UnknownCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
-import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
+import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
+import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
@@ -17,6 +20,7 @@ import { arabicText } from '../../../../shared/validators/arabic-text.validator'
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
+import { validateImageFile } from '../../../user-profile/tabs/Edit-profile/utilies/image-validation.util';
 
 type Step = 1 | 2 | 3;
 
@@ -46,13 +50,14 @@ export class UnknownCreate {
   private service = inject(UnknownCaseService);
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
+  private destroyRef = inject(DestroyRef);
 
   currentStep: Step = 1;
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
 
   // Cropper & primary photo
-  cropImageEvent = signal<any>(null);
+  cropImageEvent = signal<Event | null>(null);
   croppedPrimaryImagePreview = signal<string | null>(null);
   tempCroppedBlob = signal<Blob | null>(null);
   primaryFile = signal<File | null>(null);
@@ -113,25 +118,26 @@ export class UnknownCreate {
   // Error message helper
   // ─────────────────────────────────────────────────────────────
   getFieldError(field: string): string | null {
-    const control = this.form.get(field);
-    if (!control || !control.errors || !(control.touched || control.dirty)) return null;
-    const e = control.errors;
-    if (e['required']) return 'هذا الحقل مطلوب';
-    if (e['arabicText']) return 'يجب كتابة النص بالحروف العربية فقط';
-    if (e['minlength']) return `الحد الأدنى ${e['minlength'].requiredLength} أحرف`;
-    if (e['maxlength']) return `الحد الأقصى ${e['maxlength'].requiredLength} حرفاً`;
-    if (e['min']) return `يجب أن لا تقل القيمة عن ${e['min'].min}`;
-    if (e['max']) return `يجب أن لا تتجاوز القيمة ${e['max'].max}`;
-    if (e['egyptianPhone']) return 'أدخل رقم هاتف مصري صحيح (مثال: 01xxxxxxxxx)';
-    if (e['pastDate']) return 'لا يمكن أن يكون التاريخ في المستقبل';
-    if (e['description']) return 'لا يمكن أن يتجاوز الوصف 2000 حرف';
-    if (e['validEnum']) return 'اختر قيمة صحيحة';
-    return 'قيمة غير صحيحة';
+    return getFormFieldError(this.form, field);
   }
 
   isInvalid(field: string): boolean {
-    const c = this.form.get(field);
-    return !!(c?.invalid && (c?.touched || c?.dirty));
+    return isFieldInvalid(this.form, field);
+  }
+
+  availableCities = signal<string[]>([]);
+
+  ngOnInit(): void {
+    this.form.get('government')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((gov) => {
+        const cities = getCitiesForGovernorate(gov);
+        this.availableCities.set(cities);
+        const currentCity = this.form.get('city')?.value;
+        if (currentCity && !cities.includes(currentCity)) {
+          this.form.get('city')?.setValue('');
+        }
+      });
   }
 
   nextStep(): void {
@@ -150,25 +156,18 @@ export class UnknownCreate {
     if (this.currentStep > 1) this.currentStep = (this.currentStep - 1) as Step;
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // File validation constants
-  // ─────────────────────────────────────────────────────────────
-  private readonly ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  private readonly MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5 MB
-
   // Primary photo with Cropper — validate type/size first
   onPrimaryPhotoSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
-    if (!this.ALLOWED_TYPES.includes(file.type.toLowerCase())) {
-      this.primaryPhotoError.set('نوع الملف غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+
+    const validation = validateImageFile(file, 5);
+    if (!validation.valid) {
+      this.primaryPhotoError.set(validation.errorMessage ?? null);
       return;
     }
-    if (file.size > this.MAX_PHOTO_BYTES) {
-      this.primaryPhotoError.set('حجم الصورة يتجاوز الحد المسموح (5 MB)');
-      return;
-    }
+
     this.primaryPhotoError.set(null);
     this.cropImageEvent.set(event);
   }
@@ -199,18 +198,15 @@ export class UnknownCreate {
     this.primaryFile.set(null);
   }
 
-  // Additional photos — max 4, JPEG/PNG/WebP, max 5 MB each
+  // Additional photos — max 4, JPG/JPEG/PNG/WebP, max 5 MB each
   onAdditionalPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
-    const invalidType = files.find(f => !this.ALLOWED_TYPES.includes(f.type.toLowerCase()));
-    if (invalidType) {
-      this.additionalPhotosError.set('أحد الملفات من نوع غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
-      return;
-    }
-    const oversized = files.find(f => f.size > this.MAX_PHOTO_BYTES);
-    if (oversized) {
-      this.additionalPhotosError.set('أحد الملفات يتجاوز الحد المسموح (5 MB لكل صورة)');
-      return;
+    for (const f of files) {
+      const validation = validateImageFile(f, 5);
+      if (!validation.valid) {
+        this.additionalPhotosError.set(validation.errorMessage ?? null);
+        return;
+      }
     }
     this.additionalPhotosError.set(null);
     this.additionalPhotos.update((p) => [...p, ...files].slice(0, 4));
@@ -228,6 +224,7 @@ export class UnknownCreate {
 
   // --- إرسال النموذج ---
   onSubmit(forceCreate = false): void {
+    if (this.isSubmitting()) return;
     const primary = this.primaryFile();
 
     if (!forceCreate && (this.form.invalid || !primary)) {
@@ -267,37 +264,40 @@ export class UnknownCreate {
       this.pendingRequest = request;
     }
 
-    this.service.createCase(request, forceCreate).subscribe({
-      next: (res) => {
-        this.isSubmitting.set(false);
-        const data = res.data;
+    this.service
+      .createCase(request, forceCreate)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.isSubmitting.set(false);
+          const data = res.data;
 
-        if (data && data.isCreated === false) {
-          const rawData = data as any;
+          if (data && data.isCreated === false) {
+            const rawData = (data as unknown) as Record<string, unknown>;
 
-          if (rawData.isSameTypeDuplicate) {
-            this.showForceCreatePopup.set(false);
-            this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
-            this.router.navigate(['/unknown']);
+            if (rawData['isSameTypeDuplicate']) {
+              this.showForceCreatePopup.set(false);
+              this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
+              this.router.navigate(['/unknown']);
+              return;
+            }
+
+            this.matchedCases.set((data.matchedCases ?? []).map(mapMatchedCaseResponseToDto));
+            this.showForceCreatePopup.set(true);
             return;
           }
 
-          this.matchedCases.set((data.matchedCases ?? []).map(mapMatchedCaseResponseToDto));
-          this.showForceCreatePopup.set(true);
-          return;
-        }
-
-        this.showForceCreatePopup.set(false);
-        this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
-        this.router.navigate(['/unknown']);
-      },
-      error: (err) => {
-        this.isSubmitting.set(false);
-        const msg = err?.error?.message ?? 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.';
-        this.errorMsg.set(msg);
-        this.snackbar.error(msg);
-      },
-    });
+          this.showForceCreatePopup.set(false);
+          this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
+          this.router.navigate(['/unknown']);
+        },
+        error: (err: unknown) => {
+          this.isSubmitting.set(false);
+          const msg = extractErrorMessage(err, 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.');
+          this.errorMsg.set(msg);
+          this.snackbar.error(msg);
+        },
+      });
   }
 
   onForceCreateCancel(): void {
