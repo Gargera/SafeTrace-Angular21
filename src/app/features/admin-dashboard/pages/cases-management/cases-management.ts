@@ -20,6 +20,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { SnackbarService } from '../../../../core/services/toast.service';
+import { ReportService } from '../../services/report.service';
 
 // Badge directives
 import { CaseTypeBadgeDirective } from '../../../../shared/directives/case-type-badge-directive';
@@ -62,6 +63,7 @@ const FILTER_DEBOUNCE_MS = 400;
 export class CasesManagement implements OnInit, OnDestroy {
   protected readonly CaseType = CaseType;
   protected readonly CaseStatus = CaseStatus;
+  
   Permissions = Permissions;
   caseActionPermissions = [
     Permissions.LongTermCases.GetById,
@@ -77,6 +79,7 @@ export class CasesManagement implements OnInit, OnDestroy {
   private readonly casesService = inject(CasesManagementService);
   private readonly dashboardService = inject(DashboardService);
   private readonly toast = inject(SnackbarService);
+  private readonly reportService = inject(ReportService);
 
   // Statistics
   statistics = signal<DashboardStatistics | null>(null);
@@ -304,6 +307,15 @@ getViewPermission(caseType: CaseType): string {
     case CaseType.Urgent: return Permissions.UrgentCases.GetById;
     default: return '';
   }
+}
+
+downloadReport(): void {
+
+  this.reportService
+    .generateCasesPdfReport(this.baseFilter())
+    .subscribe(response => {
+      this.reportService.download(response);
+    });
 }
 
 }

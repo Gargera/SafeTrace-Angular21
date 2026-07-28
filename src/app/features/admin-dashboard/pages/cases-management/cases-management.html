@@ -67,6 +67,15 @@
 <section class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm mb-lg">
   <app-case-filters [showCaseType]="true" [showCaseStatus]="true" [genderInAdvanced]="true"
     [ageCategoryInAdvanced]="true" (filterChange)="onFilterChange($event)" />
+    <div class="flex items-center justify-end border-b border-outline-variant p-4">
+    <app-button
+      variant="secondary"
+      (onClick)="downloadReport()"
+      extraClass="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium border-outline hover:bg-surface-container-high transition-all duration-200">
+      <span class="material-symbols-outlined text-[18px]">download</span>
+      <span>تحميل التقرير</span>
+    </app-button>
+  </div>
 </section>
 
 <!-- Cases Table -->

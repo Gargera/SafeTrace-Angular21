@@ -1,10 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../../environments/environment';
-import { HttpClient, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpResponse, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { UserFilterDto } from '../models/User/UserFilterDto';
 import { ComplaintFilterDto } from '../../complaints/models/complaint-filter.model';
-
+import {DonationAdminFilterDto} from '../pages/donations/models/donation-admin-filter.dto'
+import { CasesReportFilterDto } from '../models/Dashboard/CasesReportFilterDto';
+import { CasesFilterRequest } from '../../../core/models/Cases.model';
 @Injectable({
   providedIn: 'root',
 })
@@ -28,6 +30,35 @@ export class ReportService {
 generateComplaintPdfReport(filter: ComplaintFilterDto): Observable<HttpResponse<Blob>>{
   return this.http.post(
     `${this.baseUrl}/Complaints/report/pdf`,
+    filter,
+    {
+      responseType: 'blob',
+      observe: 'response'
+    }
+  )
+}
+generateDonationPdfReport(
+  filter: DonationAdminFilterDto
+): Observable<HttpResponse<Blob>> {
+
+  return this.http.post(
+    `${this.baseUrl}/Payment/export-pdf`,
+    {
+      page: filter.pageNumber,
+      pageSize: filter.pageSize,
+      userEmail: filter.userEmail,
+      status: filter.paymentStatus
+    },
+    {
+      responseType: 'blob',
+      observe: 'response'
+    }
+  );
+}
+
+generateCasesPdfReport(filter: CasesFilterRequest): Observable<HttpResponse<Blob>>{
+  return this.http.post(
+    `${this.baseUrl}/Dashboard/cases/report/pdf`,
     filter,
     {
       responseType: 'blob',
