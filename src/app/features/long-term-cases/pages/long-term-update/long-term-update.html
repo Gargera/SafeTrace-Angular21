@@ -190,8 +190,11 @@
               @if (isInvalid('government')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('government') }}</p> }
             </div>
             <div>
-              <app-form-field label="المدينة / المركز *" formControlName="city" type="text" placeholder="أدخل اسم المدينة أو المركز (مثال: مدينة نصر)"
-                [extraClass]="isInvalid('city') ? 'border-error' : ''"></app-form-field>
+              <app-form-field label="المدينة / المركز *" type="select" formControlName="city"
+                [extraClass]="isInvalid('city') ? 'border-error' : ''">
+                <option value="" disabled>اختر المدينة / المركز</option>
+                @for (c of availableCities(); track c) { <option [value]="c">{{ c }}</option> }
+              </app-form-field>
               @if (isInvalid('city')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('city') }}</p> }
             </div>
           </div>
@@ -278,7 +281,7 @@
                 <span class="material-symbols-outlined text-3xl">crop_original</span>
               </div>
               <p class="text-sm font-bold text-on-surface">اضغط لاختيار صورة أساسية جديدة وتحديد الوجه</p>
-              <p class="mt-1 text-xs text-on-surface-variant/70">JPEG / PNG / WebP — حتى 5 MB</p>
+              <p class="mt-1 text-xs text-on-surface-variant/70">JPG / JPEG / PNG / WebP — حتى 5 MB</p>
             </div>
             @if (newPrimaryError()) { <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ newPrimaryError() }}</p> }
             }
@@ -348,7 +351,7 @@
           <!-- Police Report -->
           <div>
             <label class="mb-2 block text-sm font-medium text-on-surface-variant">
-              بلاغ الشرطة <span class="font-normal text-on-surface-variant/70">(اختياري — JPEG/PNG/WebP، حتى 10 MB)</span>
+              بلاغ الشرطة <span class="font-normal text-on-surface-variant/70">(اختياري — JPG/JPEG/PNG/WebP، حتى 10 MB)</span>
             </label>
 
             @if (existingPoliceReportUrl() && !policeReportFile()) {
@@ -367,7 +370,7 @@
                 <span class="material-symbols-outlined text-3xl" [ngClass]="policeReportFile() ? 'text-secondary' : 'text-outline'">description</span>
               </div>
               <p class="text-sm font-bold text-on-surface">{{ policeReportFile()?.name ?? 'استبدال / رفع صورة بلاغ الشرطة' }}</p>
-              <p class="mt-0.5 text-xs text-on-surface-variant/70">JPEG / PNG / WebP — حتى 10 MB</p>
+              <p class="mt-0.5 text-xs text-on-surface-variant/70">JPG / JPEG / PNG / WebP — حتى 10 MB</p>
             </div>
             @if (policeReportError()) { <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ policeReportError() }}</p> }
           </div>

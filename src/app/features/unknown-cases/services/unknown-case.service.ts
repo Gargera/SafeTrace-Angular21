@@ -27,7 +27,7 @@ export class UnknownCaseService extends ApiService {
   ): Observable<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>> {
     return this.get<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>>(
       `${this.baseUrl}/GetCases`,
-      filter as Record<string, any>,
+      (filter as unknown) as Record<string, unknown>,
     );
   }
 
@@ -40,7 +40,7 @@ export class UnknownCaseService extends ApiService {
   ): Observable<ApiResponse<PaginationResponse<UnknownCaseDetailResponse>>> {
     return this.get<ApiResponse<PaginationResponse<UnknownCaseDetailResponse>>>(
       `${this.baseUrl}/Admin/GetCases`,
-      filter as Record<string, any>,
+      (filter as unknown) as Record<string, unknown>,
     );
   }
 

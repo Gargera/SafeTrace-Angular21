@@ -19,24 +19,7 @@
     <section
       class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm"
     >
-      <app-case-filters (filterChange)="onFilterChange($event)" (reset)="onFilterReset()">
-        <!-- Urgent-only extra filter -->
-        <div extendedFilters>
-          <label class="text-sm font-medium text-on-surface-variant block mb-1"
-            >نطاق البحث (متر)</label
-          >
-
-          <app-form-field
-            type="number"
-            min="100"
-            step="100"
-            [ngModel]="radiusInMeters()"
-            (ngModelChange)="radiusInMeters.set($event)"
-            [ngModelOptions]="{ standalone: true }"
-            placeholder="بدون حد أقصى"
-          ></app-form-field>
-        </div>
-      </app-case-filters>
+      <app-case-filters [showRadius]="true" (filterChange)="onFilterChange($event)" (reset)="onFilterReset()"></app-case-filters>
     </section>
 
     <!-- Main Content -->

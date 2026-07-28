@@ -1,6 +1,5 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
-
-const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+import { isImageExtensionValid, isImageContentTypeValid } from '../../features/user-profile/tabs/Edit-profile/utilies/image-validation.util';
 
 function toFileArray(value: unknown): File[] | null {
     if (value === null || value === undefined) return [];
@@ -10,7 +9,7 @@ function toFileArray(value: unknown): File[] | null {
     return null;
 }
 
-/** Ensures every uploaded file is JPEG, PNG, or WebP. */
+/** Ensures every uploaded file is JPG, JPEG, PNG, or WebP. */
 export function allowedFileTypes(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
         const files = toFileArray(control.value);
@@ -22,7 +21,7 @@ export function allowedFileTypes(): ValidatorFn {
             return null;
         }
 
-        const allValid = files.every(f => ALLOWED_PHOTO_TYPES.includes(f.type.toLowerCase()));
+        const allValid = files.every(f => isImageExtensionValid(f.name) && isImageContentTypeValid(f.type));
         return allValid ? null : { allowedFileTypes: true };
     };
 }
