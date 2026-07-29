@@ -43,7 +43,11 @@ export const PERMISSION_ACTIONS_AR: Record<string, string> = {
   'GetDonations': 'عرض التبرعات',
   'GetChatStatistics': 'عرض إحصائيات المحادثات',
   'GetDonationStatistics': 'عرض إحصائيات التبرعات',
-  'GetAuditLogs': 'عرض سجلات النظام'
+  'GetAuditLogs': 'عرض سجلات النظام',
+  'GenerateCasesPdfReport': 'استخراج تقرير الحالات (PDF)',
+  'GenerateComplaintsPdfReport': 'استخراج تقرير الشكاوى (PDF)',
+  'GenerateDonationsPdfReport': 'استخراج تقرير التبرعات (PDF)',
+  'GenerateUsersPdfReport': 'استخراج تقرير المستخدمين (PDF)'
 };
 
 export const ALL_SYSTEM_PERMISSIONS = [
@@ -51,11 +55,11 @@ export const ALL_SYSTEM_PERMISSIONS = [
   "UrgentCases.GetById", "UrgentCases.HardDelete", "UrgentCases.MarkAsFounded",
   "LongTermCases.GetById", "LongTermCases.Create", "LongTermCases.Update", "LongTermCases.SoftDelete", "LongTermCases.HardDelete", "LongTermCases.Reject", "LongTermCases.Approve", "LongTermCases.MarkAsFounded",
   "UnknownCases.GetById", "UnknownCases.Create", "UnknownCases.Update", "UnknownCases.SoftDelete", "UnknownCases.HardDelete", "UnknownCases.Reject", "UnknownCases.Approve", "UnknownCases.MarkAsFounded",
-  "Dashboard.GetStatistics", "Dashboard.GetCasesStatistics", "Dashboard.GetAuditLogs",
+  "Dashboard.GetStatistics", "Dashboard.GetCasesStatistics", "Dashboard.GetAuditLogs", "Dashboard.GenerateCasesPdfReport",
   "AiMatching.Search",
-  "Complaints.GetAll", "Complaints.GetById", "Complaints.HardDelete", "Complaints.MarkAsSolved", "Complaints.GetComplaintsStatistics",
-  "Donations.GetDonations", "Donations.GetDonationStatistics",
+  "Complaints.GetAll", "Complaints.GetById", "Complaints.HardDelete", "Complaints.MarkAsSolved", "Complaints.GetComplaintsStatistics", "Complaints.GenerateComplaintsPdfReport",
+  "Donations.GetDonations", "Donations.GetDonationStatistics", "Donations.GenerateDonationsPdfReport",
   "Roles.Create", "Roles.Delete", "Roles.GetPermissionsByRoleId", "Roles.UpdateRolePermissions",
-  "Users.GetAll", "Users.GetById", "Users.RegisterByAdmin", "Users.ChangeRole", "Users.GetPermissions", "Users.AssignPermissions", "Users.Approve", "Users.Reject", "Users.ToggleBlock", "Users.GetUsersStatistics",
+  "Users.GetAll", "Users.GetById", "Users.RegisterByAdmin", "Users.ChangeRole", "Users.GetPermissions", "Users.AssignPermissions", "Users.Approve", "Users.Reject", "Users.ToggleBlock", "Users.GetUsersStatistics", "Users.GenerateUsersPdfReport",
   "Chat.GetAll", "Chat.GetById", "Chat.GetMessages", "Chat.HardDelete", "Chat.DeleteMessageForEveryone", "Chat.GetChatStatistics"
 ];

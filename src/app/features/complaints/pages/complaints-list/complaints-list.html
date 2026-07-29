@@ -75,6 +75,7 @@
 
   <div class="flex flex-wrap justify-end gap-3 pt-2">
     <app-button
+      *hasPermission="Permissions.Complaints.GenerateComplaintsPdfReport"
       variant="secondary"
       (onClick)="downloadReport()"
       extraClass="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium border-outline hover:bg-surface-container-high transition-all duration-200"

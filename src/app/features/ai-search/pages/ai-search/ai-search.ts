@@ -75,7 +75,7 @@ export class AiSearch implements OnInit {
 
   handleFile(file: File) {
     if (!this.authService.isLoggedIn()) {
-      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/ai-search' } });
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/aisearch' } });
       return;
     }
 
