@@ -6,7 +6,7 @@ import { UrgentCaseDetailResponse } from '../models/response/UrgentCaseDetailRes
 import { UrgentCreateCaseResponse } from '../models/response/UrgentCreateCaseResponse';
 import { UrgentCaseCreateRequest } from '../models/request/UrgentCaseCreateRequest';
 import { UrgentCaseUpdateRequest } from '../models/request/UrgentCaseUpdateRequest';
-import { FoundPersonInfoRequest } from '../../../core/models/Cases.model';
+import { FoundPersonInfoRequest } from '../../../core/models/cases.model';
 import { environment } from '../../../../environments/environment';
 import { UrgentCasesFilterRequest } from '../models/request/UrgentCaseFilterRequest';
 import { UrgentCreationStatusResponse } from '../models/response/UrgentCreationStatusResponse';

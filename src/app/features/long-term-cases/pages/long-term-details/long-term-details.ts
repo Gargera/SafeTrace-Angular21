@@ -23,7 +23,7 @@ import { FileType } from '../../../../shared/enums/file-type';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup';
-import { CasePhotoResponse, FoundPersonInfoRequest } from '../../../../core/models/Cases.model';
+import { CasePhotoResponse, FoundPersonInfoRequest } from '../../../../core/models/cases.model';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';

@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { catchError, EMPTY, Subject, switchMap, tap } from 'rxjs';
 
 import { UnknownCaseService } from '../../services/unknown-case.service';
-import { CasesFilterRequest } from '../../../../core/models/Cases.model';
+import { CasesFilterRequest } from '../../../../core/models/cases.model';
 import { UnknownCaseListItemResponse } from '../../models/response/UnknownCaseListItemResponse';
 import { CaseCreationFlowService } from '../../../../core/services/case-creation-flow.service';
 

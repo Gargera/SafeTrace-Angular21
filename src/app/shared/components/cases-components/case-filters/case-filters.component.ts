@@ -17,7 +17,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, AbstractContr
 import { NgModel } from '@angular/forms';
 import { Subscription, debounceTime, distinctUntilChanged, map, merge } from 'rxjs';
 import { NgTemplateOutlet } from '@angular/common';
-import { CasesFilterRequest } from '../../../../core/models/Cases.model';
+import { CasesFilterRequest } from '../../../../core/models/cases.model';
 import { AgeCategories } from '../../../enums/age-categories';
 import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.categories.dictionary';
 import { CardComponent } from '../../card/card';

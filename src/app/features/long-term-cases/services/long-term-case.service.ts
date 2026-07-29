@@ -6,7 +6,7 @@ import { LongTermCaseDetailResponse } from '../models/response/LongTermCaseDetai
 import { LongTermCreateCaseResponse } from '../models/response/LongTermCreateCaseResponse';
 import { LongTermCaseCreateRequest } from '../models/request/LongTermCaseCreateRequest';
 import { LongTermCaseUpdateRequest } from '../models/request/LongTermCaseUpdateRequest';
-import { FoundPersonInfoRequest } from '../../../core/models/Cases.model';
+import { FoundPersonInfoRequest } from '../../../core/models/cases.model';
 import { environment } from '../../../../environments/environment';
 import { LongTermCaseFilterRequest } from '../models/request/LongTermCaseFilterRequest';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';

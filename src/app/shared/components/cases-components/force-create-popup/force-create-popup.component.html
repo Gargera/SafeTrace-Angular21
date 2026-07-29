@@ -19,7 +19,7 @@
     <!-- Matched Cases Body -->
     <div class="p-6 md:p-8 flex flex-col gap-5 flex-1">
       @for (m of matches(); track m.caseCode) {
-        <div class="flex flex-col sm:flex-row gap-5 border-[1.5px] border-slate-200 rounded-[18px] p-4 bg-white hover:border-[#0058be] hover:shadow-[0_10px_20px_rgba(0,88,190,0.08)] hover:bg-[#fafcff] transition-all duration-300 overflow-hidden group">
+        <app-card extraClass="flex flex-col sm:flex-row gap-5 border-[1.5px] border-slate-200 rounded-[18px] p-4 bg-white hover:border-[#0058be] hover:shadow-[0_10px_20px_rgba(0,88,190,0.08)] hover:bg-[#fafcff] transition-all duration-300 overflow-hidden group">
 
           <!-- Photo -->
           <div class="relative w-full sm:w-[180px] h-[180px] rounded-xl overflow-hidden shrink-0 bg-[#f4f7fa] border border-slate-200">
@@ -55,49 +55,46 @@
               </div>
             </div>
 
-            <button
-              type="button"
-              class="flex items-center justify-center gap-2 p-3 rounded-xl border-[1.5px] border-[#0058be] text-[#0058be] hover:bg-[#0058be] hover:text-white text-sm font-bold transition-all duration-200 mt-auto w-full cursor-pointer hover:shadow-[0_4px_12px_rgba(0,88,190,0.2)]"
-              (click)="onContact(m)"
+            <app-button
+              variant="outline"
+              extraClass="mt-auto w-full cursor-pointer hover:bg-[#0058be] hover:text-white"
+              (onClick)="onContact(m)"
             >
               <span class="material-symbols-outlined text-[20px]">chat</span>
               تواصل مع المُبلّغ عن هذه الحالة
-            </button>
+            </app-button>
           </div>
-        </div>
+        </app-card>
       }
     </div>
 
     <!-- Footer -->
     <div class="flex justify-end gap-3 p-5 md:px-8 border-t border-slate-200 sticky bottom-0 bg-white z-10">
-      <button
-        type="button"
-        class="px-5 py-3 rounded-2xl bg-transparent text-[#56585e] text-sm font-semibold border-[1.5px] border-[#dde1ee] hover:bg-[#f4f5f8] hover:border-[#d1d5db] hover:text-[#0b1c30] transition-all cursor-pointer"
-        (click)="cancel.emit()"
+      <app-button
+        variant="outline"
+        (onClick)="cancel.emit()"
       >
         {{ cancelLabel() }}
-      </button>
+      </app-button>
 
       @if (showJoinGroup()) {
-        <button
-          type="button"
-          class="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#0b5c33] text-white text-sm font-bold hover:bg-[#084526] hover:-translate-y-0.5 hover:shadow-[0_5px_15px_rgba(11,92,51,0.3)] transition-all cursor-pointer border-none"
-          (click)="joinGroup.emit()"
+        <app-button
+          variant="success"
+          (onClick)="joinGroup.emit()"
         >
           <span class="material-symbols-outlined text-[20px]">group_add</span>
           ضم البلاغ للمجموعة المكررة
-        </button>
+        </app-button>
       }
 
       @if (canForceCreate()) {
-        <button
-          type="button"
-          class="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#0058be] text-white text-sm font-bold hover:bg-[#004494] hover:-translate-y-0.5 hover:shadow-[0_5px_15px_rgba(0,88,190,0.3)] transition-all cursor-pointer border-none"
-          (click)="forceCreate.emit()"
+        <app-button
+          variant="primary"
+          (onClick)="forceCreate.emit()"
         >
           <span class="material-symbols-outlined text-[20px]">add_circle</span>
           تجاهل وإنشاء البلاغ
-        </button>
+        </app-button>
       }
     </div>
 

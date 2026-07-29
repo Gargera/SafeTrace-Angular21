@@ -1,4 +1,4 @@
-import { UpdateCaseBaseRequest } from "../../../../core/models/Cases.model";
+import { UpdateCaseBaseRequest } from "../../../../core/models/cases.model";
 import { RelationType } from "../../../../shared/enums/relation-type";
 
 export interface LongTermCaseUpdateRequest extends UpdateCaseBaseRequest {

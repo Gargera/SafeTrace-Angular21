@@ -1,9 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { Router } from '@angular/router';
-import { MatchedCaseResponse } from '../../../../core/models/Cases.model';
+import { MatchedCaseResponse } from '../../../../core/models/cases.model';
 import { environment } from '../../../../../environments/environment';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseTypeBadgeDirective } from '../../../directives/case-type-badge-directive';
+
+import { ButtonComponent } from '../../button/button';
+import { CardComponent } from '../../card/card';
 
 /**
  * <app-force-create-popup>
@@ -19,7 +22,7 @@ import { CaseTypeBadgeDirective } from '../../../directives/case-type-badge-dire
 @Component({
   selector: 'app-force-create-popup',
   standalone: true,
-  imports: [CaseTypeBadgeDirective],
+  imports: [CaseTypeBadgeDirective, ButtonComponent, CardComponent],
   templateUrl: './force-create-popup.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -15,7 +15,7 @@ import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/for
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
-import { MatchedCaseResponse } from '../../../../core/models/Cases.model';
+import { MatchedCaseResponse } from '../../../../core/models/cases.model';
 import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';

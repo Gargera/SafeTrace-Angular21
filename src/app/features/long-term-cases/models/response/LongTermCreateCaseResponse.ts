@@ -1,3 +1,3 @@
-import { CreateCaseResponse } from '../../../../core/models/Cases.model';
+import { CreateCaseResponse } from '../../../../core/models/cases.model';
 
-export interface LongTermCreateCaseResponse extends CreateCaseResponse {}
+export interface LongTermCreateCaseResponse extends CreateCaseResponse { }

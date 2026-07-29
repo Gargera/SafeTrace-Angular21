@@ -15,7 +15,7 @@ import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/co
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
-import { MatchedCaseResponse } from '../../../../core/models/Cases.model';
+import { MatchedCaseResponse } from '../../../../core/models/cases.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';

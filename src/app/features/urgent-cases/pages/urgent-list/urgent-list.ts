@@ -11,7 +11,7 @@ import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-c
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
 
 import { UrgentCaseService } from '../../services/urgent-case.service';
-import { CasesFilterRequest } from '../../../../core/models/Cases.model';
+import { CasesFilterRequest } from '../../../../core/models/cases.model';
 import { UrgentCaseListItemResponse } from '../../models/response/UrgentCaseListItemResponse';
 import { UrgentCasesFilterRequest } from '../../models/request/UrgentCaseFilterRequest';
 import { CaseCreationFlowService } from '../../../../core/services/case-creation-flow.service';

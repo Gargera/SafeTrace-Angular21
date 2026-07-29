@@ -13,7 +13,7 @@ import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/co
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
-import { MatchedCaseResponse } from '../../../../core/models/Cases.model';
+import { MatchedCaseResponse } from '../../../../core/models/cases.model';
 
 // Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';

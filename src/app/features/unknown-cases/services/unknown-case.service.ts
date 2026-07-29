@@ -7,7 +7,7 @@ import { UnknownCaseDetailResponse } from '../models/response/UnknownCaseDetailR
 import { UnknownCreateCaseResponse } from '../models/response/UnknownCreateCaseResponse';
 import { UnknownCaseUpdateRequest } from '../models/request/UnknownCaseUpdateRequest';
 import { UnknownCaseCreateRequest } from '../models/request/UnknownCaseCreateRequest';
-import { FoundPersonInfoRequest } from '../../../core/models/Cases.model';
+import { FoundPersonInfoRequest } from '../../../core/models/cases.model';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';

@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 import { catchError, EMPTY, Subject, switchMap, tap } from 'rxjs';
 
 import { LongTermCaseService } from '../../services/long-term-case.service';
-import { CasesFilterRequest } from '../../../../core/models/Cases.model';
+import { CasesFilterRequest } from '../../../../core/models/cases.model';
 import { LongTermCaseListItemResponse } from '../../models/response/LongTermCaseListItemResponse';
 import { CaseCreationFlowService } from '../../../../core/services/case-creation-flow.service';
 
