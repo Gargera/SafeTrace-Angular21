@@ -71,6 +71,7 @@ export class UnknownCreate {
   videoFile = signal<File | null>(null);
 
   showForceCreatePopup = signal(false);
+  isBlockedDuplicate = signal(false);
   matchedCases = signal<MatchedCaseResponse[]>([]);
   private pendingRequest: UnknownCaseCreateRequest | null = null;
 
@@ -272,17 +273,9 @@ export class UnknownCreate {
           this.isSubmitting.set(false);
           const data = res.data;
 
-          if (data && data.isCreated === false) {
-            const rawData = (data as unknown) as Record<string, unknown>;
-
-            if (rawData['isSameTypeDuplicate']) {
-              this.showForceCreatePopup.set(false);
-              this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
-              this.router.navigate(['/unknown']);
-              return;
-            }
-
+          if (data && !data.isCreated) {
             this.matchedCases.set(data.matchedCases ?? []);
+            this.isBlockedDuplicate.set(data.isBlocked);
             this.showForceCreatePopup.set(true);
             return;
           }
@@ -305,6 +298,18 @@ export class UnknownCreate {
   }
 
   onForceCreateConfirm(): void {
+    if (this.isBlockedDuplicate()) {
+      return;
+    }
+    this.showForceCreatePopup.set(false);
+    this.onSubmit(true);
+  }
+
+  /** Unknown + Unknown: attach new case to the existing duplicate group */
+  onJoinGroupConfirm(): void {
+    if (this.isBlockedDuplicate()) {
+      return;
+    }
     this.showForceCreatePopup.set(false);
     this.onSubmit(true);
   }

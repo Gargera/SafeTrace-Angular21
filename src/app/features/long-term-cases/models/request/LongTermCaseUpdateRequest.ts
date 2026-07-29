@@ -1,17 +1,9 @@
-import { CaseUpsertBaseRequest } from "../../../../core/models/Cases.model";
+import { UpdateCaseBaseRequest } from "../../../../core/models/Cases.model";
 import { RelationType } from "../../../../shared/enums/relation-type";
 
-export interface LongTermCaseUpdateRequest extends CaseUpsertBaseRequest {
+export interface LongTermCaseUpdateRequest extends UpdateCaseBaseRequest {
   fName: string;
   lName: string;
-
-  relation?: RelationType | null;
-
-  primaryImage?: File | null;
-
-  newPhotos: File[] | null;
-  deletedPhotoIds: number[] | null;
-  primaryPhotoId: number | null;
-
+  relation: RelationType;
   policeReportImage?: File | null;
 }

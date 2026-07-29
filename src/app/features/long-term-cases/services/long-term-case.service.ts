@@ -140,12 +140,4 @@ export class LongTermCaseService extends ApiService {
   permanentDelete(id: number): Observable<ApiResponse<string>> {
     return this.delete<ApiResponse<string>>(`${this.baseUrl}/PermanentDeletion/${id}`);
   }
-  // في ملف الـ Service الخاص بك (مثلاً: case.service.ts)
-  // تأكد أن الميثود تُرجع الـ ApiResponse مغلفاً للكود الداخلي
-  createLongTermCase(data: FormData): Observable<ApiResponse<LongTermCreateCaseResponse>> {
-    return this.postFormData<ApiResponse<LongTermCreateCaseResponse>>(
-      `${this.baseUrl}/CreateCase`, // المسار الصحيح المعتمد في الخدمة
-      data
-    );
-  }
 }

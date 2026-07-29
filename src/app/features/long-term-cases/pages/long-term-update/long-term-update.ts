@@ -6,10 +6,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 
-import { environment } from '../../../../../environments/environment'; 
+import { environment } from '../../../../../environments/environment';
 import { LongTermCaseService } from '../../services/long-term-case.service';
 import { LongTermCaseUpdateRequest } from '../../models/request/LongTermCaseUpdateRequest';
-import { LongTermCaseDetailResponse } from '../../models/response/LongTermCaseDetailResponse';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
@@ -163,10 +162,13 @@ export class LongTermUpdate implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          const c = res.data as LongTermCaseDetailResponse & Record<string, unknown>;
-          const gov = (c as Record<string, unknown>)['government'] as string ?? '';
+          const c = res.data;
+          if (!c) {
+            this.isLoading.set(false);
+            return;
+          }
+          const gov = c.government ?? '';
           this.availableCities.set(getCitiesForGovernorate(gov));
-          const relValue = (c as Record<string, unknown>)['relation'] !== undefined && (c as Record<string, unknown>)['relation'] !== null ? (c as Record<string, unknown>)['relation'] : ((c as Record<string, unknown>)['relationType'] ?? null);
 
           this.form.patchValue({
             fName: c.fName ?? '',
@@ -175,13 +177,13 @@ export class LongTermUpdate implements OnInit {
             lName: c.lName ?? '',
             age: c.age ?? null,
             gender: c.gender ?? '',
-            relation: relValue as RelationType,
-            communicationPhone: (c as Record<string, unknown>)['communicationPhone'] as string ?? '',
-            description: (c as Record<string, unknown>)['description'] as string ?? '',
-            government: (c as Record<string, unknown>)['government'] as string ?? '',
-            city: (c as Record<string, unknown>)['city'] as string ?? '',
-            street: (c as Record<string, unknown>)['street'] as string ?? '',
-            eventDate: (c as Record<string, unknown>)['eventDate'] ? String((c as Record<string, unknown>)['eventDate']).split('T')[0] : '',
+            relation: c.relation ?? null,
+            communicationPhone: c.communicationPhone ?? '',
+            description: c.description ?? '',
+            government: c.government ?? '',
+            city: c.city ?? '',
+            street: c.street ?? '',
+            eventDate: c.eventDate ? String(c.eventDate).split('T')[0] : '',
           });
 
           const rawFiles: CaseFileResponse[] = c.photos ?? [];
@@ -194,8 +196,8 @@ export class LongTermUpdate implements OnInit {
           const primary = files.find((f) => f.isPrimary);
           this.primaryPhotoId.set(primary ? primary.id : (files[0]?.id ?? null));
 
-          this.existingPoliceReportUrl.set(this.resolveMediaUrl((c as Record<string, unknown>)['policeReportImage'] as string ?? (c as Record<string, unknown>)['policeReportImagePath'] as string ?? null));
-          this.existingVideoUrl.set(this.resolveMediaUrl((c as Record<string, unknown>)['video'] as string ?? (c as Record<string, unknown>)['videoPath'] as string ?? null));
+          this.existingPoliceReportUrl.set(this.resolveMediaUrl(c.policeReportImage ?? null));
+          this.existingVideoUrl.set(this.resolveMediaUrl(c.video ?? null));
 
           this.isLoading.set(false);
         },
@@ -428,7 +430,7 @@ export class LongTermUpdate implements OnInit {
       tName: v.tName || null,
       gender: v.gender as Gender,
       age: v.age!,
-      relation: v.relation ?? undefined,
+      relation: v.relation as RelationType,
       communicationPhone: v.communicationPhone || null,
       description: v.description || null,
       government: v.government!,

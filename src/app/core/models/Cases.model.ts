@@ -59,11 +59,10 @@ export interface MatchedCaseResponse {
 }
 
 export interface CreateCaseResponse {
-  id: number;
-  caseId: number | null;
   isCreated: boolean;
-  isSameTypeDuplicate?: boolean;
-  matchedCases?: MatchedCaseResponse[] | null;
+  isBlocked: boolean;
+  caseId: number | null;
+  matchedCases: MatchedCaseResponse[];
 }
 
 export interface DuplicateCheckResponse {
@@ -107,6 +106,7 @@ export interface CaseDetailResponse {
   ageCategory: AgeCategoryResponse | null;
   user: UserResponse | null;
   photos: CasePhotoResponse[];
+  video: string | null;
   rejectionReason: string | null;
 }
 
@@ -151,7 +151,14 @@ export interface CaseUpsertBaseRequest {
 }
 
 
-export interface CaseUpdateBaseRequest extends CaseUpsertBaseRequest {
+export interface CreateCaseBaseRequest extends CaseUpsertBaseRequest {
+  primaryImage: File;
+  additionalImages: File[] | null;
+}
+
+export interface UpdateCaseBaseRequest extends CaseUpsertBaseRequest {
+  primaryImage?: File | null;
+
   newPhotos: File[] | null;
   deletedPhotoIds: number[] | null;
   primaryPhotoId: number | null;

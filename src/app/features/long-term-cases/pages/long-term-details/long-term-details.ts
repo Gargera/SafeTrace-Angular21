@@ -1,5 +1,3 @@
-import { FormField } from '../../../../shared/components/form-field/form-field';
-import { CardComponent } from '../../../../shared/components/card/card';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -83,7 +81,7 @@ export class LongTermDetails implements OnInit {
   caseDetails = signal<LongTermCaseDetailResponse | null>(null);
 
   loading = signal(true);
-  
+
   readonly isOwner = computed(() => {
     const currentUserEmail = this.authService.currentUser()?.email?.toLowerCase();
     const caseOwnerEmail = this.caseDetails()?.user?.email?.toLowerCase();

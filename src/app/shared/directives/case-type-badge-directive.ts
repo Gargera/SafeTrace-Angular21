@@ -18,8 +18,9 @@ export class CaseTypeBadgeDirective {
     effect(() => {
       const el = this.el.nativeElement;
       el.className = el.className.replace(/\bbg-\S+|text-\S+/g, '');
-      
-      if (this.caseType() === CaseType.Urgent) {
+
+      if (this.caseType() ===
+        CaseType.Urgent) {
         this.renderer.addClass(el, 'bg-red-100');
         this.renderer.addClass(el, 'text-red-800');
       } else if (this.caseType() === CaseType.LongTerm) {
@@ -29,7 +30,7 @@ export class CaseTypeBadgeDirective {
         this.renderer.addClass(el, 'bg-gray-100');
         this.renderer.addClass(el, 'text-gray-800');
       }
-      
+
       el.innerText = getCaseTypeTranslationAr(this.caseType());
     });
   }

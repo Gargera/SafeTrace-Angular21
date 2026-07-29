@@ -2,7 +2,7 @@ import { Component, inject, signal, ChangeDetectionStrategy, DestroyRef } from '
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 
@@ -303,17 +303,9 @@ export class LongTermCreate {
           this.isSubmitting.set(false);
           const data = res.data;
 
-          if (data && (data.isCreated === false || data.isCreated === undefined)) {
-            if (data.matchedCases) {
-              this.matchedCases.set(data.matchedCases);
-            } else {
-              this.matchedCases.set([]);
-            }
-
-            const rawData = (data as unknown) as Record<string, unknown>;
-            const isSameType = rawData['isSameTypeDuplicate'] ?? rawData['IsSameTypeDuplicate'] ?? false;
-
-            this.isBlockedDuplicate.set(Boolean(isSameType));
+          if (data && !data.isCreated) {
+            this.matchedCases.set(data.matchedCases ?? []);
+            this.isBlockedDuplicate.set(data.isBlocked);
             this.showForceCreatePopup.set(true);
             return;
           }

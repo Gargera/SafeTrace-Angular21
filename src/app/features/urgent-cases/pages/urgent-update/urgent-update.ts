@@ -3,10 +3,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { environment } from '../../../../../environments/environment'; 
+import { environment } from '../../../../../environments/environment';
 import { UrgentCaseService } from '../../services/urgent-case.service';
 import { UrgentCaseUpdateRequest } from '../../models/request/UrgentCaseUpdateRequest';
-import { UrgentCaseDetailResponse } from '../../models/response/UrgentCaseDetailResponse';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
@@ -22,7 +21,6 @@ import { CardComponent } from '../../../../shared/components/card/card';
 // Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
-import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { urgentEventDate, toDatetimeLocalString } from '../../../../shared/validators/urgent-event-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
 import { validateImageFile } from '../../../user-profile/tabs/Edit-profile/utilies/image-validation.util';
@@ -186,8 +184,12 @@ export class UrgentUpdate implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          const c = res.data as UrgentCaseDetailResponse & Record<string, unknown>;
-          const gov = (c as Record<string, unknown>)['government'] as string ?? '';
+          const c = res.data;
+          if (!c) {
+            this.isLoading.set(false);
+            return;
+          }
+          const gov = c.government ?? '';
           this.availableCities.set(getCitiesForGovernorate(gov));
 
           this.form.patchValue({
@@ -197,13 +199,13 @@ export class UrgentUpdate implements OnInit {
             lName: c.lName ?? '',
             age: c.age ?? null,
             gender: c.gender ?? '',
-            relation: (c as Record<string, unknown>)['relation'] as RelationType ?? null,
-            communicationPhone: (c as Record<string, unknown>)['communicationPhone'] as string ?? '',
-            description: (c as Record<string, unknown>)['description'] as string ?? '',
-            government: (c as Record<string, unknown>)['government'] as string ?? '',
-            city: (c as Record<string, unknown>)['city'] as string ?? '',
-            street: (c as Record<string, unknown>)['street'] as string ?? '',
-            eventDate: (c as Record<string, unknown>)['eventDate'] ? toDatetimeLocalString(new Date(String((c as Record<string, unknown>)['eventDate']))) : '',
+            relation: c.relation ?? null,
+            communicationPhone: c.communicationPhone ?? '',
+            description: c.description ?? '',
+            government: c.government ?? '',
+            city: c.city ?? '',
+            street: c.street ?? '',
+            eventDate: c.eventDate ? toDatetimeLocalString(new Date(String(c.eventDate))) : '',
           });
 
           if (c.latitude != null && c.longitude != null) {
@@ -226,7 +228,7 @@ export class UrgentUpdate implements OnInit {
           }));
           this.existingPhotos.set(files);
           this.primaryPhotoId.set(files.find((f) => f.isPrimary)?.id ?? null);
-          this.existingVideoUrl.set(this.resolveMediaUrl((c as Record<string, unknown>)['video'] as string ?? null));
+          this.existingVideoUrl.set(this.resolveMediaUrl(c.video ?? null));
 
           this.isLoading.set(false);
         },
@@ -417,7 +419,7 @@ export class UrgentUpdate implements OnInit {
       tName: v.tName || null,
       gender: v.gender as Gender,
       age: v.age!,
-      relation: v.relation ?? undefined,
+      relation: v.relation as RelationType,
       communicationPhone: v.communicationPhone || null,
       description: v.description || null,
       government: v.government!,

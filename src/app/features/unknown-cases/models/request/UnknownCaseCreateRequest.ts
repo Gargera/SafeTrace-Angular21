@@ -1,9 +1,6 @@
-import { CaseUpsertBaseRequest } from "../../../../core/models/Cases.model";
+import { CreateCaseBaseRequest } from "../../../../core/models/Cases.model";
 
-export interface UnknownCaseCreateRequest extends CaseUpsertBaseRequest {
-  fName: string | null;
-  lName: string | null;
-
-  primaryImage: File;
-  additionalImages: File[] | null;
+export interface UnknownCaseCreateRequest extends CreateCaseBaseRequest {
+  fName?: string | null;
+  lName?: string | null;
 }

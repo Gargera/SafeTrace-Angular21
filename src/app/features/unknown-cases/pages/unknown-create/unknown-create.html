@@ -386,7 +386,13 @@
 
   <!-- 5. Popup outside the card -->
   @if (showForceCreatePopup()) {
-  <app-force-create-popup [matches]="matchedCases()" (cancel)="onForceCreateCancel()" (forceCreate)="onForceCreateConfirm()">
+  <app-force-create-popup
+    [matches]="matchedCases()"
+    [isBlocked]="isBlockedDuplicate()"
+    [canJoinGroup]="true"
+    (cancel)="onForceCreateCancel()"
+    (forceCreate)="onForceCreateConfirm()"
+    (joinGroup)="onJoinGroupConfirm()">
   </app-force-create-popup>
   }
 
