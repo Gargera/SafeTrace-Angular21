@@ -13,7 +13,7 @@ import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/co
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
-import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
+import { MatchedCaseResponse } from '../../../../core/models/Cases.model';
 
 // Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
@@ -71,7 +71,7 @@ export class UnknownCreate {
   videoFile = signal<File | null>(null);
 
   showForceCreatePopup = signal(false);
-  matchedCases = signal<MatchedCaseDto[]>([]);
+  matchedCases = signal<MatchedCaseResponse[]>([]);
   private pendingRequest: UnknownCaseCreateRequest | null = null;
 
   readonly genders = Gender;
@@ -282,7 +282,7 @@ export class UnknownCreate {
               return;
             }
 
-            this.matchedCases.set((data.matchedCases ?? []).map(mapMatchedCaseResponseToDto));
+            this.matchedCases.set(data.matchedCases ?? []);
             this.showForceCreatePopup.set(true);
             return;
           }

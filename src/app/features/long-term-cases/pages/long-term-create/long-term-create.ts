@@ -15,7 +15,7 @@ import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/co
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
-import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
+import { MatchedCaseResponse } from '../../../../core/models/Cases.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
@@ -78,7 +78,7 @@ export class LongTermCreate {
 
   showForceCreatePopup = signal(false);
   isBlockedDuplicate = signal(false);
-  matchedCases = signal<MatchedCaseDto[]>([]);
+  matchedCases = signal<MatchedCaseResponse[]>([]);
   private pendingRequest: LongTermCaseCreateRequest | null = null;
 
   readonly genders = Gender;
@@ -305,7 +305,7 @@ export class LongTermCreate {
 
           if (data && (data.isCreated === false || data.isCreated === undefined)) {
             if (data.matchedCases) {
-              this.matchedCases.set(data.matchedCases.map(mapMatchedCaseResponseToDto));
+              this.matchedCases.set(data.matchedCases);
             } else {
               this.matchedCases.set([]);
             }

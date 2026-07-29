@@ -3,14 +3,14 @@ import { Observable } from 'rxjs';
 import { ApiService } from '../../../shared/services/api.service';
 import { LongTermCaseListItemResponse } from '../models/response/LongTermCaseListItemResponse';
 import { LongTermCaseDetailResponse } from '../models/response/LongTermCaseDetailResponse';
+import { LongTermCreateCaseResponse } from '../models/response/LongTermCreateCaseResponse';
 import { LongTermCaseCreateRequest } from '../models/request/LongTermCaseCreateRequest';
 import { LongTermCaseUpdateRequest } from '../models/request/LongTermCaseUpdateRequest';
 import { FoundPersonInfoRequest } from '../../../core/models/Cases.model';
-import { ApiResponse } from '../../../shared/models/responses/api-response.model';
-import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
-import { CreateCaseResponse } from '../../../shared/models/responses/create-case-response.model';
 import { environment } from '../../../../environments/environment';
 import { LongTermCaseFilterRequest } from '../models/request/LongTermCaseFilterRequest';
+import { ApiResponse } from '../../../shared/models/responses/api-response.model';
+import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
 
 @Injectable({
   providedIn: 'root',
@@ -27,7 +27,7 @@ export class LongTermCaseService extends ApiService {
   ): Observable<ApiResponse<PaginationResponse<LongTermCaseListItemResponse>>> {
     return this.get<ApiResponse<PaginationResponse<LongTermCaseListItemResponse>>>(
       `${this.baseUrl}/GetCases`,
-      (filter as unknown) as Record<string, unknown>,
+      filter,
     );
   }
 
@@ -40,7 +40,7 @@ export class LongTermCaseService extends ApiService {
   ): Observable<ApiResponse<PaginationResponse<LongTermCaseDetailResponse>>> {
     return this.get<ApiResponse<PaginationResponse<LongTermCaseDetailResponse>>>(
       `${this.baseUrl}/Admin/GetCases`,
-      (filter as unknown) as Record<string, unknown>,
+      filter,
     );
   }
 
@@ -76,9 +76,9 @@ export class LongTermCaseService extends ApiService {
   createCase(
     request: LongTermCaseCreateRequest,
     forceCreate = false,
-  ): Observable<ApiResponse<CreateCaseResponse>> {
+  ): Observable<ApiResponse<LongTermCreateCaseResponse>> {
     const formData = this.buildFormData(request);
-    return this.postFormData<ApiResponse<CreateCaseResponse>>(
+    return this.postFormData<ApiResponse<LongTermCreateCaseResponse>>(
       `${this.baseUrl}/CreateCase`,
       formData,
       {
@@ -141,11 +141,11 @@ export class LongTermCaseService extends ApiService {
     return this.delete<ApiResponse<string>>(`${this.baseUrl}/PermanentDeletion/${id}`);
   }
   // في ملف الـ Service الخاص بك (مثلاً: case.service.ts)
-// تأكد أن الميثود تُرجع الـ ApiResponse مغلفاً للكود الداخلي
-createLongTermCase(data: FormData): Observable<ApiResponse<CreateCaseResponse>> {
-  return this.postFormData<ApiResponse<CreateCaseResponse>>(
-    `${this.baseUrl}/CreateCase`, // المسار الصحيح المعتمد في الخدمة
-    data
-  );
-}
+  // تأكد أن الميثود تُرجع الـ ApiResponse مغلفاً للكود الداخلي
+  createLongTermCase(data: FormData): Observable<ApiResponse<LongTermCreateCaseResponse>> {
+    return this.postFormData<ApiResponse<LongTermCreateCaseResponse>>(
+      `${this.baseUrl}/CreateCase`, // المسار الصحيح المعتمد في الخدمة
+      data
+    );
+  }
 }

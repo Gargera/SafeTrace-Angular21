@@ -59,10 +59,11 @@ export interface MatchedCaseResponse {
 }
 
 export interface CreateCaseResponse {
-  IsCreated: boolean;
-  IsSameTypeDuplicate?: boolean;
+  id: number;
   caseId: number | null;
-  matchedCases: MatchedCaseResponse[];
+  isCreated: boolean;
+  isSameTypeDuplicate?: boolean;
+  matchedCases?: MatchedCaseResponse[] | null;
 }
 
 export interface DuplicateCheckResponse {
@@ -148,7 +149,7 @@ export interface CaseUpsertBaseRequest {
 
   video: File | null;
 }
-export interface CaseCreateBaseRequest extends CaseUpsertBaseRequest { }
+
 
 export interface CaseUpdateBaseRequest extends CaseUpsertBaseRequest {
   newPhotos: File[] | null;
@@ -182,5 +183,3 @@ export interface FoundPersonInfoRequest {
   street: string;
   foundedAt: string; // DateOnly
 }
-
-export { CaseType };

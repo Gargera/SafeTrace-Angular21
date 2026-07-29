@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 import { catchError, EMPTY, Subject, switchMap, tap } from 'rxjs';
 
 import { LongTermCaseService } from '../../services/long-term-case.service';
-import { CasesFilterRequest, CaseType } from '../../../../core/models/Cases.model';
+import { CasesFilterRequest } from '../../../../core/models/Cases.model';
 import { LongTermCaseListItemResponse } from '../../models/response/LongTermCaseListItemResponse';
 import { CaseCreationFlowService } from '../../../../core/services/case-creation-flow.service';
 
@@ -19,6 +19,7 @@ import { CaseCardComponent } from '../../../../shared/components/cases-component
 import { CasesFilterState } from '../../../../shared/helper/cases-filter-state';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { CaseType } from '../../../../shared/enums/case-type';
 
 @Component({
   selector: 'app-long-term-list',
