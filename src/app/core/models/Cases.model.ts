@@ -190,3 +190,10 @@ export interface FoundPersonInfoRequest {
   street: string;
   foundedAt: string; // DateOnly
 }
+
+export interface CaseFileResponse {
+  id: number;
+  imagePath: string;
+  isPrimary: boolean;
+  faceId?: string | null;
+}

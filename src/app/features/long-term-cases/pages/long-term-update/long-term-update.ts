@@ -15,7 +15,6 @@ import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.
 import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { SnackbarService } from '../../../../core/services/toast.service';
-import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
@@ -28,6 +27,7 @@ import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.vali
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
 import { validateImageFile } from '../../../user-profile/tabs/Edit-profile/utilies/image-validation.util';
+import { CaseFileResponse } from '../../../../core/models/cases.model';
 
 type Step = 1 | 2 | 3;
 
