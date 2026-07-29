@@ -56,14 +56,27 @@ export class ForceCreatePopupComponent {
     this.matches().every((m) => m.caseType === CaseType.Unknown)
   );
 
+  /** Icon container style class */
+  readonly popupIconContainerClass = computed(() => {
+    if (this.isBlockedMode()) {
+      return 'bg-red-100 text-red-600 border border-red-200';
+    }
+    if (this.showJoinGroup()) {
+      return 'bg-emerald-100 text-emerald-600 border border-emerald-200';
+    }
+    return 'bg-blue-100 text-blue-600 border border-blue-200';
+  });
+
   /** Icon name (Material Symbols) */
-  readonly popupIcon = computed(() =>
-    this.isBlockedMode() ? 'block' : 'manage_search'
-  );
+  readonly popupIcon = computed(() => {
+    if (this.isBlockedMode()) return 'block';
+    if (this.showJoinGroup()) return 'group_add';
+    return 'search';
+  });
 
   /** Icon colour class */
   readonly popupIconClass = computed(() =>
-    this.isBlockedMode() ? 'text-red-600' : 'text-amber-500'
+    this.isBlockedMode() ? 'text-red-600' : (this.showJoinGroup() ? 'text-emerald-600' : 'text-blue-600')
   );
 
   /** Header title */
@@ -105,7 +118,7 @@ export class ForceCreatePopupComponent {
 
 
   formatSimilarity(m: MatchedCaseResponse): number {
-    const score = m.matchScore ?? 0;
+    const score = m.matchScore ?? (m as any).similarity ?? 0;
     return score > 0 && score <= 1 ? Math.round(score * 100) : Math.round(score);
   }
 
