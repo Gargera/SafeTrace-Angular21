@@ -128,13 +128,19 @@
           </div>
 
           <!-- Relation -->
-          <!-- FIX: [ngValue] instead of [value] because RelationType is a numeric enum.
-               [value] coerces to string in the DOM, breaking selection matching. -->
+          <!-- FIX #2: reverted to plain [value] (not [ngValue]). The shared
+               FormField wraps its <select> and projects <option> tags via
+               <ng-content>, which breaks Angular's NgSelectOption <-> select
+               accessor coordination that [ngValue] depends on (they end up in
+               different injector contexts). Since RelationType is now a
+               STRING enum matching the API's string values 1:1, plain [value]
+               works correctly via the native DOM value-matching fallback —
+               exactly like Gender already does. -->
           <div>
             <app-form-field label="صلة القرابة بك *" type="select" formControlName="relation" [extraClass]="isInvalid('relation') ? 'border-error' : ''">
-              <option [ngValue]="null" disabled>اختر صلة القرابة بالشخص المفقود</option>
+              <option value="" disabled>اختر صلة القرابة بالشخص المفقود</option>
               @for (opt of relationOptions; track opt.value) {
-              <option [ngValue]="opt.value">{{ opt.label }}</option>
+              <option [value]="opt.value">{{ opt.label }}</option>
               }
             </app-form-field>
             @if (isInvalid('relation')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('relation') }}</p> }

@@ -94,6 +94,7 @@ export class LongTermDetails implements OnInit {
   lightboxVisible = signal(false);
   currentIndex = signal(0);
   isAdminPage = signal(false);
+  isMyCasePage = signal(false);
 
   ngOnInit(): void {
     this.isAdminPage.set(this.route.snapshot.data['mode'] === 'dashboard');

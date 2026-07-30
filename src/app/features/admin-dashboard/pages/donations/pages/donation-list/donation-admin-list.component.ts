@@ -19,6 +19,7 @@ import { AdminDonationStatisticsDto } from '../../models/admin-donation-statisti
 import { Permissions } from '../../../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../../../shared/directives/has-permission.directive';
 import { PaginationComponent } from '../../../../../../shared/components/pagination/pagination';
+import { ReportService } from '../../../../services/report.service';
 
 @Component({
   selector: 'app-donation-admin-list',
@@ -42,6 +43,7 @@ import { PaginationComponent } from '../../../../../../shared/components/paginat
 export class DonationAdminListComponent implements OnInit {
   private readonly donationService = inject(DonationService);
   private readonly searchSubject = new Subject<string>();
+  private readonly reportService = inject(ReportService);
 
   Permissions = Permissions;
 
@@ -157,4 +159,17 @@ export class DonationAdminListComponent implements OnInit {
   closeMessage(): void {
     this.selectedMessage.set(null);
   }
+
+  downloadReport(): void {
+
+  this.reportService
+    .generateDonationPdfReport({pageNumber: this.pageNumber(),
+      pageSize: this.pageSize,
+      userEmail: this.search() || undefined,
+      paymentStatus: (this.selectedStatus() as PaymentStatus) || undefined,
+    })
+    .subscribe(response => {
+      this.reportService.download(response);
+    });
+}
 }

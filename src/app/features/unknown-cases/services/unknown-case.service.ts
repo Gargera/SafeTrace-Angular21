@@ -138,4 +138,9 @@ export class UnknownCaseService extends ApiService {
   permanentDelete(id: number): Observable<ApiResponse<string>> {
     return this.delete<ApiResponse<string>>(`${this.baseUrl}/PermanentDeletion/${id}`);
   }
+  getMyCaseById(id: number) {
+    return this.http.get<ApiResponse<UnknownCaseDetailResponse>>(
+      `${environment.baseUrl}/api/UnknownCase/MyCaseDetails/${id}`
+    );
+  }
 }

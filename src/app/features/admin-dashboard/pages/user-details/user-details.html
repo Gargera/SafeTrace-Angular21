@@ -326,5 +326,29 @@
     [variant]="modalConfig().variant"
     (confirm)="onConfirmModal()"
     (cancel)="showConfirmModal.set(false)"
-  ></app-confirmation-modal>
+  >
+    @if (modalConfig().title === 'تأكيد رفض الحساب') {
+      <div class="mt-4 w-full text-right px-2">
+        <app-form-field
+          label="سبب الرفض (اختياري)"
+          placeholder="اكتب سبب رفض توثيق الحساب هنا (إن وجد)..."
+          type="textarea"
+          [rows]="4"
+          [ngModel]="rejectReason()"
+          (ngModelChange)="rejectReason.set($event)"
+        ></app-form-field>
+      </div>
+    } @else if (modalConfig().title === 'تأكيد حظر المستخدم') {
+      <div class="mt-4 w-full text-right px-2">
+        <app-form-field
+          label="سبب الحظر (اختياري)"
+          placeholder="اكتب سبب حظر الحساب هنا (إن وجد)..."
+          type="textarea"
+          [rows]="4"
+          [ngModel]="blockReason()"
+          (ngModelChange)="blockReason.set($event)"
+        ></app-form-field>
+      </div>
+    }
+  </app-confirmation-modal>
 }

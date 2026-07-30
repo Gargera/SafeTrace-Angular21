@@ -37,12 +37,12 @@ export class UserService extends ApiService {
     return this.post<ApiResponse<string>>(`${this.baseUrl}/approve/${userId}`, {});
   }
 
-  rejectUser(userId: string): Observable<ApiResponse<string>> {
-    return this.post<ApiResponse<string>>(`${this.baseUrl}/reject/${userId}`, {});
+  rejectUser(userId: string, reason: string): Observable<ApiResponse<string>> {
+    return this.post<ApiResponse<string>>(`${this.baseUrl}/reject/${userId}`, { reason });
   }
 
-  toggleBlockStatus(userId: string): Observable<ApiResponse<string>> {
-    return this.post<ApiResponse<string>>(`${this.baseUrl}/toggle-block/${userId}`, {});
+  toggleBlockStatus(userId: string, reason?: string): Observable<ApiResponse<string>> {
+    return this.post<ApiResponse<string>>(`${this.baseUrl}/toggle-block/${userId}`, { reason: reason || null });
   }
 
   getUserPermissions(userId: string): Observable<ApiResponse<UserPermissionsResponseDto>> {

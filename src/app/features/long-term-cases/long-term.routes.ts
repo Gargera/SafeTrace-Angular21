@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { LongTermList } from './pages/long-term-list/long-term-list';
 import { permissionGuard } from '../../core/guards/permission.guard';
 import { Permissions } from '../../core/constants/Permissions';
+import { authGuard } from '../../core/guards/auth-guard';
 
 export const LONG_TERM_ROUTES: Routes = [
     { 
@@ -25,6 +26,16 @@ export const LONG_TERM_ROUTES: Routes = [
         import('./pages/long-term-update/long-term-update')
           .then(c => c.LongTermUpdate)
     },
+    {
+  path: 'my/:id',
+  title: 'تفاصيل حالتي | لقاء',
+  canActivate: [authGuard],
+  data: { mode: 'my-case' },
+  loadComponent: () =>
+    import('./pages/long-term-details/long-term-details')
+      .then(c => c.LongTermDetails)
+},
+
     {
       path: ':id',
       title: 'تفاصيل الحالة | لقاء',

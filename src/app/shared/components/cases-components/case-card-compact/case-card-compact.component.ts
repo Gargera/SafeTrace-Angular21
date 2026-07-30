@@ -47,7 +47,8 @@ export class CaseCardCompactComponent {
 
   // Reactive image error state
   private imageHasError = signal(false);
-
+  //
+  readonly isMyCase = input(false);
   // ----- Computed Signals -----
 
   /** Helper config for available actions based on case status and foundPersonInfoId */

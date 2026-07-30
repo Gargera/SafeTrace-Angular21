@@ -79,7 +79,7 @@ export class UrgentDetails implements OnInit {
 
   selectedMedia = signal<CasePhotoResponse | null>(null);
   isAdminPage = signal(false);
-
+  isMyCasePage = signal(false);
   // Lightbox
   lightboxVisible = signal(false);
   currentIndex = signal(0);

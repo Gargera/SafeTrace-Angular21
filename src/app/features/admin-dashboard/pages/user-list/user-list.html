@@ -127,6 +127,15 @@
 
   <div class="flex flex-wrap justify-end gap-3 pt-2">
     <app-button
+      *hasPermission="Permissions.Users.GenerateUsersPdfReport"
+      variant="secondary"
+      (onClick)="downloadReport()"
+      extraClass="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium border-outline hover:bg-surface-container-high transition-all duration-200"
+    >
+      <span class="material-symbols-outlined text-[18px]">download</span>
+      <span>تحميل التقرير</span>
+    </app-button>
+    <app-button
       variant="text"
       (onClick)="resetFilters()"
       extraClass="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary"
