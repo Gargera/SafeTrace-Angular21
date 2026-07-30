@@ -98,6 +98,7 @@ export class LongTermDetails implements OnInit {
 
   ngOnInit(): void {
     this.isAdminPage.set(this.route.snapshot.data['mode'] === 'dashboard');
+    this.isMyCasePage.set(this.route.snapshot.data['mode'] === 'my-case');
 
     this.route.paramMap
       .pipe(
@@ -111,7 +112,9 @@ export class LongTermDetails implements OnInit {
           this.loading.set(true);
           const req$ = this.isAdminPage()
             ? this.longTermCaseService.adminGetCaseById(id)
-            : this.longTermCaseService.getCaseById(id);
+            : this.isMyCasePage()
+              ? this.longTermCaseService.getMyCaseById(id)
+              : this.longTermCaseService.getCaseById(id);
 
           return req$.pipe(
             catchError((err: unknown) => {

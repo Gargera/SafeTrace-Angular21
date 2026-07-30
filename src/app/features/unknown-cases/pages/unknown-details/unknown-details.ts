@@ -95,6 +95,7 @@ export class UnknownDetails implements OnInit {
   isMyCasePage = signal(false);
   ngOnInit(): void {
     this.isAdminPage.set(this.route.snapshot.data['mode'] === 'dashboard');
+    this.isMyCasePage.set(this.route.snapshot.data['mode'] === 'my-case');
 
     this.route.paramMap
       .pipe(
@@ -108,7 +109,9 @@ export class UnknownDetails implements OnInit {
           this.loading.set(true);
           const req$ = this.isAdminPage()
             ? this.UnknownCaseService.adminGetCaseById(id)
-            : this.UnknownCaseService.getCaseById(id);
+            : this.isMyCasePage()
+              ? this.UnknownCaseService.getMyCaseById(id)
+              : this.UnknownCaseService.getCaseById(id);
 
           return req$.pipe(
             catchError((err: unknown) => {

@@ -77,6 +77,18 @@ export class CaseCardCompactComponent {
   /** Router link for the detail page based on case type */
   readonly detailRoute = computed(() => {
     const item = this.caseItem();
+    if (this.isMyCase()) {
+      switch (item.caseType) {
+        case CaseType.Urgent:
+          return ['/urgent/my', item.id];
+        case CaseType.LongTerm:
+          return ['/long-term/my', item.id];
+        case CaseType.Unknown:
+          return ['/unknown/my', item.id];
+        default:
+          return ['/cases', item.id];
+      }
+    }
     switch (item.caseType) {
       case CaseType.Urgent:
         return ['/urgent', item.id];

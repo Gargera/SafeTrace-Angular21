@@ -86,6 +86,7 @@ export class UrgentDetails implements OnInit {
 
   ngOnInit(): void {
     this.isAdminPage.set(this.route.snapshot.data['mode'] === 'dashboard');
+    this.isMyCasePage.set(this.route.snapshot.data['mode'] === 'my-case');
 
     this.route.paramMap
       .pipe(
@@ -99,7 +100,9 @@ export class UrgentDetails implements OnInit {
           this.loading.set(true);
           const req$ = this.isAdminPage()
             ? this.UrgentDetailsService.adminGetCaseById(id)
-            : this.UrgentDetailsService.getCaseById(id);
+            : this.isMyCasePage()
+              ? this.UrgentDetailsService.getMyCaseById(id)
+              : this.UrgentDetailsService.getCaseById(id);
 
           return req$.pipe(
             catchError((err: unknown) => {
