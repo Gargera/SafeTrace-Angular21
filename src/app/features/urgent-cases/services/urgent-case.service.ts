@@ -128,9 +128,9 @@ export class UrgentCaseService extends ApiService {
     return this.delete<ApiResponse<string>>(`${this.baseUrl}/${id}/permanent`);
   }
 
-getMyCaseById(id: number) {
-  return this.http.get<ApiResponse<UrgentCaseDetailResponse>>(
-    `${environment.baseUrl}/api/UrgentCase/MyCaseDetails/${id}`
-  );
-}
+  getMyCaseById(id: number) {
+    return this.http.get<ApiResponse<UrgentCaseDetailResponse>>(
+      `${environment.baseUrl}/api/UrgentCase/MyCaseDetails/${id}`
+    );
+  }
 }
