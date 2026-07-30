@@ -1,12 +1,6 @@
-import { CaseUpsertBaseRequest } from "../../../../core/models/Cases.model";
+import { UpdateCaseBaseRequest } from "../../../../core/models/cases.model";
 
-export interface UnknownCaseUpdateRequest extends CaseUpsertBaseRequest {
+export interface UnknownCaseUpdateRequest extends UpdateCaseBaseRequest {
   fName?: string | null;
   lName?: string | null;
-
-  primaryImage?: File | null;
-
-  newPhotos: File[] | null;
-  deletedPhotoIds: number[] | null;
-  primaryPhotoId: number | null;
 }

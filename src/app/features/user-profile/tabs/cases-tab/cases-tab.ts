@@ -6,7 +6,6 @@ import {
   computed,
   OnInit,
   OnDestroy,
-  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -21,7 +20,7 @@ import { SnackbarService } from '../../../../core/services/toast.service';
 import { MyCaseListItemResponse, MyCasesFilterRequest } from '../../model/profile.model';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
-import { FoundPersonInfoRequest, CasesFilterRequest } from '../../../../core/models/Cases.model';
+import { FoundPersonInfoRequest, CasesFilterRequest } from '../../../../core/models/cases.model';
 
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';

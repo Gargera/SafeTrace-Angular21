@@ -3,15 +3,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { environment } from '../../../../../environments/environment' ;
+import { environment } from '../../../../../environments/environment';
 import { UnknownCaseService } from '../../services/unknown-case.service';
 import { UnknownCaseUpdateRequest } from '../../models/request/UnknownCaseUpdateRequest';
-import { UnknownCaseDetailResponse } from '../../models/response/UnknownCaseDetailResponse';
 import { Gender } from '../../../../shared/enums/gender';
 import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { SnackbarService } from '../../../../core/services/toast.service';
-import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
+import { CaseFileResponse } from '../../../../core/models/cases.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
@@ -160,8 +159,12 @@ export class UnknownUpdate implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          const c = res.data as UnknownCaseDetailResponse & Record<string, unknown>;
-          const gov = (c as Record<string, unknown>)['government'] as string ?? '';
+          const c = res.data;
+          if (!c) {
+            this.isLoading.set(false);
+            return;
+          }
+          const gov = c.government ?? '';
           this.availableCities.set(getCitiesForGovernorate(gov));
           this.form.patchValue({
             fName: c.fName ?? '',
@@ -170,12 +173,12 @@ export class UnknownUpdate implements OnInit {
             lName: c.lName ?? '',
             age: c.age ?? null,
             gender: c.gender ?? '',
-            communicationPhone: (c as Record<string, unknown>)['communicationPhone'] as string ?? '',
-            description: (c as Record<string, unknown>)['description'] as string ?? '',
-            government: (c as Record<string, unknown>)['government'] as string ?? '',
-            city: (c as Record<string, unknown>)['city'] as string ?? '',
-            street: (c as Record<string, unknown>)['street'] as string ?? '',
-            eventDate: (c as Record<string, unknown>)['eventDate'] ? String((c as Record<string, unknown>)['eventDate']).split('T')[0] : '',
+            communicationPhone: c.communicationPhone ?? '',
+            description: c.description ?? '',
+            government: c.government ?? '',
+            city: c.city ?? '',
+            street: c.street ?? '',
+            eventDate: c.eventDate ? String(c.eventDate).split('T')[0] : '',
           });
 
           const rawFiles: CaseFileResponse[] = c.photos ?? [];
@@ -185,7 +188,7 @@ export class UnknownUpdate implements OnInit {
           }));
           this.existingPhotos.set(files);
           this.primaryPhotoId.set(files.find((f) => f.isPrimary)?.id ?? null);
-          this.existingVideoUrl.set(this.resolveMediaUrl((c as Record<string, unknown>)['video'] as string ?? null));
+          this.existingVideoUrl.set(this.resolveMediaUrl(c.video ?? null));
 
           this.isLoading.set(false);
         },

@@ -18,7 +18,7 @@ import { FileType } from '../../../../shared/enums/file-type';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup';
-import { CasePhotoResponse, FoundPersonInfoRequest } from '../../../../core/models/Cases.model';
+import { CasePhotoResponse, FoundPersonInfoRequest } from '../../../../core/models/cases.model';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { UrgentCaseService } from '../../services/urgent-case.service';
@@ -86,6 +86,7 @@ export class UrgentDetails implements OnInit {
 
   ngOnInit(): void {
     this.isAdminPage.set(this.route.snapshot.data['mode'] === 'dashboard');
+    this.isMyCasePage.set(this.route.snapshot.data['mode'] === 'my-case');
 
     this.route.paramMap
       .pipe(
@@ -99,7 +100,9 @@ export class UrgentDetails implements OnInit {
           this.loading.set(true);
           const req$ = this.isAdminPage()
             ? this.UrgentDetailsService.adminGetCaseById(id)
-            : this.UrgentDetailsService.getCaseById(id);
+            : this.isMyCasePage()
+              ? this.UrgentDetailsService.getMyCaseById(id)
+              : this.UrgentDetailsService.getCaseById(id);
 
           return req$.pipe(
             catchError((err: unknown) => {

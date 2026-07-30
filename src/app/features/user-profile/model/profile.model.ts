@@ -1,4 +1,4 @@
-import { AgeCategoryResponse } from '../../../core/models/Cases.model';
+import { AgeCategoryResponse } from '../../../core/models/cases.model';
 import { CaseStatus } from '../../../shared/enums/case-status';
 import { CaseType } from '../../../shared/enums/case-type';
 import { Gender } from '../../../shared/enums/gender';

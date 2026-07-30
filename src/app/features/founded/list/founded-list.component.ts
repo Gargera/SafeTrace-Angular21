@@ -12,7 +12,7 @@ import { CaseSkeletonGridComponent } from '../../../shared/components/cases-comp
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { PaginationComponent } from '../../../shared/components/cases-components/case-pagination/case-pagination.component';
 import { CaseFiltersComponent } from '../../../shared/components/cases-components/case-filters/case-filters.component';
-import { CasesFilterRequest, CaseListItemResponse } from '../../../core/models/Cases.model';
+import { CasesFilterRequest, CaseListItemResponse } from '../../../core/models/cases.model';
 import { CaseStatus } from '../../../shared/enums/case-status';
 import { CaseCardComponent } from '../../../shared/components/cases-components/case-card/case-card.component';
 import { FoundedHeaderQueryDTO, FoundPersonListItemDto } from '../models/founded.models';

@@ -11,7 +11,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { CaseListItemResponse, CasesFilterRequest } from '../../../../core/models/Cases.model';
+import { CaseListItemResponse, CasesFilterRequest } from '../../../../core/models/cases.model';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { CardComponent } from '../../../../shared/components/card/card';
@@ -276,38 +276,38 @@ export class CasesManagement implements OnInit, OnDestroy {
     this.modalConfig.set(null);
   }
   getDetailsRoute(caseItem: CaseListItemResponse) {
-  switch (caseItem.caseType) {
-    case CaseType.LongTerm:
-      return ['/admin/long-term', caseItem.id];
+    switch (caseItem.caseType) {
+      case CaseType.LongTerm:
+        return ['/admin/long-term', caseItem.id];
 
-    case CaseType.Unknown:
-      return ['/admin/unknown', caseItem.id];
+      case CaseType.Unknown:
+        return ['/admin/unknown', caseItem.id];
 
-    case CaseType.Urgent:
-      return ['/admin/urgent', caseItem.id];
+      case CaseType.Urgent:
+        return ['/admin/urgent', caseItem.id];
 
-    default:
-      return ['/admin/cases-management'];
+      default:
+        return ['/admin/cases-management'];
+    }
   }
-}
 
-getDeletePermission(caseType: CaseType): string {
-  switch (caseType) {
-    case CaseType.LongTerm: return Permissions.LongTermCases.HardDelete;
-    case CaseType.Unknown: return Permissions.UnknownCases.HardDelete;
-    case CaseType.Urgent: return Permissions.UrgentCases.HardDelete;
-    default: return '';
+  getDeletePermission(caseType: CaseType): string {
+    switch (caseType) {
+      case CaseType.LongTerm: return Permissions.LongTermCases.HardDelete;
+      case CaseType.Unknown: return Permissions.UnknownCases.HardDelete;
+      case CaseType.Urgent: return Permissions.UrgentCases.HardDelete;
+      default: return '';
+    }
   }
-}
 
-getViewPermission(caseType: CaseType): string {
-  switch (caseType) {
-    case CaseType.LongTerm: return Permissions.LongTermCases.GetById;
-    case CaseType.Unknown: return Permissions.UnknownCases.GetById;
-    case CaseType.Urgent: return Permissions.UrgentCases.GetById;
-    default: return '';
+  getViewPermission(caseType: CaseType): string {
+    switch (caseType) {
+      case CaseType.LongTerm: return Permissions.LongTermCases.GetById;
+      case CaseType.Unknown: return Permissions.UnknownCases.GetById;
+      case CaseType.Urgent: return Permissions.UrgentCases.GetById;
+      default: return '';
+    }
   }
-}
 
 downloadReport(): void {
 

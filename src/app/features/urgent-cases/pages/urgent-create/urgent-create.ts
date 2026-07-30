@@ -2,7 +2,7 @@ import { Component, inject, signal, computed, ChangeDetectionStrategy, DestroyRe
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { UrgentCaseService } from '../../services/urgent-case.service';
@@ -15,7 +15,7 @@ import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/for
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
-import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
+import { MatchedCaseResponse } from '../../../../core/models/cases.model';
 import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
@@ -99,7 +99,7 @@ export class UrgentCreate {
 
   showForceCreatePopup = signal(false);
   isBlockedDuplicate = signal(false);
-  matchedCases = signal<MatchedCaseDto[]>([]);
+  matchedCases = signal<MatchedCaseResponse[]>([]);
   private pendingRequest: UrgentCaseCreateRequest | null = null;
 
   readonly genders = Gender;
@@ -399,24 +399,15 @@ export class UrgentCreate {
           this.isSubmitting.set(false);
           const data = res.data;
 
-          // في حالة التكرار وعدم الإنشـاء
-          if (data && (data.isCreated === false || data.isCreated === undefined)) {
-            if (data.matchedCases) {
-              this.matchedCases.set(data.matchedCases.map(mapMatchedCaseResponseToDto));
-            } else {
-              this.matchedCases.set([]);
-            }
-
-            const rawData = (data as unknown) as Record<string, unknown>;
-            const isSameType = rawData['isSameTypeDuplicate'] ?? rawData['IsSameTypeDuplicate'] ?? false;
-
-            this.isBlockedDuplicate.set(Boolean(isSameType));
+          if (data && !data.isCreated) {
+            this.matchedCases.set(data.matchedCases ?? []);
+            this.isBlockedDuplicate.set(data.isBlocked);
             this.showForceCreatePopup.set(true);
             return;
           }
 
           this.showForceCreatePopup.set(false);
-          this.snackbar.success('تم إرسال بلاغ الحالة بنجاح، هيتم مراجعته من الإدارة قريبًا.');
+          this.snackbar.success('تم انشاء بلاغ حاله طارئة بنجاح');
           this.router.navigate(['/urgent']);
         },
         error: (err: unknown) => {

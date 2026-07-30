@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, input, inject, output, signal, comp
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 
-import { CaseListItemResponse } from '../../../../core/models/Cases.model';
+import { CaseListItemResponse } from '../../../../core/models/cases.model';
 import { getAgeCategory } from '../../../helper/age-category.helper';
 
 import { GenderBadgeDirective } from '../../../directives/gender-badge-directive';

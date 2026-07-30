@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
-import { CaseListItemResponse } from '../../../core/models/Cases.model';
+import { CaseListItemResponse } from '../../../core/models/cases.model';
 
 export interface AiMatchedCase extends CaseListItemResponse {
   similarity: number;

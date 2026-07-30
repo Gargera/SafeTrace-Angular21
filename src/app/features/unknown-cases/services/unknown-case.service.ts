@@ -4,13 +4,13 @@ import { ApiService } from '../../../shared/services/api.service';
 import { UnknownCaseFilterRequest } from '../models/request/UnknownCaseFilterRequest';
 import { UnknownCaseListItemResponse } from '../models/response/UnknownCaseListItemResponse';
 import { UnknownCaseDetailResponse } from '../models/response/UnknownCaseDetailResponse';
+import { UnknownCreateCaseResponse } from '../models/response/UnknownCreateCaseResponse';
 import { UnknownCaseUpdateRequest } from '../models/request/UnknownCaseUpdateRequest';
 import { UnknownCaseCreateRequest } from '../models/request/UnknownCaseCreateRequest';
-import { FoundPersonInfoRequest } from '../../../core/models/Cases.model';
+import { FoundPersonInfoRequest } from '../../../core/models/cases.model';
+import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
-import { CreateCaseResponse } from '../../../shared/models/responses/create-case-response.model';
-import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -27,7 +27,7 @@ export class UnknownCaseService extends ApiService {
   ): Observable<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>> {
     return this.get<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>>(
       `${this.baseUrl}/GetCases`,
-      (filter as unknown) as Record<string, unknown>,
+      filter,
     );
   }
 
@@ -40,7 +40,7 @@ export class UnknownCaseService extends ApiService {
   ): Observable<ApiResponse<PaginationResponse<UnknownCaseDetailResponse>>> {
     return this.get<ApiResponse<PaginationResponse<UnknownCaseDetailResponse>>>(
       `${this.baseUrl}/Admin/GetCases`,
-      (filter as unknown) as Record<string, unknown>,
+      filter,
     );
   }
 
@@ -74,9 +74,9 @@ export class UnknownCaseService extends ApiService {
   createCase(
     request: UnknownCaseCreateRequest,
     forceCreate = false,
-  ): Observable<ApiResponse<CreateCaseResponse>> {
+  ): Observable<ApiResponse<UnknownCreateCaseResponse>> {
     const formData = this.buildFormData(request);
-    return this.postFormData<ApiResponse<CreateCaseResponse>>(
+    return this.postFormData<ApiResponse<UnknownCreateCaseResponse>>(
       `${this.baseUrl}/CreateCase`,
       formData,
       {
@@ -138,6 +138,7 @@ export class UnknownCaseService extends ApiService {
   permanentDelete(id: number): Observable<ApiResponse<string>> {
     return this.delete<ApiResponse<string>>(`${this.baseUrl}/PermanentDeletion/${id}`);
   }
+
   getMyCaseById(id: number) {
     return this.http.get<ApiResponse<UnknownCaseDetailResponse>>(
       `${environment.baseUrl}/api/UnknownCase/MyCaseDetails/${id}`

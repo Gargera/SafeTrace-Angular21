@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable, forkJoin, map } from 'rxjs';
 
-import { CaseListItemResponse, CasesFilterRequest } from '../../../core/models/Cases.model';
+import { CaseListItemResponse, CasesFilterRequest } from '../../../core/models/cases.model';
 import { CaseType } from '../../../shared/enums/case-type';
 import { AgeSort } from '../../../shared/enums/age-sort';
 import { DateSort } from '../../../shared/enums/date-sort';
