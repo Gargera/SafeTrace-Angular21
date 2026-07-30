@@ -98,7 +98,7 @@ export class CasesManagementService {
         if (type === CaseType.Urgent) {
             request.latitude = request.latitude ?? null;
             request.longitude = request.longitude ?? null;
-            request.radiusInMeters = request.radiusInMeters ?? null;
+            request.radiusInKm = request.radiusInKm ?? null;
         }
 
         return (
@@ -143,7 +143,7 @@ export class CasesManagementService {
             ...baseFilter,
             latitude: null,
             longitude: null,
-            radiusInMeters: null,
+            radiusInKm: null,
         });
         const longTerm$ = this.longTermService.adminGetAllCases(baseFilter);
         const unknown$ = this.unknownService.adminGetAllCases(baseFilter);

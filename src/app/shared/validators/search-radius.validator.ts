@@ -1,6 +1,6 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
-export function searchRadiusValidator(min = 100, max = 50000): ValidatorFn {
+export function searchRadiusValidator(min = 1, max = 1000): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const val = control.value;
     if (val === null || val === undefined || val === '') {
