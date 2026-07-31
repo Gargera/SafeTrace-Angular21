@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { environment } from '../../../environments/environment';
-import { Observable, tap, firstValueFrom, timeout } from 'rxjs';
+import { Observable, tap, firstValueFrom } from 'rxjs';
 import { ApiResponse } from '../../shared/models/responses/api-response.model';
 import { AuthResponse } from '../../features/auth/models/AuthResponse';
 import { LoginRequest } from '../../features/auth/models/LoginRequest';
@@ -50,12 +50,14 @@ export class AuthService {
     }
 
     try {
-      const res = await firstValueFrom(this.refreshToken().pipe(timeout(3000)));
+      const res = await firstValueFrom(this.refreshToken());
       if (res.success && res.data) {
         this.isLoggedIn.set(true);
       }
-    } catch (error) {
-      this.handleSessionExpiration();
+    } catch (error: any) {
+      if (error?.status === 401 || error?.status === 403) {
+        this.handleSessionExpiration();
+      }
     }
   }
 
