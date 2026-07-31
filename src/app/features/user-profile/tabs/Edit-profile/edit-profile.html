@@ -132,6 +132,7 @@
   ></ng-container>
 
   <app-personal-info [userInfo]="userInfo()" (personalUpdated)="onProfileUpdated()" />
+
   <app-password
     [adminOnlyLabel]="isAdmin || userInfo()?.role === 'SuperAdmin'"
     (passwordSaved)="onProfileUpdated()"
