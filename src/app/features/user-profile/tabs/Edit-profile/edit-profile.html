@@ -56,10 +56,7 @@
 <div class="p-lg space-y-xl animate-fade-in" dir="rtl">
   @if (userInfo()?.role && userInfo()?.role !== 'User' && userInfo()?.role !== 'VerifiedUser') {
     <!-- Generic Role / Status Banner -->
-    <div
-      [class]="bannerClasses"
-      role="status"
-    >
+    <div [class]="bannerClasses" role="status">
       <div class="flex items-start gap-4">
         <div
           class="w-14 h-14 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm shrink-0"
@@ -90,7 +87,9 @@
               >
               <div>
                 <p class="text-xs opacity-80 mb-1">الحالة</p>
-                <p class="font-semibold">{{ getVerificationStatus(userInfo()?.verificationStatus) }}</p>
+                <p class="font-semibold">
+                  {{ getVerificationStatus(userInfo()?.verificationStatus) }}
+                </p>
               </div>
             </div>
 
@@ -127,11 +126,16 @@
 
   <ng-container
     [ngTemplateOutlet]="profileImagesCard"
-    [ngTemplateOutletContext]="{ showId: userInfo()?.role !== 'SuperAdmin' && userInfo()?.role !== 'Admin' }"
+    [ngTemplateOutletContext]="{
+      showId: userInfo()?.role !== 'SuperAdmin' && userInfo()?.role !== 'Admin',
+    }"
   ></ng-container>
-  
+
   <app-personal-info [userInfo]="userInfo()" (personalUpdated)="onProfileUpdated()" />
-  <app-password [adminOnlyLabel]="isAdmin || userInfo()?.role === 'SuperAdmin'" (passwordSaved)="onProfileUpdated()" />
+  <app-password
+    [adminOnlyLabel]="isAdmin || userInfo()?.role === 'SuperAdmin'"
+    (passwordSaved)="onProfileUpdated()"
+  />
   <app-phone [userInfo]="userInfo()" (phoneUpdated)="onProfileUpdated()" />
   <app-location-picker [userInfo]="userInfo()" (locationUpdated)="onProfileUpdated()" />
 </div>

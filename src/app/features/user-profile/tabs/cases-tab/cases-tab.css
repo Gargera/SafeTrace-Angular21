@@ -1,0 +1,33 @@
+/* cases-tab.css */
+.cases-scroll-container {
+  max-height: calc(100vh - 340px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+@media (max-width: 640px) {
+  .cases-scroll-container {
+    max-height: calc(100vh - 380px);
+  }
+}
+
+.cases-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cases-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cases-scroll-container::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.4);
+  border-radius: 9999px;
+}
+
+.cases-scroll-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
+}

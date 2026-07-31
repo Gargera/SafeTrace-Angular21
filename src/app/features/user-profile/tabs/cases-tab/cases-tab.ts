@@ -50,8 +50,10 @@ const CASE_TYPE_ORDER: CaseType[] = [CaseType.Urgent, CaseType.LongTerm, CaseTyp
     FoundedPopupComponent,
   ],
   templateUrl: './cases-tab.html',
+  styleUrls: ['./cases-tab.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
+
 export class MyCasesTab implements OnInit, OnDestroy {
   protected readonly CaseType = CaseType;
   protected readonly CaseStatus = CaseStatus;
