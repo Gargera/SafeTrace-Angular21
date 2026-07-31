@@ -5,7 +5,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 
 import { DashboardService } from '../../services/dashboard.service';
 import { AuditLogDto, AuditLogQueryDto } from '../../models/Dashboard/audit-log.dto';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';

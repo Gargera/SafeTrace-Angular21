@@ -17,7 +17,7 @@ import { CaseStatus } from '../../../shared/enums/case-status';
 import { CaseCardComponent } from '../../../shared/components/cases-components/case-card/case-card.component';
 import { FoundedHeaderQueryDTO, FoundPersonListItemDto } from '../models/founded.models';
 import { FoundedFilterState } from '../../../shared/helper/cases-filter-state';
-import { SnackbarService } from '../../../core/services/toast.service';
+import { SnackbarService } from '../../../shared/services/toast.service';
 import { extractErrorMessage } from '../../../shared/helper/case-error.helper';
 
 @Component({

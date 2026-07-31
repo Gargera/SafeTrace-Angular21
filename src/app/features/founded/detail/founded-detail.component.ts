@@ -6,7 +6,7 @@ import { catchError, EMPTY, switchMap, tap } from 'rxjs';
 import { FoundedService } from '../services/founded.service';
 import { PostDetailsResponseDTO } from '../models/founded.models';
 import { environment } from '../../../../environments/environment';
-import { SnackbarService } from '../../../core/services/toast.service';
+import { SnackbarService } from '../../../shared/services/toast.service';
 import { CaseHeaderComponent } from '../../../shared/components/cases-components/case-header/case-header.component';
 import { ButtonComponent } from '../../../shared/components/button/button';
 import { extractErrorMessage } from '../../../shared/helper/case-error.helper';

@@ -1,6 +1,6 @@
 import { Component, effect, inject, input, output, signal } from '@angular/core';
-import { ImageService } from '../../../../service/image.service';
-import { SnackbarService } from '../../../../../../core/services/toast.service';
+import { ImageService } from '../../../../../../shared/services/image.service';
+import { SnackbarService } from '../../../../../../shared/services/toast.service';
 import { VerificationStatus } from '../../../../../../shared/enums/verification-status';
 import { GetUserInfoDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
@@ -91,7 +91,7 @@ export class IdentificationImage {
 
     if (!file) return;
 
-    if (!this.#imageService.validateImageFile(file)) return;
+    if (!this.#imageService.validateAndToast(file)) return;
 
     this.openCropper.emit(file);
   }
