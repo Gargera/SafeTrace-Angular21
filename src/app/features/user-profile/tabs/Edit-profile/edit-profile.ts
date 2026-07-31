@@ -46,6 +46,7 @@ import { Password } from './innerComponents/password/password';
 import { Phone } from './innerComponents/phone/phone';
 import { PersonalInfo } from './innerComponents/personal-info/personal-info';
 import { LocationPicker } from './innerComponents/location-picker/location-picker';
+import { CardComponent } from '../../../../shared/components/card/card';
 
 @Component({
   selector: 'app-edit-profile',
@@ -60,6 +61,7 @@ import { LocationPicker } from './innerComponents/location-picker/location-picke
     Phone,
     PersonalInfo,
     LocationPicker,
+    CardComponent,
   ],
   templateUrl: './edit-profile.html',
 })
@@ -154,7 +156,11 @@ export class EditProfile {
   get securityLevelLabel(): string {
     const role = this.userInfo()?.role;
     if (role === UserRole.SuperAdmin || role === UserRole.Admin) return 'حساب محمي';
-    if (role === UserRole.Moderator || (role && role !== UserRole.User && role !== UserRole.VerifiedUser)) return 'حساب إشرافي';
+    if (
+      role === UserRole.Moderator ||
+      (role && role !== UserRole.User && role !== UserRole.VerifiedUser)
+    )
+      return 'حساب إشرافي';
     if (role === UserRole.VerifiedUser) return 'حساب موثوق';
     return 'حساب أساسي';
   }
