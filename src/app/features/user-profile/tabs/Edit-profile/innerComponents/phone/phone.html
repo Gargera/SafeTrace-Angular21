@@ -5,45 +5,40 @@
   aria-labelledby="phone-heading"
 >
   <div class="flex justify-between items-center border-b border-outline-variant pb-sm">
-    <h3
-      id="phone-heading"
-      class="text-headline-sm font-bold text-primary flex items-center gap-sm"
-    >
+    <h3 id="phone-heading" class="text-headline-sm font-bold text-primary flex items-center gap-sm">
       <span class="material-symbols-outlined text-[24px]" aria-hidden="true">call</span>
       رقم الهاتف
     </h3>
     @if (!isEditingPhone()) {
-      <button
-        type="button"
+      <span
         (click)="togglePhoneEdit(true)"
-        class="px-md py-xs bg-secondary-container text-on-secondary-container hover:bg-secondary-container-high focus-visible:ring-2 focus-visible:ring-secondary rounded-lg text-label-sm font-bold flex items-center gap-xs transition-colors cursor-pointer"
+        class="material-symbols-outlined text-[12px] cursor-pointer"
+        aria-hidden="true"
+        >edit</span
       >
-        <span class="material-symbols-outlined text-[16px]" aria-hidden="true">edit</span>
-        تعديل رقم الهاتف
-      </button>
     } @else {
       <div class="flex items-center gap-sm">
-        <button
+        <app-button
           type="button"
+          variant="danger"
           [disabled]="isSavingPhone()"
           (click)="togglePhoneEdit(false); cancelPhone()"
-          class="px-md py-xs text-secondary border border-secondary rounded-lg text-label-sm font-bold hover:bg-secondary-fixed focus-visible:ring-2 focus-visible:ring-secondary transition-colors disabled:opacity-50 cursor-pointer"
         >
           إلغاء
-        </button>
-        <button
+        </app-button>
+        <app-button
           type="submit"
+          variant="success"
           [disabled]="phoneForm.invalid || isSavingPhone()"
           [attr.aria-busy]="isSavingPhone()"
-          class="px-md py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 focus-visible:ring-2 focus-visible:ring-secondary transition-all flex items-center gap-xs disabled:opacity-50 cursor-pointer"
         >
           @if (isSavingPhone()) {
             <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
               >progress_activity</span
             >
           }
-          حفظ رقم الهاتف
-        </button>
+          حفظ
+        </app-button>
       </div>
     }
   </div>
@@ -54,7 +49,7 @@
       <label for="phoneNumber" class="text-label-md text-on-surface font-semibold">
         رقم الهاتف <span class="text-error" aria-hidden="true">*</span>
       </label>
-      <input
+      <app-form-field
         id="phoneNumber"
         formControlName="phoneNumber"
         type="tel"
@@ -62,7 +57,6 @@
         maxlength="20"
         [attr.aria-invalid]="isPhoneFieldInvalid('phoneNumber')"
         [attr.aria-describedby]="isPhoneFieldInvalid('phoneNumber') ? 'phoneNumber-error' : null"
-        class="w-full bg-surface-container-low border rounded-lg p-md transition-all focus:ring-2 focus:ring-secondary focus:border-secondary outline-none disabled:opacity-60 disabled:cursor-not-allowed"
         [class.border-error]="isPhoneFieldInvalid('phoneNumber')"
         [class.border-outline-variant]="!isPhoneFieldInvalid('phoneNumber')"
       />

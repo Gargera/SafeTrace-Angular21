@@ -11,6 +11,8 @@ import { AuthService } from '../../../../../../core/services/auth.service';
 import { SnackbarService } from '../../../../../../core/services/toast.service';
 import { mustMatch } from '../../../../../../shared/validators/must-match.validator';
 import { ChangePasswordDTO } from '../../../../model/profile.model';
+import { ButtonComponent } from '../../../../../../shared/components/button/button';
+import { FormField } from '../../../../../../shared/components/form-field/form-field';
 
 // ── Custom validator: new password must differ from current ────────────────
 function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
@@ -25,7 +27,7 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
 @Component({
   selector: 'app-password',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, FormField, ButtonComponent],
   templateUrl: './password.html',
 })
 export class Password {
@@ -141,7 +143,7 @@ export class Password {
         this.isSavingPassword.set(false);
         const msg =
           err?.error?.message ||
-          err.error?.detail || 
+          err.error?.detail ||
           'كلمة المرور الحالية غير صحيحة أو حدث خطأ أثناء تغيير كلمة المرور.';
         this.#snackbar.error(msg);
       },

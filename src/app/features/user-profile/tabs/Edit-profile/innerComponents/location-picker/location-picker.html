@@ -11,15 +11,12 @@
       الموقع الجغرافي
     </h3>
 
-    <button
-      type="button"
-      (click)="openMapModal()"
-      [disabled]="isSavingLocation()"
-      class="px-md py-xs bg-secondary text-white hover:bg-secondary-container-high focus-visible:ring-2 focus-visible:ring-secondary rounded-lg text-label-sm font-bold flex items-center gap-xs transition-colors cursor-pointer disabled:opacity-50"
-    >
-      <span class="material-symbols-outlined text-[18px]" aria-hidden="true">map</span>
-      تحديد الموقع على الخريطة
-    </button>
+    <div (click)="openMapModal()" class="flex items-center cursor-pointer gap-1">
+      <span class="material-symbols-outlined text-[12px] cursor-pointer" aria-hidden="true"
+        >location_on</span
+      >
+      <span class="truncate">فتح الخريطة</span>
+    </div>
   </div>
 
   <!-- Resolved address input -->

@@ -17,11 +17,13 @@ import { SnackbarService } from '../../../../../../core/services/toast.service';
 import { GetUserInfoDTO, UpdateHomeLocationDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
 import { MapLocationPickerComponent } from '../../../../../../shared/components/map-location-picker/components/map-location-picker';
+import { ButtonComponent } from '../../../../../../shared/components/button/button';
+import { FormField } from '../../../../../../shared/components/form-field/form-field';
 
 @Component({
   selector: 'app-location-picker',
   standalone: true,
-  imports: [CommonModule, MapLocationPickerComponent],
+  imports: [CommonModule, MapLocationPickerComponent, FormField, ButtonComponent],
   templateUrl: './location-picker.html',
 })
 export class LocationPicker implements OnChanges {
