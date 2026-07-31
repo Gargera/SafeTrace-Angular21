@@ -10,7 +10,7 @@ import { FormField } from '../../../../../../shared/components/form-field/form-f
 @Component({
   selector: 'app-identification-image',
   standalone: true,
-  imports: [FormField, ButtonComponent],
+  imports: [ ButtonComponent],
   templateUrl: './identification-image.html',
   host: {
     class: 'space-y-sm',

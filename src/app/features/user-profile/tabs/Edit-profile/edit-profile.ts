@@ -46,6 +46,7 @@ import { Password } from './innerComponents/password/password';
 import { Phone } from './innerComponents/phone/phone';
 import { PersonalInfo } from './innerComponents/personal-info/personal-info';
 import { LocationPicker } from './innerComponents/location-picker/location-picker';
+import { CardComponent } from '../../../../shared/components/card/card';
 
 @Component({
   selector: 'app-edit-profile',
@@ -60,6 +61,7 @@ import { LocationPicker } from './innerComponents/location-picker/location-picke
     Phone,
     PersonalInfo,
     LocationPicker,
+    CardComponent,
   ],
   templateUrl: './edit-profile.html',
 })

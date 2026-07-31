@@ -5,6 +5,7 @@ import { GetUserInfoDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
 import { SnackbarService } from '../../../../../../core/services/toast.service';
 import { ButtonComponent } from '../../../../../../shared/components/button/button';
+import { CardComponent } from '../../../../../../shared/components/card/card';
 
 @Component({
   selector: 'app-profile-image',
