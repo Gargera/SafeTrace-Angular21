@@ -115,7 +115,7 @@ export class IdentificationImage {
       },
       error: (err) => {
         this.isSavingIdImage.set(false);
-        const msg = err?.error?.message ?? 'حدث خطأ أثناء رفع صورة الهوية. يرجى المحاولة مجدداً.';
+        const msg = err?.error?.message || err.error?.detail || 'حدث خطأ أثناء رفع صورة الهوية. يرجى المحاولة مجدداً.';
         this.#snackbar.error(msg);
       },
     });

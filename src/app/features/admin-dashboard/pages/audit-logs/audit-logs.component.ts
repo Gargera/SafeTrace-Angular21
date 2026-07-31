@@ -77,8 +77,8 @@ export class AuditLogsComponent implements OnInit {
         }
         this.isLoading.set(false);
       },
-      error: () => {
-        this.toast.error('حدث خطأ أثناء الاتصال بالخادم.');
+      error: (err) => {
+        this.toast.error(err.error?.detail || 'حدث خطأ أثناء الاتصال بالخادم.');
         this.isLoading.set(false);
       },
     });

@@ -165,8 +165,8 @@ export class UserList {
         }
         this.loadingStats.set(false);
       },
-      error: () => {
-        this.toast.error('تعذر الاتصال بالخادم لتحميل الإحصائيات');
+      error: (err) => {
+        this.toast.error(err.error?.detail || 'تعذر الاتصال بالخادم لتحميل الإحصائيات');
         this.loadingStats.set(false);
       }
     });
