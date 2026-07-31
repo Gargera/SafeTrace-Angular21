@@ -1,9 +1,8 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterModule } from '@angular/router';
-import { finalize, Subject } from 'rxjs';
+import { catchError, EMPTY, Subject, switchMap, tap } from 'rxjs';
 
-import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { PaginationComponent } from '../../../../shared/components/cases-components/case-pagination/case-pagination.component';
@@ -12,12 +11,15 @@ import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-c
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
 
 import { UrgentCaseService } from '../../services/urgent-case.service';
-import { CasesFilterRequest, CaseType } from '../../../../core/models/Cases.model';
+import { CasesFilterRequest } from '../../../../core/models/cases.model';
 import { UrgentCaseListItemResponse } from '../../models/response/UrgentCaseListItemResponse';
 import { UrgentCasesFilterRequest } from '../../models/request/UrgentCaseFilterRequest';
 import { CaseCreationFlowService } from '../../../../core/services/case-creation-flow.service';
 import { CommonModule } from '@angular/common';
 import { CasesFilterState } from '../../../../shared/helper/cases-filter-state';
+import { SnackbarService } from '../../../../core/services/toast.service';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { CaseType } from '../../../../shared/enums/case-type';
 
 @Component({
   selector: 'app-urgent-list',
@@ -25,8 +27,6 @@ import { CasesFilterState } from '../../../../shared/helper/cases-filter-state';
   imports: [
     CommonModule,
     RouterModule,
-    FormField,
-    FormsModule,
     CaseHeaderComponent,
     CaseFiltersComponent,
     PaginationComponent,
@@ -38,11 +38,14 @@ import { CasesFilterState } from '../../../../shared/helper/cases-filter-state';
   styleUrls: ['./urgent-list.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class UrgentListComponent implements OnInit, OnDestroy {
+export class UrgentListComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly urgentCaseService = inject(UrgentCaseService);
   private readonly caseCreationFlowService = inject(CaseCreationFlowService);
-  private readonly destroy$ = new Subject<void>();
+  private readonly snackbar = inject(SnackbarService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  private readonly fetchTrigger$ = new Subject<void>();
 
   readonly filterState = new CasesFilterState<UrgentCasesFilterRequest>(12, {
     latitude: null,
@@ -58,18 +61,11 @@ export class UrgentListComponent implements OnInit, OnDestroy {
   readonly totalPages = this.filterState.totalPages;
   readonly totalItems = this.filterState.totalItems;
   readonly pageSize = this.filterState.pageSize;
-
-  readonly radiusInMeters = signal<number | null>(null);
-
   readonly filter = this.filterState.filter;
 
   ngOnInit(): void {
+    this.setupFetchPipeline();
     this.fetchCases();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   navigateToCreate(): void {
@@ -80,12 +76,10 @@ export class UrgentListComponent implements OnInit, OnDestroy {
     this.filterState.onFilterChange(newFilter, () => this.fetchCases(), {
       latitude: this.filter().latitude,
       longitude: this.filter().longitude,
-      radiusInMeters: this.filterState.normalizeNumber(this.radiusInMeters()),
     });
   }
 
   onFilterReset(): void {
-    this.radiusInMeters.set(null);
     this.filterState.onFilterReset(() => this.fetchCases(), {
       latitude: null,
       longitude: null,
@@ -112,13 +106,32 @@ export class UrgentListComponent implements OnInit, OnDestroy {
   }
 
   private fetchCases(): void {
-    this.loading.set(true);
+    this.fetchTrigger$.next();
+  }
 
-    this.urgentCaseService
-      .getAllCases(this.filter())
-      .pipe(finalize(() => this.loading.set(false)))
+  private setupFetchPipeline(): void {
+    this.fetchTrigger$
+      .pipe(
+        tap(() => {
+          this.loading.set(true);
+          this.hasError.set(false);
+        }),
+        switchMap(() =>
+          this.urgentCaseService.getAllCases(this.filter()).pipe(
+            catchError((err: unknown) => {
+              this.loading.set(false);
+              this.hasError.set(true);
+              const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء تحميل البيانات');
+              this.snackbar.error(errorMessage);
+              return EMPTY;
+            }),
+          ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
         next: ({ data }) => {
+          this.loading.set(false);
           if (!data) return;
 
           this.cases.set(data.items);

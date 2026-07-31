@@ -1,4 +1,4 @@
-import { CaseDetailResponse } from "../../../../core/models/Cases.model";
+import { CaseDetailResponse } from "../../../../core/models/cases.model";
 import { RelatedCaseResponse } from "./RelatedCaseResponse";
 
 export interface UnknownCaseDetailResponse extends CaseDetailResponse {

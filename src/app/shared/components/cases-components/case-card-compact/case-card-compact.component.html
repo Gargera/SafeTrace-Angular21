@@ -59,18 +59,40 @@
         class="flex flex-wrap items-center justify-end gap-2 mt-3 pt-3 border-t border-outline-variant/50"
       >
         <!-- Details -->
-        <a [routerLink]="detailRoute()">
-          <app-button variant="primary" extraClass="h-8 px-3 text-xs gap-1">
-            <span class="material-symbols-outlined text-[16px]">visibility</span>
-            التفاصيل
-          </app-button>
-        </a>
+        @if (actions().canView) {
+          <a [routerLink]="detailRoute()">
+            <app-button variant="primary" extraClass="h-8 px-3 text-xs gap-1">
+              <span class="material-symbols-outlined text-[16px]">visibility</span>
+              التفاصيل
+            </app-button>
+          </a>
+        }
 
-        <!-- Mark As Found (only if not already found) -->
-        @if (caseItem().status !== CaseStatus.Found) {
+        <!-- Found Details -->
+        @if (actions().canViewFoundDetails) {
+          <a [routerLink]="foundDetailRoute()">
+            <app-button variant="primary" extraClass="h-8 px-3 text-xs gap-1">
+              <span class="material-symbols-outlined text-[16px]">visibility</span>
+              تفاصيل العثور
+            </app-button>
+          </a>
+        }
+
+        <!-- Update -->
+        @if (actions().canUpdate) {
+          <a [routerLink]="updateRoute()">
+            <app-button variant="secondary" extraClass="h-8 px-3 text-xs gap-1">
+              <span class="material-symbols-outlined text-[16px]">edit</span>
+              تعديل
+            </app-button>
+          </a>
+        }
+
+        <!-- Mark As Found -->
+        @if (actions().canMarkAsFound) {
           <app-button
             variant="success"
-            extraClass="h-8 px-3 text-xs"
+            extraClass="h-8 px-3 text-xs gap-1"
             (onClick)="onMarkAsFound.emit(caseItem().id)"
           >
             <span class="material-symbols-outlined text-[16px]">check_circle</span>
@@ -79,10 +101,10 @@
         }
 
         <!-- Delete -->
-        @if (caseItem().status !== CaseStatus.Found) {
+        @if (actions().canDelete) {
           <app-button
             variant="danger"
-            extraClass="h-8 px-3 text-xs"
+            extraClass="h-8 px-3 text-xs gap-1"
             (onClick)="onDelete.emit(caseItem().id)"
           >
             <span class="material-symbols-outlined text-[16px]">delete</span>

@@ -1,9 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../../environments/environment';
-import { HttpClient, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpResponse, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { UserFilterDto } from '../models/User/UserFilterDto';
 import { ComplaintFilterDto } from '../../complaints/models/complaint-filter.model';
+import { DonationAdminFilterDto } from '../pages/donations/models/donation-admin-filter.dto'
+import { CasesFilterRequest } from '../../../core/models/cases.model';
 
 @Injectable({
   providedIn: 'root',
@@ -11,32 +13,61 @@ import { ComplaintFilterDto } from '../../complaints/models/complaint-filter.mod
 
 export class ReportService {
   private readonly baseUrl = `${environment.baseUrl}/api`;
-    private http = inject(HttpClient);
+  private http = inject(HttpClient);
 
 
   generateUsersPdfReport(filter: UserFilterDto): Observable<HttpResponse<Blob>> {
-  return this.http.post(
-    `${this.baseUrl}/Users/report/pdf`,
-    filter,
-    {
-      responseType: 'blob',
-      observe: 'response'
-    }
-  );
-}
+    return this.http.post(
+      `${this.baseUrl}/Users/report/pdf`,
+      filter,
+      {
+        responseType: 'blob',
+        observe: 'response'
+      }
+    );
+  }
 
-generateComplaintPdfReport(filter: ComplaintFilterDto): Observable<HttpResponse<Blob>>{
-  return this.http.post(
-    `${this.baseUrl}/Complaints/report/pdf`,
-    filter,
-    {
-      responseType: 'blob',
-      observe: 'response'
-    }
-  )
-}
+  generateComplaintPdfReport(filter: ComplaintFilterDto): Observable<HttpResponse<Blob>> {
+    return this.http.post(
+      `${this.baseUrl}/Complaints/report/pdf`,
+      filter,
+      {
+        responseType: 'blob',
+        observe: 'response'
+      }
+    )
+  }
+  generateDonationPdfReport(
+    filter: DonationAdminFilterDto
+  ): Observable<HttpResponse<Blob>> {
 
-download(response: HttpResponse<Blob>): void {
+    return this.http.post(
+      `${this.baseUrl}/Payment/export-pdf`,
+      {
+        page: filter.pageNumber,
+        pageSize: filter.pageSize,
+        userEmail: filter.userEmail,
+        status: filter.paymentStatus
+      },
+      {
+        responseType: 'blob',
+        observe: 'response'
+      }
+    );
+  }
+
+  generateCasesPdfReport(filter: CasesFilterRequest): Observable<HttpResponse<Blob>> {
+    return this.http.post(
+      `${this.baseUrl}/Dashboard/cases/report/pdf`,
+      filter,
+      {
+        responseType: 'blob',
+        observe: 'response'
+      }
+    )
+  }
+
+  download(response: HttpResponse<Blob>): void {
 
     const blob = response.body;
 
@@ -44,22 +75,22 @@ download(response: HttpResponse<Blob>): void {
 
     let fileName = 'download';
 
-  const contentDisposition =
-    response.headers.get('Content-Disposition');
+    const contentDisposition =
+      response.headers.get('Content-Disposition');
 
-  if (contentDisposition) {
+    if (contentDisposition) {
 
-    const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/);
+      const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/);
 
-    const normalMatch = contentDisposition.match(/filename="?([^";]+)"?/);
+      const normalMatch = contentDisposition.match(/filename="?([^";]+)"?/);
 
-    if (utf8Match) {
-      fileName = decodeURIComponent(utf8Match[1]);
+      if (utf8Match) {
+        fileName = decodeURIComponent(utf8Match[1]);
+      }
+      else if (normalMatch) {
+        fileName = normalMatch[1];
+      }
     }
-    else if (normalMatch) {
-      fileName = normalMatch[1];
-    }
-  }
 
 
     const url = URL.createObjectURL(blob);

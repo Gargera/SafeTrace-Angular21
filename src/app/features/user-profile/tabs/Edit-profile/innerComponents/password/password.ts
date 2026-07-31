@@ -140,7 +140,8 @@ export class Password {
       error: (err) => {
         this.isSavingPassword.set(false);
         const msg =
-          err?.error?.message ??
+          err?.error?.message ||
+          err.error?.detail || 
           'كلمة المرور الحالية غير صحيحة أو حدث خطأ أثناء تغيير كلمة المرور.';
         this.#snackbar.error(msg);
       },

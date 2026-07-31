@@ -1,4 +1,4 @@
-<div dir="rtl" class="mx-auto max-w-[760px] px-4 pb-16 pt-6">
+<div dir="rtl" class="mx-auto max-w-190 px-4 pb-16 pt-6">
 
   <!-- Single app-card containing the entire page -->
   <app-card extraClass="overflow-hidden rounded-2xl border border-outline-variant/30 bg-white shadow-sm">
@@ -197,9 +197,11 @@
               getFieldError('government') }}</p> }
           </div>
           <div>
-            <app-form-field label="المدينة / المركز *" formControlName="city" type="text"
-              placeholder="أدخل اسم المدينة أو المركز (مثال: مدينة نصر)"
-              [extraClass]="isInvalid('city') ? 'border-error' : ''"></app-form-field>
+            <app-form-field label="المدينة / المركز *" type="select" formControlName="city"
+              [extraClass]="isInvalid('city') ? 'border-error' : ''">
+              <option value="" disabled>اختر المدينة / المركز</option>
+              @for (c of availableCities(); track c) { <option [value]="c">{{ c }}</option> }
+            </app-form-field>
             @if (isInvalid('city')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
               getFieldError('city') }}</p> }
           </div>
@@ -263,7 +265,7 @@
               <span class="material-symbols-outlined text-3xl">add_photo_alternate</span>
             </div>
             <p class="text-sm font-bold text-on-surface">اضغط لإضافة الصورة الأساسية وتحديد الوجه</p>
-            <p class="mt-1 text-xs text-on-surface-variant/70">JPEG / PNG / WebP — حتى 5 MB</p>
+            <p class="mt-1 text-xs text-on-surface-variant/70">JPG / JPEG / PNG / WebP — حتى 5 MB</p>
           </div>
           @if (primaryPhotoError()) { <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{
             primaryPhotoError() }}</p> }
@@ -294,7 +296,7 @@
           <div
             class="flex items-center gap-4 rounded-2xl border border-outline-variant/50 bg-surface-container-low p-4 shadow-xs">
             <img [src]="croppedPrimaryImagePreview()"
-              class="h-[80px] w-[105px] rounded-xl border border-outline-variant/60 object-cover shadow-xs transition-transform duration-200 hover:scale-105" />
+              class="h-20 w-26.25 rounded-xl border border-outline-variant/60 object-cover shadow-xs transition-transform duration-200 hover:scale-105" />
             <div class="flex-1">
               <p class="mb-1 text-sm font-semibold text-on-tertiary-container">✓ تم تحديد الصورة وتأطيرها بنجاح</p>
               <button type="button" (click)="reCropPhoto()"
@@ -316,7 +318,7 @@
               class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
               <span class="material-symbols-outlined text-2xl">add_photo_alternate</span>
             </div>
-            <p class="text-xs text-on-surface-variant/70">JPG / PNG / WebP — حتى 5MB لكل صورة</p>
+            <p class="text-xs text-on-surface-variant/70">JPG / JPEG / PNG / WebP — حتى 5MB لكل صورة</p>
           </div>
           @if (additionalPhotosError()) { <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{
             additionalPhotosError() }}</p> }
@@ -340,7 +342,7 @@
         <!-- Police Report -->
         <div>
           <label class="mb-2 block text-sm font-medium text-on-surface-variant">
-            بلاغ الشرطة <span class="font-normal text-on-surface-variant/70">(اختياري — JPEG/PNG/WebP، حتى 10 MB)</span>
+            بلاغ الشرطة <span class="font-normal text-on-surface-variant/70">(اختياري — JPG/JPEG/PNG/WebP، حتى 10 MB)</span>
           </label>
           <div
             class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
@@ -354,7 +356,7 @@
                 [ngClass]="policeReportFile() ? 'text-secondary' : 'text-outline'">description</span>
             </div>
             <p class="text-sm font-bold text-on-surface">{{ policeReportFile()?.name ?? 'رفع صورة بلاغ الشرطة' }}</p>
-            <p class="mt-0.5 text-xs text-on-surface-variant/70">JPEG / PNG / WebP — حتى 10 MB</p>
+            <p class="mt-0.5 text-xs text-on-surface-variant/70">JPG / JPEG / PNG / WebP — حتى 10 MB</p>
           </div>
           @if (policeReportError()) { <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{
             policeReportError() }}</p> }

@@ -108,7 +108,7 @@ export class Phone implements OnChanges, OnDestroy {
         },
         error: (err) => {
           this.isSavingPhone.set(false);
-          const msg = err?.error?.message ?? 'حدث خطأ اثناء تغيير رقم الهاتف';
+          const msg = err?.error?.message || err.error?.detail || 'حدث خطأ اثناء تغيير رقم الهاتف';
           this.#snackbar.error(msg);
         },
       });

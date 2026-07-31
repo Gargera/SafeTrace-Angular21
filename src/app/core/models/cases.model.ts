@@ -59,8 +59,8 @@ export interface MatchedCaseResponse {
 }
 
 export interface CreateCaseResponse {
-  IsCreated: boolean;
-  IsSameTypeDuplicate?: boolean;
+  isCreated: boolean;
+  isBlocked: boolean;
   caseId: number | null;
   matchedCases: MatchedCaseResponse[];
 }
@@ -106,6 +106,7 @@ export interface CaseDetailResponse {
   ageCategory: AgeCategoryResponse | null;
   user: UserResponse | null;
   photos: CasePhotoResponse[];
+  video: string | null;
   rejectionReason: string | null;
 }
 
@@ -148,9 +149,16 @@ export interface CaseUpsertBaseRequest {
 
   video: File | null;
 }
-export interface CaseCreateBaseRequest extends CaseUpsertBaseRequest { }
 
-export interface CaseUpdateBaseRequest extends CaseUpsertBaseRequest {
+
+export interface CreateCaseBaseRequest extends CaseUpsertBaseRequest {
+  primaryImage: File;
+  additionalImages: File[] | null;
+}
+
+export interface UpdateCaseBaseRequest extends CaseUpsertBaseRequest {
+  primaryImage?: File | null;
+
   newPhotos: File[] | null;
   deletedPhotoIds: number[] | null;
   primaryPhotoId: number | null;
@@ -183,4 +191,9 @@ export interface FoundPersonInfoRequest {
   foundedAt: string; // DateOnly
 }
 
-export { CaseType };
+export interface CaseFileResponse {
+  id: number;
+  imagePath: string;
+  isPrimary: boolean;
+  faceId?: string | null;
+}

@@ -10,6 +10,8 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { Permissions } from '../../../../core/constants/Permissions';
 
+import { validateImageFile } from '../../../user-profile/tabs/Edit-profile/utilies/image-validation.util';
+
 @Component({
   selector: 'app-ai-search',
   standalone: true,
@@ -73,22 +75,16 @@ export class AiSearch implements OnInit {
 
   handleFile(file: File) {
     if (!this.authService.isLoggedIn()) {
-      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/ai-search' } });
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/aisearch' } });
       return;
     }
 
-    const validExtensions = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    const maxSizeBytes = 5 * 1024 * 1024; // 5MB
-
-    if (!validExtensions.includes(file.type)) {
-      this.toast.error('يرجى رفع صورة بصيغة JPG, JPEG أو PNG فقط.');
+    const validation = validateImageFile(file, 5);
+    if (!validation.valid) {
+      this.toast.error(validation.errorMessage ?? 'صيغة غير مدعومة.');
       return;
     }
 
-    if (file.size > maxSizeBytes) {
-      this.toast.error('يجب ألا يتعدى حجم الصورة 5 ميجابايت.');
-      return;
-    }
     this.selectedImage.set(file);
     this.aiMatchingService.cachedImageFile.set(file);
 

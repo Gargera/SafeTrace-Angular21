@@ -104,6 +104,18 @@
   </div>
 </app-card>
 
+<div class="flex items-center justify-start my-4">
+  <app-button
+    *hasPermission="Permissions.Donations.GenerateDonationsPdfReport"
+    variant="secondary"
+    (onClick)="downloadReport()"
+    extraClass="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium border-outline hover:bg-surface-container-high transition-all duration-200"
+  >
+    <span class="material-symbols-outlined text-[18px]">download</span>
+    <span>تحميل التقرير</span>
+  </app-button>
+</div>
+
 <!-- Table -->
 <section class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75">
   @if (loading()) {

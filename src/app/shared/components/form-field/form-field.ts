@@ -21,7 +21,10 @@ import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/f
 export class FormField implements ControlValueAccessor {
   label = input('');
   placeholder = input('');
-  type = input<'text' | 'email' | 'password' | 'number' | 'date' | 'search' | 'textarea' | 'select' | 'tel'>('text');
+  type = input<'text' | 'email' | 'password' | 'number' | 'date' | 'datetime-local' | 'search' | 'textarea' | 'select' | 'tel'>('text');
+
+  min = input<string | number | undefined>(undefined);
+  max = input<string | number | undefined>(undefined);
 
   rows = input(4);
   extraClass = input('');
