@@ -154,7 +154,11 @@ export class EditProfile {
   get securityLevelLabel(): string {
     const role = this.userInfo()?.role;
     if (role === UserRole.SuperAdmin || role === UserRole.Admin) return 'حساب محمي';
-    if (role === UserRole.Moderator || (role && role !== UserRole.User && role !== UserRole.VerifiedUser)) return 'حساب إشرافي';
+    if (
+      role === UserRole.Moderator ||
+      (role && role !== UserRole.User && role !== UserRole.VerifiedUser)
+    )
+      return 'حساب إشرافي';
     if (role === UserRole.VerifiedUser) return 'حساب موثوق';
     return 'حساب أساسي';
   }
