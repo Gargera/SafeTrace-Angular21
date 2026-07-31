@@ -3,15 +3,9 @@
     <!-- Templates for Filters -->
     <ng-template #searchTpl>
       <div>
-        <app-form-field
-          id="filter-search"
-          label="بحث"
-          formControlName="fullName"
+        <app-form-field id="filter-search" label="بحث" formControlName="fullName"
           [placeholder]="searchMode() === 'name-only' ? 'ابحث بالاسم...' : 'ابحث بالاسم أو كود الحالة...'"
-          maxlength="100"
-          [prefix]="true"
-          [extraClass]="isInvalid('fullName') ? 'border-error' : ''"
-        >
+          maxlength="100" [prefix]="true" [extraClass]="isInvalid('fullName') ? 'border-error' : ''">
           <span prefix class="material-symbols-outlined text-on-surface-variant" style="
               font-variation-settings:
                 'FILL' 0,
@@ -84,13 +78,8 @@
 
     <ng-template #fromDateTpl>
       <div>
-        <app-form-field
-          id="filter-from-date"
-          label="من تاريخ"
-          type="date"
-          formControlName="fromDate"
-          [extraClass]="isInvalid('fromDate') ? 'border-error' : ''"
-        ></app-form-field>
+        <app-form-field id="filter-from-date" label="من تاريخ" type="date" formControlName="fromDate"
+          [extraClass]="isInvalid('fromDate') ? 'border-error' : ''"></app-form-field>
         @if (isInvalid('fromDate')) {
         <p class="mt-1 flex items-center gap-1 text-xs text-error">
           <span class="material-symbols-outlined text-sm">error</span>
@@ -102,13 +91,8 @@
 
     <ng-template #toDateTpl>
       <div>
-        <app-form-field
-          id="filter-to-date"
-          label="إلى تاريخ"
-          type="date"
-          formControlName="toDate"
-          [extraClass]="isInvalid('toDate') ? 'border-error' : ''"
-        ></app-form-field>
+        <app-form-field id="filter-to-date" label="إلى تاريخ" type="date" formControlName="toDate"
+          [extraClass]="isInvalid('toDate') ? 'border-error' : ''"></app-form-field>
         @if (isInvalid('toDate')) {
         <p class="mt-1 flex items-center gap-1 text-xs text-error">
           <span class="material-symbols-outlined text-sm">error</span>
@@ -137,18 +121,12 @@
 
     <ng-template #radiusTpl>
       <div>
-        <app-form-field
-          id="filter-radius"
-          label="نطاق البحث (متر)"
-          type="number"
-          formControlName="radiusInMeters"
-          placeholder="بدون حد أقصى"
-          [extraClass]="isInvalid('radiusInMeters') ? 'border-error' : ''"
-        ></app-form-field>
-        @if (isInvalid('radiusInMeters')) {
+        <app-form-field id="filter-radius" label="نطاق البحث (كم)" type="number" formControlName="radiusInKm"
+          placeholder="مثال: 10 كم" [extraClass]="isInvalid('radiusInKm') ? 'border-error' : ''"></app-form-field>
+        @if (isInvalid('radiusInKm')) {
         <p class="mt-1 flex items-center gap-1 text-xs text-error">
           <span class="material-symbols-outlined text-sm">error</span>
-          {{ getFieldError('radiusInMeters') }}
+          {{ getFieldError('radiusInKm') }}
         </p>
         }
       </div>
@@ -157,7 +135,7 @@
     <!-- Main Filters Grid -->
     <div class="grid grid-cols-1 gap-5 md:grid" [style.grid-template-columns]="activeGridTemplate()">
       @if (showSearch() && !searchInAdvanced()) {
-        <ng-container *ngTemplateOutlet="searchTpl"></ng-container>
+      <ng-container *ngTemplateOutlet="searchTpl"></ng-container>
       }
       @if (showGender() && !genderInAdvanced()) {
       <ng-container *ngTemplateOutlet="genderTpl"></ng-container>
@@ -226,7 +204,8 @@
     <div class="grid transition-[grid-template-rows] duration-300 ease-in-out m-0"
       [style.grid-template-rows]="showAdvanced ? '1fr' : '0fr'">
       <div class="overflow-hidden">
-        <div class="grid grid-cols-1 gap-5 pt-4 transition-all duration-300 ease-out md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        <div
+          class="grid grid-cols-1 gap-5 pt-4 transition-all duration-300 ease-out md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           [class.opacity-100]="showAdvanced" [class.translate-y-0]="showAdvanced" [class.opacity-0]="!showAdvanced"
           [class.-translate-y-2]="!showAdvanced">
           @if (showSearch() && searchInAdvanced()) {

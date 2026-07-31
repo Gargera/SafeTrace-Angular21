@@ -50,7 +50,7 @@ export class UrgentListComponent implements OnInit {
   readonly filterState = new CasesFilterState<UrgentCasesFilterRequest>(12, {
     latitude: null,
     longitude: null,
-    radiusInMeters: null,
+    radiusInKm: null,
   });
 
   readonly cases = signal<UrgentCaseListItemResponse[]>([]);
@@ -73,17 +73,39 @@ export class UrgentListComponent implements OnInit {
   }
 
   onFilterChange(newFilter: CasesFilterRequest): void {
-    this.filterState.onFilterChange(newFilter, () => this.fetchCases(), {
-      latitude: this.filter().latitude,
-      longitude: this.filter().longitude,
-    });
+    const urgentFilter = newFilter as UrgentCasesFilterRequest;
+
+    if (urgentFilter.radiusInKm && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          this.filterState.onFilterChange(newFilter, () => this.fetchCases(), {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            radiusInKm: urgentFilter.radiusInKm,
+          });
+        },
+        () => {
+          this.filterState.onFilterChange(newFilter, () => this.fetchCases(), {
+            latitude: this.filter().latitude,
+            longitude: this.filter().longitude,
+            radiusInKm: urgentFilter.radiusInKm,
+          });
+        }
+      );
+    } else {
+      this.filterState.onFilterChange(newFilter, () => this.fetchCases(), {
+        latitude: urgentFilter.radiusInKm ? this.filter().latitude : null,
+        longitude: urgentFilter.radiusInKm ? this.filter().longitude : null,
+        radiusInKm: urgentFilter.radiusInKm ?? null,
+      });
+    }
   }
 
   onFilterReset(): void {
     this.filterState.onFilterReset(() => this.fetchCases(), {
       latitude: null,
       longitude: null,
-      radiusInMeters: null,
+      radiusInKm: null,
     });
   }
 

@@ -194,7 +194,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
         dateSort: ['', [validEnum(DateSort)]],
         caseType: ['', [validEnum(CaseType)]],
         status: ['', [validEnum(CaseStatus)]],
-        radiusInMeters: ['', [searchRadiusValidator(100, 50000)]],
+        radiusInKm: ['', [searchRadiusValidator(1, 1000)]],
       },
       { validators: dateRangeValidator('fromDate', 'toDate') },
     );
@@ -322,7 +322,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     if (this.toDateInAdvanced()) advancedKeys.push('toDate');
     if (this.ageSortInAdvanced()) advancedKeys.push('ageSort');
     if (this.dateSortInAdvanced()) advancedKeys.push('dateSort');
-    if (this.radiusInAdvanced()) advancedKeys.push('radiusInMeters');
+    if (this.radiusInAdvanced()) advancedKeys.push('radiusInKm');
 
     return advancedKeys.filter(
       (key) => raw[key] !== null && raw[key] !== undefined && raw[key] !== '',
@@ -348,7 +348,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
         dateSort: '',
         caseType: '',
         status: '',
-        radiusInMeters: '',
+        radiusInKm: '',
       },
       { emitEvent: true } // This will trigger the valueChanges pipeline
     );
@@ -395,14 +395,14 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
       ageSort: raw.ageSort,
       dateSort: raw.dateSort,
       caseType: raw.caseType,
-      radiusInMeters: this.toNumberOrNull(raw.radiusInMeters),
+      radiusInKm: this.toNumberOrNull(raw.radiusInKm),
       page: 1,
       pageSize: 12,
     });
   }
 
   // ---------- Normalization ----------
-  private normalizeFilterRequest(request: CasesFilterRequest & { radiusInMeters?: number | null }): CasesFilterRequest {
+  private normalizeFilterRequest(request: CasesFilterRequest & { radiusInKm?: number | null }): CasesFilterRequest {
     return {
       ...request,
       status: this.toEnumOrNull(request.status),
@@ -419,7 +419,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
       toDate: this.toStringOrNull(request.toDate),
       ageSort: this.toNumberOrNull(request.ageSort),
       dateSort: this.toNumberOrNull(request.dateSort),
-      radiusInMeters: this.toNumberOrNull(request.radiusInMeters),
+      radiusInKm: this.toNumberOrNull(request.radiusInKm),
       page: request.page ?? 1,
       pageSize: request.pageSize ?? 12,
     } as CasesFilterRequest;
