@@ -1,6 +1,6 @@
 import { Component, inject, input, OnChanges, output, signal, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { SnackbarService } from '../../../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../../../shared/services/toast.service';
 import { GetUserInfoDTO, UpdateNameDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
 

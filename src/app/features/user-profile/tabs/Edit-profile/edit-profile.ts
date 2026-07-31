@@ -39,7 +39,7 @@ import { Toast } from '../../../../shared/components/toast/toast';
 import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 import { getVerificationStatusTranslationAr } from '../../../../core/constants/verification.status.dictionary';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
-import { ImageService } from '../../service/image.service';
+import { ImageService } from '../../../../shared/services/image.service';
 import { ProfileImage } from './innerComponents/profile-image/profile-image';
 import { IdentificationImage } from './innerComponents/identification-image/identification-image';
 import { Password } from './innerComponents/password/password';

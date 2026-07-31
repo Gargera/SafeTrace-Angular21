@@ -21,7 +21,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { UserStatisticsDto } from '../../models/User/UserStatisticsDto';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ReportService } from '../../services/report.service';
 
 import { Permissions } from '../../../../core/constants/Permissions';

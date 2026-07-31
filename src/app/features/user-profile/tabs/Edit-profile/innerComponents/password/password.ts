@@ -8,7 +8,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { AuthService } from '../../../../../../core/services/auth.service';
-import { SnackbarService } from '../../../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../../../shared/services/toast.service';
 import { mustMatch } from '../../../../../../shared/validators/must-match.validator';
 import { ChangePasswordDTO } from '../../../../model/profile.model';
 

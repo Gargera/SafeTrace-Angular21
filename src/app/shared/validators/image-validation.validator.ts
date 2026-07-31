@@ -1,3 +1,5 @@
+import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+
 export const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'] as const;
 export const ALLOWED_IMAGE_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'] as const;
 export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -58,4 +60,61 @@ export function validateImageFile(file: File, maxMb: number = 5): ImageValidatio
 
 export function validateProfileImage(file: File): ImageValidationResult {
   return validateImageFile(file, 5);
+}
+
+function toFileArray(value: unknown): File[] | null {
+    if (value === null || value === undefined) return [];
+    if (value instanceof File) return [value];
+    if (Array.isArray(value)) return value as File[];
+    if (typeof FileList !== 'undefined' && value instanceof FileList) return Array.from(value);
+    return null;
+}
+
+/** Ensures every uploaded file is JPG, JPEG, PNG, or WebP. */
+export function allowedFileTypes(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+        const files = toFileArray(control.value);
+
+        if (files === null) {
+            return { allowedFileTypes: true };
+        }
+        if (files.length === 0) {
+            return null;
+        }
+
+        const allValid = files.every(f => isImageExtensionValid(f.name) && isImageContentTypeValid(f.type));
+        return allValid ? null : { allowedFileTypes: true };
+    };
+}
+
+/** Ensures every uploaded file is within the size limit (in MB). */
+export function maxFileSize(maxMb: number): ValidatorFn {
+    const maxBytes = maxMb * 1024 * 1024;
+
+    return (control: AbstractControl): ValidationErrors | null => {
+        const files = toFileArray(control.value);
+
+        if (files === null) {
+            return { maxFileSize: true };
+        }
+        if (files.length === 0) {
+            return null;
+        }
+
+        const allValid = files.every(f => f.size <= maxBytes);
+        return allValid ? null : { maxFileSize: { maxMb } };
+    };
+}
+
+/** Limits the number of uploaded files. */
+export function maxFilesCount(max: number): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+        const files = toFileArray(control.value);
+
+        if (files === null) {
+            return { maxFilesCount: true };
+        }
+
+        return files.length <= max ? null : { maxFilesCount: { max } };
+    };
 }

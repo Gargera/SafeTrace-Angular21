@@ -15,7 +15,7 @@ import { ProfileService } from '../../service/profile.service';
 import { UrgentCaseService } from '../../../urgent-cases/services/urgent-case.service';
 import { LongTermCaseService } from '../../../long-term-cases/services/long-term-case.service';
 import { UnknownCaseService } from '../../../unknown-cases/services/unknown-case.service';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 
 import { MyCaseListItemResponse, MyCasesFilterRequest } from '../../model/profile.model';
 import { CaseType } from '../../../../shared/enums/case-type';

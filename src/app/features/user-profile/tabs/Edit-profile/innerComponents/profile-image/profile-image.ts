@@ -1,9 +1,9 @@
 import { Component, effect, inject, input, output, signal } from '@angular/core';
-import { ImageService } from '../../../../service/image.service';
+import { ImageService } from '../../../../../../shared/services/image.service';
 import { ConfirmDialog } from '../../../../shared/confirm-dialog/confirm-dialog';
 import { GetUserInfoDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
-import { SnackbarService } from '../../../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-profile-image',
@@ -84,7 +84,7 @@ export class ProfileImage {
 
     if (!file) return;
 
-    if (!this.#imageService.validateImageFile(file)) return;
+    if (!this.#imageService.validateAndToast(file)) return;
 
     this.openCropper.emit(file);
   }

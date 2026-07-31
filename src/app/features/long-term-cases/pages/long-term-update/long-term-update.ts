@@ -14,7 +14,7 @@ import { RelationType } from '../../../../shared/enums/relation-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
 import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
@@ -26,7 +26,7 @@ import { arabicText } from '../../../../shared/validators/arabic-text.validator'
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
-import { validateImageFile } from '../../../user-profile/tabs/Edit-profile/utilies/image-validation.util';
+import { ImageService } from '../../../../shared/services/image.service';
 import { CaseFileResponse } from '../../../../core/models/cases.model';
 
 type Step = 1 | 2 | 3;
@@ -49,6 +49,7 @@ type Step = 1 | 2 | 3;
 })
 export class LongTermUpdate implements OnInit {
   private fb = inject(FormBuilder);
+  private imageService = inject(ImageService);
   private service = inject(LongTermCaseService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -297,7 +298,7 @@ export class LongTermUpdate implements OnInit {
     const file = input.files?.[0] ?? null;
     if (!file) return;
 
-    const validation = validateImageFile(file, 5);
+    const validation = this.imageService.validate(file, 5);
     if (!validation.valid) {
       this.newPrimaryError.set(validation.errorMessage ?? null);
       return;
@@ -366,7 +367,7 @@ export class LongTermUpdate implements OnInit {
   onNewPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
     for (const f of files) {
-      const validation = validateImageFile(f, 5);
+      const validation = this.imageService.validate(f, 5);
       if (!validation.valid) {
         this.newPhotosError.set(validation.errorMessage ?? null);
         return;
@@ -389,7 +390,7 @@ export class LongTermUpdate implements OnInit {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     if (!file) return;
 
-    const validation = validateImageFile(file, 10);
+    const validation = this.imageService.validate(file, 10);
     if (!validation.valid) {
       this.policeReportError.set(validation.errorMessage ?? null);
       return;
