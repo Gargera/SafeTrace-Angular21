@@ -1,7 +1,11 @@
 import { Injectable, inject, signal, computed, OnDestroy } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import * as signalR from '@microsoft/signalr';
-import { GetUserNotificationsDTO, NotificationPage, ParsedCaseNotification } from '../models/notification.model';
+import {
+  GetUserNotificationsDTO,
+  NotificationPage,
+  ParsedCaseNotification,
+} from '../models/notification.model';
 import { NotificationType } from '../../shared/enums/Notification-Type';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
@@ -14,6 +18,7 @@ const DEFAULT_PAGE_SIZE = 10;
 export class NotificationService implements OnDestroy {
   readonly #http = inject(HttpClient);
   readonly #apiUrl = `${environment.apiBaseUrl}/Notification`;
+  readonly #defaultLink = '/profile?tab=notifications';
   readonly #authService = inject(AuthService);
   // ─── Private state signals ────────────────────────────────────────────────
   readonly #notifications = signal<GetUserNotificationsDTO[]>([]);
@@ -352,6 +357,8 @@ export class NotificationService implements OnDestroy {
       } else {
         router.navigateByUrl(n.notificationDirectLink);
       }
+    } else {
+      router.navigateByUrl(this.#defaultLink);
     }
     return false;
   }
