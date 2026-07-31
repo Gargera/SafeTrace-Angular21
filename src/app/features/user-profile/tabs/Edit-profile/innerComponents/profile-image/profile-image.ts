@@ -118,9 +118,7 @@ export class ProfileImage {
       },
       error: (err) => {
         this.isUploadingProfileImage.set(false);
-        const msg =
-          err?.error?.message ?? 'حدث خطأ أثناء رفع الصورة الشخصية. يرجى المحاولة مجدداً.';
-        this.#snackbar.error(msg);
+        this.#snackbar.error(err.error?.detail || err?.error?.message || 'حدث خطأ أثناء رفع الصورة الشخصية. يرجى المحاولة مجدداً.');
         // Fall back to whatever the server last had, since the optimistic
         // preview never actually made it to the backend. Edit mode stays
         // open so the user can pick another file or cancel.
@@ -156,7 +154,7 @@ export class ProfileImage {
       },
       error: (err) => {
         this.isRemovingProfileImage.set(false);
-        this.#snackbar.error(err?.error?.message ?? 'حدث خطأ أثناء حذف الصورة الشخصية');
+        this.#snackbar.error(err?.error?.message || err.error?.detail ||  'حدث خطأ أثناء حذف الصورة الشخصية');
       },
     });
   }

@@ -115,7 +115,7 @@ export class PersonalInfo implements OnChanges {
       },
       error: (err) => {
         this.isSavingPersonal.set(false);
-        const msg = err?.error?.message ?? 'حدث خطأ أثناء حفظ البيانات. يرجى المحاولة مجدداً.';
+        const msg = err?.error?.message || err.error?.detail || 'حدث خطأ أثناء حفظ البيانات. يرجى المحاولة مجدداً.';
         this.#snackbar.error(msg);
       },
     });
