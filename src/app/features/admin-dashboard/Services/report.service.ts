@@ -2,9 +2,9 @@ import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { HttpClient, HttpResponse, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { UserFilterDto } from '../models/User/UserFilterDto';
-import { ComplaintFilterDto } from '../../complaints/models/complaint-filter.model';
-import { DonationAdminFilterDto } from '../pages/donations/models/donation-admin-filter.dto'
+import { UserFilterDto } from '../models/User/requests/UserFilterDto';
+import { ComplaintFilterDto } from '../../complaints/models/requests/complaint-filter.model';
+import { DonationAdminFilterDto } from '../../donations/models/requests/donation-admin-filter.dto';
 import { CasesFilterRequest } from '../../../core/models/cases.model';
 
 @Injectable({

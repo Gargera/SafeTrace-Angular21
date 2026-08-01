@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { UserService } from '../../services/user.service';
 import { RoleService } from '../../services/role.service';
-import { RoleDto } from '../../models/Role/RoleDto';
+import { RoleDto } from '../../models/Role/responses/RoleDto';
 import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 
 
