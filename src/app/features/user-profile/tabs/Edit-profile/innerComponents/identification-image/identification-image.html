@@ -6,31 +6,29 @@
 
     @if (!isEditingIdImage()) {
       @if (canEdit) {
-        <button
-          type="button"
+        <span
           (click)="toggleIdImageEdit(true)"
-          class="px-sm py-xs bg-secondary-container text-on-secondary-container hover:bg-secondary-container-high focus-visible:ring-2 focus-visible:ring-secondary rounded-lg text-label-sm font-bold flex items-center gap-xs transition-colors cursor-pointer"
+          class="material-symbols-outlined text-[12px] cursor-pointer"
+          aria-hidden="true"
+          >edit</span
         >
-          <span class="material-symbols-outlined text-[14px]" aria-hidden="true">edit</span>
-          تعديل
-        </button>
       }
     } @else {
       <div class="flex items-center gap-xs">
-        <button
+        <app-button
           type="button"
           [disabled]="isSavingIdImage()"
+          variant="danger"
           (click)="cancelIdImage()"
-          class="px-sm py-xs text-secondary border border-secondary rounded-lg text-label-sm font-bold hover:bg-secondary-fixed focus-visible:ring-2 focus-visible:ring-secondary transition-colors disabled:opacity-50 cursor-pointer"
         >
           إلغاء
-        </button>
-        <button
+        </app-button>
+        <app-button
           type="button"
           [disabled]="isSavingIdImage()"
           (click)="saveIdImage()"
           [attr.aria-busy]="isSavingIdImage()"
-          class="px-sm py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 focus-visible:ring-2 focus-visible:ring-secondary transition-all flex items-center gap-xs disabled:opacity-50 cursor-pointer"
+          variant="success"
         >
           @if (isSavingIdImage()) {
             <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
@@ -38,7 +36,7 @@
             >
           }
           حفظ
-        </button>
+        </app-button>
       </div>
     }
   </div>

@@ -61,4 +61,21 @@ export class NotificationsTab implements OnInit {
   trackById(_: number, item: GetUserNotificationsDTO): number {
     return item.id;
   }
+
+  onScroll(event: Event): void {
+    const element = event.target as HTMLElement;
+
+    const threshold = 100; // قبل آخر 100px يبدأ يحمل
+
+    const reachedBottom =
+      element.scrollHeight - element.scrollTop - element.clientHeight <= threshold;
+
+    if (
+      reachedBottom &&
+      !this.notificationService.isLoadingMore() &&
+      this.notificationService.hasNextPage()
+    ) {
+      this.notificationService.loadMore();
+    }
+  }
 }

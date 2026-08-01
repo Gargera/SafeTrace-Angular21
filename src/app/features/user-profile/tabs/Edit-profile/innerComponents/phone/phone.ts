@@ -13,11 +13,13 @@ import { Subject, takeUntil } from 'rxjs';
 import { SnackbarService } from '../../../../../../shared/services/toast.service';
 import { GetUserInfoDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
+import { FormField } from '../../../../../../shared/components/form-field/form-field';
+import { ButtonComponent } from '../../../../../../shared/components/button/button';
 
 @Component({
   selector: 'app-phone',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, FormField, ButtonComponent],
   templateUrl: './phone.html',
 })
 export class Phone implements OnChanges, OnDestroy {

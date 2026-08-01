@@ -4,11 +4,13 @@ import { SnackbarService } from '../../../../../../shared/services/toast.service
 import { VerificationStatus } from '../../../../../../shared/enums/verification-status';
 import { GetUserInfoDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
+import { ButtonComponent } from '../../../../../../shared/components/button/button';
+import { FormField } from '../../../../../../shared/components/form-field/form-field';
 
 @Component({
   selector: 'app-identification-image',
   standalone: true,
-  imports: [],
+  imports: [ ButtonComponent],
   templateUrl: './identification-image.html',
   host: {
     class: 'space-y-sm',
@@ -61,7 +63,9 @@ export class IdentificationImage {
   get isVerified(): boolean {
     const info = this.userInfo();
     if (!info) return false;
-    return info.verificationStatus === VerificationStatus.Verified || (info.role && info.role !== 'User');
+    return (
+      info.verificationStatus === VerificationStatus.Verified || (info.role && info.role !== 'User')
+    );
   }
 
   get isPending(): boolean {
@@ -115,7 +119,10 @@ export class IdentificationImage {
       },
       error: (err) => {
         this.isSavingIdImage.set(false);
-        const msg = err?.error?.message || err.error?.detail || 'حدث خطأ أثناء رفع صورة الهوية. يرجى المحاولة مجدداً.';
+        const msg =
+          err?.error?.message ||
+          err.error?.detail ||
+          'حدث خطأ أثناء رفع صورة الهوية. يرجى المحاولة مجدداً.';
         this.#snackbar.error(msg);
       },
     });
