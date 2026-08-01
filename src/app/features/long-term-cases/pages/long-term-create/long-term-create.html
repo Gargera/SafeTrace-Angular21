@@ -442,4 +442,19 @@
 </app-force-create-popup>
 }
 
+<!-- 6. Pending duplicate info dialog -->
+@if (showPendingDialog()) {
+  <app-pending-duplicate-dialog
+    (close)="showPendingDialog.set(false)">
+  </app-pending-duplicate-dialog>
+}
+
+<!-- same user dialog -->
+@if (showSameUserDialog()) {
+  <app-same-user-dialog
+    [duplicateDecision]="currentDuplicateDecision()"
+    (close)="showSameUserDialog.set(false)">
+  </app-same-user-dialog>
+}
+
 </div>

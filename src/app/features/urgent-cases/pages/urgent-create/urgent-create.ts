@@ -15,7 +15,10 @@ import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/for
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
+import { PendingDuplicateDialogComponent } from '../../../../shared/components/cases-components/pending-duplicate-dialog/pending-duplicate-dialog.component';
 import { MatchedCaseResponse } from '../../../../core/models/cases.model';
+import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
+import { SameUserDialogComponent } from '../../../../shared/components/cases-components/same-user-dialog/same-user-dialog';
 import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
@@ -41,6 +44,8 @@ type Step = 1 | 2 | 3;
     ReactiveFormsModule,
     MapLocationPickerComponent,
     ForceCreatePopupComponent,
+    PendingDuplicateDialogComponent,
+    SameUserDialogComponent,
     ButtonComponent,
     FormField,
     ImageCropperComponent,
@@ -98,6 +103,9 @@ export class UrgentCreate {
   locationError = signal<string | null>(null);
 
   showForceCreatePopup = signal(false);
+  showPendingDialog = signal(false);
+  showSameUserDialog = signal(false);
+  currentDuplicateDecision = signal<DuplicateDecision>(DuplicateDecision.None);
   isBlockedDuplicate = signal(false);
   matchedCases = signal<MatchedCaseResponse[]>([]);
   private pendingRequest: UrgentCaseCreateRequest | null = null;
@@ -400,13 +408,24 @@ export class UrgentCreate {
           const data = res.data;
 
           if (data && !data.isCreated) {
-            this.matchedCases.set(data.matchedCases ?? []);
-            this.isBlockedDuplicate.set(data.isBlocked);
-            this.showForceCreatePopup.set(true);
+            this.currentDuplicateDecision.set(data.duplicateDecision);
+
+            if (data.duplicateDecision === DuplicateDecision.SameUserPending || 
+                data.duplicateDecision === DuplicateDecision.SameUserActive) {
+              this.showSameUserDialog.set(true);
+            } else if (data.duplicateDecision === DuplicateDecision.PendingDuplicate) {
+              this.showPendingDialog.set(true);
+            } else {
+              // ApprovedDuplicate or AllowUnknown
+              this.matchedCases.set(data.matchedCases ?? []);
+              this.isBlockedDuplicate.set(data.isBlocked);
+              this.showForceCreatePopup.set(true);
+            }
             return;
           }
 
           this.showForceCreatePopup.set(false);
+          this.showPendingDialog.set(false);
           this.snackbar.success('تم انشاء بلاغ حاله طارئة بنجاح');
           this.router.navigate(['/urgent']);
         },
@@ -429,6 +448,10 @@ export class UrgentCreate {
     }
     this.showForceCreatePopup.set(false);
     this.onSubmit(true);
+  }
+
+  onPendingDialogClose(): void {
+    this.showPendingDialog.set(false);
   }
 
   goBack(): void {
