@@ -40,12 +40,11 @@ export class MyDonationsComponent implements OnInit {
     this.load();
   }
 
-  @HostListener('window:scroll')
-  onWindowScroll(): void {
-    const scrollTop = window.scrollY || document.documentElement.scrollTop;
-    const viewportHeight = window.innerHeight;
-    const documentHeight = document.documentElement.scrollHeight;
-    const nearBottom = scrollTop + viewportHeight >= documentHeight - 220;
+  onScroll(event: Event): void {
+    const target = event.target as HTMLElement;
+    const scrollPosition = target.scrollTop + target.clientHeight;
+    const documentHeight = target.scrollHeight;
+    const nearBottom = scrollPosition >= documentHeight - 220;
 
     if (nearBottom && this.hasMore() && !this.loading() && !this.loadingMore()) {
       this.loadMore();

@@ -7,9 +7,9 @@
     ></app-loading-spinner>
   }
 
-  <div class="overflow-x-auto">
+  <div class="overflow-x-auto overflow-y-auto h-[500px] md:h-[600px] w-full" (scroll)="onScroll($event)">
     <table class="w-full text-right border-collapse whitespace-nowrap">
-      <thead>
+      <thead class="sticky top-0 z-20">
         <tr class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant">
           <th class="px-lg py-md text-center">#</th>
           <th class="px-lg py-md">المبلغ</th>
