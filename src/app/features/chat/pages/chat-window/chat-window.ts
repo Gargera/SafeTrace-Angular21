@@ -5,7 +5,7 @@ import { DatePipe,CommonModule } from '@angular/common';
 import { ChatService } from '../../services/chat.service';
 import { MessageService } from '../../services/message.service';
 import { ChatAlertsService } from '../../services/chat-alert.service';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ChatHubService, MessagesReadEvent, MessageDeletedEvent} from '../../services/chat-hub.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import {ChatDetailsDto} from '../../models/chat.model';

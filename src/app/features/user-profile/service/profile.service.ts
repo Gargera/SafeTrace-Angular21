@@ -16,9 +16,17 @@ import {
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
 
+import { CaseType } from '../../../shared/enums/case-type';
+import { UrgentCaseService } from '../../urgent-cases/services/urgent-case.service';
+import { LongTermCaseService } from '../../long-term-cases/services/long-term-case.service';
+import { UnknownCaseService } from '../../unknown-cases/services/unknown-case.service';
+
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
   readonly #http = inject(HttpClient);
+  readonly #urgentCaseService = inject(UrgentCaseService);
+  readonly #longTermCaseService = inject(LongTermCaseService);
+  readonly #unknownCaseService = inject(UnknownCaseService);
   readonly #profileUrl = `${environment.apiBaseUrl}/UserProfile`;
   readonly #accountUrl = `${environment.apiBaseUrl}/Account`;
 
@@ -99,5 +107,18 @@ export class ProfileService {
   //CurrentLocation
   updateCurrentLocation(data: UpdateCurrentLocationDTO) {
     return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateCurrentLocation`, data);
+  }
+
+  getMyCaseById(id: number, caseType?: CaseType): Observable<ApiResponse<any>> {
+    switch (caseType) {
+      case CaseType.Urgent:
+        return this.#urgentCaseService.getMyCaseById(id);
+      case CaseType.LongTerm:
+        return this.#longTermCaseService.getMyCaseById(id);
+      case CaseType.Unknown:
+        return this.#unknownCaseService.getMyCaseById(id);
+      default:
+        return this.#http.get<ApiResponse<any>>(`${environment.baseUrl}/api/UserProfile/MyCaseDetails/${id}`);
+    }
   }
 }

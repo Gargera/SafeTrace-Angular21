@@ -3,15 +3,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { environment } from '../../../../../environments/environment' ;
+import { environment } from '../../../../../environments/environment';
 import { UnknownCaseService } from '../../services/unknown-case.service';
 import { UnknownCaseUpdateRequest } from '../../models/request/UnknownCaseUpdateRequest';
-import { UnknownCaseDetailResponse } from '../../models/response/UnknownCaseDetailResponse';
 import { Gender } from '../../../../shared/enums/gender';
 import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
-import { SnackbarService } from '../../../../core/services/toast.service';
-import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
+import { SnackbarService } from '../../../../shared/services/toast.service';
+import { CaseFileResponse } from '../../../../core/models/cases.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
@@ -21,7 +20,7 @@ import { arabicText } from '../../../../shared/validators/arabic-text.validator'
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
-import { validateImageFile } from '../../../user-profile/tabs/Edit-profile/utilies/image-validation.util';
+import { ImageService } from '../../../../shared/services/image.service';
 
 import { CommonModule } from '@angular/common';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
@@ -45,6 +44,7 @@ type Step = 1 | 2 | 3;
 })
 export class UnknownUpdate implements OnInit {
   private fb = inject(FormBuilder);
+  private imageService = inject(ImageService);
   private service = inject(UnknownCaseService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -160,8 +160,12 @@ export class UnknownUpdate implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          const c = res.data as UnknownCaseDetailResponse & Record<string, unknown>;
-          const gov = (c as Record<string, unknown>)['government'] as string ?? '';
+          const c = res.data;
+          if (!c) {
+            this.isLoading.set(false);
+            return;
+          }
+          const gov = c.government ?? '';
           this.availableCities.set(getCitiesForGovernorate(gov));
           this.form.patchValue({
             fName: c.fName ?? '',
@@ -170,12 +174,12 @@ export class UnknownUpdate implements OnInit {
             lName: c.lName ?? '',
             age: c.age ?? null,
             gender: c.gender ?? '',
-            communicationPhone: (c as Record<string, unknown>)['communicationPhone'] as string ?? '',
-            description: (c as Record<string, unknown>)['description'] as string ?? '',
-            government: (c as Record<string, unknown>)['government'] as string ?? '',
-            city: (c as Record<string, unknown>)['city'] as string ?? '',
-            street: (c as Record<string, unknown>)['street'] as string ?? '',
-            eventDate: (c as Record<string, unknown>)['eventDate'] ? String((c as Record<string, unknown>)['eventDate']).split('T')[0] : '',
+            communicationPhone: c.communicationPhone ?? '',
+            description: c.description ?? '',
+            government: c.government ?? '',
+            city: c.city ?? '',
+            street: c.street ?? '',
+            eventDate: c.eventDate ? String(c.eventDate).split('T')[0] : '',
           });
 
           const rawFiles: CaseFileResponse[] = c.photos ?? [];
@@ -185,7 +189,7 @@ export class UnknownUpdate implements OnInit {
           }));
           this.existingPhotos.set(files);
           this.primaryPhotoId.set(files.find((f) => f.isPrimary)?.id ?? null);
-          this.existingVideoUrl.set(this.resolveMediaUrl((c as Record<string, unknown>)['video'] as string ?? null));
+          this.existingVideoUrl.set(this.resolveMediaUrl(c.video ?? null));
 
           this.isLoading.set(false);
         },
@@ -234,7 +238,7 @@ export class UnknownUpdate implements OnInit {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     if (!file) return;
 
-    const validation = validateImageFile(file, 5);
+    const validation = this.imageService.validate(file, 5);
     if (!validation.valid) {
       this.newPrimaryError.set(validation.errorMessage ?? null);
       return;
@@ -254,7 +258,7 @@ export class UnknownUpdate implements OnInit {
   onNewPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
     for (const f of files) {
-      const validation = validateImageFile(f, 5);
+      const validation = this.imageService.validate(f, 5);
       if (!validation.valid) {
         this.newPhotosError.set(validation.errorMessage ?? null);
         return;

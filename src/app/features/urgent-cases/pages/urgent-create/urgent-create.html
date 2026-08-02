@@ -1,4 +1,4 @@
-<div dir="rtl" class="mx-auto max-w-[760px] px-4 pb-16 pt-6">
+<div dir="rtl" class="mx-auto max-w-190 px-4 pb-16 pt-6">
 
   <!-- Single app-card containing the entire page -->
   <app-card extraClass="overflow-hidden rounded-2xl border border-outline-variant/30 bg-white shadow-sm">
@@ -322,7 +322,7 @@
             @if (croppedPrimaryImagePreview() && !cropImageEvent()) {
             <div class="flex items-center gap-4 rounded-2xl border border-outline-variant/50 bg-surface-container-low p-4 shadow-xs">
               <img [src]="croppedPrimaryImagePreview()"
-                class="h-[80px] w-[105px] rounded-xl border border-outline-variant/60 object-cover shadow-xs transition-transform duration-200 hover:scale-105" />
+                class="h-20 w-26.25 rounded-xl border border-outline-variant/60 object-cover shadow-xs transition-transform duration-200 hover:scale-105" />
               <div class="flex-1">
                 <p class="mb-1 text-sm font-semibold text-on-tertiary-container">✓ تم تحديد الصورة وتأطيرها بنجاح</p>
                 <button type="button" (click)="reCropPhoto()"
@@ -344,7 +344,7 @@
               <div class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
                 <span class="material-symbols-outlined text-2xl">add_photo_alternate</span>
               </div>
-              <p class="text-xs text-on-surface-variant/70">JPG / PNG / WebP — حتى 5MB لكل صورة</p>
+              <p class="text-xs text-on-surface-variant/70">JPG / JPEG / PNG / WebP — حتى 5MB لكل صورة</p>
             </div>
             @if (additionalPhotosError()) { <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ additionalPhotosError() }}</p> }
 

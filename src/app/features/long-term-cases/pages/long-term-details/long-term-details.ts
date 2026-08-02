@@ -1,5 +1,3 @@
-import { FormField } from '../../../../shared/components/form-field/form-field';
-import { CardComponent } from '../../../../shared/components/card/card';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -23,9 +21,9 @@ import { AgeBadgeDirective } from '../../../../shared/directives/age-badge-direc
 import { AgeCategories } from '../../../../shared/enums/age-categories';
 import { FileType } from '../../../../shared/enums/file-type';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup';
-import { CasePhotoResponse, FoundPersonInfoRequest } from '../../../../core/models/Cases.model';
+import { CasePhotoResponse, FoundPersonInfoRequest } from '../../../../core/models/cases.model';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
@@ -100,6 +98,7 @@ export class LongTermDetails implements OnInit {
 
   ngOnInit(): void {
     this.isAdminPage.set(this.route.snapshot.data['mode'] === 'dashboard');
+    this.isMyCasePage.set(this.route.snapshot.data['mode'] === 'my-case');
 
     this.route.paramMap
       .pipe(
@@ -113,7 +112,9 @@ export class LongTermDetails implements OnInit {
           this.loading.set(true);
           const req$ = this.isAdminPage()
             ? this.longTermCaseService.adminGetCaseById(id)
-            : this.longTermCaseService.getCaseById(id);
+            : this.isMyCasePage()
+              ? this.longTermCaseService.getMyCaseById(id)
+              : this.longTermCaseService.getCaseById(id);
 
           return req$.pipe(
             catchError((err: unknown) => {

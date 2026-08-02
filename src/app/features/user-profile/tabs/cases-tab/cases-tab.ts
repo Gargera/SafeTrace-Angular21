@@ -6,7 +6,6 @@ import {
   computed,
   OnInit,
   OnDestroy,
-  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -16,12 +15,12 @@ import { ProfileService } from '../../service/profile.service';
 import { UrgentCaseService } from '../../../urgent-cases/services/urgent-case.service';
 import { LongTermCaseService } from '../../../long-term-cases/services/long-term-case.service';
 import { UnknownCaseService } from '../../../unknown-cases/services/unknown-case.service';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 
 import { MyCaseListItemResponse, MyCasesFilterRequest } from '../../model/profile.model';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
-import { FoundPersonInfoRequest, CasesFilterRequest } from '../../../../core/models/Cases.model';
+import { FoundPersonInfoRequest, CasesFilterRequest } from '../../../../core/models/cases.model';
 
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -51,8 +50,10 @@ const CASE_TYPE_ORDER: CaseType[] = [CaseType.Urgent, CaseType.LongTerm, CaseTyp
     FoundedPopupComponent,
   ],
   templateUrl: './cases-tab.html',
+  styleUrls: ['./cases-tab.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
+
 export class MyCasesTab implements OnInit, OnDestroy {
   protected readonly CaseType = CaseType;
   protected readonly CaseStatus = CaseStatus;

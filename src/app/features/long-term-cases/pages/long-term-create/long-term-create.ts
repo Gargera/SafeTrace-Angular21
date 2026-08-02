@@ -2,7 +2,7 @@ import { Component, inject, signal, ChangeDetectionStrategy, DestroyRef } from '
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 
@@ -13,9 +13,9 @@ import { RelationType } from '../../../../shared/enums/relation-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
 import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
-import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
+import { MatchedCaseResponse } from '../../../../core/models/cases.model';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
@@ -26,7 +26,7 @@ import { arabicText } from '../../../../shared/validators/arabic-text.validator'
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
-import { validateImageFile } from '../../../user-profile/tabs/Edit-profile/utilies/image-validation.util';
+import { ImageService } from '../../../../shared/services/image.service';
 
 type Step = 1 | 2 | 3;
 
@@ -49,6 +49,7 @@ type Step = 1 | 2 | 3;
 })
 export class LongTermCreate {
   private fb = inject(FormBuilder);
+  private imageService = inject(ImageService);
   private service = inject(LongTermCaseService);
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
@@ -78,7 +79,7 @@ export class LongTermCreate {
 
   showForceCreatePopup = signal(false);
   isBlockedDuplicate = signal(false);
-  matchedCases = signal<MatchedCaseDto[]>([]);
+  matchedCases = signal<MatchedCaseResponse[]>([]);
   private pendingRequest: LongTermCaseCreateRequest | null = null;
 
   readonly genders = Gender;
@@ -166,7 +167,7 @@ export class LongTermCreate {
     const file = input.files?.[0];
     if (!file) return;
 
-    const validation = validateImageFile(file, 5);
+    const validation = this.imageService.validate(file, 5);
     if (!validation.valid) {
       this.primaryPhotoError.set(validation.errorMessage ?? null);
       return;
@@ -208,7 +209,7 @@ export class LongTermCreate {
   onAdditionalPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
     for (const f of files) {
-      const validation = validateImageFile(f, 5);
+      const validation = this.imageService.validate(f, 5);
       if (!validation.valid) {
         this.additionalPhotosError.set(validation.errorMessage ?? null);
         return;
@@ -235,7 +236,7 @@ export class LongTermCreate {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     if (!file) return;
 
-    const validation = validateImageFile(file, 10);
+    const validation = this.imageService.validate(file, 10);
     if (!validation.valid) {
       this.policeReportError.set(validation.errorMessage ?? null);
       return;
@@ -303,17 +304,9 @@ export class LongTermCreate {
           this.isSubmitting.set(false);
           const data = res.data;
 
-          if (data && (data.isCreated === false || data.isCreated === undefined)) {
-            if (data.matchedCases) {
-              this.matchedCases.set(data.matchedCases.map(mapMatchedCaseResponseToDto));
-            } else {
-              this.matchedCases.set([]);
-            }
-
-            const rawData = (data as unknown) as Record<string, unknown>;
-            const isSameType = rawData['isSameTypeDuplicate'] ?? rawData['IsSameTypeDuplicate'] ?? false;
-
-            this.isBlockedDuplicate.set(Boolean(isSameType));
+          if (data && !data.isCreated) {
+            this.matchedCases.set(data.matchedCases ?? []);
+            this.isBlockedDuplicate.set(data.isBlocked);
             this.showForceCreatePopup.set(true);
             return;
           }

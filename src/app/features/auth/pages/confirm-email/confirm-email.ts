@@ -3,7 +3,7 @@ import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import Swal from 'sweetalert2';
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
