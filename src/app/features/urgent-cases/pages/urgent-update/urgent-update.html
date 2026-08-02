@@ -310,7 +310,7 @@
                 اجعلها أساسية
               </button>
               }
-              <button type="button" (click)="removeExistingPhoto(photo)"
+              <button type="button" (click)="confirmRemoveExistingPhoto(photo)"
                 class="absolute bottom-1 left-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110">
                 <span class="material-symbols-outlined text-xs">close</span>
               </button>
@@ -457,6 +457,19 @@
 
 }
 </app-card>
+
+@if (showDeleteImageConfirm()) {
+  <app-confirmation-modal
+    title="تأكيد الحذف"
+    message="هل أنت متأكد من حذف هذه الصورة؟ سيتم إزالتها نهائياً عند حفظ التعديلات."
+    confirmText="حذف"
+    cancelText="تراجع"
+    icon="delete"
+    variant="danger"
+    (confirm)="executeRemoveExistingPhoto()"
+    (cancel)="showDeleteImageConfirm.set(false)">
+  </app-confirmation-modal>
+}
 
 <!-- Location Picker Map Modal -->
 <app-map-location-picker [isOpen]="isMapModalOpen()" [initialLat]="selectedLat()" [initialLng]="selectedLng()"

@@ -302,8 +302,30 @@ export class UnknownCreate {
         error: (err: unknown) => {
           this.isSubmitting.set(false);
           const msg = extractErrorMessage(err, 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.');
-          this.errorMsg.set(msg);
-          this.snackbar.error(msg);
+          
+          if (err && typeof err === 'object' && 'status' in err && (err as any).status === 400) {
+            const errorObj = (err as any).error;
+            if (errorObj?.errors) {
+              let hasUnmappedErrors = false;
+              for (const key in errorObj.errors) {
+                const controlName = key.charAt(0).toLowerCase() + key.slice(1);
+                const control = this.form.get(controlName);
+                if (control) {
+                  control.setErrors({ serverError: errorObj.errors[key][0] });
+                } else {
+                  hasUnmappedErrors = true;
+                  this.errorMsg.set(errorObj.errors[key][0]);
+                }
+              }
+              if (!hasUnmappedErrors) {
+                this.errorMsg.set(null);
+              }
+            } else {
+              this.errorMsg.set(msg);
+            }
+          } else {
+            this.snackbar.error(msg);
+          }
         },
       });
   }

@@ -24,6 +24,7 @@ import { validateImageFile } from '../../../user-profile/tabs/Edit-profile/utili
 
 import { CommonModule } from '@angular/common';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 
 type Step = 1 | 2 | 3;
 
@@ -37,6 +38,7 @@ type Step = 1 | 2 | 3;
     FormField,
     CardComponent,
     CaseHeaderComponent,
+    ConfirmationModalComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./unknown-update.css'],
@@ -55,6 +57,9 @@ export class UnknownUpdate implements OnInit {
   isLoading = signal(true);
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
+
+  showDeleteImageConfirm = signal(false);
+  photoToDelete = signal<CaseFileResponse | null>(null);
 
   existingPhotos = signal<CaseFileResponse[]>([]);
   deletedPhotoIds = signal<number[]>([]);
@@ -218,6 +223,25 @@ export class UnknownUpdate implements OnInit {
     if (this.currentStep > 1) this.currentStep = (this.currentStep - 1) as Step;
   }
 
+  confirmRemoveExistingPhoto(photo: CaseFileResponse): void {
+    this.photoToDelete.set(photo);
+    this.showDeleteImageConfirm.set(true);
+  }
+
+  executeRemoveExistingPhoto(): void {
+    const photo = this.photoToDelete();
+    if (photo) {
+      this.existingPhotos.update((list) => list.filter((p) => p.id !== photo.id));
+      this.deletedPhotoIds.update((ids) => [...ids, photo.id]);
+      if (this.primaryPhotoId() === photo.id) {
+        const next = this.existingPhotos()[0];
+        this.primaryPhotoId.set(next ? next.id : null);
+      }
+    }
+    this.showDeleteImageConfirm.set(false);
+    this.photoToDelete.set(null);
+  }
+
   removeExistingPhoto(photo: CaseFileResponse): void {
     this.existingPhotos.update((list) => list.filter((p) => p.id !== photo.id));
     this.deletedPhotoIds.update((ids) => [...ids, photo.id]);
@@ -324,8 +348,35 @@ export class UnknownUpdate implements OnInit {
         error: (err: unknown) => {
           this.isSubmitting.set(false);
           const msg = extractErrorMessage(err, 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.');
-          this.errorMsg.set(msg);
-          this.snackbar.error(msg);
+          
+          if (msg === 'الصورة الجديدة لا تبدو لنفس الشخص الموجود في هذا البلاغ.') {
+            this.newPrimaryError.set(msg);
+            return;
+          }
+
+          if (err && typeof err === 'object' && 'status' in err && (err as any).status === 400) {
+            const errorObj = (err as any).error;
+            if (errorObj?.errors) {
+              let hasUnmappedErrors = false;
+              for (const key in errorObj.errors) {
+                const controlName = key.charAt(0).toLowerCase() + key.slice(1);
+                const control = this.form.get(controlName);
+                if (control) {
+                  control.setErrors({ serverError: errorObj.errors[key][0] });
+                } else {
+                  hasUnmappedErrors = true;
+                  this.errorMsg.set(errorObj.errors[key][0]);
+                }
+              }
+              if (!hasUnmappedErrors) {
+                this.errorMsg.set(null);
+              }
+            } else {
+              this.errorMsg.set(msg);
+            }
+          } else {
+            this.snackbar.error(msg);
+          }
         },
       });
   }

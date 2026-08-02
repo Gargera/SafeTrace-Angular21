@@ -253,7 +253,7 @@
                   <span class="material-symbols-outlined text-xs">crop</span>
                 </button>
 
-                <button type="button" (click)="removeExistingPhoto(photo)" class="absolute bottom-1 left-1 flex h-6 w-6 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110">
+                <button type="button" (click)="confirmRemoveExistingPhoto(photo)" class="absolute bottom-1 left-1 flex h-6 w-6 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110">
                   <span class="material-symbols-outlined text-xs">close</span>
                 </button>
               </div>
@@ -449,3 +449,16 @@
 
   </app-card>
 </div>
+
+@if (showDeleteImageConfirm()) {
+  <app-confirmation-modal
+    title="تأكيد الحذف"
+    message="هل أنت متأكد من حذف هذه الصورة؟ سيتم إزالتها نهائياً عند حفظ التعديلات."
+    confirmText="حذف"
+    cancelText="تراجع"
+    icon="delete"
+    variant="danger"
+    (confirm)="executeRemoveExistingPhoto()"
+    (cancel)="showDeleteImageConfirm.set(false)">
+  </app-confirmation-modal>
+}
