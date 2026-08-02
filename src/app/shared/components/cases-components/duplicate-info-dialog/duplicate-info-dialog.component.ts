@@ -3,13 +3,13 @@ import { ButtonComponent } from '../../button/button';
 import { DuplicateDecision } from '../../../enums/duplicate-decision';
 
 @Component({
-  selector: 'app-same-user-dialog',
+  selector: 'app-duplicate-info-dialog',
   standalone: true,
   imports: [ButtonComponent],
-  templateUrl: './same-user-dialog.html',
+  templateUrl: './duplicate-info-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SameUserDialogComponent {
+export class DuplicateInfoDialogComponent {
   readonly duplicateDecision = input.required<DuplicateDecision>();
   readonly close = output<void>();
 

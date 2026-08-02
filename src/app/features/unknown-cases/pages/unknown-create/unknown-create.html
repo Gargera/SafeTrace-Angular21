@@ -396,19 +396,12 @@
   </app-force-create-popup>
   }
 
-  <!-- 6. Pending duplicate info dialog -->
-  @if (showPendingDialog()) {
-  <app-pending-duplicate-dialog
-    (close)="showPendingDialog.set(false)">
-  </app-pending-duplicate-dialog>
-  }
-
-  <!-- same user dialog -->
-  @if (showSameUserDialog()) {
-  <app-same-user-dialog
+  <!-- 6. Informational duplicate dialog -->
+  @if (showDuplicateInfoDialog()) {
+  <app-duplicate-info-dialog
     [duplicateDecision]="currentDuplicateDecision()"
-    (close)="showSameUserDialog.set(false)">
-  </app-same-user-dialog>
+    (close)="showDuplicateInfoDialog.set(false)">
+  </app-duplicate-info-dialog>
   }
 
 </div>

@@ -16,8 +16,10 @@
         <h2 class="text-xl font-extrabold text-[#0b1c30] m-0 leading-snug">
           @if (duplicateDecision() === 'SameUserPending') {
             لديك بلاغ قيد المراجعة
-          } @else {
+          } @else if (duplicateDecision() === 'SameUserActive') {
             لديك بلاغ معتمد
+          } @else if (duplicateDecision() === 'PendingDuplicate') {
+            يوجد بلاغ مشابه قيد المراجعة
           }
         </h2>
       </div>
@@ -31,8 +33,10 @@
         <p class="text-sm text-amber-800 leading-relaxed m-0">
           @if (duplicateDecision() === 'SameUserPending') {
             لديك بالفعل بلاغ لنفس الشخص وهو قيد المراجعة.
-          } @else {
+          } @else if (duplicateDecision() === 'SameUserActive') {
             لديك بالفعل بلاغ معتمد لنفس الشخص.
+          } @else if (duplicateDecision() === 'PendingDuplicate') {
+            يوجد بالفعل بلاغ مشابه قيد المراجعة من قبل الإدارة.
           }
         </p>
       </div>
@@ -40,6 +44,13 @@
       @if (duplicateDecision() === 'SameUserPending') {
         <p class="text-sm text-[#56585e] leading-relaxed m-0">
           يرجى انتظار انتهاء المراجعة قبل إنشاء بلاغ جديد.
+        </p>
+      } @else if (duplicateDecision() === 'PendingDuplicate') {
+        <p class="text-sm text-[#56585e] leading-relaxed m-0">
+          لا يمكن إنشاء بلاغ جديد حتى تنتهي المراجعة.
+        </p>
+        <p class="text-sm text-[#56585e] leading-relaxed m-0">
+          يرجى المحاولة مرة أخرى لاحقًا.
         </p>
       }
     </div>

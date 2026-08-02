@@ -13,10 +13,9 @@ import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/co
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { SnackbarService } from '../../../../core/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
-import { PendingDuplicateDialogComponent } from '../../../../shared/components/cases-components/pending-duplicate-dialog/pending-duplicate-dialog.component';
 import { MatchedCaseResponse } from '../../../../core/models/cases.model';
 import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
-import { SameUserDialogComponent } from '../../../../shared/components/cases-components/same-user-dialog/same-user-dialog';
+import { DuplicateInfoDialogComponent } from '../../../../shared/components/cases-components/duplicate-info-dialog/duplicate-info-dialog.component';
 
 // Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
@@ -38,8 +37,7 @@ import { CaseHeaderComponent } from '../../../../shared/components/cases-compone
     CommonModule,
     ReactiveFormsModule,
     ForceCreatePopupComponent,
-    PendingDuplicateDialogComponent,
-    SameUserDialogComponent,
+    DuplicateInfoDialogComponent,
     ImageCropperComponent,
     CardComponent,
     FormField,
@@ -76,8 +74,7 @@ export class UnknownCreate {
   videoFile = signal<File | null>(null);
 
   showForceCreatePopup = signal(false);
-  showPendingDialog = signal(false);
-  showSameUserDialog = signal(false);
+  showDuplicateInfoDialog = signal(false);
   currentDuplicateDecision = signal<DuplicateDecision>(DuplicateDecision.None);
   isBlockedDuplicate = signal(false);
   matchedCases = signal<MatchedCaseResponse[]>([]);
@@ -285,10 +282,9 @@ export class UnknownCreate {
             this.currentDuplicateDecision.set(data.duplicateDecision);
 
             if (data.duplicateDecision === DuplicateDecision.SameUserPending || 
-                data.duplicateDecision === DuplicateDecision.SameUserActive) {
-              this.showSameUserDialog.set(true);
-            } else if (data.duplicateDecision === DuplicateDecision.PendingDuplicate) {
-              this.showPendingDialog.set(true);
+                data.duplicateDecision === DuplicateDecision.SameUserActive ||
+                data.duplicateDecision === DuplicateDecision.PendingDuplicate) {
+              this.showDuplicateInfoDialog.set(true);
             } else {
               // ApprovedDuplicate or AllowUnknown
               this.matchedCases.set(data.matchedCases ?? []);
@@ -299,7 +295,7 @@ export class UnknownCreate {
           }
 
           this.showForceCreatePopup.set(false);
-          this.showPendingDialog.set(false);
+          this.showDuplicateInfoDialog.set(false);
           this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
           this.router.navigate(['/unknown']);
         },
@@ -333,8 +329,8 @@ export class UnknownCreate {
     this.onSubmit(true);
   }
 
-  onPendingDialogClose(): void {
-    this.showPendingDialog.set(false);
+  onPendingDialogClose() {
+    this.showDuplicateInfoDialog.set(false);
   }
 
   goBack(): void {
