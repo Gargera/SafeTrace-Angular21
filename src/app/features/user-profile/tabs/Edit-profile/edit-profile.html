@@ -43,9 +43,9 @@
       @if (showId) {
         <app-identification-image
           [userInfo]="userInfo()"
-          [croppedImage]="idCroppedImage()"
-          (openCropper)="onOpenCropper('id', $event)"
-          (cropReset)="idCroppedImage.set(null)"
+          [croppedFrontImage]="idFrontCroppedImage()" [croppedBackImage]="idBackCroppedImage()"
+          (openCropperFront)="onOpenCropper('idFront', $event)" (openCropperBack)="onOpenCropper('idBack', $event)"
+          (cropResetFront)="idFrontCroppedImage.set(null)" (cropResetBack)="idBackCroppedImage.set(null)"
           (profileUpdated)="onProfileUpdated()"
         />
       }
@@ -152,3 +152,4 @@
 />
 
 <app-toast />
+

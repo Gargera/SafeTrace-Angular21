@@ -52,7 +52,8 @@ export class ProfileService {
   /** PUT /UserProfile/AddIdImage */
   addIdImage(dto: AddIdImageDTO): Observable<ApiResponse<boolean>> {
     const formData = new FormData();
-    formData.append('identificationImage', dto.identificationImage);
+    formData.append('identificationImageFront', dto.identificationImageFront);
+    formData.append('identificationImageBack', dto.identificationImageBack);
     return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/AddIdImage`, formData);
   }
 

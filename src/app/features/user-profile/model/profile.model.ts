@@ -13,7 +13,8 @@ export interface GetUserInfoDTO {
   homeLongitude: number | null;
   profileImage: string | null;
   verificationStatus: VerificationStatus;
-  identificationImage: string | null;
+  identificationImageFront: string | null;
+  identificationImageBack: string | null;
   role: UserRole;
   phoneNumber: string | null; // ← كانت PhoneNumber بحرف كبير
   cases: any[];
@@ -40,7 +41,8 @@ export interface UpdateProfileImageDTO {
 
 /** PUT /UserProfile/AddIdImage (form-data) */
 export interface AddIdImageDTO {
-  identificationImage: File;
+  identificationImageFront: File;
+  identificationImageBack: File;
 }
 
 /** PUT /UserProfile/UpdateHomeLocation (form-data) */
