@@ -12,7 +12,7 @@ import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.
 import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
@@ -22,7 +22,7 @@ import { arabicText } from '../../../../shared/validators/arabic-text.validator'
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { urgentEventDate, toDatetimeLocalString } from '../../../../shared/validators/urgent-event-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
-import { validateImageFile } from '../../../user-profile/tabs/Edit-profile/utilies/image-validation.util';
+import { ImageService } from '../../../../shared/services/image.service';
 
 import { CommonModule } from '@angular/common';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
@@ -52,6 +52,7 @@ type Step = 1 | 2 | 3;
 })
 export class UrgentUpdate implements OnInit {
   private fb = inject(FormBuilder);
+  private imageService = inject(ImageService);
   private destroyRef = inject(DestroyRef);
 
   // Allowed datetime range for urgent cases (last 6 hours)
@@ -371,7 +372,7 @@ export class UrgentUpdate implements OnInit {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     if (!file) return;
 
-    const validation = validateImageFile(file, 5);
+    const validation = this.imageService.validate(file, 5);
     if (!validation.valid) {
       this.newPrimaryError.set(validation.errorMessage ?? null);
       return;
@@ -392,7 +393,7 @@ export class UrgentUpdate implements OnInit {
   onNewPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
     for (const f of files) {
-      const validation = validateImageFile(f, 5);
+      const validation = this.imageService.validate(f, 5);
       if (!validation.valid) {
         this.newPhotosError.set(validation.errorMessage ?? null);
         return;

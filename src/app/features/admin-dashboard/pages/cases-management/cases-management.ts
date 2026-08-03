@@ -19,7 +19,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ReportService } from '../../services/report.service';
 
 // Badge directives
@@ -28,7 +28,7 @@ import { CaseStatusBadgeDirective } from '../../../../shared/directives/case-sta
 
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import { DashboardService } from '../../services/dashboard.service';
-import { CasesStatisticsDto as DashboardStatistics } from '../../models/Dashboard/CasesStatisticsDto';
+import { CasesStatisticsDto as DashboardStatistics } from '../../models/Dashboard/responses/CasesStatisticsDto';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { CasesManagementService } from '../../services/cases-management.service';
 import { Permissions } from '../../../../core/constants/Permissions';

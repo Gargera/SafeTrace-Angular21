@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { GetUserDto } from '../models/User/GetUserDto';
+import { GetUserDto } from '../models/User/responses/GetUserDto';
 import { environment } from '../../../../environments/environment';
-import { UserFilterDto } from '../models/User/UserFilterDto';
+import { UserFilterDto } from '../models/User/requests/UserFilterDto';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
-import { GetUserByIdDto } from '../models/User/GetUserByIdDto';
-import { ChangeUserRoleDto } from '../models/User/ChangeUserRoleDto';
-import { UserPermissionsResponseDto } from '../models/User/UserPermissionsResponseDto';
-import { AssignUserPermissionsDto } from '../models/User/AssignUserPermissionsDto';
-import { RegisterByAdminDto } from '../models/User/RegisterByAdminDto';
-import { UserStatisticsDto } from '../models/User/UserStatisticsDto';
+import { GetUserByIdDto } from '../models/User/responses/GetUserByIdDto';
+import { ChangeUserRoleDto } from '../models/User/requests/ChangeUserRoleDto';
+import { UserPermissionsResponseDto } from '../models/User/responses/UserPermissionsResponseDto';
+import { AssignUserPermissionsDto } from '../models/User/requests/AssignUserPermissionsDto';
+import { RegisterByAdminDto } from '../models/User/requests/RegisterByAdminDto';
+import { UserStatisticsDto } from '../models/User/responses/UserStatisticsDto';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { ApiService } from '../../../shared/services/api.service';
 

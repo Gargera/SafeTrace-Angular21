@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { DonationService } from './services/donations.service';
+import { DonationService } from '../../services/donations.service';
 
 const MIN_DONATION_AMOUNT = 10;
 const MAX_DONATION_AMOUNT = 100_000;

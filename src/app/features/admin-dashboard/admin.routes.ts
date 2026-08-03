@@ -65,7 +65,7 @@ export const ADMIN_ROUTES: Routes = [
         data: { requiredPermission: Permissions.Donations.GetDonations },
         title: 'إدارة التبرعات | لقاء',
         loadComponent: () =>
-          import('./pages/donations/pages/donation-list/donation-admin-list.component').then(
+          import('../donations/pages/donation-admin-list/donation-admin-list.component').then(
             (m) => m.DonationAdminListComponent,
           ),
       },

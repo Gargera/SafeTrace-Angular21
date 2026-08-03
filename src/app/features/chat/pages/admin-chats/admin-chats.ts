@@ -15,7 +15,7 @@ import { ConfirmationModalComponent } from '../../../../shared/components/confir
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
 import {CaseTypeBadgeDirective} from '../../../../shared/directives/case-type-badge-directive';
 import {TruncatePipe} from '../../../../shared/pipes/truncate-pipe';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
