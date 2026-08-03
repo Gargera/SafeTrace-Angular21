@@ -10,12 +10,15 @@ import { LongTermCaseService } from '../../services/long-term-case.service';
 import { LongTermCaseCreateRequest } from '../../models/request/LongTermCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
+import { CaseType } from '../../../../shared/enums/case-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
 import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { MatchedCaseResponse } from '../../../../core/models/cases.model';
+import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
+import { DuplicateInfoDialogComponent } from '../../../../shared/components/cases-components/duplicate-info-dialog/duplicate-info-dialog.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
@@ -37,6 +40,7 @@ type Step = 1 | 2 | 3;
     CommonModule,
     ReactiveFormsModule,
     ForceCreatePopupComponent,
+    DuplicateInfoDialogComponent,
     ButtonComponent,
     FormField,
     ImageCropperComponent,
@@ -78,12 +82,16 @@ export class LongTermCreate {
   videoFile = signal<File | null>(null);
 
   showForceCreatePopup = signal(false);
+  showDuplicateInfoDialog = signal(false);
+  currentDuplicateDecision = signal<DuplicateDecision>(DuplicateDecision.None);
   isBlockedDuplicate = signal(false);
   matchedCases = signal<MatchedCaseResponse[]>([]);
+  existingCaseType = signal<CaseType | null>(null);
   private pendingRequest: LongTermCaseCreateRequest | null = null;
 
   readonly genders = Gender;
   readonly relationOptions = RELATION_TYPE_OPTIONS;
+  readonly caseTypes = CaseType;
   readonly governorates = EGYPT_GOVERNORATES;
   readonly today = new Date().toISOString().split('T')[0];
 
@@ -305,21 +313,59 @@ export class LongTermCreate {
           const data = res.data;
 
           if (data && !data.isCreated) {
-            this.matchedCases.set(data.matchedCases ?? []);
+            this.currentDuplicateDecision.set(data.duplicateDecision);
             this.isBlockedDuplicate.set(data.isBlocked);
-            this.showForceCreatePopup.set(true);
+            this.matchedCases.set(data.matchedCases ?? []);
+            this.existingCaseType.set(data.existingCaseType ?? null);
+
+            if (data.duplicateDecision === DuplicateDecision.SameUserDuplicate || 
+                data.duplicateDecision === DuplicateDecision.PendingOwnerCase ||
+                data.duplicateDecision === DuplicateDecision.PendingUnknownCase) {
+              this.showDuplicateInfoDialog.set(true);
+            } else if (data.duplicateDecision === DuplicateDecision.ActiveOwnerCase ||
+                       data.duplicateDecision === DuplicateDecision.ActiveUnknownCase) {
+              this.showForceCreatePopup.set(true);
+            }
             return;
           }
 
           this.showForceCreatePopup.set(false);
-          this.snackbar.success('تم إرسال بلاغ الحالة بنجاح، هيتم مراجعته من الإدارة قريبًا.');
+          this.showDuplicateInfoDialog.set(false);
+          this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
           this.router.navigate(['/long-term']);
         },
         error: (err: unknown) => {
           this.isSubmitting.set(false);
           const msg = extractErrorMessage(err, 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.');
-          this.errorMsg.set(msg);
-          this.snackbar.error(msg);
+          
+          if (err && typeof err === 'object' && 'status' in err && (err as any).status === 400) {
+            if (msg.includes('يجب أن تكون لنفس الشخص') || msg.includes('لا تبدو لنفس الشخص')) {
+               this.additionalPhotosError.set(msg);
+               return;
+            }
+
+            const errorObj = (err as any).error;
+            if (errorObj?.errors) {
+              let hasUnmappedErrors = false;
+              for (const key in errorObj.errors) {
+                const controlName = key.charAt(0).toLowerCase() + key.slice(1);
+                const control = this.form.get(controlName);
+                if (control) {
+                  control.setErrors({ serverError: errorObj.errors[key][0] });
+                } else {
+                  hasUnmappedErrors = true;
+                  this.errorMsg.set(errorObj.errors[key][0]);
+                }
+              }
+              if (!hasUnmappedErrors) {
+                this.errorMsg.set(null);
+              }
+            } else {
+              this.errorMsg.set(msg);
+            }
+          } else {
+            this.snackbar.error(msg);
+          }
         },
       });
   }
@@ -333,6 +379,18 @@ export class LongTermCreate {
       return;
     }
     this.showForceCreatePopup.set(false);
+    this.onSubmit(true);
+  }
+
+  onPendingDialogClose(): void {
+    this.showDuplicateInfoDialog.set(false);
+  }
+
+  onPendingDialogContinueCreate(): void {
+    if (this.isBlockedDuplicate()) {
+      return;
+    }
+    this.showDuplicateInfoDialog.set(false);
     this.onSubmit(true);
   }
 
