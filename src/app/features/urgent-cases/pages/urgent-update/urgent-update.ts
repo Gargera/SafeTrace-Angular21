@@ -186,7 +186,7 @@ export class UrgentUpdate implements OnInit {
   private loadCase(): void {
     this.isLoading.set(true);
     this.service
-      .getCaseById(this.caseId)
+      .getMyCaseById(this.caseId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
