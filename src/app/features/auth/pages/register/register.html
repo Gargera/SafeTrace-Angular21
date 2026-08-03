@@ -1,21 +1,21 @@
 <div class="min-h-screen bg-surface flex flex-col justify-center items-center px-margin-mobile py-12">
   
   <div class="absolute top-6 right-6 md:top-8 md:right-8">
-    <app-button routerLink="/home" variant="secondary">
-      <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+    <app-button routerLink="/home" variant="secondary" extraClass="group">
+      <span class="material-symbols-outlined text-[20px] transition-transform duration-300 group-hover:-translate-x-1">arrow_forward</span>
       العودة للرئيسية
     </app-button>
   </div>
 
   <div class="text-center mb-8">
-    <a routerLink="/home" class="inline-flex items-center justify-center text-on-primary w-12 h-12 rounded-xl mb-4 hover:scale-105 transition-transform shadow-md">
+    <a routerLink="/home" class="inline-flex items-center justify-center text-on-primary w-12 h-12 rounded-xl mb-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg shadow-sm">
       <img src="images/logo.svg" alt="منصة لقاء" class="h-10 w-auto" />
     </a>
     <h1 class="text-3xl font-headline-lg font-bold text-primary mb-2">إنشاء حساب جديد</h1>
     <p class="text-on-surface-variant text-body-md max-w-87.5 mx-auto">انضم إلى مجتمع لقاء للمساهمة في عمليات البحث والإنقاذ.</p>
   </div>
 
-  <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-sm w-full max-w-112.5 p-6 md:p-8">
+  <div class="bg-surface-container-lowest/95 backdrop-blur-sm border border-outline-variant/40 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full max-w-112.5 p-6 md:p-8">
     
     @if (apiErrorMessage()) {
       <div class="bg-error-container text-on-error-container p-4 rounded-xl mb-6 flex justify-between items-start gap-3 border border-error/20">
@@ -97,7 +97,7 @@
           [suffix]="true"
           [class.border-error]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid">
           
-          <button type="button" suffix (click)="togglePasswordVisibility()" class="px-4 flex items-center text-on-surface-variant hover:text-secondary transition-colors focus:outline-none pointer-events-auto">
+          <button type="button" suffix (click)="togglePasswordVisibility()" class="px-4 flex items-center text-on-surface-variant hover:text-secondary transition-all duration-300 hover:scale-110 focus:outline-none pointer-events-auto">
             @if (isPasswordVisible()) {
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
@@ -127,7 +127,7 @@
           [suffix]="true"
           [class.border-error]="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.invalid">
           
-          <button type="button" suffix (click)="toggleConfirmPasswordVisibility()" class="px-4 flex items-center text-on-surface-variant hover:text-secondary transition-colors focus:outline-none pointer-events-auto">
+          <button type="button" suffix (click)="toggleConfirmPasswordVisibility()" class="px-4 flex items-center text-on-surface-variant hover:text-secondary transition-all duration-300 hover:scale-110 focus:outline-none pointer-events-auto">
             @if (isConfirmPasswordVisible()) {
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
@@ -149,7 +149,7 @@
       </div>
 
       <app-button type="submit" [disabled]="isLoading()" variant="primary" [loading]="isLoading()" extraClass="w-full justify-center mt-4 font-label-lg">
-        @if (isLoading()) { جاري الإنشاء... } @else { المتابعة }
+        المتابعة
       </app-button>
 
     </form>
