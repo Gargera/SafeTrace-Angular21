@@ -4,7 +4,7 @@ export interface ComplaintFilterDto {
   caseCode?: string;
   /** بحث حر يطابق البريد الإلكتروني أو كود الحالة */
   search?: string;
-  status?: ComplaintStatus;
+  status?: ComplaintStatus | null;
   pageNumber: number;
   pageSize: number;
 }
