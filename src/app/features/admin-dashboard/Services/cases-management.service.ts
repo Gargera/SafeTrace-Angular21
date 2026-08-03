@@ -58,7 +58,7 @@ export class CasesManagementService {
      * Delete a case, automatically routing to the correct API based on caseType.
      */
     deleteCase(caseId: number, caseType: CaseType): Observable<ApiResponse<string>> {
-        return this.getCaseService(caseType).deleteCase(caseId);
+        return this.getCaseService(caseType).permanentDelete(caseId);
     }
 
     /**

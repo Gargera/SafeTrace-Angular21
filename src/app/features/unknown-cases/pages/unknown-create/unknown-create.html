@@ -389,11 +389,22 @@
   <app-force-create-popup
     [matches]="matchedCases()"
     [isBlocked]="isBlockedDuplicate()"
-    [canJoinGroup]="true"
+    [readOnly]="currentDuplicateDecision() === 'ActiveOwnerCase'"
+    [duplicateDecision]="currentDuplicateDecision()"
     (cancel)="onForceCreateCancel()"
-    (forceCreate)="onForceCreateConfirm()"
-    (joinGroup)="onJoinGroupConfirm()">
+    (forceCreate)="onForceCreateConfirm()">
   </app-force-create-popup>
+  }
+
+  <!-- 6. Informational duplicate dialog -->
+  @if (showDuplicateInfoDialog()) {
+  <app-duplicate-info-dialog
+    [duplicateDecision]="currentDuplicateDecision()"
+    [existingCaseType]="existingCaseType()!"
+    [currentCaseType]="caseTypes.Unknown"
+    (close)="onPendingDialogClose()"
+    (continueCreate)="onPendingDialogContinueCreate()">
+  </app-duplicate-info-dialog>
   }
 
 </div>

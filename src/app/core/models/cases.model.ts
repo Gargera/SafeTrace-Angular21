@@ -7,6 +7,7 @@ import { DateSort } from '../../shared/enums/date-sort';
 import { FileType } from '../../shared/enums/file-type';
 import { Gender } from '../../shared/enums/gender';
 import { RelationType } from '../../shared/enums/relation-type';
+import { DuplicateDecision } from '../../shared/enums/duplicate-decision';
 
 // ============ RESPONSE MODELS ============
 
@@ -61,7 +62,11 @@ export interface MatchedCaseResponse {
 export interface CreateCaseResponse {
   isCreated: boolean;
   isBlocked: boolean;
-  caseId: number | null;
+  caseId?: number;
+  duplicateDecision: DuplicateDecision;
+  existingCaseId?: number;
+  existingCaseType?: CaseType;
+  existingStatus?: CaseStatus;
   matchedCases: MatchedCaseResponse[];
 }
 

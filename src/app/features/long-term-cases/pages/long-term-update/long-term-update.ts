@@ -20,6 +20,7 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 
 // Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
@@ -42,6 +43,7 @@ type Step = 1 | 2 | 3;
     FormField,
     CardComponent,
     CaseHeaderComponent,
+    ConfirmationModalComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./long-term-update.css'],
@@ -61,6 +63,9 @@ export class LongTermUpdate implements OnInit {
   isLoading = signal(true);
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
+
+  showDeleteImageConfirm = signal(false);
+  photoToDelete = signal<CaseFileResponse | null>(null);
 
   // Existing photos
   existingPhotos = signal<CaseFileResponse[]>([]);
@@ -159,7 +164,7 @@ export class LongTermUpdate implements OnInit {
   private loadCase(): void {
     this.isLoading.set(true);
     this.service
-      .getCaseById(this.caseId)
+      .getMyCaseById(this.caseId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
@@ -248,6 +253,25 @@ export class LongTermUpdate implements OnInit {
   // ─────────────────────────────────────────────────────────────
   // Existing Photos Handler
   // ─────────────────────────────────────────────────────────────
+  confirmRemoveExistingPhoto(photo: CaseFileResponse): void {
+    this.photoToDelete.set(photo);
+    this.showDeleteImageConfirm.set(true);
+  }
+
+  executeRemoveExistingPhoto(): void {
+    const photo = this.photoToDelete();
+    if (photo) {
+      this.existingPhotos.update((list) => list.filter((p) => p.id !== photo.id));
+      this.deletedPhotoIds.update((ids) => [...ids, photo.id]);
+      if (this.primaryPhotoId() === photo.id) {
+        const next = this.existingPhotos()[0];
+        this.primaryPhotoId.set(next ? next.id : null);
+      }
+    }
+    this.showDeleteImageConfirm.set(false);
+    this.photoToDelete.set(null);
+  }
+
   removeExistingPhoto(photo: CaseFileResponse): void {
     this.existingPhotos.update((list) => list.filter((p) => p.id !== photo.id));
     this.deletedPhotoIds.update((ids) => [...ids, photo.id]);
@@ -458,8 +482,36 @@ export class LongTermUpdate implements OnInit {
         error: (err: unknown) => {
           this.isSubmitting.set(false);
           const msg = extractErrorMessage(err, 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.');
-          this.errorMsg.set(msg);
-          this.snackbar.error(msg);
+          
+          if (msg.includes('يجب أن تكون لنفس الشخص') || msg.includes('لا تبدو لنفس الشخص')) {
+            this.newPrimaryError.set(msg);
+            this.newPhotosError.set(msg);
+            return;
+          }
+
+          if (err && typeof err === 'object' && 'status' in err && (err as any).status === 400) {
+            const errorObj = (err as any).error;
+            if (errorObj?.errors) {
+              let hasUnmappedErrors = false;
+              for (const key in errorObj.errors) {
+                const controlName = key.charAt(0).toLowerCase() + key.slice(1);
+                const control = this.form.get(controlName);
+                if (control) {
+                  control.setErrors({ serverError: errorObj.errors[key][0] });
+                } else {
+                  hasUnmappedErrors = true;
+                  this.errorMsg.set(errorObj.errors[key][0]);
+                }
+              }
+              if (!hasUnmappedErrors) {
+                this.errorMsg.set(null);
+              }
+            } else {
+              this.errorMsg.set(msg);
+            }
+          } else {
+            this.snackbar.error(msg);
+          }
         },
       });
   }
