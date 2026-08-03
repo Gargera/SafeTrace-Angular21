@@ -10,6 +10,7 @@ import { LongTermCaseService } from '../../services/long-term-case.service';
 import { LongTermCaseCreateRequest } from '../../models/request/LongTermCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
+import { CaseType } from '../../../../shared/enums/case-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
 import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
@@ -84,10 +85,12 @@ export class LongTermCreate {
   currentDuplicateDecision = signal<DuplicateDecision>(DuplicateDecision.None);
   isBlockedDuplicate = signal(false);
   matchedCases = signal<MatchedCaseResponse[]>([]);
+  existingCaseType = signal<CaseType | null>(null);
   private pendingRequest: LongTermCaseCreateRequest | null = null;
 
   readonly genders = Gender;
   readonly relationOptions = RELATION_TYPE_OPTIONS;
+  readonly caseTypes = CaseType;
   readonly governorates = EGYPT_GOVERNORATES;
   readonly today = new Date().toISOString().split('T')[0];
 
@@ -310,15 +313,16 @@ export class LongTermCreate {
 
           if (data && !data.isCreated) {
             this.currentDuplicateDecision.set(data.duplicateDecision);
+            this.isBlockedDuplicate.set(data.isBlocked);
+            this.matchedCases.set(data.matchedCases ?? []);
+            this.existingCaseType.set(data.existingCaseType ?? null);
 
-            if (data.duplicateDecision === DuplicateDecision.SameUserPending || 
-                data.duplicateDecision === DuplicateDecision.SameUserActive ||
-                data.duplicateDecision === DuplicateDecision.PendingDuplicate) {
+            if (data.duplicateDecision === DuplicateDecision.SameUserDuplicate || 
+                data.duplicateDecision === DuplicateDecision.PendingOwnerCase ||
+                data.duplicateDecision === DuplicateDecision.PendingUnknownCase) {
               this.showDuplicateInfoDialog.set(true);
-            } else {
-              // ApprovedDuplicate or AllowUnknown
-              this.matchedCases.set(data.matchedCases ?? []);
-              this.isBlockedDuplicate.set(data.isBlocked);
+            } else if (data.duplicateDecision === DuplicateDecision.ActiveOwnerCase ||
+                       data.duplicateDecision === DuplicateDecision.ActiveUnknownCase) {
               this.showForceCreatePopup.set(true);
             }
             return;
@@ -326,7 +330,7 @@ export class LongTermCreate {
 
           this.showForceCreatePopup.set(false);
           this.showDuplicateInfoDialog.set(false);
-          this.snackbar.success('تم إرسال بلاغ الحالة بنجاح، هيتم مراجعته من الإدارة قريبًا.');
+          this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
           this.router.navigate(['/long-term']);
         },
         error: (err: unknown) => {
@@ -334,6 +338,11 @@ export class LongTermCreate {
           const msg = extractErrorMessage(err, 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.');
           
           if (err && typeof err === 'object' && 'status' in err && (err as any).status === 400) {
+            if (msg.includes('يجب أن تكون لنفس الشخص') || msg.includes('لا تبدو لنفس الشخص')) {
+               this.additionalPhotosError.set(msg);
+               return;
+            }
+
             const errorObj = (err as any).error;
             if (errorObj?.errors) {
               let hasUnmappedErrors = false;
@@ -374,6 +383,14 @@ export class LongTermCreate {
 
   onPendingDialogClose(): void {
     this.showDuplicateInfoDialog.set(false);
+  }
+
+  onPendingDialogContinueCreate(): void {
+    if (this.isBlockedDuplicate()) {
+      return;
+    }
+    this.showDuplicateInfoDialog.set(false);
+    this.onSubmit(true);
   }
 
   goBack(): void {

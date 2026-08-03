@@ -1,8 +1,8 @@
 export enum DuplicateDecision {
     None = 'None',
-    SameUserPending = 'SameUserPending',
-    SameUserActive = 'SameUserActive',
-    PendingDuplicate = 'PendingDuplicate',
-    ApprovedDuplicate = 'ApprovedDuplicate',
-    AllowUnknown = 'AllowUnknown'
+    SameUserDuplicate = 'SameUserDuplicate',
+    PendingOwnerCase = 'PendingOwnerCase',
+    PendingUnknownCase = 'PendingUnknownCase',
+    ActiveOwnerCase = 'ActiveOwnerCase',
+    ActiveUnknownCase = 'ActiveUnknownCase'
 }

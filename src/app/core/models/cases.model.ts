@@ -65,6 +65,8 @@ export interface CreateCaseResponse {
   caseId?: number;
   duplicateDecision: DuplicateDecision;
   existingCaseId?: number;
+  existingCaseType?: CaseType;
+  existingStatus?: CaseStatus;
   matchedCases: MatchedCaseResponse[];
 }
 

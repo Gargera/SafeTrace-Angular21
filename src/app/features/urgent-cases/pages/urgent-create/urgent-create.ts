@@ -9,6 +9,7 @@ import { UrgentCaseService } from '../../services/urgent-case.service';
 import { UrgentCaseCreateRequest } from '../../models/request/UrgentCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
+import { CaseType } from '../../../../shared/enums/case-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
 import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
@@ -105,10 +106,12 @@ export class UrgentCreate {
   currentDuplicateDecision = signal<DuplicateDecision>(DuplicateDecision.None);
   isBlockedDuplicate = signal(false);
   matchedCases = signal<MatchedCaseResponse[]>([]);
+  existingCaseType = signal<CaseType | null>(null);
   private pendingRequest: UrgentCaseCreateRequest | null = null;
 
   readonly genders = Gender;
   readonly relationOptions = RELATION_TYPE_OPTIONS;
+  readonly caseTypes = CaseType;
   readonly governorates = EGYPT_GOVERNORATES;
   readonly today = new Date().toISOString().split('T')[0];
 
@@ -406,15 +409,16 @@ export class UrgentCreate {
 
           if (data && !data.isCreated) {
             this.currentDuplicateDecision.set(data.duplicateDecision);
+            this.isBlockedDuplicate.set(data.isBlocked);
+            this.matchedCases.set(data.matchedCases ?? []);
+            this.existingCaseType.set(data.existingCaseType ?? null);
 
-            if (data.duplicateDecision === DuplicateDecision.SameUserPending || 
-                data.duplicateDecision === DuplicateDecision.SameUserActive ||
-                data.duplicateDecision === DuplicateDecision.PendingDuplicate) {
+            if (data.duplicateDecision === DuplicateDecision.SameUserDuplicate || 
+                data.duplicateDecision === DuplicateDecision.PendingOwnerCase ||
+                data.duplicateDecision === DuplicateDecision.PendingUnknownCase) {
               this.showDuplicateInfoDialog.set(true);
-            } else {
-              // ApprovedDuplicate or AllowUnknown
-              this.matchedCases.set(data.matchedCases ?? []);
-              this.isBlockedDuplicate.set(data.isBlocked);
+            } else if (data.duplicateDecision === DuplicateDecision.ActiveOwnerCase ||
+                       data.duplicateDecision === DuplicateDecision.ActiveUnknownCase) {
               this.showForceCreatePopup.set(true);
             }
             return;
@@ -422,7 +426,7 @@ export class UrgentCreate {
 
           this.showForceCreatePopup.set(false);
           this.showDuplicateInfoDialog.set(false);
-          this.snackbar.success('تم انشاء بلاغ حاله طارئة بنجاح');
+          this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
           this.router.navigate(['/urgent']);
         },
         error: (err: unknown) => {
@@ -470,6 +474,14 @@ export class UrgentCreate {
 
   onPendingDialogClose(): void {
     this.showDuplicateInfoDialog.set(false);
+  }
+
+  onPendingDialogContinueCreate(): void {
+    if (this.isBlockedDuplicate()) {
+      return;
+    }
+    this.showDuplicateInfoDialog.set(false);
+    this.onSubmit(true);
   }
 
   goBack(): void {

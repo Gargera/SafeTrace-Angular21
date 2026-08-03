@@ -14,11 +14,9 @@
           <span class="material-symbols-outlined text-[26px] text-amber-500">warning</span>
         </div>
         <h2 class="text-xl font-extrabold text-[#0b1c30] m-0 leading-snug">
-          @if (duplicateDecision() === 'SameUserPending') {
-            لديك بلاغ قيد المراجعة
-          } @else if (duplicateDecision() === 'SameUserActive') {
-            لديك بلاغ معتمد
-          } @else if (duplicateDecision() === 'PendingDuplicate') {
+          @if (duplicateDecision() === 'SameUserDuplicate') {
+            لديك بلاغ مسجل
+          } @else if (duplicateDecision() === 'PendingOwnerCase' || duplicateDecision() === 'PendingUnknownCase') {
             يوجد بلاغ مشابه قيد المراجعة
           }
         </h2>
@@ -30,37 +28,58 @@
 
       <div class="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
         <span class="material-symbols-outlined text-[22px] text-amber-500 mt-0.5 shrink-0">info</span>
-        <p class="text-sm text-amber-800 leading-relaxed m-0">
-          @if (duplicateDecision() === 'SameUserPending') {
-            لديك بالفعل بلاغ لنفس الشخص وهو قيد المراجعة.
-          } @else if (duplicateDecision() === 'SameUserActive') {
-            لديك بالفعل بلاغ معتمد لنفس الشخص.
-          } @else if (duplicateDecision() === 'PendingDuplicate') {
-            يوجد بالفعل بلاغ مشابه قيد المراجعة من قبل الإدارة.
+        <div class="flex flex-col gap-2">
+          @if (duplicateDecision() === 'SameUserDuplicate') {
+            @if (existingCaseType() === currentCaseType()) {
+              <p class="text-sm text-amber-800 leading-relaxed m-0">
+                لقد قمت بالفعل بإنشاء بلاغ من نفس النوع لهذا الشخص.
+              </p>
+              <p class="text-sm text-amber-800 leading-relaxed m-0">
+                إذا كنت ترغب في تعديل بياناته يمكنك تعديل البلاغ الحالي.
+              </p>
+            } @else {
+              <p class="text-sm text-amber-800 leading-relaxed m-0">
+                لقد قمت بالفعل بإنشاء بلاغ لهذا الشخص.
+              </p>
+              <p class="text-sm text-amber-800 leading-relaxed m-0">
+                إذا كنت ترغب في تغيير نوع البلاغ قم بحذف البلاغ الحالي ثم أنشئ بلاغاً جديداً.
+              </p>
+            }
+          } @else if (duplicateDecision() === 'PendingOwnerCase') {
+            <p class="text-sm text-amber-800 leading-relaxed m-0">
+              يوجد بالفعل بلاغ مفقود لهذا الشخص وهو قيد المراجعة.
+            </p>
+            <p class="text-sm text-amber-800 leading-relaxed m-0">
+              يرجى انتظار انتهاء المراجعة.
+            </p>
+          } @else if (duplicateDecision() === 'PendingUnknownCase') {
+            <p class="text-sm text-amber-800 leading-relaxed m-0">
+              يوجد بالفعل بلاغ لشخص بنفس المواصفات وهو حالياً قيد المراجعة.
+            </p>
+            <p class="text-sm text-amber-800 leading-relaxed m-0">
+              يمكنك انتظار نتيجة المراجعة أو متابعة إنشاء البلاغ.
+            </p>
           }
-        </p>
+        </div>
       </div>
-
-      @if (duplicateDecision() === 'SameUserPending') {
-        <p class="text-sm text-[#56585e] leading-relaxed m-0">
-          يرجى انتظار انتهاء المراجعة قبل إنشاء بلاغ جديد.
-        </p>
-      } @else if (duplicateDecision() === 'PendingDuplicate') {
-        <p class="text-sm text-[#56585e] leading-relaxed m-0">
-          لا يمكن إنشاء بلاغ جديد حتى تنتهي المراجعة.
-        </p>
-        <p class="text-sm text-[#56585e] leading-relaxed m-0">
-          يرجى المحاولة مرة أخرى لاحقًا.
-        </p>
-      }
     </div>
 
     <!-- Footer -->
     <div class="flex justify-end gap-3 px-8 py-5 border-t border-slate-200 bg-slate-50">
-      <app-button variant="primary" (onClick)="close.emit()">
-        <span class="material-symbols-outlined text-[20px]">check_circle</span>
-        حسناً
-      </app-button>
+      @if (duplicateDecision() === 'PendingUnknownCase') {
+        <app-button variant="outline" (onClick)="close.emit()">
+          انتظار
+        </app-button>
+        <app-button variant="primary" (onClick)="continueCreate.emit()">
+          <span class="material-symbols-outlined text-[20px]">add_circle</span>
+          متابعة الإنشاء
+        </app-button>
+      } @else {
+        <app-button variant="primary" (onClick)="close.emit()">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+          إغلاق
+        </app-button>
+      }
     </div>
 
   </div>

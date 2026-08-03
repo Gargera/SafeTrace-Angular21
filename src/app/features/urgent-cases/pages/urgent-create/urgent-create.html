@@ -432,7 +432,12 @@
 
   <!-- 5. Popup outside the card -->
   @if (showForceCreatePopup()) {
-  <app-force-create-popup [matches]="matchedCases()" [isBlocked]="isBlockedDuplicate()" (cancel)="onForceCreateCancel()"
+  <app-force-create-popup 
+    [matches]="matchedCases()" 
+    [isBlocked]="isBlockedDuplicate()" 
+    [readOnly]="currentDuplicateDecision() === 'ActiveOwnerCase'"
+    [duplicateDecision]="currentDuplicateDecision()"
+    (cancel)="onForceCreateCancel()"
     (forceCreate)="onForceCreateConfirm()">
   </app-force-create-popup>
   }
@@ -441,7 +446,10 @@
   @if (showDuplicateInfoDialog()) {
   <app-duplicate-info-dialog
     [duplicateDecision]="currentDuplicateDecision()"
-    (close)="showDuplicateInfoDialog.set(false)">
+    [existingCaseType]="existingCaseType()!"
+    [currentCaseType]="caseTypes.Urgent"
+    (close)="onPendingDialogClose()"
+    (continueCreate)="onPendingDialogContinueCreate()">
   </app-duplicate-info-dialog>
   }
 

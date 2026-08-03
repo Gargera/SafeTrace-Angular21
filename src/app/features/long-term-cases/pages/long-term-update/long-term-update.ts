@@ -482,8 +482,9 @@ export class LongTermUpdate implements OnInit {
           this.isSubmitting.set(false);
           const msg = extractErrorMessage(err, 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.');
           
-          if (msg === 'الصورة الجديدة لا تبدو لنفس الشخص الموجود في هذا البلاغ.') {
+          if (msg.includes('يجب أن تكون لنفس الشخص') || msg.includes('لا تبدو لنفس الشخص')) {
             this.newPrimaryError.set(msg);
+            this.newPhotosError.set(msg);
             return;
           }
 

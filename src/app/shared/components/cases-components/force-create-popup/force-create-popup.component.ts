@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { MatchedCaseResponse } from '../../../../core/models/cases.model';
 import { environment } from '../../../../../environments/environment';
 import { CaseType } from '../../../../shared/enums/case-type';
+import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
 import { CaseTypeBadgeDirective } from '../../../directives/case-type-badge-directive';
 
 import { ButtonComponent } from '../../button/button';
@@ -30,14 +31,12 @@ export class ForceCreatePopupComponent {
   // ── Inputs ────────────────────────────────────────────────────────────────
   readonly matches = input.required<MatchedCaseResponse[]>();
   readonly isBlocked = input(false);
-  /** Pass true only from Unknown create — enables the Join Group button for Unknown+Unknown */
-  readonly canJoinGroup = input(false);
+  readonly readOnly = input(false);
+  readonly duplicateDecision = input<DuplicateDecision>(DuplicateDecision.None);
 
   // ── Outputs ───────────────────────────────────────────────────────────────
   readonly cancel = output<void>();
   readonly forceCreate = output<void>();
-  /** Emitted when the user chooses to attach this case to the existing duplicate group */
-  readonly joinGroup = output<void>();
 
   // ── Private helpers ───────────────────────────────────────────────────────
   private readonly router = inject(Router);
@@ -47,68 +46,48 @@ export class ForceCreatePopupComponent {
 
   // ── Computed state (drives the template declaratively) ────────────────────
 
-  /** true  → Mode 1 (blocked), false → Mode 2 (confirmation) */
   readonly isBlockedMode = computed(() => this.isBlocked());
 
-  /** Whether ALL matches are Unknown cases (affects confirmation wording) */
-  readonly hasOnlyUnknownMatches = computed(() =>
-    this.matches().length > 0 &&
-    this.matches().every((m) => m.caseType === CaseType.Unknown)
-  );
-
-  /** Icon container style class */
   readonly popupIconContainerClass = computed(() => {
-    if (this.isBlockedMode()) {
+    if (this.readOnly()) {
       return 'bg-red-100 text-red-600 border border-red-200';
-    }
-    if (this.showJoinGroup()) {
-      return 'bg-emerald-100 text-emerald-600 border border-emerald-200';
     }
     return 'bg-blue-100 text-blue-600 border border-blue-200';
   });
 
-  /** Icon name (Material Symbols) */
   readonly popupIcon = computed(() => {
-    if (this.isBlockedMode()) return 'block';
-    if (this.showJoinGroup()) return 'group_add';
+    if (this.readOnly()) return 'block';
     return 'search';
   });
 
-  /** Icon colour class */
   readonly popupIconClass = computed(() =>
-    this.isBlockedMode() ? 'text-red-600' : (this.showJoinGroup() ? 'text-emerald-600' : 'text-blue-600')
+    this.readOnly() ? 'text-red-600' : 'text-blue-600'
   );
 
-  /** Header title */
-  readonly popupTitle = computed(() =>
-    this.isBlockedMode()
-      ? 'تعذّر إنشاء البلاغ — حالة مكررة محمية'
-      : 'تم رصد حالات مشابهة بالذكاء الاصطناعي'
-  );
-
-  /** Subtitle / description paragraph */
-  readonly popupDescription = computed(() => {
-    if (this.isBlockedMode()) {
-      return 'تم العثور على حالة نشطة من نوع محمي (طويل الأمد أو عاجل). لا يُسمح بتكرار هذا النوع من البلاغات للحفاظ على موارد البحث. يمكنك التواصل مع المُبلغ الأصلي من خلال الأزرار أدناه.';
+  readonly popupTitle = computed(() => {
+    if (this.duplicateDecision() === DuplicateDecision.ActiveOwnerCase) {
+      return 'تم العثور على بلاغ مطابق معتمد';
     }
-    if (this.showJoinGroup()) {
-      return `تم رصد ${this.matches().length} حالة مجهولة الهوية مشابهة. يمكنك ضم بلاغك إلى مجموعة البلاغات المكررة الحالية، أو تجاهل التطابق وإنشاء بلاغ مستقل.`;
+    return 'تم رصد حالات مشابهة بالذكاء الاصطناعي';
+  });
+
+  readonly popupDescription = computed(() => {
+    if (this.duplicateDecision() === DuplicateDecision.ActiveOwnerCase) {
+      return 'يوجد بالفعل بلاغ مفقود معتمد ومطابق لهذا الشخص. لا يمكن إنشاء بلاغ إضافي للحفاظ على دقة البيانات.';
+    }
+    if (this.duplicateDecision() === DuplicateDecision.PendingUnknownCase) {
+      return `يوجد ${this.matches().length} بلاغ مجهول الهوية مطابق وهو قيد المراجعة حالياً.`;
     }
     return `تم رصد ${this.matches().length} حالة مشابهة باستخدام تقنية التعرف على الوجه. يمكنك المتابعة إذا كنت متأكدًا أن هذه حالة جديدة مستقلة.`;
   });
 
-  /** Label for the close/cancel button */
-  readonly cancelLabel = computed(() =>
-    this.isBlockedMode() ? 'إغلاق' : 'إلغاء'
-  );
+  readonly cancelLabel = computed(() => {
+    if (this.duplicateDecision() === DuplicateDecision.PendingUnknownCase) return 'انتظار';
+    if (this.readOnly()) return 'إغلاق';
+    return 'إلغاء';
+  });
 
-  /** Whether to show the Force Create button (hidden when Join Group is shown) */
-  readonly canForceCreate = computed(() => !this.isBlockedMode() && !this.showJoinGroup());
-
-  /** Whether to show the Join Group button (Unknown + Unknown only) */
-  readonly showJoinGroup = computed(() =>
-    !this.isBlockedMode() && this.canJoinGroup() && this.hasOnlyUnknownMatches()
-  );
+  readonly canForceCreate = computed(() => !this.readOnly());
 
   // ── Per-match helpers ─────────────────────────────────────────────────────
 
