@@ -23,6 +23,7 @@ import { HasPermissionDirective } from '../../../../shared/directives/has-permis
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 import { ReportService } from '../../../admin-dashboard/services/report.service';
 
+
 @Component({
   selector: 'app-complaints-list',
   standalone: true,
@@ -226,11 +227,20 @@ export class ComplaintsList implements OnInit {
     });
   }
  downloadReport(): void {
-
+  const filter = {
+    ...this.filter(),
+    status: this.filter().status || null
+  };
   this.reportService
-    .generateComplaintPdfReport(this.filter())
-    .subscribe(response => {
-      this.reportService.download(response);
+    .generateComplaintPdfReport(filter)
+    .subscribe({
+      next: (response) => {
+        this.reportService.download(response);
+      },
+      error: (err) => {
+        const message = err?.error?.detail || err?.error?.title || 'حدث خطأ أثناء تنزيل التقرير';
+        this.toast.error(message);
+      }
     });
 }
 
