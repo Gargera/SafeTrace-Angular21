@@ -81,7 +81,13 @@
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         @for (c of urgentCases(); track c.id) {
-          <app-case-card [caseItem]="c" [showUrgentTag]="true" [showContactButton]="false" />
+          <app-case-card 
+            [caseItem]="c" 
+            [showUrgentTag]="true" 
+            [showCaseType]="false"
+            [detailRoute]="['/urgent', c.id]"
+            (onContact)="onContactReporter($event, 'urgent')"
+            class="block" />
         }
       </div>
     </section>
@@ -102,7 +108,12 @@
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         @for (c of longTermCases(); track c.id) {
-          <app-case-card [caseItem]="c" [showContactButton]="false" />
+          <app-case-card 
+            [caseItem]="c" 
+            [showCaseType]="false"
+            [detailRoute]="['/long-term', c.id]"
+            (onContact)="onContactReporter($event, 'long-term')"
+            class="block" />
         }
       </div>
     </section>
@@ -123,7 +134,12 @@
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         @for (c of unknownCases(); track c.id) {
-          <app-case-card [caseItem]="c" [showContactButton]="false" />
+          <app-case-card 
+            [caseItem]="c" 
+            [showCaseType]="false"
+            [detailRoute]="['/unknown', c.id]"
+            (onContact)="onContactReporter($event, 'unknown')"
+            class="block" />
         }
       </div>
     </section>
@@ -187,7 +203,7 @@
           </div>
 
           <div>
-            <app-form-field type="textarea" label="نص الرسالة *" placeholder="اكتب تفاصيلك هنا..." formControlName="message"></app-form-field>
+            <app-form-field type="textarea" label="نص الرسالة *" placeholder="اكتب شكواك هنا..." formControlName="message"></app-form-field>
             @if (complaintForm.get('message')?.invalid && (complaintForm.get('message')?.touched || complaintForm.get('message')?.dirty)) {
               <span class="text-error text-[14px] font-medium mt-1 block">
                 @if (complaintForm.get('message')?.errors?.['required']) {

@@ -1,7 +1,7 @@
  import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { UrgentCaseService } from '../../../features/urgent-cases/services/urgent-case.service';
 import { LongTermCaseService } from '../../../features/long-term-cases/services/long-term-case.service';
 import { UnknownCaseService } from '../../../features/unknown-cases/services/unknown-case.service';
@@ -28,6 +28,7 @@ export class Home implements OnInit {
   private foundedSvc = inject(FoundedService);
   private complaintSvc = inject(ComplaintsService);
   private snackbar = inject(SnackbarService);
+  private router = inject(Router);
 
   urgentCases = signal<any[]>([]);
   longTermCases = signal<any[]>([]);
@@ -109,6 +110,12 @@ export class Home implements OnInit {
         this.snackbar.error(err.error?.message || err.error?.detail || 'حدث خطأ أثناء إرسال الرسالة، يرجى المحاولة مرة أخرى');
         this.isSendingComplaint.set(false);
       }
+    });
+  }
+
+  onContactReporter(caseId: number, type: 'urgent' | 'long-term' | 'unknown'): void {
+    this.router.navigate([`/${type}`, caseId], {
+      queryParams: { contact: true },
     });
   }
 
