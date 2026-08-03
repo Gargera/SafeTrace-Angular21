@@ -160,49 +160,71 @@
 
             <!-- ================= Owner Buttons ================= -->
            @if (
-  isOwner() &&
-  !isAdminPage() &&
-  caseDetails()?.status !== CaseStatus.Found
-) {
-  <div class="flex flex-wrap items-center gap-3 pt-2">
+            isOwner() &&
+            !isAdminPage() &&
+            caseDetails()?.status !== CaseStatus.Found
+          ) {
+              <div class="flex flex-wrap items-center gap-3 pt-2">
 
-    @if(caseDetails()?.status !== CaseStatus.Rejected){
-      <app-button
-        *hasPermission="Permissions.UnknownCases.MarkAsFounded"
-        (onClick)="openFoundedPopup()"
-        variant="primary"
-        extraClass="flex items-center gap-2 rounded-2xl !bg-[#009688] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#00796b]">
-        <span class="material-symbols-outlined text-[20px]">beenhere</span>
-        <span>تم العثور</span>
-      </app-button>
-    }
+              @if(caseDetails()?.status !== CaseStatus.Rejected){
+                <app-button
+                  *hasPermission="Permissions.UnknownCases.MarkAsFounded"
+                  (onClick)="openFoundedPopup()"
+                  variant="primary"
+                  extraClass="flex items-center gap-2 rounded-2xl !bg-[#009688] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#00796b]">
+                  <span class="material-symbols-outlined text-[20px]">beenhere</span>
+                  <span>تم العثور</span>
+                </app-button>
+              }
 
-    <app-button
-      *hasPermission="Permissions.UnknownCases.Update"
-      (onClick)="editCase()"
-      variant="primary"
-      extraClass="flex items-center gap-2 rounded-2xl !bg-[#0265DC] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#0252b5]">
-      <span class="material-symbols-outlined text-[20px]">edit</span>
-      <span>تعديل</span>
-    </app-button>
+              <app-button
+                *hasPermission="Permissions.UnknownCases.Update"
+                (onClick)="editCase()"
+                variant="primary"
+                extraClass="flex items-center gap-2 rounded-2xl !bg-[#0265DC] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#0252b5]">
+                <span class="material-symbols-outlined text-[20px]">edit</span>
+                <span>تعديل</span>
+              </app-button>
 
-    <app-button
-      *hasPermission="Permissions.UnknownCases.SoftDelete"
-      (onClick)="deleteCase()"
-      variant="primary"
-      extraClass="flex items-center gap-2 rounded-2xl !bg-[#C61A1A] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
-      <span class="material-symbols-outlined text-[20px]">delete</span>
-      <span>حذف</span>
-    </app-button>
+              <app-button
+                *hasPermission="Permissions.UnknownCases.SoftDelete"
+                (onClick)="deleteCase()"
+                variant="primary"
+                extraClass="flex items-center gap-2 rounded-2xl !bg-[#C61A1A] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
+                <span class="material-symbols-outlined text-[20px]">delete</span>
+                <span>حذف</span>
+              </app-button>
 
-  </div>
-}
+            </div>
+          }
+          @if (
+            !isAdminPage() &&
+            !isOwner() &&
+            caseDetails()?.status !== CaseStatus.Found
+          ) {
+            <app-button
+              variant="secondary"
+              (onClick)="startChat(caseDetails()?.id!)"
+              extraClass="w-full justify-center gap-2 hover:border-primary hover:bg-primary/5 hover:text-primary">
+              <span class="material-symbols-outlined material-icon-sm">chat</span>
+              تواصل مع المُبلّغ
+            </app-button>
+          }
 
             <!-- ================= Admin Buttons ================= -->
             @let status = caseDetails()?.status;
 
             @if (isAdminPage()) {
               <div class="flex flex-wrap items-center gap-3 pt-2">
+                @if(!isOwner()){
+                <app-button
+                variant="secondary"
+                (onClick)="startChat(caseDetails()?.id!)"
+                extraClass="flex items-center gap-2">
+                <span class="material-symbols-outlined material-icon-sm">chat</span>
+                <span>تواصل مع المُبلّغ</span>
+              </app-button>
+            }
 
                 @if (status === CaseStatus.Pending) {
                   <app-button 

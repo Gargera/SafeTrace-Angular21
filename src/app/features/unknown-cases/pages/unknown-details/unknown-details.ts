@@ -439,4 +439,8 @@ export class UnknownDetails implements OnInit {
       },
     });
   }
+  
+  startChat(id: number): void {
+    this.router.navigate(['/chat/start', id]);
+  }
 }

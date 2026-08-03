@@ -314,6 +314,9 @@ export class UrgentDetails implements OnInit {
       });
   }
 
+  startChat(id: number): void {
+    this.router.navigate(['/chat/start', id]);
+  }
   getAgeCategoryEnum(): AgeCategories {
     switch (this.caseDetails()?.ageCategory?.name) {
       case 'Toddler':

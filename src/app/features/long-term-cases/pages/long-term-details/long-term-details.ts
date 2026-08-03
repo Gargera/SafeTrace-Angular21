@@ -427,4 +427,8 @@ export class LongTermDetails implements OnInit {
       },
     });
   }
+
+  startChat(id: number): void {
+    this.router.navigate(['/chat/start', id]);
+  }
 }
