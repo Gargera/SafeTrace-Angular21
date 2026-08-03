@@ -9,22 +9,24 @@
 
 }
 @else {
-<div class="max-w-3xl mx-auto py-lg px-md">
-  <h1 class="text-xl font-semibold text-on-surface mb-md">الرسائل والمحادثات</h1>
-  <p class="text-sm text-on-surface-variant mb-md">تواصل مع المفقودين وعائلات المفقودين لتحديث مسار البحث.</p>
+<div class="max-w-3xl mx-auto py-lg px-md h-[500px] md:h-[600px] flex flex-col">
+  <div class="shrink-0">
+    <h1 class="text-xl font-semibold text-on-surface mb-md">الرسائل والمحادثات</h1>
+    <p class="text-sm text-on-surface-variant mb-md">تواصل مع المفقودين وعائلات المفقودين لتحديث مسار البحث.</p>
 
-  <!-- Filter tabs -->
-  <div class="flex gap-xs mb-md">
-    @for (tab of filterTabs; track tab.key) {
-    <app-button [variant]="activeFilter() === tab.key ? 'primary' : 'secondary'"
-        extraClass="rounded-full !h-9 !px-4 rounded-full text-sm text-sm" (onClick)="setFilter(tab.key)">
-        {{ tab.label }}
-    </app-button>
-    }
+    <!-- Filter tabs -->
+    <div class="flex gap-xs mb-md">
+      @for (tab of filterTabs; track tab.key) {
+      <app-button [variant]="activeFilter() === tab.key ? 'primary' : 'secondary'"
+          extraClass="rounded-full !h-9 !px-4 rounded-full text-sm text-sm" (onClick)="setFilter(tab.key)">
+          {{ tab.label }}
+      </app-button>
+      }
+    </div>
   </div>
 
   <!-- Conversation list -->
-  <div class="flex flex-col gap-sm">
+  <div class="flex flex-col gap-sm flex-1 overflow-y-auto pe-2">
     @for (chat of filteredChats(); track chat.chatId) {
       <!-- Inlined conversation card (was app-conversation-card) -->
       <div
