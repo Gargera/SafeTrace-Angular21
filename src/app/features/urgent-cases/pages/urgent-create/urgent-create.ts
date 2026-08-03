@@ -9,13 +9,16 @@ import { UrgentCaseService } from '../../services/urgent-case.service';
 import { UrgentCaseCreateRequest } from '../../models/request/UrgentCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
+import { CaseType } from '../../../../shared/enums/case-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
 import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { MatchedCaseResponse } from '../../../../core/models/cases.model';
+import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
+import { DuplicateInfoDialogComponent } from '../../../../shared/components/cases-components/duplicate-info-dialog/duplicate-info-dialog.component';
 import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
@@ -26,7 +29,7 @@ import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.vali
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { urgentEventDate, toDatetimeLocalString } from '../../../../shared/validators/urgent-event-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
-import { validateImageFile } from '../../../user-profile/tabs/Edit-profile/utilies/image-validation.util';
+import { ImageService } from '../../../../shared/services/image.service';
 
 import { CardComponent } from '../../../../shared/components/card/card';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
@@ -41,6 +44,7 @@ type Step = 1 | 2 | 3;
     ReactiveFormsModule,
     MapLocationPickerComponent,
     ForceCreatePopupComponent,
+    DuplicateInfoDialogComponent,
     ButtonComponent,
     FormField,
     ImageCropperComponent,
@@ -53,6 +57,7 @@ type Step = 1 | 2 | 3;
 })
 export class UrgentCreate {
   private fb = inject(FormBuilder);
+  private imageService = inject(ImageService);
   private destroyRef = inject(DestroyRef);
 
   // Allowed datetime range for urgent cases (last 6 hours)
@@ -98,12 +103,16 @@ export class UrgentCreate {
   locationError = signal<string | null>(null);
 
   showForceCreatePopup = signal(false);
+  showDuplicateInfoDialog = signal(false);
+  currentDuplicateDecision = signal<DuplicateDecision>(DuplicateDecision.None);
   isBlockedDuplicate = signal(false);
   matchedCases = signal<MatchedCaseResponse[]>([]);
+  existingCaseType = signal<CaseType | null>(null);
   private pendingRequest: UrgentCaseCreateRequest | null = null;
 
   readonly genders = Gender;
   readonly relationOptions = RELATION_TYPE_OPTIONS;
+  readonly caseTypes = CaseType;
   readonly governorates = EGYPT_GOVERNORATES;
   readonly today = new Date().toISOString().split('T')[0];
 
@@ -275,7 +284,7 @@ export class UrgentCreate {
     const file = input.files?.[0];
     if (!file) return;
 
-    const validation = validateImageFile(file, 5);
+    const validation = this.imageService.validate(file, 5);
     if (!validation.valid) {
       this.primaryPhotoError.set(validation.errorMessage ?? null);
       return;
@@ -317,7 +326,7 @@ export class UrgentCreate {
   onAdditionalPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
     for (const f of files) {
-      const validation = validateImageFile(f, 5);
+      const validation = this.imageService.validate(f, 5);
       if (!validation.valid) {
         this.additionalPhotosError.set(validation.errorMessage ?? null);
         return;
@@ -400,21 +409,54 @@ export class UrgentCreate {
           const data = res.data;
 
           if (data && !data.isCreated) {
-            this.matchedCases.set(data.matchedCases ?? []);
+            this.currentDuplicateDecision.set(data.duplicateDecision);
             this.isBlockedDuplicate.set(data.isBlocked);
-            this.showForceCreatePopup.set(true);
+            this.matchedCases.set(data.matchedCases ?? []);
+            this.existingCaseType.set(data.existingCaseType ?? null);
+
+            if (data.duplicateDecision === DuplicateDecision.SameUserDuplicate || 
+                data.duplicateDecision === DuplicateDecision.PendingOwnerCase ||
+                data.duplicateDecision === DuplicateDecision.PendingUnknownCase) {
+              this.showDuplicateInfoDialog.set(true);
+            } else if (data.duplicateDecision === DuplicateDecision.ActiveOwnerCase ||
+                       data.duplicateDecision === DuplicateDecision.ActiveUnknownCase) {
+              this.showForceCreatePopup.set(true);
+            }
             return;
           }
 
           this.showForceCreatePopup.set(false);
-          this.snackbar.success('تم انشاء بلاغ حاله طارئة بنجاح');
+          this.showDuplicateInfoDialog.set(false);
+          this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
           this.router.navigate(['/urgent']);
         },
         error: (err: unknown) => {
           this.isSubmitting.set(false);
           const msg = extractErrorMessage(err, 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.');
-          this.errorMsg.set(msg);
-          this.snackbar.error(msg);
+          
+          if (err && typeof err === 'object' && 'status' in err && (err as any).status === 400) {
+            const errorObj = (err as any).error;
+            if (errorObj?.errors) {
+              let hasUnmappedErrors = false;
+              for (const key in errorObj.errors) {
+                const controlName = key.charAt(0).toLowerCase() + key.slice(1);
+                const control = this.form.get(controlName);
+                if (control) {
+                  control.setErrors({ serverError: errorObj.errors[key][0] });
+                } else {
+                  hasUnmappedErrors = true;
+                  this.errorMsg.set(errorObj.errors[key][0]);
+                }
+              }
+              if (!hasUnmappedErrors) {
+                this.errorMsg.set(null);
+              }
+            } else {
+              this.errorMsg.set(msg);
+            }
+          } else {
+            this.snackbar.error(msg);
+          }
         },
       });
   }
@@ -428,6 +470,18 @@ export class UrgentCreate {
       return;
     }
     this.showForceCreatePopup.set(false);
+    this.onSubmit(true);
+  }
+
+  onPendingDialogClose(): void {
+    this.showDuplicateInfoDialog.set(false);
+  }
+
+  onPendingDialogContinueCreate(): void {
+    if (this.isBlockedDuplicate()) {
+      return;
+    }
+    this.showDuplicateInfoDialog.set(false);
     this.onSubmit(true);
   }
 

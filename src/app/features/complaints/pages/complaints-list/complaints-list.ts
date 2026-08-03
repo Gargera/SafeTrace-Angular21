@@ -3,11 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { ComplaintsService } from '../../services/complaints.service';
-import { ComplaintResponseDto } from '../../models/complaint.model';
-import { ComplaintFilterDto } from '../../models/complaint-filter.model';
-import { ResolveComplaintDto } from '../../models/resolve-complaint.model';
+import { ComplaintResponseDto } from '../../models/responses/complaint.model';
+import { ComplaintFilterDto } from '../../models/requests/complaint-filter.model';
+import { ResolveComplaintDto } from '../../models/requests/resolve-complaint.model';
 import { ComplaintStatus } from '../../../../shared/enums/complaint-status';
-import { ComplaintStatisticsDto } from '../../models/complaint-statistics-dto';
+import { ComplaintStatisticsDto } from '../../models/responses/complaint-statistics-dto';
 import { ComplaintStatusBadgeDirective } from '../../../../shared/directives/complaint-status-badge-directive';
 import { TruncatePipe } from '../../../../shared/pipes/truncate-pipe';
 import { FormField } from '../../../../shared/components/form-field/form-field';
@@ -16,12 +16,13 @@ import { CardComponent } from '../../../../shared/components/card/card';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 import { ReportService } from '../../../admin-dashboard/services/report.service';
+
 
 @Component({
   selector: 'app-complaints-list',
@@ -226,11 +227,20 @@ export class ComplaintsList implements OnInit {
     });
   }
  downloadReport(): void {
-
+  const filter = {
+    ...this.filter(),
+    status: this.filter().status || null
+  };
   this.reportService
-    .generateComplaintPdfReport(this.filter())
-    .subscribe(response => {
-      this.reportService.download(response);
+    .generateComplaintPdfReport(filter)
+    .subscribe({
+      next: (response) => {
+        this.reportService.download(response);
+      },
+      error: (err) => {
+        const message = err?.error?.detail || err?.error?.title || 'حدث خطأ أثناء تنزيل التقرير';
+        this.toast.error(message);
+      }
     });
 }
 

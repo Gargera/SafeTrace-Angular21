@@ -12,7 +12,7 @@ import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.
 import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
@@ -22,10 +22,11 @@ import { arabicText } from '../../../../shared/validators/arabic-text.validator'
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { urgentEventDate, toDatetimeLocalString } from '../../../../shared/validators/urgent-event-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
-import { validateImageFile } from '../../../user-profile/tabs/Edit-profile/utilies/image-validation.util';
+import { ImageService } from '../../../../shared/services/image.service';
 
 import { CommonModule } from '@angular/common';
 import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 
 import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 import { CaseFileResponse } from '../../../../core/models/cases.model';
@@ -43,6 +44,7 @@ type Step = 1 | 2 | 3;
     FormField,
     CardComponent,
     CaseHeaderComponent,
+    ConfirmationModalComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./urgent-update.css'],
@@ -50,6 +52,7 @@ type Step = 1 | 2 | 3;
 })
 export class UrgentUpdate implements OnInit {
   private fb = inject(FormBuilder);
+  private imageService = inject(ImageService);
   private destroyRef = inject(DestroyRef);
 
   // Allowed datetime range for urgent cases (last 6 hours)
@@ -74,6 +77,9 @@ export class UrgentUpdate implements OnInit {
   isLoading = signal(true);
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
+
+  showDeleteImageConfirm = signal(false);
+  photoToDelete = signal<CaseFileResponse | null>(null);
 
   existingPhotos = signal<CaseFileResponse[]>([]);
   deletedPhotoIds = signal<number[]>([]);
@@ -180,7 +186,7 @@ export class UrgentUpdate implements OnInit {
   private loadCase(): void {
     this.isLoading.set(true);
     this.service
-      .getCaseById(this.caseId)
+      .getMyCaseById(this.caseId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
@@ -337,13 +343,23 @@ export class UrgentUpdate implements OnInit {
   // Photo management — file type/size validation
   // ─────────────────────────────────────────────────────────────
 
-  removeExistingPhoto(photo: CaseFileResponse): void {
-    this.existingPhotos.update((list) => list.filter((p) => p.id !== photo.id));
-    this.deletedPhotoIds.update((ids) => [...ids, photo.id]);
-    if (this.primaryPhotoId() === photo.id) {
-      const next = this.existingPhotos()[0];
-      this.primaryPhotoId.set(next ? next.id : null);
+  confirmRemoveExistingPhoto(photo: CaseFileResponse): void {
+    this.photoToDelete.set(photo);
+    this.showDeleteImageConfirm.set(true);
+  }
+
+  executeRemoveExistingPhoto(): void {
+    const photo = this.photoToDelete();
+    if (photo) {
+      this.deletedPhotoIds.update((ids) => [...ids, photo.id]);
+      this.existingPhotos.update((photos) => photos.filter((p) => p.id !== photo.id));
+      if (this.primaryPhotoId() === photo.id) {
+        const next = this.existingPhotos()[0];
+        this.primaryPhotoId.set(next ? next.id : null);
+      }
     }
+    this.showDeleteImageConfirm.set(false);
+    this.photoToDelete.set(null);
   }
 
   setExistingAsPrimary(photo: CaseFileResponse): void {
@@ -356,7 +372,7 @@ export class UrgentUpdate implements OnInit {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     if (!file) return;
 
-    const validation = validateImageFile(file, 5);
+    const validation = this.imageService.validate(file, 5);
     if (!validation.valid) {
       this.newPrimaryError.set(validation.errorMessage ?? null);
       return;
@@ -377,7 +393,7 @@ export class UrgentUpdate implements OnInit {
   onNewPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
     for (const f of files) {
-      const validation = validateImageFile(f, 5);
+      const validation = this.imageService.validate(f, 5);
       if (!validation.valid) {
         this.newPhotosError.set(validation.errorMessage ?? null);
         return;
@@ -447,8 +463,36 @@ export class UrgentUpdate implements OnInit {
         error: (err: unknown) => {
           this.isSubmitting.set(false);
           const msg = extractErrorMessage(err, 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.');
-          this.errorMsg.set(msg);
-          this.snackbar.error(msg);
+          
+          if (msg.includes('يجب أن تكون لنفس الشخص') || msg.includes('لا تبدو لنفس الشخص')) {
+            this.newPrimaryError.set(msg);
+            this.newPhotosError.set(msg);
+            return;
+          }
+
+          if (err && typeof err === 'object' && 'status' in err && (err as any).status === 400) {
+            const errorObj = (err as any).error;
+            if (errorObj?.errors) {
+              let hasUnmappedErrors = false;
+              for (const key in errorObj.errors) {
+                const controlName = key.charAt(0).toLowerCase() + key.slice(1);
+                const control = this.form.get(controlName);
+                if (control) {
+                  control.setErrors({ serverError: errorObj.errors[key][0] });
+                } else {
+                  hasUnmappedErrors = true;
+                  this.errorMsg.set(errorObj.errors[key][0]);
+                }
+              }
+              if (!hasUnmappedErrors) {
+                this.errorMsg.set(null);
+              }
+            } else {
+              this.errorMsg.set(msg);
+            }
+          } else {
+            this.snackbar.error(msg);
+          }
         },
       });
   }

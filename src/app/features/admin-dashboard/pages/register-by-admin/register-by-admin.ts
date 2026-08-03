@@ -3,10 +3,10 @@ import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@ang
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { UserService } from '../../services/user.service';
 import { RoleService } from '../../services/role.service';
-import { RoleDto } from '../../models/Role/RoleDto';
+import { RoleDto } from '../../models/Role/responses/RoleDto';
 import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 
 

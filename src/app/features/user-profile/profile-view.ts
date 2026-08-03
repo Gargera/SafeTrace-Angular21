@@ -9,7 +9,7 @@ import { NotificationService } from '../../core/services/notification.service';
 import { ProfileService } from './service/profile.service';
 import { MyCasesTab } from './tabs/cases-tab/cases-tab';
 import { EditProfile } from './tabs/Edit-profile/edit-profile';
-import { DonationHistoryComponent } from './tabs/donation-tab/donation-tab';
+import { MyDonationsComponent } from '../donations/pages/my-donations/my-donations.component';
 export type ProfileTab = 'edit' | 'cases' | 'chat' | 'notifications' | 'donations'; // ADDED 'donations'
 
 @Component({
@@ -21,8 +21,8 @@ export type ProfileTab = 'edit' | 'cases' | 'chat' | 'notifications' | 'donation
     NotificationsTab,
     MyCasesTab,
     MyChats,
-    DonationHistoryComponent,
-  ], // ADDED MyCasesTab and DonationHistoryComponent
+    MyDonationsComponent,
+  ], // ADDED MyCasesTab and MyDonationsComponent
   templateUrl: './profile-view.html',
   styleUrl: './profile-view.css',
 })

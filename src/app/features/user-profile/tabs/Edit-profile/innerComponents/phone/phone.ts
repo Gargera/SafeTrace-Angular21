@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import { SnackbarService } from '../../../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../../../shared/services/toast.service';
 import { GetUserInfoDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
 import { FormField } from '../../../../../../shared/components/form-field/form-field';

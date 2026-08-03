@@ -4,7 +4,7 @@ import { Router, RouterModule } from '@angular/router';
 import { ChatService } from '../../services/chat.service';
 import { ChatAlertsService } from '../../services/chat-alert.service';
 import { ChatSummaryDto } from '../../models/chat.model';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 

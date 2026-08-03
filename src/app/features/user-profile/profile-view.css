@@ -4,15 +4,4 @@
   border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 10px;
-}

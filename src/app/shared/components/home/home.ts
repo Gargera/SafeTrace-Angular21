@@ -8,7 +8,7 @@ import { UnknownCaseService } from '../../../features/unknown-cases/services/unk
 import { FoundedService } from '../../../features/founded/services/founded.service';
 import { CaseCardComponent } from '../cases-components/case-card/case-card.component';
 import { ComplaintsService } from '../../../features/complaints/services/complaints.service';
-import { SnackbarService } from '../../../core/services/toast.service';
+import { SnackbarService } from '../../../shared/services/toast.service';
 import { ButtonComponent } from '../button/button';
 import { FormField } from '../form-field/form-field';
 import { CardComponent } from '../card/card';

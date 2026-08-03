@@ -5,10 +5,10 @@ import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { environment } from '../../../environments/environment';
 import { Observable, tap, firstValueFrom } from 'rxjs';
 import { ApiResponse } from '../../shared/models/responses/api-response.model';
-import { AuthResponse } from '../../features/auth/models/AuthResponse';
-import { LoginRequest } from '../../features/auth/models/LoginRequest';
-import { RegisterRequest } from '../../features/auth/models/RegisterRequest';
-import { ResetPasswordRequest } from '../../features/auth/models/ResetPasswordRequest';
+import { AuthResponse } from '../../features/auth/models/responses/AuthResponse';
+import { LoginRequest } from '../../features/auth/models/requests/LoginRequest';
+import { RegisterRequest } from '../../features/auth/models/requests/RegisterRequest';
+import { ResetPasswordRequest } from '../../features/auth/models/requests/ResetPasswordRequest';
 import { VerificationStatus } from '../../shared/enums/verification-status';
 import { LocationTrackingService } from './LocationTracking.service';
 

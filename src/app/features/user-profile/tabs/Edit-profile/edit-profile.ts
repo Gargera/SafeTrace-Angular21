@@ -39,14 +39,13 @@ import { Toast } from '../../../../shared/components/toast/toast';
 import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
 import { getVerificationStatusTranslationAr } from '../../../../core/constants/verification.status.dictionary';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
-import { ImageService } from '../../service/image.service';
+import { ImageService } from '../../../../shared/services/image.service';
 import { ProfileImage } from './innerComponents/profile-image/profile-image';
 import { IdentificationImage } from './innerComponents/identification-image/identification-image';
 import { Password } from './innerComponents/password/password';
 import { Phone } from './innerComponents/phone/phone';
 import { PersonalInfo } from './innerComponents/personal-info/personal-info';
 import { LocationPicker } from './innerComponents/location-picker/location-picker';
-import { CardComponent } from '../../../../shared/components/card/card';
 
 @Component({
   selector: 'app-edit-profile',
@@ -61,7 +60,6 @@ import { CardComponent } from '../../../../shared/components/card/card';
     Phone,
     PersonalInfo,
     LocationPicker,
-    CardComponent,
   ],
   templateUrl: './edit-profile.html',
 })
@@ -79,11 +77,12 @@ export class EditProfile {
   // Which field the current crop session is for. The cropper itself is now
   // fully free-form and has no notion of "profile" vs "id" — this only
   // decides where onCropSaved routes the resulting Blob.
-  #cropTarget: 'profile' | 'id' = 'profile';
+  #cropTarget: 'profile' | 'idFront' | 'idBack' = 'profile';
 
   // Cropped images passed to child components
   readonly profileCroppedImage = signal<Blob | null>(null);
-  readonly idCroppedImage = signal<Blob | null>(null);
+  readonly idFrontCroppedImage = signal<Blob | null>(null);
+    readonly idBackCroppedImage = signal<Blob | null>(null);
 
   // ── Role / verification helpers ───────────────────────────────────────────
 
@@ -167,7 +166,7 @@ export class EditProfile {
 
   // ── Crop dialog handlers ──────────────────────────────────────────────────
 
-  onOpenCropper(target: 'profile' | 'id', file: File): void {
+  onOpenCropper(target: 'profile' | 'idFront' | 'idBack', file: File): void {
     this.#cropTarget = target;
     this.cropSourceFile.set(file);
     this.showCropDialog.set(true);
@@ -182,8 +181,12 @@ export class EditProfile {
     this.showCropDialog.set(false);
     this.cropSourceFile.set(null);
 
-    if (this.#cropTarget === 'id') {
-      this.idCroppedImage.set(blob);
+    if (this.#cropTarget === 'idFront') {
+      this.idFrontCroppedImage.set(blob);
+      return;
+    }
+    if (this.#cropTarget === 'idBack') {
+      this.idBackCroppedImage.set(blob);
       return;
     }
 
@@ -214,3 +217,4 @@ export class EditProfile {
     });
   }
 }
+

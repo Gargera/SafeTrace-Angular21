@@ -1,31 +1,9 @@
-.scrollable {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-secondary) transparent;
-}
 
-/* Chrome / Edge */
-.scrollable::-webkit-scrollbar {
-  width: 8px;
-}
-
-.scrollable::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.scrollable::-webkit-scrollbar-thumb {
-  background: var(--color-secondary);
-  border-radius: 999px;
-}
-
-.scrollable::-webkit-scrollbar-thumb:hover {
-  opacity: 0.8;
-}
 .scroll-wrapper {
   direction: ltr;
 }
 
 .scrollable {
   direction: rtl;
-  height: 700px;
   overflow-y: auto;
 }

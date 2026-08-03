@@ -78,13 +78,6 @@
         {{ cancelLabel() }}
       </app-button>
 
-      @if (showJoinGroup()) {
-      <app-button variant="success" (onClick)="joinGroup.emit()">
-        <span class="material-symbols-outlined text-[20px]">group_add</span>
-        ضم البلاغ للمجموعة المكررة
-      </app-button>
-      }
-
       @if (canForceCreate()) {
       <app-button variant="primary" (onClick)="forceCreate.emit()">
         <span class="material-symbols-outlined text-[20px]">add_circle</span>

@@ -1,16 +1,15 @@
 import { Component, effect, inject, input, output, signal } from '@angular/core';
-import { ImageService } from '../../../../service/image.service';
-import { SnackbarService } from '../../../../../../core/services/toast.service';
+import { ImageService } from '../../../../../../shared/services/image.service';
+import { SnackbarService } from '../../../../../../shared/services/toast.service';
 import { VerificationStatus } from '../../../../../../shared/enums/verification-status';
 import { GetUserInfoDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
 import { ButtonComponent } from '../../../../../../shared/components/button/button';
-import { FormField } from '../../../../../../shared/components/form-field/form-field';
 
 @Component({
   selector: 'app-identification-image',
   standalone: true,
-  imports: [ ButtonComponent],
+  imports: [ButtonComponent],
   templateUrl: './identification-image.html',
   host: {
     class: 'space-y-sm',
@@ -18,44 +17,57 @@ import { FormField } from '../../../../../../shared/components/form-field/form-f
 })
 export class IdentificationImage {
   readonly userInfo = input<GetUserInfoDTO | null>(null);
-  readonly croppedImage = input<Blob | null>(null);
+  
+  readonly croppedFrontImage = input<Blob | null>(null);
+  readonly croppedBackImage = input<Blob | null>(null);
 
-  readonly openCropper = output<File>();
-  readonly cropReset = output<void>();
+  readonly openCropperFront = output<File>();
+  readonly openCropperBack = output<File>();
+  
+  readonly cropResetFront = output<void>();
+  readonly cropResetBack = output<void>();
+  
   readonly profileUpdated = output<void>();
 
   readonly #profileService = inject(ProfileService);
   readonly #imageService = inject(ImageService);
   readonly #snackbar = inject(SnackbarService);
 
-  // ── Section Editing Flags ─────────────────────────────────────────────────
   readonly isEditingIdImage = signal(false);
-
-  // ── Section Loading States ────────────────────────────────────────────────
   readonly isSavingIdImage = signal(false);
 
-  // ── File state ────────────────────────────────────────────────────────────
-  #selectedIdImage: File | null = null;
-  readonly idImagePreview = signal<string | null>(null);
-  readonly filledIconStyle = "'FILL' 1";
+  #selectedIdImageFront: File | null = null;
+  #selectedIdImageBack: File | null = null;
+  
+  readonly idImageFrontPreview = signal<string | null>(null);
+  readonly idImageBackPreview = signal<string | null>(null);
 
   constructor() {
     effect(() => {
       const info = this.userInfo();
       if (info) {
         if (!this.isEditingIdImage()) {
-          this.idImagePreview.set(info.identificationImage);
+          this.idImageFrontPreview.set(info.identificationImageFront);
+          this.idImageBackPreview.set(info.identificationImageBack);
         }
       }
     });
 
-    // Handle incoming cropped image blob
     effect(() => {
-      const blob = this.croppedImage();
+      const blob = this.croppedFrontImage();
       if (blob) {
         const objectUrl = URL.createObjectURL(blob);
-        this.idImagePreview.set(objectUrl);
-        this.#selectedIdImage = new File([blob], `id-${Date.now()}.png`, { type: 'image/png' });
+        this.idImageFrontPreview.set(objectUrl);
+        this.#selectedIdImageFront = new File([blob], `id-front-${Date.now()}.png`, { type: 'image/png' });
+      }
+    });
+
+    effect(() => {
+      const blob = this.croppedBackImage();
+      if (blob) {
+        const objectUrl = URL.createObjectURL(blob);
+        this.idImageBackPreview.set(objectUrl);
+        this.#selectedIdImageBack = new File([blob], `id-back-${Date.now()}.png`, { type: 'image/png' });
       }
     });
   }
@@ -78,43 +90,46 @@ export class IdentificationImage {
     return !this.isVerified && !this.isPending;
   }
 
-  // ── ID image: select → validate → crop ─────────────────────────────────────
-
-  /**
-   * Triggered by the (hidden) file input under the ID photo.
-   * Validates type/size before opening the crop dialog.
-   */
-  onIdImageSelected(event: Event): void {
+  onIdImageFrontSelected(event: Event): void {
     const inputEl = event.target as HTMLInputElement;
     const file = inputEl.files?.[0] ?? null;
     inputEl.value = '';
-
     if (!file) return;
+    if (!this.#imageService.validateAndToast(file)) return;
+    this.openCropperFront.emit(file);
+  }
 
-    if (!this.#imageService.validateImageFile(file)) return;
-
-    this.openCropper.emit(file);
+  onIdImageBackSelected(event: Event): void {
+    const inputEl = event.target as HTMLInputElement;
+    const file = inputEl.files?.[0] ?? null;
+    inputEl.value = '';
+    if (!file) return;
+    if (!this.#imageService.validateAndToast(file)) return;
+    this.openCropperBack.emit(file);
   }
 
   saveIdImage(): void {
     if (this.isSavingIdImage()) return;
 
-    const idFile = this.#selectedIdImage;
+    const idFileFront = this.#selectedIdImageFront;
+    const idFileBack = this.#selectedIdImageBack;
 
-    if (!idFile) {
-      this.toggleIdImageEdit(false);
-      return;
+    if (!idFileFront || !idFileBack) {
+        this.#snackbar.error('يرجى اختيار صورة الوجه الأمامي والخلفي للبطاقة.');
+        return;
     }
 
     this.isSavingIdImage.set(true);
 
-    this.#profileService.addIdImage({ identificationImage: idFile }).subscribe({
+    this.#profileService.addIdImage({ identificationImageFront: idFileFront, identificationImageBack: idFileBack }).subscribe({
       next: () => {
         this.isSavingIdImage.set(false);
         this.toggleIdImageEdit(false);
-        this.#selectedIdImage = null;
-        this.cropReset.emit();
-        this.#snackbar.success('تم تحديث صورة الهوية بنجاح');
+        this.#selectedIdImageFront = null;
+        this.#selectedIdImageBack = null;
+        this.cropResetFront.emit();
+        this.cropResetBack.emit();
+        this.#snackbar.success('تم تحديث صور الهوية بنجاح');
         this.profileUpdated.emit();
       },
       error: (err) => {
@@ -122,7 +137,7 @@ export class IdentificationImage {
         const msg =
           err?.error?.message ||
           err.error?.detail ||
-          'حدث خطأ أثناء رفع صورة الهوية. يرجى المحاولة مجدداً.';
+          'حدث خطأ أثناء رفع صور الهوية. يرجى المحاولة مرة أخرى.';
         this.#snackbar.error(msg);
       },
     });
@@ -135,8 +150,11 @@ export class IdentificationImage {
   cancelIdImage(): void {
     this.toggleIdImageEdit(false);
     const info = this.userInfo();
-    this.idImagePreview.set(info?.identificationImage ?? null);
-    this.#selectedIdImage = null;
-    this.cropReset.emit();
+    this.idImageFrontPreview.set(info?.identificationImageFront ?? null);
+    this.idImageBackPreview.set(info?.identificationImageBack ?? null);
+    this.#selectedIdImageFront = null;
+    this.#selectedIdImageBack = null;
+    this.cropResetFront.emit();
+    this.cropResetBack.emit();
   }
 }
