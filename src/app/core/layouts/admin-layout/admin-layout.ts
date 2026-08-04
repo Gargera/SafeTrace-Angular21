@@ -1,23 +1,24 @@
 import { ChangeDetectionStrategy, Component, HostListener, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { AuthService } from '../../../../core/services/auth.service';
-import { SystemConstants } from '../../../../core/constants/system.constants';
+import { AuthService } from '../../services/auth.service';
+import { SystemConstants } from '../../constants/system.constants';
 import Swal from 'sweetalert2';
-import { environment } from '../../../../../environments/environment';
-import { ButtonComponent } from '../../../../shared/components/button/button';
-import { Permissions } from '../../../../core/constants/Permissions';
-import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
-import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+import { environment } from '../../../../environments/environment';
+import { ButtonComponent } from '../../../shared/components/button/button';
+import { Permissions } from '../../constants/Permissions';
+import { getRoleTranslationAr } from '../../constants/roles.dictionary';
+import { HasPermissionDirective } from '../../../shared/directives/has-permission.directive';
 
 @Component({
-  selector: 'app-overview',
+  selector: 'app-admin-layout',
   standalone: true,
   imports: [CommonModule, RouterModule, ButtonComponent, HasPermissionDirective], 
-  templateUrl: './overview.html',
+  templateUrl: './admin-layout.html',
+  styleUrl: './admin-layout.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Overview implements OnInit {
+export class AdminLayoutComponent implements OnInit {
   public authService = inject(AuthService);
   private router = inject(Router);
   currentUser = this.authService.currentUser;
