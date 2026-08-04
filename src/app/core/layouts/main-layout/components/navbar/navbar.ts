@@ -1,15 +1,15 @@
 import { Component, inject, OnInit, signal, HostListener, effect, input } from '@angular/core';
-import { AuthService } from '../../../core/services/auth.service';
+import { AuthService } from '../../../../services/auth.service';
 import { Router, RouterModule } from '@angular/router';
-import { NotificationService } from '../../../core/services/notification.service';
-import { GetUserNotificationsDTO } from '../../../core/models/notification.model';
-import { environment } from '../../../../environments/environment';
+import { NotificationService } from '../../../../services/notification.service';
+import { GetUserNotificationsDTO } from '../../../../models/notification.model';
+import { environment } from '../../../../../../environments/environment';
 import Swal from 'sweetalert2';
-import { GetUserInfoDTO } from '../../../features/user-profile/model/profile.model';
-import { UserRole } from '../../enums/user-role';
-import { Permissions } from '../../../core/constants/Permissions';
-import { HasPermissionDirective } from '../../directives/has-permission.directive';
-import { CaseNotificationModalComponent } from '../cases-components/case-notification-modal/case-notification-modal';
+import { GetUserInfoDTO } from '../../../../../features/user-profile/model/profile.model';
+import { UserRole } from '../../../../../shared/enums/user-role';
+import { Permissions } from '../../../../constants/Permissions';
+import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
+import { CaseNotificationModalComponent } from '../../../../../shared/components/cases-components/case-notification-modal/case-notification-modal';
 
 @Component({
   selector: 'app-navbar',
