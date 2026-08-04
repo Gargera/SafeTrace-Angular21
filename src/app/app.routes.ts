@@ -28,7 +28,7 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./shared/components/main-layout/main-layout').then((c) => c.MainLayout),
+      import('./core/layouts/main-layout/main-layout').then((c) => c.MainLayout),
     children: [
       {
         path: '',
