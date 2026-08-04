@@ -36,8 +36,8 @@ import { VerificationStatus } from '../../../../shared/enums/verification-status
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
 import { ImageCropDialog } from '../../shared/image-crop-dialog/image-crop-dialog';
 import { Toast } from '../../../../shared/components/toast/toast';
-import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
-import { getVerificationStatusTranslationAr } from '../../../../core/constants/verification.status.dictionary';
+import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
+import { getVerificationStatusTranslationAr } from '../../../../core/constants/dictionaries/verification.status.dictionary';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
 import { ImageService } from '../../../../shared/services/image.service';
 import { ProfileImage } from './innerComponents/profile-image/profile-image';

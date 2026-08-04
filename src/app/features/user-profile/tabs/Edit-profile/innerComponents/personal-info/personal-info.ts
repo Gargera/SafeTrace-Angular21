@@ -32,7 +32,7 @@ export class PersonalInfo implements OnChanges {
       [
         Validators.required,
         Validators.maxLength(100),
-        Validators.pattern('^[a-zA-Z\u0600-\u06FF]+$'),
+        Validators.pattern(/^[\u0600-\u06FF]+$/),
       ],
     ],
     lastName: [
@@ -40,7 +40,7 @@ export class PersonalInfo implements OnChanges {
       [
         Validators.required,
         Validators.maxLength(100),
-        Validators.pattern('^[a-zA-Z\u0600-\u06FF]+( [a-zA-Z\u0600-\u06FF]+)*$'),
+        Validators.pattern(/^[\u0600-\u06FF]+( [\u0600-\u06FF]+)*$/),
       ],
     ],
   });

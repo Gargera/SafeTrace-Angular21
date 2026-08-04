@@ -7,7 +7,7 @@ import { FoundedService } from '../../services/founded.service';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { Gender } from '../../../../shared/enums/gender';
 import { environment } from '../../../../../environments/environment';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { PaginationComponent } from '../../../../shared/components/cases-components/case-pagination/case-pagination.component';
@@ -27,7 +27,7 @@ import { extractErrorMessage } from '../../../../shared/helper/case-error.helper
   imports: [
     CommonModule,
     RouterModule,
-    CaseHeaderComponent,
+    HeaderComponent,
     CaseSkeletonGridComponent,
     EmptyStateComponent,
     PaginationComponent,

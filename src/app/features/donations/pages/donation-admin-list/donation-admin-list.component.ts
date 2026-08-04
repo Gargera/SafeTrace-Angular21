@@ -9,7 +9,7 @@ import { PaymentStatus } from '../../../../shared/enums/payment-status.enum';
 import { TruncatePipe } from '../../../../shared/pipes/truncate-pipe';
 import { CardComponent } from '../../../../shared/components/card/card';
 
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
@@ -29,7 +29,7 @@ import { ReportService } from '../../../admin-dashboard/services/report.service'
     FormsModule,
     TruncatePipe,
     CardComponent,
-    CaseHeaderComponent,
+    HeaderComponent,
     LoadingSpinnerComponent,
     EmptyStateComponent,
     ButtonComponent,

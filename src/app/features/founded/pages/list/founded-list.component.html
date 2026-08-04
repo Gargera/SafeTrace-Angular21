@@ -3,11 +3,11 @@
 
     <!-- Page Header -->
     <section class="space-y-3 pb-2">
-      <app-case-header title="تم العثور عليهم"
+      <app-header title="تم العثور عليهم"
         subtitle="نحن نحتفل بكل لقاء جديد. هنا تجد قائمة بالأشخاص الذين تم العثور عليهم."
         [badge]="!isLoading() && !hasError() ? totalCount() + ' نتيجة' : ''" [loading]="isLoading()"
         [showPrimary]="false" [showSecondary]="false">
-      </app-case-header>
+      </app-header>
     </section>
 
     <!-- Filters Card -->

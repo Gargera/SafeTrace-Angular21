@@ -1,4 +1,3 @@
-import { FormField } from '../../../../shared/components/form-field/form-field';
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -11,7 +10,7 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
 @Component({
   selector: 'app-confirm-email',
   standalone: true,
-  imports: [FormField, ReactiveFormsModule, RouterModule,  ButtonComponent],
+  imports: [ReactiveFormsModule, RouterModule,  ButtonComponent],
   templateUrl: './confirm-email.html'
 })
 export class ConfirmEmail implements OnInit, OnDestroy {

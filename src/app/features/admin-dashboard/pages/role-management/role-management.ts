@@ -9,19 +9,19 @@ import { ConfirmationModalComponent } from '../../../../shared/components/confir
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { AuthService } from '../../../../core/services/auth.service';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 
 import {
   PERMISSION_GROUPS_AR,
   PERMISSION_ACTIONS_AR,
   ALL_SYSTEM_PERMISSIONS,
-} from '../../../../core/constants/permission.dictionary';
+} from '../../../../core/constants/dictionaries/permission.dictionary';
 import Swal from 'sweetalert2';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { RolePermissionDto } from '../../models/Role/responses/RolePermissionDto';
 import { RoleService } from '../../services/role.service';
 import { RoleDto } from '../../models/Role/responses/RoleDto';
-import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
+import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
 import { UserRole } from '../../../../shared/enums/user-role';
 
 interface PermissionGroup {
@@ -34,7 +34,7 @@ interface PermissionGroup {
 @Component({
   selector: 'app-role-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective, CaseHeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective, HeaderComponent],
   templateUrl: './role-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
