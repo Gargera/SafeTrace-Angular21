@@ -13,7 +13,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, finalize, of } from 'rxjs';
-import { environment } from '../../../../environments/environment.development';
+import { environment } from '../../../../environments/environment';
 import { UserRole } from '../../enums/user-role';
 import { ApiResponse } from '../../models/responses/api-response.model';
 import { GeocodingService } from '../../../core/services/geocoding/geocoding.service';
