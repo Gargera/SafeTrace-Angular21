@@ -2,17 +2,17 @@
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
-import { UrgentCaseService } from '../../../features/urgent-cases/services/urgent-case.service';
-import { LongTermCaseService } from '../../../features/long-term-cases/services/long-term-case.service';
-import { UnknownCaseService } from '../../../features/unknown-cases/services/unknown-case.service';
-import { FoundedService } from '../../../features/founded/services/founded.service';
-import { CaseCardComponent } from '../cases-components/case-card/case-card.component';
-import { ComplaintsService } from '../../../features/complaints/services/complaints.service';
-import { SnackbarService } from '../../../shared/services/toast.service';
-import { ButtonComponent } from '../button/button';
-import { FormField } from '../form-field/form-field';
-import { CardComponent } from '../card/card';
-import { environment } from '../../../../environments/environment';
+import { UrgentCaseService } from '../../../../features/urgent-cases/services/urgent-case.service';
+import { LongTermCaseService } from '../../../../features/long-term-cases/services/long-term-case.service';
+import { UnknownCaseService } from '../../../../features/unknown-cases/services/unknown-case.service';
+import { FoundedService } from '../../../../features/founded/services/founded.service';
+import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
+import { ComplaintsService } from '../../../../features/complaints/services/complaints.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { FormField } from '../../../../shared/components/form-field/form-field';
+import { CardComponent } from '../../../../shared/components/card/card';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-home',
