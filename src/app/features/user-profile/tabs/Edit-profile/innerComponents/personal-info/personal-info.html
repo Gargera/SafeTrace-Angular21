@@ -69,7 +69,7 @@
           } @else if (personalForm.get('firstName')?.hasError('maxlength')) {
             لا يتجاوز 100 حرف
           } @else if (personalForm.get('firstName')?.hasError('pattern')) {
-            الاسم الأول يجب أن يكون كلمة واحدة فقط من الحروف العربية أو الإنجليزية
+            الاسم الأول يجب أن يكون كلمة واحدة باللغة العربية فقط
           }
         </p>
       }
@@ -97,7 +97,7 @@
           } @else if (personalForm.get('lastName')?.hasError('maxlength')) {
             لا يتجاوز 100 حرف
           } @else if (personalForm.get('lastName')?.hasError('pattern')) {
-            اسم العائلة يجب أن يحتوي على حروف عربية أو إنجليزية ومسافة واحدة بين الكلمات
+            اسم العائلة يجب أن يحتوي على حروف عربية فقط ومسافة واحدة بين الكلمات
           }
         </p>
       }

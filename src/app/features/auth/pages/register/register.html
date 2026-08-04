@@ -34,7 +34,7 @@
         </app-form-field>
         @if (registerForm.get('fName')?.touched && registerForm.get('fName')?.invalid) {
           <span class="text-error text-xs font-medium">
-            @if (registerForm.get('fName')?.errors?.['serverError']) { {{ registerForm.get('fName')?.errors?.['serverError'] }} } @else if (registerForm.get('fName')?.errors?.['pattern']) { الاسم الأول يجب أن يكون كلمة واحدة فقط من الحروف العربية أو الإنجليزية. } @else if (registerForm.get('fName')?.errors?.['minlength']) { الاسم الأول لا يجب أن يقل عن حرفين. } @else { الاسم الأول مطلوب ويجب ألا يزيد عن 100 حرف. }
+            @if (registerForm.get('fName')?.errors?.['serverError']) { {{ registerForm.get('fName')?.errors?.['serverError'] }} } @else if (registerForm.get('fName')?.errors?.['pattern']) { الاسم الأول يجب أن يكون كلمة واحدة باللغة العربية فقط. } @else if (registerForm.get('fName')?.errors?.['minlength']) { الاسم الأول لا يجب أن يقل عن حرفين. } @else { الاسم الأول مطلوب ويجب ألا يزيد عن 100 حرف. }
           </span>
         }
       </div>
@@ -50,7 +50,7 @@
         </app-form-field>
         @if (registerForm.get('lName')?.touched && registerForm.get('lName')?.invalid) {
           <span class="text-error text-xs font-medium">
-            @if (registerForm.get('lName')?.errors?.['serverError']) { {{ registerForm.get('lName')?.errors?.['serverError'] }} } @else if (registerForm.get('lName')?.errors?.['pattern']) { اسم العائلة يجب أن يحتوي على حروف عربية أو إنجليزية ومسافة واحدة بين الكلمات. } @else if (registerForm.get('lName')?.errors?.['minlength']) { اسم العائلة لا يجب أن يقل عن حرفين. } @else { اسم العائلة مطلوب ويجب ألا يزيد عن 100 حرف.  }
+            @if (registerForm.get('lName')?.errors?.['serverError']) { {{ registerForm.get('lName')?.errors?.['serverError'] }} } @else if (registerForm.get('lName')?.errors?.['pattern']) { اسم العائلة يجب أن يحتوي على حروف عربية فقط ومسافة واحدة بين الكلمات. } @else if (registerForm.get('lName')?.errors?.['minlength']) { اسم العائلة لا يجب أن يقل عن حرفين. } @else { اسم العائلة مطلوب ويجب ألا يزيد عن 100 حرف.  }
           </span>
         }
       </div>
