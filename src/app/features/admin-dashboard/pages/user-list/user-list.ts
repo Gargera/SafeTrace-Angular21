@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
-import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
+import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
 import { RoleService } from '../../services/role.service';
 import { UserService } from '../../services/user.service';
 import { FormField } from '../../../../shared/components/form-field/form-field';

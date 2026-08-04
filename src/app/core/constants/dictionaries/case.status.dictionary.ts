@@ -1,4 +1,4 @@
-import { CaseStatus } from '../../shared/enums/case-status';
+import { CaseStatus } from '../../../shared/enums/case-status';
 
 export const CASE_STATUS_TRANSLATIONS_AR: Record<CaseStatus, string> = {
   [CaseStatus.Pending]: 'قيد المراجعة',

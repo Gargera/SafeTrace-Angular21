@@ -15,13 +15,13 @@ import {
   PERMISSION_GROUPS_AR,
   PERMISSION_ACTIONS_AR,
   ALL_SYSTEM_PERMISSIONS,
-} from '../../../../core/constants/permission.dictionary';
+} from '../../../../core/constants/dictionaries/permission.dictionary';
 import Swal from 'sweetalert2';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { RolePermissionDto } from '../../models/Role/responses/RolePermissionDto';
 import { RoleService } from '../../services/role.service';
 import { RoleDto } from '../../models/Role/responses/RoleDto';
-import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
+import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
 import { UserRole } from '../../../../shared/enums/user-role';
 
 interface PermissionGroup {

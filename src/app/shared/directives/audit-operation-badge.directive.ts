@@ -1,5 +1,5 @@
 import { Directive, ElementRef, effect, input, Renderer2 } from '@angular/core';
-import { getAuditOperationTranslationAr } from '../../core/constants/audit.operation.dictionary';
+import { getAuditOperationTranslationAr } from '../../core/constants/dictionaries/audit.operation.dictionary';
 
 @Directive({
   selector: '[appAuditOperationBadge]',

@@ -1,4 +1,4 @@
-import { AgeCategories } from '../../shared/enums/age-categories';
+import { AgeCategories } from '../../../shared/enums/age-categories';
 
 export const AGE_CATEGORIES_TRANSLATIONS_AR: Record<AgeCategories, string> = {
   [AgeCategories.Toddler]: 'طفل رضيع',

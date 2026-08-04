@@ -1,4 +1,4 @@
-import { PaymentStatus } from '../../shared/enums/payment-status.enum';
+import { PaymentStatus } from '../../../shared/enums/payment-status.enum';
 
 export const PaymentStatusDictionary: Record<
   PaymentStatus | string,

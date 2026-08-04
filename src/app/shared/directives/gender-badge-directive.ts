@@ -1,6 +1,6 @@
 import { Directive, ElementRef, effect, input, Renderer2 } from '@angular/core';
 import { Gender } from '../enums/gender';
-import { getGenderTranslationAr } from '../../core/constants/gender.dictionary';
+import { getGenderTranslationAr } from '../../core/constants/dictionaries/gender.dictionary';
 
 @Directive({
   selector: '[appGenderBadgeDirective]',

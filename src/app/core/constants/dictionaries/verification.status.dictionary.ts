@@ -1,4 +1,4 @@
-import { VerificationStatus } from '../../shared/enums/verification-status';
+import { VerificationStatus } from '../../../shared/enums/verification-status';
 
 export const VERIFICATION_STATUS_TRANSLATIONS_AR: Record<VerificationStatus, string> = {
   [VerificationStatus.Unverified]: 'غير موثق',

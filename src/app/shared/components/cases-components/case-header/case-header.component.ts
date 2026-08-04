@@ -3,7 +3,7 @@ import { Component, input, output } from '@angular/core';
 
 import { ButtonComponent } from '../../button/button';
 import { CaseType } from '../../../enums/case-type';
-import { getCaseTypeTranslationAr } from '../../../../core/constants/case.type.dictionary';
+import { getCaseTypeTranslationAr } from '../../../../core/constants/dictionaries/case.type.dictionary';
 
 @Component({
   selector: 'app-case-header',

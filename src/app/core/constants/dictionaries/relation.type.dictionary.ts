@@ -1,4 +1,4 @@
-import { RelationType } from '../../shared/enums/relation-type';
+import { RelationType } from '../../../shared/enums/relation-type';
 
 export const RELATION_TYPE_TRANSLATIONS_AR: Record<RelationType, string> = {
   [RelationType.Father]: 'الأب',

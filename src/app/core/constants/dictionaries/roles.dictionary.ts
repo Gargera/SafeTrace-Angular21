@@ -1,4 +1,4 @@
-import { UserRole } from '../../shared/enums/user-role';
+import { UserRole } from '../../../shared/enums/user-role';
 
 export const ROLE_TRANSLATIONS_AR: Record<UserRole, string> = {
   [UserRole.SuperAdmin]: 'مدير النظام',

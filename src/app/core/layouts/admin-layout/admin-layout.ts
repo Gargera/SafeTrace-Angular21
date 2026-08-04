@@ -7,7 +7,7 @@ import Swal from 'sweetalert2';
 import { environment } from '../../../../environments/environment';
 import { ButtonComponent } from '../../../shared/components/button/button';
 import { Permissions } from '../../constants/Permissions';
-import { getRoleTranslationAr } from '../../constants/roles.dictionary';
+import { getRoleTranslationAr } from '../../constants/dictionaries/roles.dictionary';
 import { HasPermissionDirective } from '../../../shared/directives/has-permission.directive';
 
 @Component({

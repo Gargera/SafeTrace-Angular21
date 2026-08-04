@@ -1,4 +1,4 @@
-import { CaseType } from '../../shared/enums/case-type';
+import { CaseType } from '../../../shared/enums/case-type';
 
 export const CASE_TYPE_TRANSLATIONS_AR: Record<CaseType, string> = {
   [CaseType.Urgent]: 'عاجل',

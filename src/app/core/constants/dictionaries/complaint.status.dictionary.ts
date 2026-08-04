@@ -1,4 +1,4 @@
-import {ComplaintStatus} from "../../shared/enums/complaint-status";
+import {ComplaintStatus} from "../../../shared/enums/complaint-status";
 
 export const COMPLAINT_STATUS_TRANSLATIONS_AR: Record<ComplaintStatus, string> = {
   [ComplaintStatus.Solved]: 'محلول',

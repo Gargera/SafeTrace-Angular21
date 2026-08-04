@@ -2,14 +2,14 @@ import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy } 
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { ALL_SYSTEM_PERMISSIONS, PERMISSION_ACTIONS_AR, PERMISSION_GROUPS_AR } from '../../../../core/constants/permission.dictionary';
+import { ALL_SYSTEM_PERMISSIONS, PERMISSION_ACTIONS_AR, PERMISSION_GROUPS_AR } from '../../../../core/constants/dictionaries/permission.dictionary';
 import { environment } from '../../../../../environments/environment';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { UserService } from '../../services/user.service';
 import { RoleService } from '../../services/role.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { UserPermissionDto } from '../../models/User/responses/UserPermissionDto';
-import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
+import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
 import { GetUserByIdDto } from '../../models/User/responses/GetUserByIdDto';
 import { RoleDto } from '../../models/Role/responses/RoleDto';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';

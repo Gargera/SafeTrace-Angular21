@@ -8,7 +8,7 @@ import { UrgentCaseService } from '../../services/urgent-case.service';
 import { UrgentCaseUpdateRequest } from '../../models/request/UrgentCaseUpdateRequest';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
-import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
+import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/dictionaries/relation.type.dictionary';
 import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';

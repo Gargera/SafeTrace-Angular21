@@ -1,4 +1,4 @@
-import { Gender } from '../../shared/enums/gender';
+import { Gender } from '../../../shared/enums/gender';
 
 export const GENDER_TRANSLATIONS_AR: Record<Gender, string> = {
   [Gender.Male]: 'ذكر',
