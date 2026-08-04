@@ -137,18 +137,29 @@
           <app-form-field
             label="من تاريخ"
             type="date"
+            [max] = "today"
             [ngModel]="fromDate()"
             (ngModelChange)="fromDate.set($event)">
           </app-form-field>
+          @if (fromDateError()) {
+          <p class="mt-1 text-xs text-error">
+            {{ fromDateError() }}
+          </p>
+        }
 
           <!-- التاريخ إلى -->
           <app-form-field
             label="إلى تاريخ"
             type="date"
+            [max] = "today"
             [ngModel]="toDate()"
             (ngModelChange)="toDate.set($event)">
           </app-form-field>
-
+          @if (toDateError()) {
+          <p class="mt-1 text-xs text-error">
+            {{ toDateError() }}
+          </p>
+        }
           <!-- حذف من المرسل -->
           <app-form-field
             label="محذوفة من المرسل"
@@ -185,7 +196,9 @@
             <app-button variant="text" (onClick)="resetFilters()" extraClass="px-3 py-1.5 text-sm cursor-pointer">
               مسح الكل
             </app-button>
-            <app-button variant="primary" (onClick)="applyFilters()" extraClass="px-4 py-1.5 rounded-lg text-sm font-bold cursor-pointer">
+            <app-button variant="primary" 
+             [disabled]="hasDateErrors()"
+             (onClick)="applyFilters()" extraClass="px-4 py-1.5 rounded-lg text-sm font-bold cursor-pointer">
               تطبيق
             </app-button>
           </div>
