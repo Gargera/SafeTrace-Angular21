@@ -49,9 +49,9 @@
       <form [formGroup]="createRoleForm" (ngSubmit)="onCreateRole()" class="flex flex-col gap-2">
         <div class="flex gap-2">
           <div class="flex-1">
-            <app-form-field formControlName="roleName" placeholder="e.g. Volunteer"></app-form-field>
+            <app-form-field formControlName="roleName" placeholder="مثال: متطوع"></app-form-field>
           </div>
-          <app-button type="submit" [disabled]="createRoleForm.invalid || isCreating()" [loading]="isCreating()" variant="primary" extraClass="px-6 rounded-xl font-bold shrink-0">
+          <app-button type="submit" [disabled]="isCreating()" [loading]="isCreating()" variant="primary" extraClass="px-6 rounded-xl font-bold shrink-0">
             إنشاء
           </app-button>
         </div>

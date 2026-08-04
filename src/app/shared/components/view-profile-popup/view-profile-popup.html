@@ -4,7 +4,7 @@
     (click)="onBackdropClick($event)"
   >
     <div
-      class="relative w-full max-w-[340px] rounded-[1.25rem] border border-outline-variant/30 bg-surface-container-lowest p-6 pt-7 shadow-2xl"
+      class="relative w-full max-w-85 rounded-[1.25rem] border border-outline-variant/30 bg-surface-container-lowest p-6 pt-7 shadow-2xl"
       role="dialog"
       aria-modal="true"
       dir="rtl"
@@ -14,7 +14,7 @@
         type="button"
         (click)="close()"
         aria-label="إغلاق"
-        class="absolute top-3 left-3 grid h-8 w-8 place-items-center rounded-[9999px] bg-surface-container text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary focus-visible:outline-offset-2"
+        class="absolute top-3 left-3 grid h-8 w-8 place-items-center rounded-[9999px] bg-surface-container text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface focus-visible:outline-2 focus-visible:outline-secondary focus-visible:outline-offset-2"
       >
         <span class="material-symbols-outlined material-icon-sm">close</span>
       </button>
@@ -36,7 +36,7 @@
           <button
             type="button"
             (click)="retry()"
-            class="rounded-[9999px] bg-primary px-5 py-2 text-[13.5px] font-semibold text-on-primary transition-[filter,transform] hover:brightness-110 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary focus-visible:outline-offset-2"
+            class="rounded-[9999px] bg-primary px-5 py-2 text-[13.5px] font-semibold text-on-primary transition-[filter,transform] hover:brightness-110 active:scale-95 focus-visible:outline-2 focus-visible:outline-secondary focus-visible:outline-offset-2"
           >
             إعادة المحاولة
           </button>
