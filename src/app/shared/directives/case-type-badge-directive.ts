@@ -1,6 +1,6 @@
 import { Directive, ElementRef, effect, input, Renderer2 } from '@angular/core';
 import { CaseType } from '../enums/case-type';
-import { getCaseTypeTranslationAr } from '../../core/constants/case.type.dictionary';
+import { getCaseTypeTranslationAr } from '../../core/constants/dictionaries/case.type.dictionary';
 
 @Directive({
   selector: '[appCaseTypeBadgeDirective]',

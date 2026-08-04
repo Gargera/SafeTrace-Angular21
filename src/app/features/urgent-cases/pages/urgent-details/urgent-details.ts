@@ -6,7 +6,7 @@ import { catchError, EMPTY, switchMap } from 'rxjs';
 
 import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/services/auth.service';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 
 import { GenderBadgeDirective } from '../../../../shared/directives/gender-badge-directive';
 import { CaseStatusBadgeDirective } from '../../../../shared/directives/case-status-badge-directive';
@@ -33,7 +33,7 @@ import { extractErrorMessage } from '../../../../shared/helper/case-error.helper
   standalone: true,
   imports: [
     CommonModule,
-    CaseHeaderComponent,
+    HeaderComponent,
     GenderBadgeDirective,
     CaseStatusBadgeDirective,
     CaseTypeBadgeDirective,
@@ -314,6 +314,9 @@ export class UrgentDetails implements OnInit {
       });
   }
 
+  startChat(id: number): void {
+    this.router.navigate(['/chat/start', id]);
+  }
   getAgeCategoryEnum(): AgeCategories {
     switch (this.caseDetails()?.ageCategory?.name) {
       case 'Toddler':

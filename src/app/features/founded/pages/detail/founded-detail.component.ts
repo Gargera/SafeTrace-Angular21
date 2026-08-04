@@ -7,14 +7,14 @@ import { FoundedService } from '../../services/founded.service';
 import { PostDetailsResponseDTO } from '../../models/responses/post-details-response-dto';
 import { environment } from '../../../../../environments/environment';
 import { SnackbarService } from '../../../../shared/services/toast.service';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 
 @Component({
   selector: 'app-founded-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, CaseHeaderComponent, ButtonComponent],
+  imports: [CommonModule, RouterModule, HeaderComponent, ButtonComponent],
   templateUrl: './founded-detail.component.html',
 })
 export class FoundedDetailComponent implements OnInit {

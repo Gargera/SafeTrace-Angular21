@@ -7,7 +7,7 @@ export const ADMIN_ROUTES: Routes = [
     path: '',
     canActivate: [permissionGuard],
     data: { requiredPermission: Permissions.Cases.GetAll },
-    loadComponent: () => import('./pages/overview/overview').then((c) => c.Overview),
+    loadComponent: () => import('../../core/layouts/admin-layout/admin-layout').then((c) => c.AdminLayoutComponent),
     children: [
       {
         path: '',

@@ -6,7 +6,7 @@
 <!-- Show header and filters only if there are any cases in the system -->
 @if (hasAnyCases()) {
 <!-- Header -->
-<app-case-header title="حالاتي" subtitle="إدارة ومتابعة جميع الحالات التي قمت بإنشائها" [badge]="totalCases() + ' حالة'"
+<app-header title="حالاتي" subtitle="إدارة ومتابعة جميع الحالات التي قمت بإنشائها" [badge]="totalCases() + ' حالة'"
   [showBackButton]="false" [showPrimary]="false" [showSecondary]="false" />
 
 <!-- Filters Card (Fixed Top) -->

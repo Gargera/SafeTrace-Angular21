@@ -1,7 +1,7 @@
 <div class="space-y-sm">
   <div class="flex items-center justify-between">
     <label id="id-photo-label" class="text-label-md text-on-surface font-semibold">
-      صورة الهوية <span class="text-error" aria-hidden="true">*</span>
+      صور الهوية <span class="text-error" aria-hidden="true">*</span>
     </label>
 
     @if (!isEditingIdImage()) {
@@ -41,93 +41,128 @@
     }
   </div>
 
-  <div class="flex items-center gap-md">
-    <div class="relative w-24 h-24 shrink-0">
-      @if (idImagePreview()) {
-        <div class="w-24 h-24 rounded-lg overflow-hidden border-2 border-secondary shadow-sm">
-          <img
-            [src]="idImagePreview()!"
-            alt="معاينة صورة الهوية"
-            class="w-full h-full object-cover"
-          />
+  <div class="flex flex-col md:flex-row items-center gap-md">
+    <!-- الوجه الأمامي -->
+    <div class="flex flex-col gap-2 w-full">
+      <div class="flex-col items-center gap-md">
+        <div class="relative w-24 h-24 shrink-0">
+          @if (idImageFrontPreview()) {
+            <div class="w-24 h-24 rounded-lg overflow-hidden border-2 border-secondary shadow-sm">
+              <img
+                [src]="idImageFrontPreview()!"
+                alt="الوجه الأمامي للهوية"
+                class="w-full h-full object-cover"
+              />
+            </div>
+          } @else {
+            <div
+              class="w-24 h-24 rounded-lg border-2 border-dashed border-outline-variant flex items-center justify-center text-on-surface-variant"
+              aria-hidden="true"
+            >
+              <span class="material-symbols-outlined text-[32px]">badge</span>
+            </div>
+          }
         </div>
-      } @else {
-        <div
-          class="w-24 h-24 rounded-lg border-2 border-dashed border-outline-variant flex items-center justify-center text-on-surface-variant"
-          aria-hidden="true"
-        >
-          <span class="material-symbols-outlined text-[32px]">badge</span>
-        </div>
-      }
 
-      @if (isSavingIdImage()) {
-        <div
-          class="absolute inset-0 rounded-lg bg-black/40 flex items-center justify-center animate-fade-in"
-          role="status"
-          aria-label="جاري المعالجة"
-        >
-          <span
-            class="material-symbols-outlined text-white text-[24px] animate-spin"
-            aria-hidden="true"
-            >progress_activity</span
-          >
-        </div>
-      }
+        @if (isEditingIdImage()) {
+          <div class="flex-1 flex flex-col gap-xs">
+            <label
+              class="mt-2.5 flex items-center gap-sm p-md bg-surface-container-low border border-dashed border-outline-variant rounded-lg hover:border-secondary hover:bg-surface-container focus-within:ring-2 focus-within:ring-secondary transition-all group cursor-pointer"
+            >
+              <span
+                class="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform"
+                aria-hidden="true"
+              >
+                add_photo_alternate
+              </span>
+              <span class="text-label-sm text-on-surface-variant">
+                {{ idImageFrontPreview() ? 'تغيير الوجه الأمامي' : ' الوجه الأمامي' }}
+              </span>
+
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                class="hidden"
+                [disabled]="isSavingIdImage()"
+                (change)="onIdImageFrontSelected($event)"
+              />
+            </label>
+          </div>
+        }
+      </div>
     </div>
 
-    @if (isEditingIdImage()) {
-      <div class="flex-1 flex flex-col gap-xs">
-        @if (!isVerified) {
-          <span class="text-[12px] font-bold text-on-surface-variant">
-            -يفضل رفع صورة واحده تحتوي على وجه وظهر الهوية.
-          </span>
+    <!-- الوجه الخلفي -->
+    <div class="flex flex-col gap-2 w-full">
+      <div class="flex-col items-center gap-md">
+        <div class="relative w-24 h-24 shrink-0">
+          @if (idImageBackPreview()) {
+            <div class="w-24 h-24 rounded-lg overflow-hidden border-2 border-secondary shadow-sm">
+              <img
+                [src]="idImageBackPreview()!"
+                alt="الوجه الخلفي للهوية"
+                class="w-full h-full object-cover"
+              />
+            </div>
+          } @else {
+            <div
+              class="w-24 h-24 rounded-lg border-2 border-dashed border-outline-variant flex items-center justify-center text-on-surface-variant"
+              aria-hidden="true"
+            >
+              <span class="material-symbols-outlined text-[32px]">credit_card</span>
+            </div>
+          }
+        </div>
 
-          <span class="text-[12px] font-bold text-on-surface-variant">
-            -او الوجه فقط على الاقل.
-          </span>
-        }
-        <label
-          aria-labelledby="id-photo-label"
-          class="flex items-center gap-sm p-md bg-surface-container-low border border-dashed border-outline-variant rounded-lg hover:border-secondary hover:bg-surface-container focus-within:ring-2 focus-within:ring-secondary transition-all group cursor-pointer"
-        >
-          <span
-            class="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform"
-            aria-hidden="true"
-          >
-            add_photo_alternate
-          </span>
-          <span class="text-label-sm text-on-surface-variant">
-            {{ (idImagePreview() ? 'تغيير الصورة' : 'اختر صورة') + ' حتى 5MB' }}
-          </span>
+        @if (isEditingIdImage()) {
+          <div class="flex-1 flex flex-col gap-xs">
+            <label
+              class="mt-2.5 flex items-center gap-sm p-md bg-surface-container-low border border-dashed border-outline-variant rounded-lg hover:border-secondary hover:bg-surface-container focus-within:ring-2 focus-within:ring-secondary transition-all group cursor-pointer"
+            >
+              <span
+                class="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform"
+                aria-hidden="true"
+              >
+                add_photo_alternate
+              </span>
+              <span class="text-label-sm text-on-surface-variant">
+                {{ idImageBackPreview() ? 'تغيير الوجه الخلفي' : ' الوجه الخلفي' }}
+              </span>
 
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            class="hidden"
-            [disabled]="isSavingIdImage()"
-            (change)="onIdImageSelected($event)"
-          />
-        </label>
-      </div>
-    } @else {
-      <div class="flex-1 flex flex-col gap-xs justify-center">
-        @if (isVerified) {
-          <span class="text-label-sm font-semibold text-emerald-600 flex items-center gap-1">
-            <span class="material-symbols-outlined text-[18px]">verified</span>
-            تم توثيق الهوية بنجاح
-          </span>
-        } @else if (isPending) {
-          <span class="text-label-sm font-semibold text-amber-600 flex items-center gap-1">
-            <span class="material-symbols-outlined text-[18px]">hourglass_empty</span>
-            صورة الهوية قيد المراجعة
-          </span>
-        } @else if (!idImagePreview()) {
-          <span class="text-label-sm text-on-surface-variant flex items-center gap-1">
-            <span class="material-symbols-outlined text-[18px]">info</span>
-            لم يتم رفع صورة الهوية بعد
-          </span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                class="hidden"
+                [disabled]="isSavingIdImage()"
+                (change)="onIdImageBackSelected($event)"
+              />
+            </label>
+          </div>
         }
       </div>
-    }
+    </div>
   </div>
+  @if (isEditingIdImage()) {
+    <p class="block"><b> ملحوظة: </b>يجب الا يتجاوز حجم الصورة 5 ميغابايت</p>
+  }
+  @if (!isEditingIdImage()) {
+    <div class="flex-1 flex flex-col gap-xs justify-center mt-2">
+      @if (isVerified) {
+        <span class="text-label-sm font-semibold text-emerald-600 flex items-center gap-1">
+          <span class="material-symbols-outlined text-[18px]">verified</span>
+          تم توثيق الهوية بنجاح
+        </span>
+      } @else if (isPending) {
+        <span class="text-label-sm font-semibold text-amber-600 flex items-center gap-1">
+          <span class="material-symbols-outlined text-[18px]">hourglass_empty</span>
+          هوية المستخدم قيد المراجعة
+        </span>
+      } @else if (!idImageFrontPreview() || !idImageBackPreview()) {
+        <span class="text-label-sm text-on-surface-variant flex items-center gap-1">
+          <span class="material-symbols-outlined text-[18px]">info</span>
+          قم برفع صورتي الهوية (الأمامي والخلفي)
+        </span>
+      }
+    </div>
+  }
 </div>

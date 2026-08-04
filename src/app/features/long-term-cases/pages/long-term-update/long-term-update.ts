@@ -11,7 +11,7 @@ import { LongTermCaseService } from '../../services/long-term-case.service';
 import { LongTermCaseUpdateRequest } from '../../models/request/LongTermCaseUpdateRequest';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
-import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
+import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/dictionaries/relation.type.dictionary';
 import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { SnackbarService } from '../../../../shared/services/toast.service';
@@ -19,7 +19,7 @@ import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 
 // Shared validators
@@ -42,7 +42,7 @@ type Step = 1 | 2 | 3;
     ButtonComponent,
     FormField,
     CardComponent,
-    CaseHeaderComponent,
+    HeaderComponent,
     ConfirmationModalComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

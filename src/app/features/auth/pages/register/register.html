@@ -1,164 +1,164 @@
-<div class="min-h-screen bg-surface flex flex-col justify-center items-center px-margin-mobile py-12">
+<div class="text-center mb-8 md:hidden">
+  <div class="inline-flex items-center justify-center text-on-primary w-12 h-12 rounded-xl mb-4">
+    <img src="images/logo.svg" alt="منصة لقاء" class="h-10 w-auto" />
+  </div>
+</div>
+
+<div class="text-center mb-8">
+  <h1 class="text-3xl font-headline-lg font-bold text-primary mb-2">إنشاء حساب جديد</h1>
+  <p class="text-on-surface-variant text-body-md max-w-87.5 mx-auto">انضم إلى مجتمع لقاء للمساهمة في عمليات البحث والإنقاذ.</p>
+</div>
+
+<div class="bg-surface-container-lowest/95 backdrop-blur-sm border border-outline-variant/40 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full p-6 md:p-10 animate-fade-in">
   
-  <div class="absolute top-6 right-6 md:top-8 md:right-8">
-    <app-button routerLink="/home" variant="secondary">
-      <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
-      العودة للرئيسية
-    </app-button>
-  </div>
+  @if (apiErrorMessage()) {
+    <div class="bg-error-container text-on-error-container p-4 rounded-xl mb-6 flex justify-between items-start gap-3 border border-error/20">
+      <span class="font-body-sm font-medium">{{ apiErrorMessage() }}</span>
+      <button type="button" (click)="apiErrorMessage.set('')" class="text-on-error-container hover:text-error transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+  }
 
-  <div class="text-center mb-8">
-    <a routerLink="/home" class="inline-flex items-center justify-center text-on-primary w-12 h-12 rounded-xl mb-4 hover:scale-105 transition-transform shadow-md">
-      <img src="images/logo.svg" alt="منصة لقاء" class="h-10 w-auto" />
-    </a>
-    <h1 class="text-3xl font-headline-lg font-bold text-primary mb-2">إنشاء حساب جديد</h1>
-    <p class="text-on-surface-variant text-body-md max-w-87.5 mx-auto">انضم إلى مجتمع لقاء للمساهمة في عمليات البحث والإنقاذ.</p>
-  </div>
-
-  <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-sm w-full max-w-112.5 p-6 md:p-8">
+  <form [formGroup]="registerForm" autocomplete="on" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
     
-    @if (apiErrorMessage()) {
-      <div class="bg-error-container text-on-error-container p-4 rounded-xl mb-6 flex justify-between items-start gap-3 border border-error/20">
-        <span class="font-body-sm font-medium">{{ apiErrorMessage() }}</span>
-        <button type="button" (click)="apiErrorMessage.set('')" class="text-on-error-container hover:text-error transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-      </div>
-    }
-
-    <form [formGroup]="registerForm" autocomplete="on" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
-      
-      <div class="grid grid-cols-2 gap-4">
-        <div class="flex flex-col gap-1">
-          <app-form-field 
-            formControlName="fName" 
-            label="الاسم الأول *" 
-            placeholder="أحمد"
-            [class.border-error]="registerForm.get('fName')?.touched && registerForm.get('fName')?.invalid">
-          </app-form-field>
-          @if (registerForm.get('fName')?.touched && registerForm.get('fName')?.invalid) {
-            <span class="text-error text-xs font-medium">
-              @if (registerForm.get('fName')?.errors?.['serverError']) { {{ registerForm.get('fName')?.errors?.['serverError'] }} } @else if (registerForm.get('fName')?.errors?.['pattern']) { الاسم الأول يجب أن يكون كلمة واحدة فقط من الحروف العربية أو الإنجليزية. } @else if (registerForm.get('fName')?.errors?.['minlength']) { الاسم الأول لا يجب أن يقل عن حرفين. } @else { الاسم الأول مطلوب ويجب ألا يزيد عن 100 حرف. }
-            </span>
-          }
-        </div>
-
-        <div class="flex flex-col gap-1">
-          <app-form-field 
-            formControlName="lName" 
-            label="اسم العائلة *" 
-            placeholder="محمد"
-            [class.border-error]="registerForm.get('lName')?.touched && registerForm.get('lName')?.invalid">
-          </app-form-field>
-          @if (registerForm.get('lName')?.touched && registerForm.get('lName')?.invalid) {
-            <span class="text-error text-xs font-medium">
-              @if (registerForm.get('lName')?.errors?.['serverError']) { {{ registerForm.get('lName')?.errors?.['serverError'] }} } @else if (registerForm.get('lName')?.errors?.['pattern']) { اسم العائلة يجب أن يحتوي على حروف عربية أو إنجليزية ومسافة واحدة بين الكلمات. } @else if (registerForm.get('lName')?.errors?.['minlength']) { اسم العائلة لا يجب أن يقل عن حرفين. } @else { اسم العائلة مطلوب ويجب ألا يزيد عن 100 حرف.  }
-            </span>
-          }
-        </div>
-      </div>
-
+    <div class="grid grid-cols-2 gap-4">
       <div class="flex flex-col gap-1">
         <app-form-field 
-          formControlName="email" 
-          type="email"
-          label="البريد الإلكتروني *" 
-          placeholder="example@email.com"
-          [class.border-error]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid">
+          formControlName="fName" 
+          label="الاسم الأول *" 
+          placeholder="أحمد"
+          [prefix]="true"
+          [class.border-error]="registerForm.get('fName')?.touched && registerForm.get('fName')?.invalid">
+          <span prefix class="material-symbols-outlined text-[20px]">person</span>
         </app-form-field>
-        @if (registerForm.get('email')?.touched && registerForm.get('email')?.invalid) {
+        @if (registerForm.get('fName')?.touched && registerForm.get('fName')?.invalid) {
           <span class="text-error text-xs font-medium">
-            @if (registerForm.get('email')?.errors?.['serverError']) { {{ registerForm.get('email')?.errors?.['serverError'] }} } @else { صيغة البريد الإلكتروني غير صحيحة.}
+            @if (registerForm.get('fName')?.errors?.['serverError']) { {{ registerForm.get('fName')?.errors?.['serverError'] }} } @else if (registerForm.get('fName')?.errors?.['pattern']) { الاسم الأول يجب أن يكون كلمة واحدة باللغة العربية فقط. } @else if (registerForm.get('fName')?.errors?.['minlength']) { الاسم الأول لا يجب أن يقل عن حرفين. } @else { الاسم الأول مطلوب ويجب ألا يزيد عن 100 حرف. }
           </span>
         }
       </div>
 
       <div class="flex flex-col gap-1">
         <app-form-field 
-          formControlName="phoneNumber" 
-          type="tel"
-          label="رقم الهاتف (اختياري)" 
-          placeholder="01234567890"
-          [class.border-error]="registerForm.get('phoneNumber')?.touched && registerForm.get('phoneNumber')?.invalid">
+          formControlName="lName" 
+          label="اسم العائلة *" 
+          placeholder="محمد"
+          [prefix]="true"
+          [class.border-error]="registerForm.get('lName')?.touched && registerForm.get('lName')?.invalid">
+          <span prefix class="material-symbols-outlined text-[20px]">person</span>
         </app-form-field>
-        @if (registerForm.get('phoneNumber')?.touched && registerForm.get('phoneNumber')?.invalid) {
+        @if (registerForm.get('lName')?.touched && registerForm.get('lName')?.invalid) {
           <span class="text-error text-xs font-medium">
-            @if (registerForm.get('phoneNumber')?.errors?.['serverError']) { {{ registerForm.get('phoneNumber')?.errors?.['serverError'] }} } @else { يرجى إدخال رقم هاتف مصري صحيح.}
+            @if (registerForm.get('lName')?.errors?.['serverError']) { {{ registerForm.get('lName')?.errors?.['serverError'] }} } @else if (registerForm.get('lName')?.errors?.['pattern']) { اسم العائلة يجب أن يحتوي على حروف عربية فقط ومسافة واحدة بين الكلمات. } @else if (registerForm.get('lName')?.errors?.['minlength']) { اسم العائلة لا يجب أن يقل عن حرفين. } @else { اسم العائلة مطلوب ويجب ألا يزيد عن 100 حرف.  }
           </span>
         }
       </div>
-
-      <div class="flex flex-col gap-1">
-        <app-form-field 
-          formControlName="password" 
-          [type]="isPasswordVisible() ? 'text' : 'password'"
-          label="كلمة المرور *" 
-          placeholder="••••••••"
-          [suffix]="true"
-          [class.border-error]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid">
-          
-          <button type="button" suffix (click)="togglePasswordVisibility()" class="px-4 flex items-center text-on-surface-variant hover:text-secondary transition-colors focus:outline-none pointer-events-auto">
-            @if (isPasswordVisible()) {
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-              </svg>
-            } @else {
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-              </svg>
-            }
-          </button>
-        </app-form-field>
-
-        @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
-          <span class="text-error text-xs font-medium">
-            @if (registerForm.get('password')?.errors?.['serverError']) { {{ registerForm.get('password')?.errors?.['serverError'] }} } @else if (registerForm.get('password')?.errors?.['required']) { كلمة المرور مطلوبة. } @else { يجب أن تتكون كلمة المرور من 8 أحرف على الأقل ولا تزيد عن 50، وأن تتضمن حرفًا كبيرًا، وحرفًا صغيرًا، ورقمًا، ورمزًا خاصًا، وبدون مسافات. }
-          </span>
-        }
-      </div>
-
-      <div class="flex flex-col gap-1">
-        <app-form-field 
-          formControlName="confirmPassword" 
-          [type]="isConfirmPasswordVisible() ? 'text' : 'password'"
-          label="تأكيد كلمة المرور *" 
-          placeholder="••••••••"
-          [suffix]="true"
-          [class.border-error]="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.invalid">
-          
-          <button type="button" suffix (click)="toggleConfirmPasswordVisibility()" class="px-4 flex items-center text-on-surface-variant hover:text-secondary transition-colors focus:outline-none pointer-events-auto">
-            @if (isConfirmPasswordVisible()) {
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-              </svg>
-            } @else {
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-              </svg>
-            }
-          </button>
-        </app-form-field>
-
-        @if (registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.invalid) {
-          <span class="text-error text-xs font-medium">
-            @if (registerForm.get('confirmPassword')?.errors?.['mustMatch']) { كلمتا المرور غير متطابقتين. } @else { هذا الحقل مطلوب. }
-          </span>
-        }
-      </div>
-
-      <app-button type="submit" [disabled]="isLoading()" variant="primary" [loading]="isLoading()" extraClass="w-full justify-center mt-4 font-label-lg">
-        @if (isLoading()) { جاري الإنشاء... } @else { المتابعة }
-      </app-button>
-
-    </form>
-
-    <div class="text-center mt-6 pt-4 border-t border-outline-variant">
-      <p class="text-on-surface-variant text-body-sm">
-        لديك حساب بالفعل؟ <a routerLink="/auth" class="text-secondary font-semibold hover:underline">سجل الدخول الآن</a>
-      </p>
     </div>
 
+    <div class="flex flex-col gap-1">
+      <app-form-field 
+        formControlName="email" 
+        type="email"
+        label="البريد الإلكتروني *" 
+        placeholder="example@email.com"
+        [prefix]="true"
+        [class.border-error]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid">
+        <span prefix class="material-symbols-outlined text-[20px]">mail</span>
+      </app-form-field>
+      @if (registerForm.get('email')?.touched && registerForm.get('email')?.invalid) {
+        <span class="text-error text-xs font-medium">
+          @if (registerForm.get('email')?.errors?.['serverError']) { {{ registerForm.get('email')?.errors?.['serverError'] }} } @else { صيغة البريد الإلكتروني غير صحيحة.}
+        </span>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <app-form-field 
+        formControlName="phoneNumber" 
+        type="tel"
+        label="رقم الهاتف (اختياري)" 
+        placeholder="01234567890"
+        [prefix]="true"
+        [class.border-error]="registerForm.get('phoneNumber')?.touched && registerForm.get('phoneNumber')?.invalid">
+        <span prefix class="material-symbols-outlined text-[20px]">call</span>
+      </app-form-field>
+      @if (registerForm.get('phoneNumber')?.touched && registerForm.get('phoneNumber')?.invalid) {
+        <span class="text-error text-xs font-medium">
+          @if (registerForm.get('phoneNumber')?.errors?.['serverError']) { {{ registerForm.get('phoneNumber')?.errors?.['serverError'] }} } @else { يرجى إدخال رقم هاتف مصري صحيح.}
+        </span>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <app-form-field 
+        formControlName="password" 
+        [type]="isPasswordVisible() ? 'text' : 'password'"
+        label="كلمة المرور *" 
+        placeholder="••••••••"
+        [prefix]="true"
+        [suffix]="true"
+        [class.border-error]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid">
+        
+        <span prefix class="material-symbols-outlined text-[20px]">lock</span>
+
+        <button type="button" suffix (click)="togglePasswordVisibility()" class="px-4 flex items-center text-on-surface-variant hover:text-secondary transition-all duration-300 hover:scale-110 focus:outline-none pointer-events-auto">
+          @if (isPasswordVisible()) {
+            <span class="material-symbols-outlined text-[20px]">visibility_off</span>
+          } @else {
+            <span class="material-symbols-outlined text-[20px]">visibility</span>
+          }
+        </button>
+      </app-form-field>
+
+      @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
+        <span class="text-error text-xs font-medium">
+          @if (registerForm.get('password')?.errors?.['serverError']) { {{ registerForm.get('password')?.errors?.['serverError'] }} } @else if (registerForm.get('password')?.errors?.['required']) { كلمة المرور مطلوبة. } @else { يجب أن تتكون كلمة المرور من 8 أحرف على الأقل ولا تزيد عن 50، وأن تتضمن حرفًا كبيرًا، وحرفًا صغيرًا، ورقمًا، ورمزًا خاصًا، وبدون مسافات. }
+        </span>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <app-form-field 
+        formControlName="confirmPassword" 
+        [type]="isConfirmPasswordVisible() ? 'text' : 'password'"
+        label="تأكيد كلمة المرور *" 
+        placeholder="••••••••"
+        [prefix]="true"
+        [suffix]="true"
+        [class.border-error]="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.invalid">
+        
+        <span prefix class="material-symbols-outlined text-[20px]">lock</span>
+
+        <button type="button" suffix (click)="toggleConfirmPasswordVisibility()" class="px-4 flex items-center text-on-surface-variant hover:text-secondary transition-all duration-300 hover:scale-110 focus:outline-none pointer-events-auto">
+          @if (isConfirmPasswordVisible()) {
+            <span class="material-symbols-outlined text-[20px]">visibility_off</span>
+          } @else {
+            <span class="material-symbols-outlined text-[20px]">visibility</span>
+          }
+        </button>
+      </app-form-field>
+
+      @if (registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.invalid) {
+        <span class="text-error text-xs font-medium">
+          @if (registerForm.get('confirmPassword')?.errors?.['mustMatch']) { كلمتا المرور غير متطابقتين. } @else { هذا الحقل مطلوب. }
+        </span>
+      }
+    </div>
+
+    <app-button type="submit" [disabled]="isLoading()" variant="primary" [loading]="isLoading()" extraClass="w-full justify-center mt-4 font-label-lg group relative overflow-hidden">
+      <span class="flex items-center gap-2">
+        المتابعة
+        <span class="material-symbols-outlined transition-transform duration-300 group-hover:-translate-x-1">arrow_back</span>
+      </span>
+    </app-button>
+
+  </form>
+
+  <div class="text-center mt-6 pt-4 border-t border-outline-variant">
+    <p class="text-on-surface-variant text-body-sm">
+      لديك حساب بالفعل؟ <a routerLink="/auth" class="text-secondary font-semibold hover:underline">سجل الدخول الآن</a>
+    </p>
   </div>
+
 </div>

@@ -12,7 +12,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import {CaseTypeBadgeDirective} from '../../../../shared/directives/case-type-badge-directive';
 import {TruncatePipe} from '../../../../shared/pipes/truncate-pipe';
 import { SnackbarService } from '../../../../shared/services/toast.service';
@@ -33,7 +33,7 @@ const PAGE_SIZE = 10;
     FormField,
     ButtonComponent,
     ConfirmationModalComponent,
-    CaseHeaderComponent,
+    HeaderComponent,
     CaseTypeBadgeDirective,
     TruncatePipe,
     HasPermissionDirective,

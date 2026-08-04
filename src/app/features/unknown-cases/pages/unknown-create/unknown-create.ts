@@ -29,7 +29,7 @@ type Step = 1 | 2 | 3;
 
 import { CommonModule } from '@angular/common';
 import { ButtonComponent } from '../../../../shared/components/button/button';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 
 @Component({
   selector: 'app-unknown-create',
@@ -43,7 +43,7 @@ import { CaseHeaderComponent } from '../../../../shared/components/cases-compone
     CardComponent,
     FormField,
     ButtonComponent,
-    CaseHeaderComponent,
+    HeaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./unknown-create.css'],

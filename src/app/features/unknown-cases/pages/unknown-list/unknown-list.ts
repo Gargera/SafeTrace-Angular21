@@ -9,7 +9,7 @@ import { CasesFilterRequest } from '../../../../core/models/cases.model';
 import { UnknownCaseListItemResponse } from '../../models/response/UnknownCaseListItemResponse';
 import { CaseCreationFlowService } from '../../../../core/services/case-creation-flow.service';
 
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { PaginationComponent } from '../../../../shared/components/cases-components/case-pagination/case-pagination.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -25,7 +25,7 @@ import { CaseType } from '../../../../shared/enums/case-type';
   standalone: true,
   imports: [
     FormsModule,
-    CaseHeaderComponent,
+    HeaderComponent,
     CaseFiltersComponent,
     PaginationComponent,
     CaseSkeletonGridComponent,
