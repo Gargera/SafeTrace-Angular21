@@ -71,14 +71,19 @@ export class ChatWindow implements OnInit {
     }
 
     this.isLoading.set(true);
-    this.chatService.getChatDetails(this.chatId).subscribe({
+
+    const chatDetailsRequest = this.isAdmin
+      ? this.chatService.getChatDetailsForAdmin(this.chatId)
+      : this.chatService.getChatDetails(this.chatId);
+
+    chatDetailsRequest.subscribe({
       next: (res) => {
         this.chat.set(res.data);
         this.checkLoadingStatus();
       },
       error: (err) => {
         this.snackbarService.error(
-         err.error?.message ?? 'تعذر تحميل بيانات المحادثة'
+         err.error?.detail ?? 'تعذر تحميل بيانات المحادثة'
         );
         this.isLoading.set(false);
       },
@@ -251,8 +256,10 @@ private handleMessageDeletedForEveryone = (
         });
       },
       error: (err) => {
+      console.log(err);
+
       this.snackbarService.error(
-      err.error?.message ?? 'تعذر تحميل الرسائل'
+      err.error?.detail ?? err.error?.title ?? 'تعذر تحميل الرسائل'
       );
       this.isLoading.set(false);
     }
@@ -332,7 +339,10 @@ private handleMessageDeletedForEveryone = (
         this.sending.set(false);
         //this.loadMessages();
       },
-        error: () => {this.snackbarService.error('تعذر إرسال الرسالة، تحقق من الاتصال وحاول مرة أخرى');
+        error: (err) => {
+
+          this.snackbarService.error(
+            err.error?.detail ?? err.error?.title ?? 'تعذر إرسال الرسالة، تحقق من الاتصال وحاول مرة أخرى');
           this.sending.set(false);
         }
     });
@@ -369,9 +379,9 @@ private handleMessageDeletedForEveryone = (
     this.snackbarService.success(res.message);
     },
 
-    error: () => {
+    error: (err) => {
       this.snackbarService.error(
-        'تعذر حذف الرسالة، حاول مرة أخرى'
+        err.error?.detail ?? err.error?.title ?? 'تعذر حذف الرسالة، حاول مرة أخرى'
       );
     },
   });
