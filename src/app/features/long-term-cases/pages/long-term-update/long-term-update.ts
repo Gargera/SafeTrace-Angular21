@@ -19,7 +19,7 @@ import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 
 // Shared validators
@@ -42,7 +42,7 @@ type Step = 1 | 2 | 3;
     ButtonComponent,
     FormField,
     CardComponent,
-    CaseHeaderComponent,
+    HeaderComponent,
     ConfirmationModalComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

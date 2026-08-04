@@ -25,7 +25,7 @@ import { validEnum } from '../../../../shared/validators/enum.validator';
 import { ImageService } from '../../../../shared/services/image.service';
 
 import { CommonModule } from '@angular/common';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 
 import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
@@ -43,7 +43,7 @@ type Step = 1 | 2 | 3;
     ButtonComponent,
     FormField,
     CardComponent,
-    CaseHeaderComponent,
+    HeaderComponent,
     ConfirmationModalComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -26,7 +26,7 @@ import { ReportService } from '../../services/report.service';
 import { CaseTypeBadgeDirective } from '../../../../shared/directives/case-type-badge-directive';
 import { CaseStatusBadgeDirective } from '../../../../shared/directives/case-status-badge-directive';
 
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { DashboardService } from '../../services/dashboard.service';
 import { CasesStatisticsDto as DashboardStatistics } from '../../models/Dashboard/responses/CasesStatisticsDto';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
@@ -52,7 +52,7 @@ const FILTER_DEBOUNCE_MS = 400;
     ConfirmationModalComponent,
     CaseTypeBadgeDirective,
     CaseStatusBadgeDirective,
-    CaseHeaderComponent,
+    HeaderComponent,
     CaseFiltersComponent,
     HasPermissionDirective,
     PaginationComponent,

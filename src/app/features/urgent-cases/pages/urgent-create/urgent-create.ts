@@ -32,7 +32,7 @@ import { validEnum } from '../../../../shared/validators/enum.validator';
 import { ImageService } from '../../../../shared/services/image.service';
 
 import { CardComponent } from '../../../../shared/components/card/card';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 
 type Step = 1 | 2 | 3;
 
@@ -49,7 +49,7 @@ type Step = 1 | 2 | 3;
     FormField,
     ImageCropperComponent,
     CardComponent,
-    CaseHeaderComponent,
+    HeaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./urgent-create.css'],

@@ -1,18 +1,18 @@
 import { NgClass } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 
-import { ButtonComponent } from '../../button/button';
-import { CaseType } from '../../../enums/case-type';
-import { getCaseTypeTranslationAr } from '../../../../core/constants/dictionaries/case.type.dictionary';
+import { ButtonComponent } from '../button/button';
+import { CaseType } from '../../enums/case-type';
+import { getCaseTypeTranslationAr } from '../../../core/constants/dictionaries/case.type.dictionary';
 
 @Component({
-  selector: 'app-case-header',
+  selector: 'app-header',
   standalone: true,
   imports: [NgClass, ButtonComponent],
-  templateUrl: './case-header.component.html',
-  styleUrls: ['./case-header.component.css'],
+  templateUrl: './header.component.html',
+  styleUrls: ['./header.component.css'],
 })
-export class CaseHeaderComponent {
+export class HeaderComponent {
   // Header
   title = input('');
   subtitle = input('');

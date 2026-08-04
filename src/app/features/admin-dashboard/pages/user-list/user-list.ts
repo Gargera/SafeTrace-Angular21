@@ -20,7 +20,7 @@ import { CardComponent } from '../../../../shared/components/card/card';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { UserStatisticsDto } from '../../models/User/responses/UserStatisticsDto';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ReportService } from '../../services/report.service';
 
@@ -42,7 +42,7 @@ import { PaginationComponent } from '../../../../shared/components/pagination/pa
     CardComponent,
     EmptyStateComponent,
     LoadingSpinnerComponent,
-    CaseHeaderComponent,
+    HeaderComponent,
     HasPermissionDirective,
     PaginationComponent
   ],

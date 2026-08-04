@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-7xl space-y-6 px-4 py-6">
     <!-- Page Header -->
     <section class="space-y-3 pb-2">
-      <app-case-header
+      <app-header
         title="الحالات العاجلة"
         subtitle="إدارة وعرض جميع الحالات العاجلة"
         [badge]="!loading() ? totalItems() + ' حالة' : ''"
@@ -12,7 +12,7 @@
         primaryButtonClass="bg-error hover:opacity-90 text-on-error shadow-sm"
         (primaryAction)="navigateToCreate()"
       >
-      </app-case-header>
+      </app-header>
     </section>
 
     <!-- Filters Card -->

@@ -15,7 +15,7 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { Permissions } from '../../../../core/constants/Permissions';
@@ -37,7 +37,7 @@ import { ReportService } from '../../../admin-dashboard/services/report.service'
     CardComponent,
     EmptyStateComponent,
     LoadingSpinnerComponent,
-    CaseHeaderComponent,
+    HeaderComponent,
     ConfirmationModalComponent,
     HasPermissionDirective,
     PaginationComponent
