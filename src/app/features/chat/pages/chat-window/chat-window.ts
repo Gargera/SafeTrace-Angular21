@@ -63,8 +63,6 @@ export class ChatWindow implements OnInit {
       this.isAdmin = data['mode'] === 'admin';
     });
 
-    console.log("CURRENT USER ID:", this.currentUserId);
-
     this.chatId = Number(this.route.snapshot.paramMap.get('chatId'));
     if(!this.chatId) {
       return;
@@ -143,7 +141,6 @@ export class ChatWindow implements OnInit {
   };
 
   private handleMessagesRead = (event: MessagesReadEvent) : void => {
-      console.log("MESSAGES READ EVENT RECEIVED", event);
 
     if(event.chatId !== this.chatId || event.userId === this.currentUserId) {
       return;
@@ -153,10 +150,6 @@ export class ChatWindow implements OnInit {
 
       if(message.senderId === this.currentUserId)
       {
-        console.log(
-          "MARKING READ:",
-          message.id
-        );
         return {
           ...message,
           isRead:true
@@ -208,6 +201,8 @@ private handleMessageDeletedForEveryone = (
         content: this.isAdmin 
           ? msg.content 
           : "تم حذف هذه الرسالة",
+          filePath: undefined,
+          fileType: undefined,
         forEveryoneDeletedAt:event.deletedAt
       }
       :
@@ -222,13 +217,7 @@ private handleMessageDeletedForEveryone = (
       const incomingMessages = res.data!.map((m) =>
         this.normalizeMessage(m)
       );
-      console.log(
-      "API MESSAGES",
-      res.data?.map(m=>({
-        id:m.id,
-        isRead:m.isRead
-      }))
-      );
+    
       this.messages.update(current => {
 
         const currentMap = new Map(
@@ -256,8 +245,6 @@ private handleMessageDeletedForEveryone = (
         });
       },
       error: (err) => {
-      console.log(err);
-
       this.snackbarService.error(
       err.error?.detail ?? err.error?.title ?? 'تعذر تحميل الرسائل'
       );
@@ -326,7 +313,6 @@ private handleMessageDeletedForEveryone = (
     this.messageService.sendMessage({chatId: this.chatId, content: text || undefined, file: file || undefined})
     .subscribe({
       next: (res) => {
-      console.log("API MESSAGE in on send", res.data);
     
         const message = res.data;
 
