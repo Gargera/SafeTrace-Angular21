@@ -31,6 +31,9 @@ getMyChats(): Observable<ApiResponse<ChatSummaryDto[]>> {
 getChatDetails(chatId: number): Observable<ApiResponse<ChatDetailsDto>> {
     return this.http.get<ApiResponse<ChatDetailsDto>>(`${this.baseUrl}/${chatId}`);
   }
+getChatDetailsForAdmin(chatId: number): Observable<ApiResponse<ChatDetailsDto>> {
+    return this.http.get<ApiResponse<ChatDetailsDto>>(`${this.baseUrl}/admin/${chatId}`);
+  }
 deleteChatForMe(chatId: number): Observable<ApiResponse<ChatDetailsDto>> {
     return this.http.delete<ApiResponse<ChatDetailsDto>>(`${this.baseUrl}/${chatId}`);
   }
