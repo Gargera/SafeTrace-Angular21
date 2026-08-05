@@ -20,6 +20,7 @@ export interface ChatSummaryDto {
   unreadCount: number;
   otherUserId: string;
   otherUserName: string;
+  otherUserImage?:string;
 }
 import {CaseType} from '../../../shared/enums/case-type';
 export interface StartChatContextDto{
@@ -47,12 +48,14 @@ export interface ChatDetailsDto {
   caseId: number;
   caseTitle: string;
   caseImage: string;
+  caseType:CaseType;
   senderId: string;
   senderName?: string;
   senderImage?:string;
   receiverId: string;
   receiverName?: string;
   receiverImage?:string;
+  otherUserId?:string;
   otherUserName?: string;
   otherUserImage?:string;
   createdAt: string; // ISO date string
@@ -75,6 +78,8 @@ export interface ChatDetailsDto {
 export interface AdminChatsDto {
   chatId: number;
   caseId: number;
+  caseTitle:string;
+  caseType:CaseType;
   senderId: string;
   senderName: string;
   receiverId: string;
@@ -83,6 +88,7 @@ export interface AdminChatsDto {
   unreadMessagesCount: number;
   createdAt: string;
   lastMessage?: string;
+  lastMessageAt?:string;
   isDeletedBySender: boolean;
   isDeletedByReceiver: boolean;
   senderDeletedAt?: string;

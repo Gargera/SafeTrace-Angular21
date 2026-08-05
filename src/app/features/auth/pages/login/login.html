@@ -1,99 +1,99 @@
-<div class="min-h-screen bg-surface flex flex-col justify-center items-center px-margin-mobile py-12 relative">
+<div class="text-center mb-8 md:hidden">
+  <div class="inline-flex items-center justify-center text-on-primary w-12 h-12 rounded-xl mb-4">
+    <img src="images/logo.svg" alt="منصة لقاء" class="h-10 w-auto" />
+  </div>
+</div>
+
+<div class="text-center mb-8">
+  <h1 class="text-3xl font-headline-lg font-bold text-primary mb-2">مرحباً بك مجدداً</h1>
+  <p class="text-on-surface-variant text-body-md">الدقة الإنسانية في البحث والإنقاذ. يرجى تسجيل الدخول للوصول إلى حسابك.</p>
+</div>
+
+<div class="bg-surface-container-lowest/95 backdrop-blur-sm border border-outline-variant/40 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full p-6 md:p-10 animate-fade-in">
   
-  <div class="absolute top-6 right-6 md:top-8 md:right-8">
-    <app-button routerLink="/home" variant="secondary">
-      <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
-      العودة للرئيسية
-    </app-button>
+  @if (apiErrorMessage()) {
+    <div class="bg-error-container text-on-error-container p-4 rounded-xl mb-6 flex justify-between items-start gap-3 border border-error/20">
+      <span class="font-body-sm font-medium">{{ apiErrorMessage() }}</span>
+      <button type="button" (click)="apiErrorMessage.set('')" class="text-on-error-container hover:text-error transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+  }
+
+  <div class="flex justify-center mb-6 h-[40px] w-full">
+    <asl-google-signin-button type="standard" size="large" locale="ar"></asl-google-signin-button>
   </div>
 
-  <div class="text-center mb-8">
-    <a routerLink="/home" class="inline-flex items-center justify-center text-on-primary w-12 h-12 rounded-xl mb-4 hover:scale-105 transition-transform shadow-md">
-      <img src="images/logo.svg" alt="منصة لقاء" class="h-10 w-auto" />
-    </a>
-    <h1 class="text-3xl font-headline-lg font-bold text-primary mb-2">لقاء</h1>
-    <p class="text-on-surface-variant text-body-md max-w-87.5 mx-auto">الدقة الإنسانية في البحث والإنقاذ. يرجى تسجيل الدخول للوصول إلى لوحة التحكم.</p>
+  <div class="relative flex py-2 items-center mb-6">
+    <div class="grow h-px bg-linear-to-r from-outline-variant/0 via-outline-variant/50 to-outline-variant/0"></div>
+    <span class="shrink-0 mx-4 text-on-surface-variant text-body-sm bg-surface-container-lowest/95 px-2 rounded-full">أو باستخدام البريد</span>
+    <div class="grow h-px bg-linear-to-r from-outline-variant/0 via-outline-variant/50 to-outline-variant/0"></div>
   </div>
 
-  <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-sm w-full max-w-112.5 p-6 md:p-8">
-    
-    @if (apiErrorMessage()) {
-      <div class="bg-error-container text-on-error-container p-4 rounded-xl mb-6 flex justify-between items-start gap-3 border border-error/20">
-        <span class="font-body-sm font-medium">{{ apiErrorMessage() }}</span>
-        <button type="button" (click)="apiErrorMessage.set('')" class="text-on-error-container hover:text-error transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-      </div>
-    }
-
-    <div class="flex justify-center mb-6 h-[40px] w-full">
-      <asl-google-signin-button type="standard" size="large" locale="ar"></asl-google-signin-button>
+  <form [formGroup]="loginForm" action="#" method="post" autocomplete="on" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+    <div class="flex flex-col gap-1">
+      <app-form-field 
+        formControlName="email" 
+        type="email" 
+        label="البريد الإلكتروني *" 
+        placeholder="name@example.com"
+        [prefix]="true"
+        [class.border-error]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid">
+        <span prefix class="material-symbols-outlined text-[20px]">mail</span>
+      </app-form-field>
+      @if (loginForm.get('email')?.touched && loginForm.get('email')?.invalid) {
+        <span class="text-error text-xs font-medium">
+          @if (loginForm.get('email')?.errors?.['required']) { البريد الإلكتروني مطلوب. }
+          @else if (loginForm.get('email')?.errors?.['email']) { يرجى إدخال بريد إلكتروني صحيح. }
+          @else if (loginForm.get('email')?.errors?.['serverError']) { {{ loginForm.get('email')?.errors?.['serverError'] }} }
+        </span>
+      }
     </div>
 
-    <div class="relative flex py-2 items-center mb-4">
-      <div class="grow border-t border-outline-variant"></div>
-      <span class="shrink-0 mx-4 text-on-surface-variant text-body-sm">أو باستخدام البريد</span>
-      <div class="grow border-t border-outline-variant"></div>
-    </div>
-
-    <form [formGroup]="loginForm" action="#" method="post" autocomplete="on" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
-      <div class="flex flex-col gap-1">
-        <app-form-field 
-          formControlName="email" 
-          type="email" 
-          label="البريد الإلكتروني" 
-          placeholder="name@example.com"
-          [class.border-error]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid">
-        </app-form-field>
-        @if (loginForm.get('email')?.touched && loginForm.get('email')?.invalid) {
-          <span class="text-error text-xs font-medium">
-            @if (loginForm.get('email')?.errors?.['required']) { البريد الإلكتروني مطلوب. }
-            @else if (loginForm.get('email')?.errors?.['email']) { يرجى إدخال بريد إلكتروني صحيح. }
-            @else if (loginForm.get('email')?.errors?.['serverError']) { {{ loginForm.get('email')?.errors?.['serverError'] }} }
-          </span>
-        }
+    <div class="flex flex-col gap-1">
+      <div class="flex justify-between items-center mb-1">
+        <label class="text-label-md font-medium text-on-surface">كلمة المرور <span class="text-error">*</span></label>
+        <a routerLink="/auth/forgot-password" class="text-secondary text-body-sm font-medium hover:underline">نسيت كلمة المرور؟</a>
       </div>
-
-      <div class="flex flex-col gap-1">
-        <div class="flex justify-between items-center mb-1">
-          <label class="text-label-md font-medium text-on-surface">كلمة المرور</label>
-          <a routerLink="/auth/forgot-password" class="text-secondary text-body-sm font-medium hover:underline">نسيت كلمة المرور؟</a>
-        </div>
+      
+      <app-form-field 
+        formControlName="password" 
+        [type]="showPassword() ? 'text' : 'password'" 
+        placeholder="••••••••"
+        [prefix]="true"
+        [suffix]="true"
+        [class.border-error]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
         
-        <app-form-field 
-          formControlName="password" 
-          [type]="showPassword() ? 'text' : 'password'" 
-          placeholder="••••••••"
-          [suffix]="true"
-          [class.border-error]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
-          <button type="button" suffix (click)="togglePassword()" class="px-4 flex items-center text-on-surface-variant hover:text-primary transition-colors focus:outline-none pointer-events-auto">
-            @if (showPassword()) {
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
-            } @else {
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-            }
-          </button>
-        </app-form-field>
+        <span prefix class="material-symbols-outlined text-[20px]">lock</span>
 
-        @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
-          <span class="text-error text-xs font-medium mt-1">
-            @if (loginForm.get('password')?.errors?.['required']) { كلمة المرور مطلوبة. }
-            @else if (loginForm.get('password')?.errors?.['serverError']) { {{ loginForm.get('password')?.errors?.['serverError'] }} }
-          </span>
-        }
-      </div>
+        <button type="button" suffix (click)="togglePassword()" class="px-4 flex items-center text-on-surface-variant hover:text-primary transition-all duration-300 hover:scale-110 focus:outline-none pointer-events-auto">
+          @if (showPassword()) {
+            <span class="material-symbols-outlined text-[20px]">visibility_off</span>
+          } @else {
+            <span class="material-symbols-outlined text-[20px]">visibility</span>
+          }
+        </button>
+      </app-form-field>
 
-      <app-button type="submit" [disabled]="isLoading()" variant="primary" [loading]="isLoading()" extraClass="w-full justify-center mt-2 font-label-lg">
-        تسجيل الدخول
-      </app-button>
-
-    </form>
-
-    <div class="text-center mt-6">
-      <p class="text-on-surface-variant text-body-sm">
-        ليس لديك حساب؟ <a routerLink="/auth/register" class="text-secondary font-semibold hover:underline">إنشاء حساب جديد</a>
-      </p>
+      @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
+        <span class="text-error text-xs font-medium mt-1">
+          @if (loginForm.get('password')?.errors?.['required']) { كلمة المرور مطلوبة. }
+          @else if (loginForm.get('password')?.errors?.['serverError']) { {{ loginForm.get('password')?.errors?.['serverError'] }} }
+        </span>
+      }
     </div>
 
+    <app-button type="submit" [disabled]="isLoading()" variant="primary" [loading]="isLoading()" extraClass="w-full justify-center mt-4 font-label-lg group relative overflow-hidden">
+      <span class="flex items-center gap-2">
+        تسجيل الدخول
+        <span class="material-symbols-outlined transition-transform duration-300 group-hover:-translate-x-1">login</span>
+      </span>
+    </app-button>
+  </form>
+
+  <div class="text-center mt-8">
+    <p class="text-on-surface-variant text-body-sm">
+      ليس لديك حساب؟ <a routerLink="/auth/register" class="text-secondary font-semibold hover:underline">إنشاء حساب جديد</a>
+    </p>
   </div>
 </div>

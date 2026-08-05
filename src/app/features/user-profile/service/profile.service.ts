@@ -8,6 +8,7 @@ import {
   GetUserInfoDTO,
   MyCaseListItemResponse,
   MyCasesFilterRequest,
+  UpdateCurrentLocationDTO,
   UpdateHomeLocationDTO,
   UpdateNameDTO,
   UpdateProfileImageDTO,
@@ -15,9 +16,17 @@ import {
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
 
+import { CaseType } from '../../../shared/enums/case-type';
+import { UrgentCaseService } from '../../urgent-cases/services/urgent-case.service';
+import { LongTermCaseService } from '../../long-term-cases/services/long-term-case.service';
+import { UnknownCaseService } from '../../unknown-cases/services/unknown-case.service';
+
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
   readonly #http = inject(HttpClient);
+  readonly #urgentCaseService = inject(UrgentCaseService);
+  readonly #longTermCaseService = inject(LongTermCaseService);
+  readonly #unknownCaseService = inject(UnknownCaseService);
   readonly #profileUrl = `${environment.apiBaseUrl}/UserProfile`;
   readonly #accountUrl = `${environment.apiBaseUrl}/Account`;
 
@@ -43,7 +52,8 @@ export class ProfileService {
   /** PUT /UserProfile/AddIdImage */
   addIdImage(dto: AddIdImageDTO): Observable<ApiResponse<boolean>> {
     const formData = new FormData();
-    formData.append('identificationImage', dto.identificationImage);
+    formData.append('identificationImageFront', dto.identificationImageFront);
+    formData.append('identificationImageBack', dto.identificationImageBack);
     return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/AddIdImage`, formData);
   }
 
@@ -64,6 +74,7 @@ export class ProfileService {
 
     return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdatePhoneNumber`, formData);
   }
+
   getMyCases(
     filter: MyCasesFilterRequest,
   ): Observable<ApiResponse<PaginationResponse<MyCaseListItemResponse>>> {
@@ -81,6 +92,10 @@ export class ProfileService {
       params = params.set('caseType', filter.caseType.toString());
     }
 
+    if (filter.status !== null && filter.status !== undefined) {
+      params = params.set('status', filter.status.toString());
+    }
+
     params = params.set('page', (filter.page ?? 1).toString());
     params = params.set('pageSize', (filter.pageSize ?? 6).toString());
 
@@ -88,5 +103,23 @@ export class ProfileService {
       `${this.#profileUrl}/MyCases`,
       { params },
     );
+  }
+
+  //CurrentLocation
+  updateCurrentLocation(data: UpdateCurrentLocationDTO) {
+    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateCurrentLocation`, data);
+  }
+
+  getMyCaseById(id: number, caseType?: CaseType): Observable<ApiResponse<any>> {
+    switch (caseType) {
+      case CaseType.Urgent:
+        return this.#urgentCaseService.getMyCaseById(id);
+      case CaseType.LongTerm:
+        return this.#longTermCaseService.getMyCaseById(id);
+      case CaseType.Unknown:
+        return this.#unknownCaseService.getMyCaseById(id);
+      default:
+        return this.#http.get<ApiResponse<any>>(`${environment.baseUrl}/api/UserProfile/MyCaseDetails/${id}`);
+    }
   }
 }

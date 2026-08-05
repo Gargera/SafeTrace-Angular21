@@ -27,10 +27,10 @@ export class Register {
   isConfirmPasswordVisible = signal<boolean>(false);
 
     registerForm: FormGroup = this.fb.group({
-    fName: ['', [Validators.required, Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+$')]],
-    lName: ['', [Validators.required, Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+( [a-zA-Z\u0600-\u06FF]+)*$')]],
+    fName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), Validators.pattern(/^[\u0600-\u06FF]+$/)]],
+    lName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), Validators.pattern(/^[\u0600-\u06FF]+( [\u0600-\u06FF]+)*$/)]],
     email: ['', [Validators.required, Validators.email, Validators.pattern('^\\S+$')]],
-    phoneNumber: ['', [Validators.required, Validators.pattern('^01[0125][0-9]{8}$')]],
+    phoneNumber: ['', [Validators.pattern('^01[0125][0-9]{8}$')]],
     password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(50), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_])\\S+$')]],
     confirmPassword: ['', [Validators.required]]
   }, { validators: mustMatch('password', 'confirmPassword') });
@@ -55,6 +55,9 @@ export class Register {
     formData.fName = formData.fName.trim();
     formData.lName = formData.lName.trim();
     delete formData.confirmPassword;
+    if (!formData.phoneNumber) {
+      delete formData.phoneNumber;
+    }
 
     this.authService.register(formData).subscribe({
       next: (res) => {

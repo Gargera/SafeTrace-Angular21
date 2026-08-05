@@ -1,0 +1,106 @@
+<form
+  [formGroup]="personalForm"
+  (ngSubmit)="savePersonal()"
+  class="bg-surface border my-5 border-outline-variant rounded-2xl p-lg space-y-md shadow-sm transition-all duration-300 hover:shadow-md"
+  aria-labelledby="personal-heading"
+>
+  <div class="flex justify-between items-center border-b border-outline-variant pb-sm">
+    <h3
+      id="personal-heading"
+      class="text-headline-sm font-bold text-primary flex items-center gap-sm"
+    >
+      <span class="material-symbols-outlined text-[24px]" aria-hidden="true">person</span>
+      المعلومات الشخصية
+    </h3>
+    @if (!isEditingPersonal()) {
+      <span
+        (click)="togglePersonalEdit(true)"
+        class="material-symbols-outlined text-[12px] cursor-pointer"
+        aria-hidden="true"
+        >edit</span
+      >
+    } @else {
+      <div class="flex items-center gap-sm">
+        <app-button
+          type="button"
+          variant="danger"
+          [disabled]="isSavingPersonal()"
+          (click)="togglePersonalEdit(false); cancelPersonal()"
+        >
+          إلغاء
+        </app-button>
+        <app-button
+          type="submit"
+          variant="success"
+          [disabled]="personalForm.invalid || isSavingPersonal()"
+          [attr.aria-busy]="isSavingPersonal()"
+        >
+          @if (isSavingPersonal()) {
+            <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
+              >progress_activity</span
+            >
+          }
+          حفظ
+        </app-button>
+      </div>
+    }
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-lg pt-sm">
+    <!-- First Name -->
+    <div class="space-y-xs">
+      <label for="firstName" class="text-label-md text-on-surface font-semibold">
+        الاسم الأول <span class="text-error" aria-hidden="true">*</span>
+      </label>
+      <app-form-field
+        id="firstName"
+        formControlName="firstName"
+        type="text"
+        maxlength="100"
+        [attr.aria-invalid]="isFieldInvalid('firstName')"
+        [attr.aria-describedby]="isFieldInvalid('firstName') ? 'firstName-error' : null"
+        [class.border-error]="isFieldInvalid('firstName')"
+        [class.border-outline-variant]="!isFieldInvalid('firstName')"
+      />
+      @if (isFieldInvalid('firstName')) {
+        <p id="firstName-error" class="text-label-sm text-error font-medium mt-xs" role="alert">
+          @if (personalForm.get('firstName')?.hasError('required')) {
+            الاسم الأول مطلوب
+          } @else if (personalForm.get('firstName')?.hasError('maxlength')) {
+            لا يتجاوز 100 حرف
+          } @else if (personalForm.get('firstName')?.hasError('pattern')) {
+            الاسم الأول يجب أن يكون كلمة واحدة باللغة العربية فقط
+          }
+        </p>
+      }
+    </div>
+
+    <!-- Last Name -->
+    <div class="space-y-xs">
+      <label for="lastName" class="text-label-md text-on-surface font-semibold">
+        اسم العائلة <span class="text-error" aria-hidden="true">*</span>
+      </label>
+      <app-form-field
+        id="lastName"
+        formControlName="lastName"
+        type="text"
+        maxlength="100"
+        [attr.aria-invalid]="isFieldInvalid('lastName')"
+        [attr.aria-describedby]="isFieldInvalid('lastName') ? 'lastName-error' : null"
+        [class.border-error]="isFieldInvalid('lastName')"
+        [class.border-outline-variant]="!isFieldInvalid('lastName')"
+      />
+      @if (isFieldInvalid('lastName')) {
+        <p id="lastName-error" class="text-label-sm text-error font-medium mt-xs" role="alert">
+          @if (personalForm.get('lastName')?.hasError('required')) {
+            اسم العائلة مطلوب
+          } @else if (personalForm.get('lastName')?.hasError('maxlength')) {
+            لا يتجاوز 100 حرف
+          } @else if (personalForm.get('lastName')?.hasError('pattern')) {
+            اسم العائلة يجب أن يحتوي على حروف عربية فقط ومسافة واحدة بين الكلمات
+          }
+        </p>
+      }
+    </div>
+  </div>
+</form>

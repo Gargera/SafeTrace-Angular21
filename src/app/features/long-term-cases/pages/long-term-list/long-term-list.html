@@ -2,15 +2,16 @@
   <div class="mx-auto max-w-7xl space-y-6 px-4 py-6">
     <!-- Page Header -->
     <section class="space-y-3 pb-2">
-      <app-case-header
+      <app-header
         title="الحالات طويلة الأمد"
         subtitle="قائمة الحالات طويلة الأمد"
         [badge]="!loading() ? totalItems() + ' حالة' : ''"
         [loading]="loading()"
         primaryActionLabel="إنشاء حالة طويلة الأمد"
+        primaryActionIcon="add"
         (primaryAction)="navigateToCreate()"
       >
-      </app-case-header>
+      </app-header>
     </section>
 
     <!-- Filters Card -->

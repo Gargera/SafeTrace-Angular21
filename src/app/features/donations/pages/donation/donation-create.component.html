@@ -23,10 +23,20 @@
       <input
         type="number"
         [(ngModel)]="amount"
-        min="1"
+        [min]="minAmount"
+        [max]="maxAmount"
         placeholder="مبلغ مخصص"
-        class="w-full border rounded-lg h-12 px-4 mb-5 outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-full border rounded-lg h-12 px-4 mb-5 outline-none focus:ring-2"
+        [ngClass]="
+          amount && amountError
+            ? 'border-red-500 focus:ring-red-500 mb-2'
+            : 'border-gray-300 focus:ring-blue-500 mb-5'
+        "
       />
+
+      <p *ngIf="amount && amountError" class="text-red-600 text-sm mb-3">
+        {{ amountError }}
+      </p>
 
       <textarea
         rows="5"
@@ -38,7 +48,7 @@
       <button
         type="button"
         (click)="donate()"
-        [disabled]="loading"
+        [disabled]="loading || !isAmountValid"
         class="w-full h-12 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {{ loading ? 'جاري التحويل...' : 'تبرع الآن' }}
@@ -68,12 +78,6 @@
         <li>✔ توفير الدعم الفني.</li>
         <li>✔ دعم المنصة واستمرارها.</li>
       </ul>
-
-      <img
-        src="assets/images/donation.jpg"
-        class="rounded-xl mt-8 w-full object-cover"
-        alt="Donation"
-      />
     </div>
   </div>
 </div>

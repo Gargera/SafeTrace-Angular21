@@ -1,0 +1,137 @@
+<div class="space-y-sm">
+  <div class="flex items-center justify-between">
+    <label id="profile-photo-label" class="text-label-md text-on-surface font-semibold"
+      >صورة الملف الشخصي</label
+    >
+
+    @if (!isEditingProfileImage()) {
+      <span
+        (click)="toggleProfileImageEdit(true)"
+        class="material-symbols-outlined text-[12px] cursor-pointer"
+        aria-hidden="true"
+        >edit</span
+      >
+    } @else {
+      <div class="flex items-center gap-xs">
+        <app-button
+          type="button"
+          variant="danger"
+          [disabled]="isUploadingProfileImage()"
+          (click)="cancelProfileImage()"
+        >
+          إلغاء
+        </app-button>
+        <app-button
+          [disabled]="isUploadingProfileImage()"
+          type="button"
+          variant="success"
+          (click)="saveProfileImage()"
+          [attr.aria-busy]="isUploadingProfileImage()"
+        >
+          @if (isUploadingProfileImage()) {
+            <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
+              >progress_activity</span
+            >
+          }
+          حفظ
+        </app-button>
+      </div>
+    }
+  </div>
+
+  <div class="flex items-center gap-md">
+    <div class="relative w-24 h-24 shrink-0">
+      @if (profileImagePreview()) {
+        <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-secondary shadow-sm">
+          <img
+            [src]="profileImagePreview()!"
+            alt="معاينة صورة الملف الشخصي"
+            class="w-full h-full object-cover"
+          />
+        </div>
+      } @else {
+        <div
+          class="w-24 h-24 rounded-full border-2 border-dashed border-outline-variant flex items-center justify-center text-on-surface-variant"
+          aria-hidden="true"
+        >
+          <span class="material-symbols-outlined text-[32px]">person</span>
+        </div>
+      }
+
+      @if (isUploadingProfileImage() || isRemovingProfileImage()) {
+        <div
+          class="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center animate-fade-in"
+          role="status"
+          aria-label="جاري المعالجة"
+        >
+          <span
+            class="material-symbols-outlined text-white text-[24px] animate-spin"
+            aria-hidden="true"
+            >progress_activity</span
+          >
+        </div>
+      }
+    </div>
+
+    <div class="flex-1 flex flex-col gap-xs">
+      @if (isEditingProfileImage()) {
+        <label
+          aria-labelledby="profile-photo-label"
+          class="flex items-center gap-sm cursor-pointer p-md bg-surface-container-low border border-dashed border-outline-variant rounded-lg hover:border-secondary hover:bg-surface-container focus-within:ring-2 focus-within:ring-secondary transition-all group"
+          [class.opacity-50]="isUploadingProfileImage() || isRemovingProfileImage()"
+          [class.pointer-events-none]="isUploadingProfileImage() || isRemovingProfileImage()"
+        >
+          <span
+            class="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform"
+            aria-hidden="true"
+          >
+            add_photo_alternate
+          </span>
+          <span class="text-label-sm text-on-surface-variant">
+            {{ profileImagePreview() ? 'تغيير الصورة' : 'اختر صورة' }} حتى 5MB
+          </span>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            class="hidden"
+            [disabled]="isUploadingProfileImage() || isRemovingProfileImage()"
+            (change)="onProfilePhotoFileSelected($event)"
+          />
+        </label>
+      } @else if (!profileImagePreview()) {
+        <span class="text-label-sm text-on-surface-variant">لم يتم رفع صورة شخصية بعد</span>
+      }
+
+      @if (profileImagePreview()) {
+        <button
+          type="button"
+          [disabled]="isUploadingProfileImage() || isRemovingProfileImage()"
+          (click)="requestRemoveProfilePhoto()"
+          class="inline-flex items-center justify-center gap-2 rounded-xl border border-error/20 bg-error-container/60 px-4 py-2.5 text-sm font-semibold text-error transition-all duration-200 hover:bg-error-container hover:border-error/40 hover:shadow-md active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
+        >
+          <span
+            class="material-symbols-outlined text-[18px]"
+            style="font-variation-settings: 'FILL' 1"
+            aria-hidden="true"
+          >
+            delete
+          </span>
+
+          <span>إزالة الصورة الشخصية</span>
+        </button>
+      }
+    </div>
+  </div>
+</div>
+
+<app-confirm-dialog
+  [open]="showRemoveConfirm()"
+  title="إزالة الصورة الشخصية"
+  message="هل أنت متأكد من رغبتك في إزالة صورتك الشخصية؟ يمكنك إضافة صورة جديدة في أي وقت."
+  confirmLabel="إزالة"
+  cancelLabel="إلغاء"
+  [danger]="true"
+  [loading]="isRemovingProfileImage()"
+  (confirmed)="confirmRemoveProfilePhoto()"
+  (cancelled)="cancelRemoveProfilePhoto()"
+/>

@@ -1,0 +1,94 @@
+<section
+  class="bg-surface border border-outline-variant rounded-2xl p-lg space-y-md shadow-sm transition-all duration-300 hover:shadow-md"
+  aria-labelledby="location-heading"
+>
+  <div class="flex items-center justify-between border-b border-outline-variant pb-sm">
+    <h3
+      id="location-heading"
+      class="text-headline-sm font-bold text-primary flex items-center gap-sm"
+    >
+      <span class="material-symbols-outlined text-[24px]" aria-hidden="true">location_on</span>
+      الموقع الجغرافي
+    </h3>
+
+    <div (click)="openMapModal()" class="flex items-center cursor-pointer gap-1">
+      <span class="material-symbols-outlined text-[12px] cursor-pointer" aria-hidden="true"
+        >location_on</span
+      >
+      <span class="truncate">فتح الخريطة</span>
+    </div>
+  </div>
+
+  <!-- Resolved address input -->
+  <div class="space-y-xs pt-xs">
+    <label for="resolvedAddress" class="text-label-sm text-on-surface-variant font-semibold"
+      >العنوان الحالي</label
+    >
+    <div class="relative">
+      <input
+        id="resolvedAddress"
+        type="text"
+        readonly
+        [value]="resolvedAddress() ?? ''"
+        placeholder="اضغط على زر الخريطة أعلاه لتحديد عنوانك على الخريطة"
+        aria-live="polite"
+        class="w-full bg-surface-container border border-outline-variant rounded-lg p-md text-body-sm text-on-surface cursor-default select-none pr-10 focus:outline-none"
+      />
+      @if (isResolvingAddress() || isSavingLocation()) {
+        <span
+          class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-secondary animate-spin"
+          aria-hidden="true"
+        >
+          progress_activity
+        </span>
+      } @else if (resolvedAddress()) {
+        <span
+          class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-emerald-600"
+          style="font-variation-settings: 'FILL' 1"
+          aria-hidden="true"
+        >
+          check_circle
+        </span>
+      }
+    </div>
+  </div>
+
+  <!-- Action Bar & Coordinates display -->
+  <div class="flex flex-wrap items-center justify-between gap-md pt-xs">
+    <div class="flex items-center gap-sm">
+      <button
+        type="button"
+        (click)="useCurrentLocation()"
+        [disabled]="isLocating() || isSavingLocation()"
+        class="text-label-sm text-secondary hover:underline flex items-center gap-xs font-bold cursor-pointer disabled:opacity-50"
+      >
+        @if (isLocating()) {
+          <span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+          جاري التحديد...
+        } @else {
+          <span class="material-symbols-outlined text-[16px]" aria-hidden="true">my_location</span>
+          استخدام موقعي الحالي
+        }
+      </button>
+    </div>
+
+    @if (selectedLat() !== null && selectedLng() !== null) {
+      <div
+        class="flex items-center gap-xs text-[12px] font-mono text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-lg border border-outline-variant/40"
+      >
+        <span class="material-symbols-outlined text-sm text-secondary">pin_drop</span>
+        <span>{{ selectedLat()?.toFixed(4) }}, {{ selectedLng()?.toFixed(4) }}</span>
+      </div>
+    }
+  </div>
+
+  <!-- Leaflet Map Location Picker Modal Component -->
+  <app-map-location-picker
+    [isOpen]="isMapModalOpen()"
+    [initialLat]="selectedLat()"
+    [initialLng]="selectedLng()"
+    [initialAddress]="resolvedAddress() ?? ''"
+    (confirmLocation)="onLocationConfirmed($event)"
+    (cancel)="closeMapModal()"
+  />
+</section>

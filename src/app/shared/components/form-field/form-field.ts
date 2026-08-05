@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, input, forwardRef } from '@angular/core';
+import { Component, input, computed, forwardRef } from '@angular/core';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 @Component({
@@ -8,7 +8,7 @@ import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/f
   imports: [CommonModule, FormsModule],
   templateUrl: './form-field.html',
   host: {
-    '[class]': 'extraClass()'
+    '[class]': 'hostClasses()'
   },
   providers: [
     {
@@ -21,13 +21,33 @@ import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/f
 export class FormField implements ControlValueAccessor {
   label = input('');
   placeholder = input('');
-  type = input<'text' | 'email' | 'password' | 'number' | 'date' | 'search' | 'textarea' | 'select' | 'tel'>('text');
+  type = input<'text' | 'email' | 'password' | 'number' | 'date' | 'datetime-local' | 'search' | 'textarea' | 'select' | 'tel'>('text');
+
+  min = input<string | number | undefined>(undefined);
+  max = input<string | number | undefined>(undefined);
 
   rows = input(4);
   extraClass = input('');
+  isInvalid = input(false);
 
   prefix = input(false);
   suffix = input(false);
+
+  hasError = computed(() => this.isInvalid() || this.extraClass().includes('border-error'));
+
+  hostClasses = computed(() => {
+    // Remove border-error from host class to prevent double borders
+    return this.extraClass().replace(/\bborder-error\b/g, '').trim();
+  });
+
+  labelParts = computed(() => {
+    const raw = this.label();
+    if (!raw) return { text: '', hasStar: false };
+    if (raw.includes('*')) {
+      return { text: raw.replace(/\*/g, '').trim(), hasStar: true };
+    }
+    return { text: raw, hasStar: false };
+  });
 
   value: any = '';
   disabled = false;
@@ -58,8 +78,15 @@ export class FormField implements ControlValueAccessor {
   }
 
   onModelChange(value: any) {
-    this.value = value;
-    this.onChange(value);
+    let parsedValue = value;
+    if (parsedValue === '' || parsedValue === null || parsedValue === 'null' || parsedValue === undefined) {
+      parsedValue = null;
+    } else if (typeof parsedValue === 'string' && parsedValue.trim() !== '' && !isNaN(Number(parsedValue))) {
+      parsedValue = Number(parsedValue);
+    }
+
+    this.value = parsedValue;
+    this.onChange(parsedValue);
   }
 
   handleBlur() {

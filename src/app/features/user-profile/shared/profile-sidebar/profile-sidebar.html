@@ -66,13 +66,15 @@
       @if (userInfo()?.email) {
         <div class="flex items-center gap-sm text-on-surface-variant">
           <span class="material-symbols-outlined text-secondary shrink-0">mail</span>
-          <span class="text-body-sm break-all">{{ userInfo()!.email }}</span>
+          <span dir="ltr" class="block truncate text-left">
+            {{ userInfo()!.email }}
+          </span>
         </div>
       }
       @if (userInfo()?.phoneNumber) {
         <div class="flex items-center gap-sm text-on-surface-variant">
           <span class="material-symbols-outlined text-secondary shrink-0">phone</span>
-          <span class="text-body-sm break-all">{{ userInfo()!.phoneNumber }}</span>
+          <span dir="ltr" class="block truncate text-left"> {{ userInfo()!.phoneNumber }}</span>
         </div>
       }
       <!-- Address (resolved from lat/lng via Geocoding API) -->

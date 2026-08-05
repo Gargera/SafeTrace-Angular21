@@ -1,24 +1,34 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { catchError, EMPTY, Subject, switchMap, tap } from 'rxjs';
 
 import { LongTermCaseService } from '../../services/long-term-case.service';
-import { CasesFilterRequest } from '../../../../core/models/Cases.model';
+import { CasesFilterRequest } from '../../../../core/models/cases.model';
 import { LongTermCaseListItemResponse } from '../../models/response/LongTermCaseListItemResponse';
+import { CaseCreationFlowService } from '../../../../core/services/case-creation-flow.service';
 
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { PaginationComponent } from '../../../../shared/components/cases-components/case-pagination/case-pagination.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
+import { CasesFilterState } from '../../../../shared/helper/cases-filter-state';
+import { SnackbarService } from '../../../../shared/services/toast.service';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { CaseType } from '../../../../shared/enums/case-type';
 
 @Component({
   selector: 'app-long-term-list',
   standalone: true,
   imports: [
+    CommonModule,
+    RouterModule,
     FormsModule,
-    CaseHeaderComponent,
+    HeaderComponent,
     CaseFiltersComponent,
     PaginationComponent,
     CaseSkeletonGridComponent,
@@ -32,48 +42,44 @@ import { CaseCardComponent } from '../../../../shared/components/cases-component
 export class LongTermList implements OnInit {
   private readonly router = inject(Router);
   private readonly longTermCaseService = inject(LongTermCaseService);
+  private readonly caseCreationFlowService = inject(CaseCreationFlowService);
+  private readonly snackbar = inject(SnackbarService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  private readonly fetchTrigger$ = new Subject<void>();
+
+  readonly filterState = new CasesFilterState(12);
 
   readonly cases = signal<LongTermCaseListItemResponse[]>([]);
-  readonly loading = signal(true);
+  readonly loading = this.filterState.loading;
+  readonly hasError = this.filterState.hasError;
 
-  readonly currentPage = signal(1);
-  readonly totalPages = signal(1);
-  readonly totalItems = signal(0);
-  readonly pageSize = signal(12);
+  readonly currentPage = this.filterState.currentPage;
+  readonly totalPages = this.filterState.totalPages;
+  readonly totalItems = this.filterState.totalItems;
+  readonly pageSize = this.filterState.pageSize;
 
-  readonly filter = signal<CasesFilterRequest>(this.emptyFilter());
+  readonly filter = this.filterState.filter;
 
   ngOnInit(): void {
+    this.setupFetchPipeline();
     this.fetchCases();
   }
 
   navigateToCreate(): void {
-    this.router.navigate(['/long-term/create']);
+    this.caseCreationFlowService.start(CaseType.LongTerm);
   }
 
   onFilterChange(newFilter: CasesFilterRequest): void {
-    this.filter.update(() => ({
-      ...this.sanitizeFilter(newFilter),
-      page: 1,
-      pageSize: this.pageSize(),
-    }));
-
-    this.fetchCases();
+    this.filterState.onFilterChange(newFilter, () => this.fetchCases());
   }
 
   onFilterReset(): void {
-    this.filter.set(this.emptyFilter());
-    this.fetchCases();
+    this.filterState.onFilterReset(() => this.fetchCases());
   }
 
   onPageChange(page: number): void {
-    this.filter.update((f) => ({
-      ...f,
-      page,
-      pageSize: this.pageSize(),
-    }));
-
-    this.fetchCases();
+    this.filterState.onPageChange(page, () => this.fetchCases());
   }
 
   onViewDetails(caseId: number): void {
@@ -89,97 +95,43 @@ export class LongTermList implements OnInit {
   }
 
   private fetchCases(): void {
-    this.loading.set(true);
-
-    this.longTermCaseService.getAllCases(this.filter()).subscribe({
-      next: (apiRes) => {
-        const res = apiRes.data;
-
-        if (res) {
-          this.cases.set(res.items);
-          this.totalItems.set(res.totalCount);
-          this.totalPages.set(res.totalPages);
-          this.currentPage.set(res.pageNumber);
-          this.pageSize.set(res.pageSize);
-        }
-
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
-    });
+    this.fetchTrigger$.next();
   }
 
-  private emptyFilter(): CasesFilterRequest {
-    return {
-      status: null,
-      gender: null,
-      ageCategory: null,
-      fullName: null,
-      government: null,
-      city: null,
-      minAge: null,
-      maxAge: null,
-      fromDate: null,
-      toDate: null,
-      ageSort: null,
-      dateSort: null,
-      page: 1,
-      pageSize: this.pageSize(),
-    };
-  }
+  private setupFetchPipeline(): void {
+    this.fetchTrigger$
+      .pipe(
+        tap(() => {
+          this.loading.set(true);
+          this.hasError.set(false);
+        }),
+        switchMap(() =>
+          this.longTermCaseService.getAllCases(this.filter()).pipe(
+            catchError((err: unknown) => {
+              this.loading.set(false);
+              this.hasError.set(true);
+              const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء تحميل البيانات');
+              this.snackbar.error(errorMessage);
+              return EMPTY;
+            }),
+          ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (apiRes) => {
+          const res = apiRes.data;
 
-  private sanitizeFilter(filter: CasesFilterRequest): CasesFilterRequest {
-    return {
-      ...filter,
-      gender: this.normalizeEnum(filter.gender),
-      ageCategory: this.normalizeEnum(filter.ageCategory),
-      fullName: this.normalizeText(filter.fullName),
-      government: this.normalizeText(filter.government),
-      city: this.normalizeText(filter.city),
-      minAge: this.normalizeNumber(filter.minAge),
-      maxAge: this.normalizeNumber(filter.maxAge),
-      fromDate: this.normalizeText(filter.fromDate),
-      toDate: this.normalizeText(filter.toDate),
-      ageSort: this.normalizeNumber(filter.ageSort),
-      dateSort: this.normalizeNumber(filter.dateSort),
-      page: 1,
-      pageSize: this.pageSize(),
-    };
-  }
+          if (res) {
+            this.cases.set(res.items);
+            this.totalItems.set(res.totalCount);
+            this.totalPages.set(res.totalPages);
+            this.currentPage.set(res.pageNumber);
+            this.pageSize.set(res.pageSize);
+          }
 
-  private normalizeNumber(value: number | null | undefined): number | null {
-    if (value === null || value === undefined) {
-      return null;
-    }
-
-    const numericValue = typeof value === 'number' ? value : Number(value);
-
-    return Number.isFinite(numericValue) && numericValue !== Number.MAX_VALUE ? numericValue : null;
-  }
-
-  private normalizeEnum<T>(value: T | null | undefined): T | null {
-    if (value === null || value === undefined) {
-      return null;
-    }
-
-    if (typeof value === 'string') {
-      return value.trim().length > 0 ? value : null;
-    }
-
-    if (typeof value === 'number') {
-      return Number.isFinite(value) && value !== Number.MAX_VALUE ? value : null;
-    }
-
-    return value;
-  }
-
-  private normalizeText(value: string | null | undefined): string | null {
-    if (value === null || value === undefined) {
-      return null;
-    }
-
-    const textValue = String(value).trim();
-
-    return textValue.length > 0 ? textValue : null;
+          this.loading.set(false);
+        },
+      });
   }
 }

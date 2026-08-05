@@ -1,4 +1,4 @@
-import { AgeCategoryResponse } from '../../../core/models/Cases.model';
+import { AgeCategoryResponse } from '../../../core/models/cases.model';
 import { CaseStatus } from '../../../shared/enums/case-status';
 import { CaseType } from '../../../shared/enums/case-type';
 import { Gender } from '../../../shared/enums/gender';
@@ -13,12 +13,16 @@ export interface GetUserInfoDTO {
   homeLongitude: number | null;
   profileImage: string | null;
   verificationStatus: VerificationStatus;
-  identificationImage: string | null;
+  identificationImageFront: string | null;
+  identificationImageBack: string | null;
   role: UserRole;
   phoneNumber: string | null; // ← كانت PhoneNumber بحرف كبير
   cases: any[];
 }
-
+export interface UpdateCurrentLocationDTO {
+  currentLocationLatitude: number;
+  currentLocationLongitude: number;
+}
 // ── One DTO per endpoint — matches the backend exactly, keeps sections independent ──
 
 /** PUT /UserProfile/UpdateName (form-data) */
@@ -37,7 +41,8 @@ export interface UpdateProfileImageDTO {
 
 /** PUT /UserProfile/AddIdImage (form-data) */
 export interface AddIdImageDTO {
-  identificationImage: File;
+  identificationImageFront: File;
+  identificationImageBack: File;
 }
 
 /** PUT /UserProfile/UpdateHomeLocation (form-data) */
@@ -58,8 +63,9 @@ export interface UpdateProfileImageDTO {
 }
 
 export interface MyCasesFilterRequest {
-  fullName?: string;
-  caseCode?: string;
+  fullName?: string | null;
+  caseCode?: string | null;
+  status?: CaseStatus | null;
   caseType?: CaseType | null;
   page?: number;
   pageSize?: number;
@@ -68,6 +74,7 @@ export interface MyCasesFilterRequest {
 export interface MyCaseListItemResponse {
   id: number;
   fullName: string;
+  caseCode?: string;
   age: number;
   ageCategory: AgeCategoryResponse | null;
   gender: Gender;
@@ -77,4 +84,5 @@ export interface MyCaseListItemResponse {
   caseType: CaseType;
   createdAt: string;
   mainImageUrl: string | null;
+  foundPersonInfoId?: number | null;
 }

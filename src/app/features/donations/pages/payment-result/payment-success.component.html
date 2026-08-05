@@ -25,7 +25,8 @@
 
     <div class="mt-10 flex justify-center gap-4">
       <a
-        routerLink="/profile/donations"
+        [routerLink]="['/profile']"
+        [queryParams]="{ tab: 'donations' }"
         class="px-6 py-3 rounded-xl bg-green-600 text-white hover:bg-green-700 transition"
       >
         سجل التبرعات

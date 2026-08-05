@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { RoleDto } from '../models/Role/RoleDto';
-import { CreateRoleDto } from '../models/Role/CreateRoleDto';
-import { RolePermissionsResponseDto } from '../models/Role/RolePermissionsResponseDto';
-import { UpdateRolePermissionsDto } from '../models/Role/UpdateRolePermissionsDto';
+import { RoleDto } from '../models/Role/responses/RoleDto';
+import { CreateRoleDto } from '../models/Role/requests/CreateRoleDto';
+import { RolePermissionsResponseDto } from '../models/Role/responses/RolePermissionsResponseDto';
+import { UpdateRolePermissionsDto } from '../models/Role/requests/UpdateRolePermissionsDto';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { ApiService } from '../../../shared/services/api.service';
 

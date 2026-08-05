@@ -1,4 +1,4 @@
-import { CaseDetailResponse } from "../../../../core/models/Cases.model";
+import { CaseDetailResponse } from "../../../../core/models/cases.model";
 
 export interface UrgentCaseDetailResponse extends CaseDetailResponse {
   endDate: string | null; // DateTime? 

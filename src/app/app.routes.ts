@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth-guard';
-import { About } from './shared/components/about/about';
-import { roleGuard } from './core/guards/role-guard';
-import { UserRole } from './shared/enums/user-role';
-import { Home } from './shared/components/home/home';
+import { About } from './features/public/pages/about/about';
+import { permissionGuard } from './core/guards/permission.guard';
+import { Permissions } from './core/constants/Permissions';
+import { Home } from './features/public/pages/home/home';
 
 export const routes: Routes = [
   { 
@@ -12,16 +12,23 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
-    canActivate: [roleGuard],
-    data: { roles: [UserRole.Admin, UserRole.Moderator] },
+    canActivate: [permissionGuard],
+    data: { requiredPermission: Permissions.Cases.GetAll },
     loadChildren: () =>
       import('./features/admin-dashboard/admin.routes').then((m) => m.ADMIN_ROUTES),
   },
-
+  {
+    path: 'chat/chat/:chatId',
+    title: "المحادثة | لقاء",
+    canActivate: [authGuard],
+    data: {mode: 'user'},
+    loadComponent: () =>
+      import('./features/chat/pages/chat-window/chat-window').then((m) => m.ChatWindow),
+  },
   {
     path: '',
     loadComponent: () =>
-      import('./shared/components/main-layout/main-layout').then((c) => c.MainLayout),
+      import('./core/layouts/main-layout/main-layout').then((c) => c.MainLayout),
     children: [
       {
         path: '',
@@ -42,7 +49,7 @@ export const routes: Routes = [
         path: 'privacy-policy',
         title: 'سياسة الخصوصية | لقاء',
         loadComponent: () =>
-          import('./shared/components/privacy-policy/privacy-policy').then(
+          import('./features/public/pages/privacy-policy/privacy-policy').then(
             (c) => c.PrivacyPolicyComponent,
           ),
       },
@@ -101,10 +108,10 @@ export const routes: Routes = [
   {
     path: '403',
     loadComponent: () =>
-      import('./shared/components/access-denied/access-denied').then((c) => c.AccessDenied),
+      import('./core/pages/access-denied/access-denied').then((c) => c.AccessDenied),
   },
   {
     path: '**',
-    loadComponent: () => import('./shared/components/not-found/not-found').then((c) => c.NotFound),
+    loadComponent: () => import('./core/pages/not-found/not-found').then((c) => c.NotFound),
   },
 ];

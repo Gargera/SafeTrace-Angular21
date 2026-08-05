@@ -13,6 +13,7 @@ import { MyCaseListItemResponse } from '../../../../features/user-profile/model/
 import { CardComponent } from '../../card/card';
 import { environment } from '../../../../../environments/environment';
 import { getAgeCategory } from '../../../helper/age-category.helper';
+import { getCaseActions } from '../../../helper/case-actions.helper';
 
 @Component({
   selector: 'app-case-card-compact',
@@ -46,8 +47,14 @@ export class CaseCardCompactComponent {
 
   // Reactive image error state
   private imageHasError = signal(false);
-
+  //
+  readonly isMyCase = input(false);
   // ----- Computed Signals -----
+
+  /** Helper config for available actions based on case status and foundPersonInfoId */
+  readonly actions = computed(() =>
+    getCaseActions(this.caseItem().status, this.caseItem().foundPersonInfoId),
+  );
 
   /** Age category derived from the case item's age using the provided helper */
   readonly ageCategoryEnum = computed(() => getAgeCategory(this.caseItem().age));
@@ -70,6 +77,18 @@ export class CaseCardCompactComponent {
   /** Router link for the detail page based on case type */
   readonly detailRoute = computed(() => {
     const item = this.caseItem();
+    if (this.isMyCase()) {
+      switch (item.caseType) {
+        case CaseType.Urgent:
+          return ['/urgent/my', item.id];
+        case CaseType.LongTerm:
+          return ['/long-term/my', item.id];
+        case CaseType.Unknown:
+          return ['/unknown/my', item.id];
+        default:
+          return ['/cases', item.id];
+      }
+    }
     switch (item.caseType) {
       case CaseType.Urgent:
         return ['/urgent', item.id];
@@ -79,6 +98,28 @@ export class CaseCardCompactComponent {
         return ['/unknown', item.id];
       default:
         return ['/cases', item.id];
+    }
+  });
+
+  /** Router link for the found details page using foundPersonInfoId (fallback to case id) */
+  readonly foundDetailRoute = computed(() => {
+    const item = this.caseItem();
+    const targetId = item.foundPersonInfoId ?? item.id;
+    return ['/founded', targetId];
+  });
+
+  /** Router link for the update/edit page based on case type */
+  readonly updateRoute = computed(() => {
+    const item = this.caseItem();
+    switch (item.caseType) {
+      case CaseType.Urgent:
+        return ['/urgent/edit', item.id];
+      case CaseType.LongTerm:
+        return ['/long-term/edit', item.id];
+      case CaseType.Unknown:
+        return ['/unknown/edit', item.id];
+      default:
+        return ['/cases/edit', item.id];
     }
   });
 

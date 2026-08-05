@@ -1,68 +1,77 @@
-<div class="min-h-screen bg-surface flex flex-col justify-center items-center px-margin-mobile py-12">
-  
-  <div class="absolute top-6 right-6 md:top-8 md:right-8">
-    <app-button routerLink="/home" variant="secondary">
-      <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
-      العودة للرئيسية
-    </app-button>
+<div class="text-center mb-8 md:hidden">
+  <div class="inline-flex items-center justify-center text-on-primary w-12 h-12 rounded-xl mb-4">
+    <img src="images/logo.svg" alt="منصة لقاء" class="h-10 w-auto" />
   </div>
-  
-  <div class="text-center mb-8">
-    <a routerLink="/home" class="inline-flex items-center justify-center bg-primary text-on-primary w-12 h-12 rounded-xl mb-4 hover:scale-105 transition-transform shadow-md">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-    </a>
-    <h1 class="text-3xl font-headline-lg font-bold text-primary mb-2">تأكيد البريد الإلكتروني</h1>
-    <p class="text-on-surface-variant text-body-md max-w-87.5 mx-auto">
-      لقد أرسلنا رمز تحقق مكون من 6 أرقام إلى {{ email() }} <br>
-      <span class="font-bold text-error">(الرمز صالح لمدة 10 دقائق)</span> <br>
-      <span class="text-body-sm mt-1 block">يرجى تفقد مجلد البريد غير المرغوب فيه (Spam) إذا لم تجد الرسالة.</span>
-    </p>
-  </div>
+</div>
 
-  <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-sm w-full max-w-112.5 p-6 md:p-8">
-    @if (apiErrorMessage()) {
-      <div class="bg-error-container text-on-error-container p-4 rounded-xl mb-6 flex gap-3 border border-error/20">
-        <span class="font-body-sm font-medium">{{ apiErrorMessage() }}</span>
-      </div>
-    }
+<div class="text-center mb-8">
+  <h1 class="text-3xl font-headline-lg font-bold text-primary mb-2">تأكيد البريد الإلكتروني</h1>
+  <p class="text-on-surface-variant text-body-md max-w-87.5 mx-auto">
+    لقد أرسلنا رمز تحقق مكون من 6 أرقام إلى {{ email() }} <br>
+    <span class="font-bold text-error">(الرمز صالح لمدة 10 دقائق)</span> <br>
+    <span class="text-body-sm mt-1 block">يرجى تفقد مجلد البريد غير المرغوب فيه (Spam) إذا لم تجد الرسالة.</span>
+  </p>
+</div>
 
-    <form [formGroup]="confirmForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
-      <div class="flex flex-col gap-1">
-        <label class="text-label-md font-medium text-on-surface text-center mb-2">أدخل الرمز هنا</label>
-        <app-form-field 
-          formControlName="otpCode" 
-          type="text" 
-          placeholder="••••••"
-          [class.border-error]="confirmForm.get('otpCode')?.touched && confirmForm.get('otpCode')?.invalid"
-          class="text-center tracking-widest text-2xl font-bold">
-        </app-form-field>
-        @if (confirmForm.get('otpCode')?.touched && confirmForm.get('otpCode')?.invalid) {
-          <span class="text-error text-xs font-medium mt-1 text-center">
-            @if (confirmForm.get('otpCode')?.hasError('required')) {
-              رمز التحقق مطلوب.
-            } @else {
-              يجب أن يتكون رمز التحقق من 6 أرقام.
-            }
-          </span>
-        }
-      </div>
-
-      <app-button type="submit" [disabled]="isLoading()" variant="primary" [loading]="isLoading()" extraClass="w-full justify-center mt-2 font-label-lg transition-all">
-        @if (isLoading()) { جاري التأكيد... } @else { تأكيد الحساب }
-      </app-button>
-    </form>
-
-    <div class="text-center mt-6">
-      <p class="text-on-surface-variant text-body-sm">
-        لم يصلك الرمز؟ 
-        <app-button type="button" (onClick)="resendOtp()" [disabled]="countdown() > 0" variant="text" extraClass="text-secondary font-semibold hover:underline bg-transparent border-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline">
-          @if (countdown() > 0) {
-            إعادة الإرسال بعد {{ countdown() }} ثانية
-          } @else {
-            إعادة الإرسال
-          }
-        </app-button>
-      </p>
+<div class="bg-surface-container-lowest/95 backdrop-blur-sm border border-outline-variant/40 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full p-6 md:p-10 animate-fade-in">
+  @if (apiErrorMessage()) {
+    <div class="bg-error-container text-on-error-container p-4 rounded-xl mb-6 flex gap-3 border border-error/20">
+      <span class="font-body-sm font-medium">{{ apiErrorMessage() }}</span>
     </div>
+  }
+
+  <form [formGroup]="confirmForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+    <div class="flex flex-col gap-1">
+      <label class="text-label-md font-medium text-on-surface text-center mb-2">أدخل الرمز هنا <span class="text-error">*</span></label>
+      <div class="relative flex justify-center dir-ltr mt-2 mx-auto" dir="ltr">
+        <input 
+          type="text" 
+          formControlName="otpCode" 
+          maxlength="6" 
+          class="absolute inset-0 w-full h-full opacity-0 cursor-text z-10"
+        />
+        <div class="flex gap-2 sm:gap-3 pointer-events-none">
+          @for (i of [0, 1, 2, 3, 4, 5]; track i) {
+            <div class="w-12 h-14 bg-surface-container-lowest rounded-xl border-2 flex items-center justify-center text-2xl font-bold transition-all duration-300"
+              [class.border-error]="confirmForm.get('otpCode')?.touched && confirmForm.get('otpCode')?.invalid"
+              [class.border-secondary]="(confirmForm.get('otpCode')?.value?.length || 0) === i || (i === 5 && confirmForm.get('otpCode')?.value?.length === 6)"
+              [class.shadow-[0_0_12px_rgba(0,88,190,0.15)]]="(confirmForm.get('otpCode')?.value?.length || 0) === i || (i === 5 && confirmForm.get('otpCode')?.value?.length === 6)"
+              [class.border-outline-variant]="(confirmForm.get('otpCode')?.value?.length || 0) !== i && !(i === 5 && confirmForm.get('otpCode')?.value?.length === 6) && !(confirmForm.get('otpCode')?.touched && confirmForm.get('otpCode')?.invalid)"
+            >
+              {{ confirmForm.get('otpCode')?.value?.[i] || '' }}
+            </div>
+          }
+        </div>
+      </div>
+      @if (confirmForm.get('otpCode')?.touched && confirmForm.get('otpCode')?.invalid) {
+        <span class="text-error text-xs font-medium mt-1 text-center">
+          @if (confirmForm.get('otpCode')?.hasError('required')) {
+            رمز التحقق مطلوب.
+          } @else {
+            يجب أن يتكون رمز التحقق من 6 أرقام.
+          }
+        </span>
+      }
+    </div>
+
+    <app-button type="submit" [disabled]="isLoading()" variant="primary" [loading]="isLoading()" extraClass="w-full justify-center mt-4 font-label-lg group relative overflow-hidden transition-all">
+      <span class="flex items-center gap-2">
+        تأكيد الحساب
+        <span class="material-symbols-outlined transition-transform duration-300 group-hover:-translate-x-1">arrow_back</span>
+      </span>
+    </app-button>
+  </form>
+
+  <div class="text-center mt-6">
+    <p class="text-on-surface-variant text-body-sm">
+      لم يصلك الرمز؟ 
+      <app-button type="button" (onClick)="resendOtp()" [disabled]="countdown() > 0" variant="text" extraClass="text-secondary font-semibold hover:underline bg-transparent border-none cursor-pointer disabled:opacity-100 disabled:cursor-not-allowed disabled:hover:no-underline transition-all">
+        @if (countdown() > 0) {
+          <span class="inline-flex items-center gap-1 bg-surface-variant/70 px-2.5 py-1 rounded-full text-on-surface-variant font-bold text-[11px]">إعادة الإرسال بعد {{ countdown() }} ثانية</span>
+        } @else {
+          إعادة الإرسال
+        }
+      </app-button>
+    </p>
   </div>
 </div>

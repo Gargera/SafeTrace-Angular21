@@ -24,3 +24,14 @@ export interface NotificationPage {
   totalPages: number;
   hasMore: boolean;
 }
+
+export interface ParsedCaseNotification {
+  kind: 'approved' | 'rejected';
+  caseId: string | number;
+  caseCode: string;
+  rejectionReason?: string;
+  detailsUrl: string;
+  updateUrl: string;
+  fullMessage: string;
+  raw: GetUserNotificationsDTO;
+}

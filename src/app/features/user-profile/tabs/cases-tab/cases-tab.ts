@@ -6,7 +6,6 @@ import {
   computed,
   OnInit,
   OnDestroy,
-  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -16,25 +15,23 @@ import { ProfileService } from '../../service/profile.service';
 import { UrgentCaseService } from '../../../urgent-cases/services/urgent-case.service';
 import { LongTermCaseService } from '../../../long-term-cases/services/long-term-case.service';
 import { UnknownCaseService } from '../../../unknown-cases/services/unknown-case.service';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 
 import { MyCaseListItemResponse, MyCasesFilterRequest } from '../../model/profile.model';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
-import { FoundPersonInfoRequest } from '../../../../core/models/Cases.model';
+import { FoundPersonInfoRequest, CasesFilterRequest } from '../../../../core/models/cases.model';
 
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { CaseCardCompactComponent } from '../../../../shared/components/cases-components/case-card-compact/case-card-compact.component';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
-import { FormField } from '../../../../shared/components/form-field/form-field';
-import { CardComponent } from '../../../../shared/components/card/card';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
+import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup';
 
 const CASE_TYPE_ORDER: CaseType[] = [CaseType.Urgent, CaseType.LongTerm, CaseType.Unknown];
-const FILTER_DEBOUNCE_MS = 350;
 
 @Component({
   selector: 'app-my-cases-tab',
@@ -48,14 +45,15 @@ const FILTER_DEBOUNCE_MS = 350;
     EmptyStateComponent,
     ButtonComponent,
     ConfirmationModalComponent,
-    CaseHeaderComponent,
-    FormField,
-    CardComponent,
+    HeaderComponent,
+    CaseFiltersComponent,
     FoundedPopupComponent,
   ],
   templateUrl: './cases-tab.html',
+  styleUrls: ['./cases-tab.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
+
 export class MyCasesTab implements OnInit, OnDestroy {
   protected readonly CaseType = CaseType;
   protected readonly CaseStatus = CaseStatus;
@@ -67,8 +65,7 @@ export class MyCasesTab implements OnInit, OnDestroy {
   private toast = inject(SnackbarService);
 
   // Filters
-  searchQuery = signal('');
-  caseTypeFilter = signal<CaseType | ''>('');
+  filterRequest = signal<MyCasesFilterRequest>({});
   currentPage = signal(1);
   totalPages = signal(0);
   totalCount = signal(0); // total number of cases matching current filters
@@ -77,6 +74,7 @@ export class MyCasesTab implements OnInit, OnDestroy {
 
   // Data – this is the filtered result from the backend
   allCases = signal<MyCaseListItemResponse[]>([]);
+  initialLoad = signal(true);
   loading = signal(true);
   loadingMore = signal(false);
 
@@ -99,7 +97,6 @@ export class MyCasesTab implements OnInit, OnDestroy {
   markAsFoundCaseType = signal<CaseType | null>(null);
 
   private isFirstFilterRun = true;
-  private searchDebounceTimer: ReturnType<typeof setTimeout> | undefined;
 
   // Computed
   // No local filtering – all filtering is done by the backend.
@@ -142,46 +139,46 @@ export class MyCasesTab implements OnInit, OnDestroy {
     }));
   });
 
-  constructor() {
-    // Effect for filter changes – triggers backend fetch with debounce
-    effect(() => {
-      this.searchQuery();
-      this.caseTypeFilter();
-
-      if (this.isFirstFilterRun) {
-        this.isFirstFilterRun = false;
-        return;
-      }
-
-      if (this.searchDebounceTimer) {
-        clearTimeout(this.searchDebounceTimer);
-      }
-
-      this.searchDebounceTimer = setTimeout(() => {
-        this.currentPage.set(1);
-        this.loadCases();
-      }, FILTER_DEBOUNCE_MS);
-    });
-  }
+  constructor() { }
 
   ngOnInit(): void {
     this.loadCases();
   }
 
-  ngOnDestroy(): void {
-    if (this.searchDebounceTimer) {
-      clearTimeout(this.searchDebounceTimer);
+  ngOnDestroy(): void { }
+
+  onFilterChange(request: CasesFilterRequest) {
+    const myCasesFilter: MyCasesFilterRequest = {
+      fullName: request.fullName,
+      caseCode: request.caseCode,
+      status: request.status,
+      caseType: request.caseType,
+    };
+
+    if (this.isFirstFilterRun) {
+      this.isFirstFilterRun = false;
+      this.filterRequest.set(myCasesFilter);
+      return;
     }
+    this.filterRequest.set(myCasesFilter);
+    this.currentPage.set(1);
+    this.loadCases();
+  }
+
+  onFilterReset() {
+    this.filterRequest.set({});
+    this.currentPage.set(1);
+    this.loadCases();
   }
 
   private loadCases(): void {
     this.loading.set(true);
 
+    const req = this.filterRequest();
     const filter: MyCasesFilterRequest = {
+      ...req,
       page: this.currentPage(),
       pageSize: this.pageSize,
-      fullName: this.searchQuery() || undefined,
-      caseType: this.caseTypeFilter() || undefined,
     };
 
     this.profileService.getMyCases(filter).subscribe({
@@ -192,6 +189,7 @@ export class MyCasesTab implements OnInit, OnDestroy {
           this.totalPages.set(0);
           this.totalCount.set(0);
           // Do not reset overallTotalCount here – keep the last known value
+          this.initialLoad.set(false);
           this.loading.set(false);
           return;
         }
@@ -203,7 +201,11 @@ export class MyCasesTab implements OnInit, OnDestroy {
           this.totalCount.set(pagination.totalCount ?? 0);
 
           // Update overall total only when no filters are applied
-          const hasActiveFilter = this.searchQuery().trim() !== '' || this.caseTypeFilter() !== '';
+          const hasActiveFilter = !!req && (
+            (req.fullName && req.fullName.trim() !== '') ||
+            (req.caseCode && req.caseCode.trim() !== '') ||
+            req.caseType !== undefined || req.status !== undefined
+          );
           if (!hasActiveFilter) {
             this.overallTotalCount.set(pagination.totalCount ?? 0);
           }
@@ -212,6 +214,7 @@ export class MyCasesTab implements OnInit, OnDestroy {
           this.totalPages.set(0);
           this.totalCount.set(0);
         }
+        this.initialLoad.set(false);
         this.loading.set(false);
       },
       error: () => {
@@ -219,6 +222,7 @@ export class MyCasesTab implements OnInit, OnDestroy {
         this.allCases.set([]);
         this.totalPages.set(0);
         this.totalCount.set(0);
+        this.initialLoad.set(false);
         this.loading.set(false);
       },
     });
@@ -230,11 +234,11 @@ export class MyCasesTab implements OnInit, OnDestroy {
     this.loadingMore.set(true);
     const nextPage = this.currentPage() + 1;
 
+    const req = this.filterRequest();
     const filter: MyCasesFilterRequest = {
+      ...req,
       page: nextPage,
       pageSize: this.pageSize,
-      fullName: this.searchQuery() || undefined,
-      caseType: this.caseTypeFilter() || undefined,
     };
 
     this.profileService.getMyCases(filter).subscribe({
@@ -318,9 +322,9 @@ export class MyCasesTab implements OnInit, OnDestroy {
           items.map((item) =>
             item.id === id
               ? {
-                  ...item,
-                  status: CaseStatus.Found,
-                }
+                ...item,
+                status: CaseStatus.Found,
+              }
               : item,
           ),
         );
