@@ -295,7 +295,9 @@
             placeholder="اكتب رسالتك هنا..." [ngModel]="draft()" (ngModelChange)="draft.set($event)"
             (keyup.enter)="onSend()" />
 
-          <input #fileInput type="file" class="hidden" (change)="onFileSelected($event)" />
+          <input #fileInput type="file" class="hidden"   accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm"
+             (change)="onFileSelected($event)" />
+            
 
           <button type="button" class="text-on-surface-variant shrink-0 cursor-pointer" (click)="openFilePicker()"
             aria-label="إرفاق ملف">
@@ -315,6 +317,11 @@
           </svg>
         </button>
       </div>
+      @if (fileError()) {
+            <span class="text-sm text-error px-md pb-2" dir="rtl">
+              {{ fileError() }}
+            </span>
+          }
     </div>
   }@else {
   <div class="border-t border-outline-variant bg-surface-container px-6 py-5">

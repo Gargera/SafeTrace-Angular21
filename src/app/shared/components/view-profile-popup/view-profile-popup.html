@@ -62,21 +62,13 @@
             }
             <span
               class="absolute bottom-0.5 left-0.5 h-4 w-4 rounded-[9999px] border-2 border-surface-container-lowest"
-              [class]="roleDotClass()"
             ></span>
           </div>
 
           <h2 class="mb-2 text-lg font-bold leading-snug text-on-surface">
             {{ p.fullName }}
           </h2>
-
-          <span
-            class="inline-flex items-center rounded-[9999px] px-3 py-0.5 text-[12.5px] font-semibold"
-            [class]="roleBadgeClass()"
-          >
-            {{ roleLabel() }}
-          </span>
-
+          <span [appRoleBadgeDirective]="p!.role"></span>
           <div class="my-4.5 h-px w-full bg-outline-variant/50"></div>
           <!-- phone nuumber -->
           <dl class="w-full">

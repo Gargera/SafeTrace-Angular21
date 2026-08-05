@@ -41,6 +41,9 @@ deleteChatForMe(chatId: number): Observable<ApiResponse<ChatDetailsDto>> {
 getMessages(chatId: number): Observable<ApiResponse<MessageDto[]>> {
     return this.http.get<ApiResponse<MessageDto[]>>(`${this.baseUrl}/${chatId}/messages`);
   }
+getMessagesForAdmin(chatId: number): Observable<ApiResponse<MessageDto[]>> {
+    return this.http.get<ApiResponse<MessageDto[]>>(`${this.baseUrl}/admin/${chatId}/messages`);
+  }
 hardDeleteChat(chatId: number): Observable<ApiResponse<ChatDetailsDto>> {
     return this.http.delete<ApiResponse<ChatDetailsDto>>(`${this.baseUrl}/${chatId}/hard-delete`);
   }

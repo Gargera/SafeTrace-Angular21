@@ -16,7 +16,8 @@ import { Location } from '@angular/common';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
-
+import { validateImageFile} from '../../../../shared/validators/image-validation.validator';
+import { validateVideoFile } from '../../../../shared/validators/video-validation.validator';
 @Component({
   selector: 'app-chat-window',
   standalone: true,
@@ -53,6 +54,7 @@ export class ChatWindow implements OnInit {
 
   draft = signal<string>('');
   selectedFile = signal<File | null>(null);
+  fileError = signal<string | null>(null);
   sending = signal<boolean>(false);
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
@@ -212,45 +214,50 @@ private handleMessageDeletedForEveryone = (
 
 };
   loadMessages(): void {
-    this.chatService.getMessages(this.chatId).subscribe({
-      next: (res) => {
+    const messagesRequest = this.isAdmin
+  ? this.chatService.getMessagesForAdmin(this.chatId)
+  : this.chatService.getMessages(this.chatId);
+
+  messagesRequest.subscribe({
+    next: (res) => {
       const incomingMessages = res.data!.map((m) =>
         this.normalizeMessage(m)
       );
-    
-      this.messages.update(current => {
 
+      this.messages.update(current => {
         const currentMap = new Map(
           current.map(m => [m.id, m])
         );
 
         return incomingMessages.map(message => {
-
           const oldMessage = currentMap.get(message.id);
 
           return {
             ...message,
             isRead: oldMessage?.isRead ?? message.isRead
           };
-
         });
+      });
 
-      });     
-        this.hasMoreMessages.set(false);
-        this.messagesLoaded.set(true);
-        this.checkLoadingStatus();
+      this.hasMoreMessages.set(false);
+      this.messagesLoaded.set(true);
+      this.checkLoadingStatus();
+
+      if (!this.isAdmin) {
         this.markAsRead();
-        setTimeout(() => {
+      }
+
+      setTimeout(() => {
         this.scrollToBottom();
-        });
-      },
-      error: (err) => {
+      });
+    },
+    error: (err) => {
       this.snackbarService.error(
-      err.error?.detail ?? err.error?.title ?? 'تعذر تحميل الرسائل'
+        err.error?.detail ?? err.error?.title ?? 'تعذر تحميل الرسائل'
       );
       this.isLoading.set(false);
     }
-    });
+  });
   }
 
   attachmentUrl(message: MessageDto): string | null {
@@ -289,15 +296,44 @@ private handleMessageDeletedForEveryone = (
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.selectedFile.set(input.files?.[0] ?? null);
+
+    const file = input.files?.[0] ?? null;
+    if(!file) {
+      this.fileError.set(null);
+      return;
+    }
+    
+    let validation;
+
+    if (file.type.startsWith('image/')) {
+      validation = validateImageFile(file);
+    } else if (file.type.startsWith('video/')) {
+      validation = validateVideoFile(file);
+    } else {
+      this.fileError.set('نوع الملف غير مدعوم.');
+      this.selectedFile.set(null);
+      input.value = '';
+      return;
+    }   
+
+    if (!validation.valid) {
+      this.fileError.set(validation.errorMessage!);
+      this.selectedFile.set(null);
+      input.value = ''; // Reset the input so the same file can be selected again
+      return;
+    }
+    this.fileError.set(null);
+    this.selectedFile.set(file);
   }
 
   clearSelectedFile(): void {
     this.selectedFile.set(null);
+    this.fileError.set(null);
     this.fileInput.nativeElement.value = '';
   }
 
   onSend() : void {
+   
     if (this.sending()) {
       return; // a send is already in flight - ignore extra Enter/click triggers
     }

@@ -73,7 +73,7 @@ export class UserList {
     searchTerm: '',
     verificationStatus: '' as any,
     roleId: '' as any,
-    isBlocked: '' as any,
+    isBlocked: undefined ,
   });
 
   private searchSubject = new Subject<string>();
@@ -138,7 +138,7 @@ export class UserList {
       searchTerm: '',
       verificationStatus: '' as any,
       roleId: '' as any,
-      isBlocked: '' as any,
+      isBlocked: undefined,
     });
     this.loadUsers();
   }
@@ -184,7 +184,8 @@ export class UserList {
   searchTerm: this.filter().searchTerm || undefined,
   verificationStatus: this.filter().verificationStatus || undefined,
   roleId: this.filter().roleId || undefined,
-  isBlocked: this.filter().isBlocked ?? undefined
+  isBlocked: this.filter().isBlocked ?? null
+
 };
   console.log(reportFilter);
   this.reportService
