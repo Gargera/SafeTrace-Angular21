@@ -1,14 +1,20 @@
 import { Directive, ElementRef, effect, input, Renderer2 } from '@angular/core';
 import { UserRole } from '../enums/user-role';
-import { ROLE_TRANSLATIONS_AR, getRoleTranslationAr } from '../../core/constants/dictionaries/roles.dictionary';
+import {
+  ROLE_TRANSLATIONS_AR,
+  getRoleTranslationAr,
+} from '../../core/constants/dictionaries/roles.dictionary';
 
 @Directive({
-  selector: '[appRoleBadgeDirective]'
+  selector: '[appRoleBadgeDirective]',
 })
 export class RoleBadgeDirective {
   role = input.required<string>({ alias: 'appRoleBadgeDirective' });
 
-  constructor(private el: ElementRef, private renderer: Renderer2) {
+  constructor(
+    private el: ElementRef,
+    private renderer: Renderer2,
+  ) {
     this.renderer.addClass(this.el.nativeElement, 'px-sm');
     this.renderer.addClass(this.el.nativeElement, 'py-1');
     this.renderer.addClass(this.el.nativeElement, 'rounded-lg');
