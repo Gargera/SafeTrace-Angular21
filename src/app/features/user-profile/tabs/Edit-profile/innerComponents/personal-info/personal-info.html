@@ -1,7 +1,7 @@
 <form
   [formGroup]="personalForm"
   (ngSubmit)="savePersonal()"
-  class="bg-surface border border-outline-variant rounded-2xl p-lg space-y-md shadow-sm transition-all duration-300 hover:shadow-md block"
+  class="bg-surface border my-5 border-outline-variant rounded-2xl p-lg space-y-md shadow-sm transition-all duration-300 hover:shadow-md"
   aria-labelledby="personal-heading"
 >
   <div class="flex justify-between items-center border-b border-outline-variant pb-sm">
@@ -13,37 +13,35 @@
       المعلومات الشخصية
     </h3>
     @if (!isEditingPersonal()) {
-      <button
-        type="button"
+      <span
         (click)="togglePersonalEdit(true)"
-        class="px-md py-xs bg-secondary-container text-on-secondary-container hover:bg-secondary-container-high focus-visible:ring-2 focus-visible:ring-secondary rounded-lg text-label-sm font-bold flex items-center gap-xs transition-colors cursor-pointer"
+        class="material-symbols-outlined text-[12px] cursor-pointer"
+        aria-hidden="true"
+        >edit</span
       >
-        <span class="material-symbols-outlined text-[16px]" aria-hidden="true">edit</span>
-        تعديل البيانات
-      </button>
     } @else {
       <div class="flex items-center gap-sm">
-        <button
+        <app-button
           type="button"
+          variant="danger"
           [disabled]="isSavingPersonal()"
           (click)="togglePersonalEdit(false); cancelPersonal()"
-          class="px-md py-xs text-secondary border border-secondary rounded-lg text-label-sm font-bold hover:bg-secondary-fixed focus-visible:ring-2 focus-visible:ring-secondary transition-colors disabled:opacity-50 cursor-pointer"
         >
           إلغاء
-        </button>
-        <button
+        </app-button>
+        <app-button
           type="submit"
+          variant="success"
           [disabled]="personalForm.invalid || isSavingPersonal()"
           [attr.aria-busy]="isSavingPersonal()"
-          class="px-md py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 focus-visible:ring-2 focus-visible:ring-secondary transition-all flex items-center gap-xs disabled:opacity-50 cursor-pointer"
         >
           @if (isSavingPersonal()) {
             <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
               >progress_activity</span
             >
           }
-          حفظ التغييرات
-        </button>
+          حفظ
+        </app-button>
       </div>
     }
   </div>
@@ -54,14 +52,13 @@
       <label for="firstName" class="text-label-md text-on-surface font-semibold">
         الاسم الأول <span class="text-error" aria-hidden="true">*</span>
       </label>
-      <input
+      <app-form-field
         id="firstName"
         formControlName="firstName"
         type="text"
         maxlength="100"
         [attr.aria-invalid]="isFieldInvalid('firstName')"
         [attr.aria-describedby]="isFieldInvalid('firstName') ? 'firstName-error' : null"
-        class="w-full bg-surface-container-low border rounded-lg p-md transition-all focus:ring-2 focus:ring-secondary focus:border-secondary outline-none disabled:opacity-60 disabled:cursor-not-allowed"
         [class.border-error]="isFieldInvalid('firstName')"
         [class.border-outline-variant]="!isFieldInvalid('firstName')"
       />
@@ -72,7 +69,7 @@
           } @else if (personalForm.get('firstName')?.hasError('maxlength')) {
             لا يتجاوز 100 حرف
           } @else if (personalForm.get('firstName')?.hasError('pattern')) {
-            الاسم الأول يجب أن يكون كلمة واحدة فقط من الحروف العربية أو الإنجليزية
+            الاسم الأول يجب أن يكون كلمة واحدة باللغة العربية فقط
           }
         </p>
       }
@@ -83,14 +80,13 @@
       <label for="lastName" class="text-label-md text-on-surface font-semibold">
         اسم العائلة <span class="text-error" aria-hidden="true">*</span>
       </label>
-      <input
+      <app-form-field
         id="lastName"
         formControlName="lastName"
         type="text"
         maxlength="100"
         [attr.aria-invalid]="isFieldInvalid('lastName')"
         [attr.aria-describedby]="isFieldInvalid('lastName') ? 'lastName-error' : null"
-        class="w-full bg-surface-container-low border rounded-lg p-md transition-all focus:ring-2 focus:ring-secondary focus:border-secondary outline-none disabled:opacity-60 disabled:cursor-not-allowed"
         [class.border-error]="isFieldInvalid('lastName')"
         [class.border-outline-variant]="!isFieldInvalid('lastName')"
       />
@@ -101,7 +97,7 @@
           } @else if (personalForm.get('lastName')?.hasError('maxlength')) {
             لا يتجاوز 100 حرف
           } @else if (personalForm.get('lastName')?.hasError('pattern')) {
-            اسم العائلة يجب أن يحتوي على حروف عربية أو إنجليزية ومسافة واحدة بين الكلمات
+            اسم العائلة يجب أن يحتوي على حروف عربية فقط ومسافة واحدة بين الكلمات
           }
         </p>
       }

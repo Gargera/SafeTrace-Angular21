@@ -1,6 +1,6 @@
 <!-- 1. Header المشترك لـ SafeTrace AI -->
 <div class="mb-xl">
-  <app-case-header title="إدارة المحادثات" subtitle="نظرة عامة ومراقبة شاملة لجميع المحادثات النشطة في النظام" />
+  <app-header title="إدارة المحادثات" subtitle="نظرة عامة ومراقبة شاملة لجميع المحادثات النشطة في النظام" />
 </div>
 
 <!-- 2. Statistics Cards -->
@@ -17,7 +17,7 @@
   </div>
   } @else {
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+  <app-card extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
     <div class="flex items-center justify-between">
       <span class="text-sm font-medium text-on-surface-variant">الإجمالي</span>
       <span class="material-symbols-outlined text-secondary">forum</span>
@@ -25,7 +25,7 @@
     <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.totalChats ?? 0 }}</p>
   </app-card>
 
-  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+  <app-card extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
     <div class="flex items-center justify-between">
       <span class="text-sm font-medium text-on-surface-variant">نشطة</span>
       <span class="material-symbols-outlined text-green-500">mark_chat_read</span>
@@ -33,7 +33,7 @@
     <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.activeChats ?? 0 }}</p>
   </app-card>
 
-  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+  <app-card extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
     <div class="flex items-center justify-between">
       <span class="text-sm font-medium text-on-surface-variant">حذف مرسل</span>
       <span class="material-symbols-outlined text-orange-500">person_remove</span>
@@ -41,7 +41,7 @@
     <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.deletedBySenderOnly ?? 0 }}</p>
   </app-card>
 
-  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+  <app-card extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
     <div class="flex items-center justify-between">
       <span class="text-sm font-medium text-on-surface-variant">حذف مستقبل</span>
       <span class="material-symbols-outlined text-indigo-500">person_off</span>
@@ -49,7 +49,7 @@
     <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.deletedByReceiverOnly ?? 0 }}</p>
   </app-card>
 
-  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+  <app-card extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
     <div class="flex items-center justify-between">
       <span class="text-sm font-medium text-on-surface-variant">حذف الطرفين</span>
       <span class="material-symbols-outlined text-red-500">delete_forever</span>
@@ -57,12 +57,12 @@
     <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.deletedByBoth ?? 0 }}</p>
   </app-card>
   
-  <app-card extraClass="p-4 rounded-xl bg-error-container shadow-sm border border-outline-variant">
-  <div class="flex items-center justify-between">
+  <app-card extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-error-container shadow-sm border border-outline-variant">
+  <div class="flex items-center justify-between gap-1">
     <span class="text-sm font-medium text-on-error-container">
       رسائل غير مقروءة 
     </span>
-    <span class="material-symbols-outlined text-on-error-container">
+    <span class="material-symbols-outlined text-on-error-container shrink-0">
       mark_chat_unread
     </span>
   </div>
@@ -137,18 +137,29 @@
           <app-form-field
             label="من تاريخ"
             type="date"
+            [max] = "today"
             [ngModel]="fromDate()"
             (ngModelChange)="fromDate.set($event)">
           </app-form-field>
+          @if (fromDateError()) {
+          <p class="mt-1 text-xs text-error">
+            {{ fromDateError() }}
+          </p>
+        }
 
           <!-- التاريخ إلى -->
           <app-form-field
             label="إلى تاريخ"
             type="date"
+            [max] = "today"
             [ngModel]="toDate()"
             (ngModelChange)="toDate.set($event)">
           </app-form-field>
-
+          @if (toDateError()) {
+          <p class="mt-1 text-xs text-error">
+            {{ toDateError() }}
+          </p>
+        }
           <!-- حذف من المرسل -->
           <app-form-field
             label="محذوفة من المرسل"
@@ -185,7 +196,9 @@
             <app-button variant="text" (onClick)="resetFilters()" extraClass="px-3 py-1.5 text-sm cursor-pointer">
               مسح الكل
             </app-button>
-            <app-button variant="primary" (onClick)="applyFilters()" extraClass="px-4 py-1.5 rounded-lg text-sm font-bold cursor-pointer">
+            <app-button variant="primary" 
+             [disabled]="hasDateErrors()"
+             (onClick)="applyFilters()" extraClass="px-4 py-1.5 rounded-lg text-sm font-bold cursor-pointer">
               تطبيق
             </app-button>
           </div>
@@ -348,36 +361,11 @@
       <span class="text-label-sm text-on-surface-variant font-medium">
         إجمالي عدد المحادثات: <span class="font-bold">{{ totalCount() }}</span>
       </span>
-      <div class="flex gap-xs" dir="ltr">
-        <button
-          [disabled]="currentPage() === 1"
-          (click)="changePage(currentPage() - 1)"
-          class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <span class="material-symbols-outlined text-md">chevron_left</span>
-        </button>
-        
-        @for (page of pagesArray(); track page) {
-          <button
-            (click)="changePage(page)"
-            [class.bg-secondary]="page === currentPage()"
-            [class.text-white]="page === currentPage()"
-            [class.bg-white]="page !== currentPage()"
-            [class.text-primary]="page !== currentPage()"
-            class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant font-bold text-label-sm hover:bg-secondary-fixed-dim transition-all"
-          >
-            {{ page }}
-          </button>
-        }
-        
-        <button
-          [disabled]="currentPage() === totalPages()"
-          (click)="changePage(currentPage() + 1)"
-          class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <span class="material-symbols-outlined text-md">chevron_right</span>
-        </button>
-      </div>
+      <app-pagination
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        (pageChange)="changePage($event)"
+      />
     </div>
   }
 </section>

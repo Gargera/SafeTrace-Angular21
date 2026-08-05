@@ -1,10 +1,11 @@
 <app-card extraClass="rounded-xl bg-surface-container-lowest p-6 shadow-sm" dir="rtl">
-  <form [formGroup]="filterForm" class="space-y-6">
+  <form [formGroup]="filterForm" (ngSubmit)="onSubmit($event)" class="space-y-6">
     <!-- Templates for Filters -->
     <ng-template #searchTpl>
       <div>
-        <label for="filter-search" class="text-sm font-medium text-on-surface-variant block mb-1">بحث</label>
-        <app-form-field id="filter-search" formControlName="fullName" placeholder="ابحث بالاسم أو كود الحالة..." [prefix]="true">
+        <app-form-field id="filter-search" label="بحث" formControlName="fullName"
+          [placeholder]="searchMode() === 'name-only' ? 'ابحث بالاسم...' : 'ابحث بالاسم أو كود الحالة...'"
+          maxlength="100" [prefix]="true" [extraClass]="isInvalid('fullName') ? 'border-error' : ''">
           <span prefix class="material-symbols-outlined text-on-surface-variant" style="
               font-variation-settings:
                 'FILL' 0,
@@ -12,112 +13,129 @@
                 'opsz' 20;
             ">search</span>
         </app-form-field>
+        @if (isInvalid('fullName')) {
+        <p class="mt-1 flex items-center gap-1 text-xs text-error">
+          <span class="material-symbols-outlined text-sm">error</span>
+          {{ getFieldError('fullName') }}
+        </p>
+        }
       </div>
     </ng-template>
 
     <ng-template #genderTpl>
-      <div>
-        <label for="filter-gender" class="text-sm font-medium text-on-surface-variant block mb-1">الجنس</label>
-        <app-form-field id="filter-gender" type="select" formControlName="gender">
-          <option value="">الكل</option>
-          @for (gender of genders(); track gender) {
-          <option [value]="gender">{{ getGenderLabel(gender) }}</option>
-          }
-        </app-form-field>
-      </div>
+      <app-form-field id="filter-gender" label="الجنس" type="select" formControlName="gender">
+        <option value="">الكل</option>
+        @for (gender of genders(); track gender) {
+        <option [value]="gender">{{ getGenderLabel(gender) }}</option>
+        }
+      </app-form-field>
     </ng-template>
 
     <ng-template #ageCategoryTpl>
-      <div>
-        <label for="filter-age-category" class="text-sm font-medium text-on-surface-variant block mb-1">فئة العمر</label>
-        <app-form-field id="filter-age-category" type="select" formControlName="ageCategory">
-          <option value="">الكل</option>
-          @for (ageCategory of ageCategories; track ageCategory) {
-          <option [value]="ageCategory">{{ getAgeCategoryLabel(ageCategory) }}</option>
-          }
-        </app-form-field>
-      </div>
+      <app-form-field id="filter-age-category" label="فئة العمر" type="select" formControlName="ageCategory">
+        <option value="">الكل</option>
+        @for (ageCategory of ageCategories; track ageCategory) {
+        <option [value]="ageCategory">{{ getAgeCategoryLabel(ageCategory) }}</option>
+        }
+      </app-form-field>
     </ng-template>
 
     <ng-template #caseTypeTpl>
-      <div>
-        <label for="filter-case-type" class="text-sm font-medium text-on-surface-variant block mb-1">نوع الحالة</label>
-        <app-form-field id="filter-case-type" type="select" formControlName="caseType">
-          <option value="">الكل</option>
-          @for (type of caseTypeOptions; track type) {
-          <option [value]="type">{{ getCaseTypeLabel(type) }}</option>
-          }
-        </app-form-field>
-      </div>
+      <app-form-field id="filter-case-type" label="نوع الحالة" type="select" formControlName="caseType">
+        <option value="">الكل</option>
+        @for (type of caseTypeOptions; track type) {
+        <option [value]="type">{{ getCaseTypeLabel(type) }}</option>
+        }
+      </app-form-field>
     </ng-template>
 
     <ng-template #caseStatusTpl>
-      <div>
-        <label for="filter-case-status" class="text-sm font-medium text-on-surface-variant block mb-1">حالة الحالة</label>
-        <app-form-field id="filter-case-status" type="select" formControlName="status">
-          <option value="">الكل</option>
-          @for (status of statusOptions; track status) {
-          <option [value]="status">{{ getCaseStatusLabel(status) }}</option>
-          }
-        </app-form-field>
-      </div>
+      <app-form-field id="filter-case-status" label="حالة الحالة" type="select" formControlName="status">
+        <option value="">الكل</option>
+        @for (status of statusOptions; track status) {
+        <option [value]="status">{{ getCaseStatusLabel(status) }}</option>
+        }
+      </app-form-field>
     </ng-template>
 
     <ng-template #governmentTpl>
-      <div>
-        <label for="filter-government" class="text-sm font-medium text-on-surface-variant block mb-1">المحافظة</label>
-        <app-form-field id="filter-government" formControlName="government" placeholder="المحافظة..."></app-form-field>
-      </div>
+      <app-form-field id="filter-government" label="المحافظة" type="select" formControlName="government">
+        <option value="">الكل</option>
+        @for (gov of governorateOptions; track gov) {
+        <option [value]="gov">{{ gov }}</option>
+        }
+      </app-form-field>
     </ng-template>
 
     <ng-template #cityTpl>
-      <div>
-        <label for="filter-city" class="text-sm font-medium text-on-surface-variant block mb-1">المدينة</label>
-        <app-form-field id="filter-city" formControlName="city" placeholder="المدينة..."></app-form-field>
-      </div>
+      <app-form-field id="filter-city" label="المدينة" type="select" formControlName="city">
+        <option value="">الكل</option>
+        @for (c of availableCities(); track c) {
+        <option [value]="c">{{ c }}</option>
+        }
+      </app-form-field>
     </ng-template>
 
     <ng-template #fromDateTpl>
       <div>
-        <label for="filter-from-date" class="text-sm font-medium text-on-surface-variant block mb-1">من تاريخ</label>
-        <app-form-field id="filter-from-date" type="date" formControlName="fromDate"></app-form-field>
+        <app-form-field id="filter-from-date" label="من تاريخ" type="date" formControlName="fromDate"
+          [extraClass]="isInvalid('fromDate') ? 'border-error' : ''"></app-form-field>
+        @if (isInvalid('fromDate')) {
+        <p class="mt-1 flex items-center gap-1 text-xs text-error">
+          <span class="material-symbols-outlined text-sm">error</span>
+          {{ getFieldError('fromDate') }}
+        </p>
+        }
       </div>
     </ng-template>
 
     <ng-template #toDateTpl>
       <div>
-        <label for="filter-to-date" class="text-sm font-medium text-on-surface-variant block mb-1">إلى تاريخ</label>
-        <app-form-field id="filter-to-date" type="date" formControlName="toDate"></app-form-field>
+        <app-form-field id="filter-to-date" label="إلى تاريخ" type="date" formControlName="toDate"
+          [extraClass]="isInvalid('toDate') ? 'border-error' : ''"></app-form-field>
+        @if (isInvalid('toDate')) {
+        <p class="mt-1 flex items-center gap-1 text-xs text-error">
+          <span class="material-symbols-outlined text-sm">error</span>
+          {{ getFieldError('toDate') }}
+        </p>
+        }
       </div>
     </ng-template>
 
     <ng-template #ageSortTpl>
-      <div>
-        <label for="filter-age-sort" class="text-sm font-medium text-on-surface-variant block mb-1">ترتيب العمر</label>
-        <app-form-field id="filter-age-sort" type="select" formControlName="ageSort">
-          <option value="">بدون ترتيب</option>
-          @for (sort of ageSorts(); track sort) {
-          <option [value]="sort">{{ getAgeSortLabel(sort) }}</option>
-          }
-        </app-form-field>
-      </div>
+      <app-form-field id="filter-age-sort" label="ترتيب العمر" type="select" formControlName="ageSort">
+        <option value="">بدون ترتيب</option>
+        @for (sort of ageSorts(); track sort) {
+        <option [value]="sort">{{ getAgeSortLabel(sort) }}</option>
+        }
+      </app-form-field>
     </ng-template>
 
     <ng-template #dateSortTpl>
+      <app-form-field id="filter-date-sort" label="ترتيب التاريخ" type="select" formControlName="dateSort">
+        <option value="">بدون ترتيب</option>
+        <option value="0">{{ getDateSortLabel(0) }}</option>
+        <option value="1">{{ getDateSortLabel(1) }}</option>
+      </app-form-field>
+    </ng-template>
+
+    <ng-template #radiusTpl>
       <div>
-        <label for="filter-date-sort" class="text-sm font-medium text-on-surface-variant block mb-1">ترتيب التاريخ</label>
-        <app-form-field id="filter-date-sort" type="select" formControlName="dateSort">
-          <option value="">بدون ترتيب</option>
-          <option value="0">{{ getDateSortLabel(0) }}</option>
-          <option value="1">{{ getDateSortLabel(1) }}</option>
-        </app-form-field>
+        <app-form-field id="filter-radius" label="نطاق البحث (كم)" type="number" formControlName="radiusInKm"
+          placeholder="مثال: 10 كم" [extraClass]="isInvalid('radiusInKm') ? 'border-error' : ''"></app-form-field>
+        @if (isInvalid('radiusInKm')) {
+        <p class="mt-1 flex items-center gap-1 text-xs text-error">
+          <span class="material-symbols-outlined text-sm">error</span>
+          {{ getFieldError('radiusInKm') }}
+        </p>
+        }
       </div>
     </ng-template>
 
     <!-- Main Filters Grid -->
     <div class="grid grid-cols-1 gap-5 md:grid" [style.grid-template-columns]="activeGridTemplate()">
       @if (showSearch() && !searchInAdvanced()) {
-        <ng-container *ngTemplateOutlet="searchTpl"></ng-container>
+      <ng-container *ngTemplateOutlet="searchTpl"></ng-container>
       }
       @if (showGender() && !genderInAdvanced()) {
       <ng-container *ngTemplateOutlet="genderTpl"></ng-container>
@@ -148,6 +166,9 @@
       }
       @if (showDateSort() && !dateSortInAdvanced()) {
       <ng-container *ngTemplateOutlet="dateSortTpl"></ng-container>
+      }
+      @if (showRadius() && !radiusInAdvanced()) {
+      <ng-container *ngTemplateOutlet="radiusTpl"></ng-container>
       }
     </div>
 
@@ -183,7 +204,8 @@
     <div class="grid transition-[grid-template-rows] duration-300 ease-in-out m-0"
       [style.grid-template-rows]="showAdvanced ? '1fr' : '0fr'">
       <div class="overflow-hidden">
-        <div class="grid grid-cols-1 gap-5 pt-4 transition-all duration-300 ease-out md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        <div
+          class="grid grid-cols-1 gap-5 pt-4 transition-all duration-300 ease-out md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           [class.opacity-100]="showAdvanced" [class.translate-y-0]="showAdvanced" [class.opacity-0]="!showAdvanced"
           [class.-translate-y-2]="!showAdvanced">
           @if (showSearch() && searchInAdvanced()) {
@@ -219,6 +241,9 @@
           @if (showDateSort() && dateSortInAdvanced()) {
           <ng-container *ngTemplateOutlet="dateSortTpl"></ng-container>
           }
+          @if (showRadius() && radiusInAdvanced()) {
+          <ng-container *ngTemplateOutlet="radiusTpl"></ng-container>
+          }
 
           <ng-content select="[extendedFilters]"></ng-content>
         </div>
@@ -226,16 +251,9 @@
     </div>
     }
 
-    <!-- Form Validation Messages -->
-    @if (filterForm.hasError('dateRangeInvalid')) {
-    <div class="rounded-lg bg-error-container/20 p-3 text-sm font-medium text-error flex items-center gap-2 mb-2">
-      <span class="material-symbols-outlined text-base">error</span>
-      تاريخ البداية (من تاريخ) لا يمكن أن يكون بعد تاريخ النهاية (إلى تاريخ).
-    </div>
-    }
-
     <!-- Footer -->
-    <div class="flex flex-wrap justify-end gap-3 pt-2">
+    <div class="flex flex-wrap justify-end gap-3 pt-4 border-t border-outline-variant/30 mt-4">
+      <ng-content select="[actions]"></ng-content>
       <app-button variant="text" type="button" (onClick)="resetFilters()"
         extraClass="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary">
         <span class="material-symbols-outlined transition-transform duration-200 group-hover:-rotate-90">refresh</span>

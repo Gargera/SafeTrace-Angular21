@@ -9,22 +9,24 @@
 
 }
 @else {
-<div class="max-w-3xl mx-auto py-lg px-md">
-  <h1 class="text-xl font-semibold text-on-surface mb-md">الرسائل والمحادثات</h1>
-  <p class="text-sm text-on-surface-variant mb-md">تواصل مع المفقودين وعائلات المفقودين لتحديث مسار البحث.</p>
+<div class="max-w-3xl mx-auto py-lg px-md h-125 md:h-150 flex flex-col">
+  <div class="shrink-0">
+    <h1 class="text-xl font-semibold text-on-surface mb-md">الرسائل والمحادثات</h1>
+    <p class="text-sm text-on-surface-variant mb-md">تواصل مع المفقودين وعائلات المفقودين لتحديث مسار البحث.</p>
 
-  <!-- Filter tabs -->
-  <div class="flex gap-xs mb-md">
-    @for (tab of filterTabs; track tab.key) {
-    <app-button [variant]="activeFilter() === tab.key ? 'primary' : 'secondary'"
-        extraClass="rounded-full !h-9 !px-4 rounded-full text-sm text-sm" (onClick)="setFilter(tab.key)">
-        {{ tab.label }}
-    </app-button>
-    }
+    <!-- Filter tabs -->
+    <div class="flex gap-xs mb-md">
+      @for (tab of filterTabs; track tab.key) {
+      <app-button [variant]="activeFilter() === tab.key ? 'primary' : 'secondary'"
+          extraClass="rounded-full !h-9 !px-4 rounded-full text-sm text-sm" (onClick)="setFilter(tab.key)">
+          {{ tab.label }}
+      </app-button>
+      }
+    </div>
   </div>
 
   <!-- Conversation list -->
-  <div class="flex flex-col gap-sm">
+  <div class="flex flex-col gap-sm flex-1 overflow-y-auto pe-2">
     @for (chat of filteredChats(); track chat.chatId) {
       <!-- Inlined conversation card (was app-conversation-card) -->
       <div
@@ -42,7 +44,7 @@
             <img [src]="chatService.getImageUrl(chat.otherUserImage)" alt="صورة المستخدم" class="w-full h-full object-cover" />
           } @else {
             <!-- إذا لم تكن الصورة موجودة، تعرض الأيقونة الافتراضية -->
-            <span class="m-auto font-medium text-sm">{{ chat.otherUserName?.charAt(0) }}</span>
+            <span class="m-auto font-medium text-sm">{{ chat.otherUserName.charAt(0) }}</span>
 
           }
         </span>
@@ -69,7 +71,7 @@
             <span class="text-xs text-on-surface-variant">{{ formatLastMessageDate(chat.lastMessageDate)  }}</span>
           }
           @if (chat.unreadCount > 0) {
-            <span class="min-w-[20px] h-5 px-1 rounded-full bg-secondary text-on-secondary text-xs flex items-center justify-center">
+            <span class="min-w-5 h-5 px-1 rounded-full bg-secondary text-on-secondary text-xs flex items-center justify-center">
               {{ chat.unreadCount }}
             </span>
           }
@@ -77,8 +79,8 @@
 
         <button
           type="button"
-          class="text-on-surface-variant hover:text-error shrink-1"
-          (click)="$event.stopPropagation(); deleteChat(chat)"
+          class="text-on-surface-variant hover:text-error shrink"
+          (click)="$event.stopPropagation(); openDeleteModal(chat)"
           aria-label="حذف المحادثة"
         >
           <svg viewBox="0 0 24 24" class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -91,4 +93,17 @@
     }
   </div>
 </div>
+}
+@if (showDeleteModal()) {
+  <app-confirmation-modal
+    title="حذف المحادثة"
+    message="سيتم حذف هذه المحادثة من قائمتك فقط."
+    icon="delete"
+    variant="danger"
+    confirmText="حذف"
+    cancelText="إلغاء"
+    [confirmLoading]="deleting()"
+    (confirm)="confirmDeleteChat()"
+    (cancel)="closeDeleteModal()">
+  </app-confirmation-modal>
 }

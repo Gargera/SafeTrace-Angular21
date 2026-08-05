@@ -1,6 +1,6 @@
 import { Directive, ElementRef, effect, input, Renderer2 } from '@angular/core';
 import { VerificationStatus } from '../enums/verification-status';
-import { getVerificationStatusTranslationAr } from '../../core/constants/verification.status.dictionary';
+import { getVerificationStatusTranslationAr } from '../../core/constants/dictionaries/verification.status.dictionary';
 
 @Directive({
   selector: '[appVerificationBadgeDirective]'

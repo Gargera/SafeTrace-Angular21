@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-7xl space-y-6 px-4 py-6">
 
     <section class="space-y-3 pb-2">
-      <app-case-header title="تفاصيل الحالة"></app-case-header>
+      <app-header title="تفاصيل الحالة"></app-header>
     </section>
 
     @if (loading()) {
@@ -25,12 +25,12 @@
               </button>
 
               @if(selectedMedia()?.type === 'Video'){
-                <video controls class="h-[550px] w-full rounded-xl border border-outline-variant object-cover">
+                <video controls class="h-137.5 w-full rounded-xl border border-outline-variant object-cover">
                   <source [src]="getImageUrl(selectedMedia()?.imagePath)" type="video/mp4">
                 </video>
               } @else {
                 <img 
-                  class="h-[550px] w-full cursor-pointer rounded-xl border border-outline-variant object-cover"
+                  class="h-137.5 w-full cursor-pointer rounded-xl border border-outline-variant object-cover"
                   [src]="getImageUrl(selectedMedia()?.imagePath)" 
                   (click)="openLightbox(currentIndex())">
               }
@@ -74,6 +74,13 @@
 
           <!-- ================= Details ================= -->
           <div class="space-y-6 p-6">
+            <app-rejection-reason-card
+              [isOwner]="isOwner()"
+              [isAdmin]="isAdminPage()"
+              [status]="caseDetails()?.status"
+              [rejectionReason]="caseDetails()?.rejectionReason">
+            </app-rejection-reason-card>
+
             <div>
               <h1 class="text-3xl font-bold text-on-background">
                 {{caseDetails()?.fName}}
@@ -152,92 +159,111 @@
             }
 
             <!-- ================= Owner Buttons ================= -->
-            @if(isOwner() && !isAdminPage()){
+           @if (
+            isOwner() &&
+            !isAdminPage() &&
+            caseDetails()?.status !== CaseStatus.Found
+          ) {
               <div class="flex flex-wrap items-center gap-3 pt-2">
-                @if(caseDetails()?.status !== CaseStatus.Rejected){
-                  <button 
-                    type="button"
-                    (click)="openFoundedPopup()" 
-                    class="flex items-center gap-2 rounded-2xl bg-[#009688] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:bg-[#00796b]">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>تم العثور</span>
-                  </button>
-                }
 
-                <button 
-                  type="button"
-                  (click)="editCase()" 
-                  class="flex items-center gap-2 rounded-2xl bg-[#0265DC] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:bg-[#0252b5]">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  <span>تعديل</span>
-                </button>
+              @if(caseDetails()?.status !== CaseStatus.Rejected){
+                <app-button
+                  *hasPermission="Permissions.UnknownCases.MarkAsFounded"
+                  (onClick)="openFoundedPopup()"
+                  variant="primary"
+                  extraClass="flex items-center gap-2 rounded-2xl !bg-[#009688] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#00796b]">
+                  <span class="material-symbols-outlined text-[20px]">beenhere</span>
+                  <span>تم العثور</span>
+                </app-button>
+              }
 
-                <button 
-                  type="button"
-                  (click)="deleteCase()" 
-                  class="flex items-center gap-2 rounded-2xl bg-[#C61A1A] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:bg-[#a11313]">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  <span>حذف</span>
-                </button>
-              </div>
-            }
+              <app-button
+                *hasPermission="Permissions.UnknownCases.Update"
+                (onClick)="editCase()"
+                variant="primary"
+                extraClass="flex items-center gap-2 rounded-2xl !bg-[#0265DC] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#0252b5]">
+                <span class="material-symbols-outlined text-[20px]">edit</span>
+                <span>تعديل</span>
+              </app-button>
+
+              <app-button
+                *hasPermission="Permissions.UnknownCases.SoftDelete"
+                (onClick)="deleteCase()"
+                variant="primary"
+                extraClass="flex items-center gap-2 rounded-2xl !bg-[#C61A1A] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
+                <span class="material-symbols-outlined text-[20px]">delete</span>
+                <span>حذف</span>
+              </app-button>
+
+            </div>
+          }
+          @if (
+            !isAdminPage() &&
+            !isOwner() &&
+            caseDetails()?.status !== CaseStatus.Found
+          ) {
+            <app-button
+              variant="secondary"
+              (onClick)="startChat(caseDetails()?.id!)"
+              extraClass="w-full justify-center gap-2 hover:border-primary hover:bg-primary/5 hover:text-primary">
+              <span class="material-symbols-outlined material-icon-sm">chat</span>
+              تواصل مع المُبلّغ
+            </app-button>
+          }
 
             <!-- ================= Admin Buttons ================= -->
             @let status = caseDetails()?.status;
 
-            @if ((isAdmin() || isModerator()) && isAdminPage()) {
+            @if (isAdminPage()) {
               <div class="flex flex-wrap items-center gap-3 pt-2">
+                @if(!isOwner()){
+                <app-button
+                variant="secondary"
+                (onClick)="startChat(caseDetails()?.id!)"
+                extraClass="flex items-center gap-2">
+                <span class="material-symbols-outlined material-icon-sm">chat</span>
+                <span>تواصل مع المُبلّغ</span>
+              </app-button>
+            }
 
                 @if (status === CaseStatus.Pending) {
-                  <button 
-                    type="button"
-                    (click)="openApproveConfirmation()" 
-                    class="flex items-center gap-2 rounded-2xl bg-[#009688] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:bg-[#00796b]">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
+                  <app-button 
+                    *hasPermission="Permissions.UnknownCases.Approve"
+                    (onClick)="openApproveConfirmation()" 
+                    variant="primary"
+                    extraClass="flex items-center gap-2 rounded-2xl !bg-[#009688] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#00796b]">
+                    <span class="material-symbols-outlined text-[20px]">check_circle</span>
                     <span>قبول</span>
-                  </button>
+                  </app-button>
 
-                  <button 
-                    type="button"
-                    (click)="openRejectConfirmation()" 
-                    class="flex items-center gap-2 rounded-2xl bg-[#C61A1A] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:bg-[#a11313]">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                  <app-button 
+                    *hasPermission="Permissions.UnknownCases.Reject"
+                    (onClick)="openRejectConfirmation()" 
+                    variant="primary"
+                    extraClass="flex items-center gap-2 rounded-2xl !bg-[#C61A1A] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
+                    <span class="material-symbols-outlined text-[20px]">cancel</span>
                     <span>رفض</span>
-                  </button>
+                  </app-button>
                 }
 
                 @if (status === CaseStatus.Pending || status === CaseStatus.Active) {
-                  <button 
-                    type="button"
-                    (click)="openFoundedPopup()" 
-                    class="flex items-center gap-2 rounded-2xl bg-[#009688] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:bg-[#00796b]">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                  <app-button 
+                    *hasPermission="Permissions.UnknownCases.MarkAsFounded"
+                    (onClick)="openFoundedPopup()" 
+                    variant="primary"
+                    extraClass="flex items-center gap-2 rounded-2xl !bg-[#009688] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#00796b]">
+                    <span class="material-symbols-outlined text-[20px]">beenhere</span>
                     <span>تم العثور</span>
-                  </button>
+                  </app-button>
 
-                  @if (isAdmin()) {
-                    <button 
-                      type="button"
-                      (click)="openPermanentDeleteConfirmation()" 
-                      class="flex items-center gap-2 rounded-2xl bg-[#C61A1A] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:bg-[#a11313]">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      <span>حذف نهائي</span>
-                    </button>
-                  }
+                  <app-button 
+                    *hasPermission="Permissions.UnknownCases.HardDelete"
+                    (onClick)="openPermanentDeleteConfirmation()" 
+                    variant="primary"
+                    extraClass="flex items-center gap-2 rounded-2xl !bg-[#C61A1A] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
+                    <span class="material-symbols-outlined text-[20px]">delete_forever</span>
+                    <span>حذف نهائي</span>
+                  </app-button>
                 }
 
               </div>
@@ -305,15 +331,12 @@
   
 
   @if(showRejectConfirmation()){
-    <app-confirmation-modal 
-      title="رفض الحالة"
-      message="هل أنت متأكد أنك تريد رفض هذه الحالة؟" 
-      confirmText="رفض"
-      cancelText="إلغاء" 
-      variant="danger" 
-      (confirm)="confirmReject()" 
+    <app-reject-case-popup
+      [isSubmitting]="isRejecting()"
+      [apiError]="rejectApiError()"
+      (confirm)="confirmReject($event)"
       (cancel)="cancelReject()">
-    </app-confirmation-modal>
+    </app-reject-case-popup>
   }
 
   @if(showPermanentDeleteConfirmation()){

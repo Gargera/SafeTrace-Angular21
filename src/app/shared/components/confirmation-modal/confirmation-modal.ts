@@ -16,6 +16,8 @@ export class ConfirmationModalComponent {
   cancelText = input('إلغاء');
   icon = input('help_outline');
   variant = input<'primary' | 'danger'>('primary');
+  confirmDisabled = input(false);
+  confirmLoading = input(false);
 
   confirm = output<void>();
   cancel = output<void>();

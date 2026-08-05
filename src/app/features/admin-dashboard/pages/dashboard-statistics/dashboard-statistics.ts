@@ -7,7 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DashboardDto } from '../../models/Dashboard/DashboardDto';
+import { DashboardDto } from '../../models/Dashboard/responses/DashboardDto';
 import { DashboardService } from '../../services/dashboard.service';
 
 interface ProblemDetails {
@@ -221,9 +221,9 @@ export class DashboardStatistics implements OnInit {
   caseTypeBars = computed<CaseTypeBar[]>(() => {
     const d = this.dashboard();
     if (!d || !d.caseTypes?.length) return [];
-    const maxTotal = Math.max(...d.caseTypes.map((c) => c.total), 1);
+    const maxTotal = Math.max(...d.caseTypes.map((c: any) => c.total), 1);
 
-    return d.caseTypes.map((c) => ({
+    return d.caseTypes.map((c: any) => ({
       label: c.caseType,
       total: c.total,
       active: c.active,

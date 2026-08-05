@@ -1,26 +1,31 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { catchError, EMPTY, Subject, switchMap, tap } from 'rxjs';
 
 import { UnknownCaseService } from '../../services/unknown-case.service';
-import { CasesFilterRequest, CaseType } from '../../../../core/models/Cases.model';
+import { CasesFilterRequest } from '../../../../core/models/cases.model';
 import { UnknownCaseListItemResponse } from '../../models/response/UnknownCaseListItemResponse';
 import { CaseCreationFlowService } from '../../../../core/services/case-creation-flow.service';
 
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { PaginationComponent } from '../../../../shared/components/cases-components/case-pagination/case-pagination.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
+import { CasesFilterState } from '../../../../shared/helper/cases-filter-state';
+import { SnackbarService } from '../../../../shared/services/toast.service';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { CaseType } from '../../../../shared/enums/case-type';
 
 @Component({
   selector: 'app-unknown-list',
   standalone: true,
   imports: [
     FormsModule,
-    CaseHeaderComponent,
+    HeaderComponent,
     CaseFiltersComponent,
     PaginationComponent,
     CaseSkeletonGridComponent,
@@ -35,20 +40,26 @@ export class UnknownList implements OnInit {
   private readonly router = inject(Router);
   private readonly unknownCaseService = inject(UnknownCaseService);
   private readonly caseCreationFlowService = inject(CaseCreationFlowService);
+  private readonly snackbar = inject(SnackbarService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  private readonly defaultPageSize = 12;
+  private readonly fetchTrigger$ = new Subject<void>();
+
+  readonly filterState = new CasesFilterState(12);
 
   readonly cases = signal<UnknownCaseListItemResponse[]>([]);
-  readonly loading = signal(true);
+  readonly loading = this.filterState.loading;
+  readonly hasError = this.filterState.hasError;
 
-  readonly currentPage = signal(1);
-  readonly totalPages = signal(1);
-  readonly totalItems = signal(0);
-  readonly pageSize = signal(this.defaultPageSize);
+  readonly currentPage = this.filterState.currentPage;
+  readonly totalPages = this.filterState.totalPages;
+  readonly totalItems = this.filterState.totalItems;
+  readonly pageSize = this.filterState.pageSize;
 
-  readonly filter = signal<CasesFilterRequest>(this.emptyFilter());
+  readonly filter = this.filterState.filter;
 
   ngOnInit(): void {
+    this.setupFetchPipeline();
     this.fetchCases();
   }
 
@@ -57,33 +68,15 @@ export class UnknownList implements OnInit {
   }
 
   onFilterChange(newFilter: CasesFilterRequest): void {
-    this.filter.update(() => ({
-      ...this.sanitizeFilter(newFilter),
-      page: 1,
-      pageSize: this.pageSize(),
-    }));
-
-    this.fetchCases();
+    this.filterState.onFilterChange(newFilter, () => this.fetchCases());
   }
 
   onFilterReset(): void {
-    this.filter.set({
-      ...this.emptyFilter(),
-      pageSize: this.pageSize(),
-    });
-
-    this.fetchCases();
+    this.filterState.onFilterReset(() => this.fetchCases());
   }
 
   onPageChange(page: number): void {
-    this.currentPage.set(page);
-
-    this.filter.update((f) => ({
-      ...f,
-      page,
-    }));
-
-    this.fetchCases();
+    this.filterState.onPageChange(page, () => this.fetchCases());
   }
 
   onViewDetails(caseId: number): void {
@@ -99,13 +92,32 @@ export class UnknownList implements OnInit {
   }
 
   private fetchCases(): void {
-    this.loading.set(true);
+    this.fetchTrigger$.next();
+  }
 
-    this.unknownCaseService
-      .getAllCases(this.filter() as any)
-      .pipe(finalize(() => this.loading.set(false)))
+  private setupFetchPipeline(): void {
+    this.fetchTrigger$
+      .pipe(
+        tap(() => {
+          this.loading.set(true);
+          this.hasError.set(false);
+        }),
+        switchMap(() =>
+          this.unknownCaseService.getAllCases(this.filter()).pipe(
+            catchError((err: unknown) => {
+              this.loading.set(false);
+              this.hasError.set(true);
+              const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء تحميل البيانات');
+              this.snackbar.error(errorMessage);
+              return EMPTY;
+            }),
+          ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
         next: ({ data }) => {
+          this.loading.set(false);
           if (!data) return;
 
           this.cases.set(data.items);
@@ -115,83 +127,5 @@ export class UnknownList implements OnInit {
           this.pageSize.set(data.pageSize);
         },
       });
-  }
-
-  private emptyFilter(): CasesFilterRequest {
-    return {
-      status: null,
-      caseType: null,
-      caseCode: null,
-      gender: null,
-      ageCategory: null,
-      fullName: null,
-      government: null,
-      city: null,
-      minAge: null,
-      maxAge: null,
-      fromDate: null,
-      toDate: null,
-      ageSort: null,
-      dateSort: null,
-      page: 1,
-      pageSize: this.defaultPageSize,
-    };
-  }
-
-  private sanitizeFilter(filter: CasesFilterRequest): CasesFilterRequest {
-    return {
-      ...filter,
-      caseType: this.normalizeEnum(filter.caseType),
-      caseCode: this.normalizeText(filter.caseCode),
-      gender: this.normalizeEnum(filter.gender),
-      ageCategory: this.normalizeEnum(filter.ageCategory),
-      fullName: this.normalizeText(filter.fullName),
-      government: this.normalizeText(filter.government),
-      city: this.normalizeText(filter.city),
-      minAge: this.normalizeNumber(filter.minAge),
-      maxAge: this.normalizeNumber(filter.maxAge),
-      fromDate: this.normalizeText(filter.fromDate),
-      toDate: this.normalizeText(filter.toDate),
-      ageSort: this.normalizeNumber(filter.ageSort),
-      dateSort: this.normalizeNumber(filter.dateSort),
-      page: 1,
-      pageSize: this.pageSize(),
-    };
-  }
-
-  private normalizeNumber(value: number | null | undefined): number | null {
-    if (value === null || value === undefined) {
-      return null;
-    }
-
-    const numericValue = typeof value === 'number' ? value : Number(value);
-
-    return Number.isFinite(numericValue) && numericValue !== Number.MAX_VALUE ? numericValue : null;
-  }
-
-  private normalizeEnum<T>(value: T | null | undefined): T | null {
-    if (value === null || value === undefined) {
-      return null;
-    }
-
-    if (typeof value === 'string') {
-      return value.trim().length > 0 ? value : null;
-    }
-
-    if (typeof value === 'number') {
-      return Number.isFinite(value) && value !== Number.MAX_VALUE ? value : null;
-    }
-
-    return value;
-  }
-
-  private normalizeText(value: string | null | undefined): string | null {
-    if (value === null || value === undefined) {
-      return null;
-    }
-
-    const textValue = value.trim();
-
-    return textValue.length > 0 ? textValue : null;
   }
 }

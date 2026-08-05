@@ -1,6 +1,6 @@
 <div class="mb-xl">
-  <app-case-header
-    title="إدارة الشكاوى والبلاغات"
+  <app-header
+    title="إدارة الشكاوى"
     subtitle="متابعة ومعالجة شكاوى ومقترحات المستخدمين المتعلقة بالخدمات أو العمليات داخل النظام."
     primaryActionLabel=""
     primaryActionIcon=""
@@ -73,7 +73,16 @@
     </div>
   </div>
 
-  <div class="flex flex-wrap justify-end gap-3 pt-2">
+  <div class="flex flex-wrap justify-end gap-3 pt-4 border-t border-outline-variant/30 mt-4">
+    <app-button
+      *hasPermission="Permissions.Complaints.GenerateComplaintsPdfReport"
+      variant="outline"
+      (onClick)="downloadReport()"
+    >
+      <span class="material-symbols-outlined text-[18px]">download</span>
+      <span>تحميل التقرير</span>
+    </app-button>
+
     <app-button
       variant="text"
       (onClick)="resetFilters()"
@@ -87,6 +96,8 @@
     </app-button>
   </div>
 </app-card>
+
+
 
 <section
   class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75"
@@ -180,36 +191,11 @@
         إجمالي عدد الشكاوى: <span class="font-bold">{{ totalCount() }}</span>
       </span>
 
-      <div class="flex gap-xs" dir="ltr">
-        <button
-          [disabled]="filter().pageNumber === 1"
-          (click)="changePage(filter().pageNumber - 1)"
-          class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <span class="material-symbols-outlined text-md">chevron_left</span>
-        </button>
-
-        @for (page of pagesArray(); track page) {
-          <button
-            (click)="changePage(page)"
-            [class.bg-secondary]="page === filter().pageNumber"
-            [class.text-white]="page === filter().pageNumber"
-            [class.bg-white]="page !== filter().pageNumber"
-            [class.text-primary]="page !== filter().pageNumber"
-            class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant font-bold text-label-sm hover:bg-secondary-fixed-dim transition-all"
-          >
-            {{ page }}
-          </button>
-        }
-
-        <button
-          [disabled]="filter().pageNumber === totalPages()"
-          (click)="changePage(filter().pageNumber + 1)"
-          class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <span class="material-symbols-outlined text-md">chevron_right</span>
-        </button>
-      </div>
+      <app-pagination
+        [currentPage]="filter().pageNumber"
+        [totalPages]="totalPages()"
+        (pageChange)="changePage($event)"
+      />
     </div>
   }
 </section>

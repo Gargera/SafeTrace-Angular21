@@ -2,7 +2,10 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-import { DonationService } from './services/donations.service';
+import { DonationService } from '../../services/donations.service';
+
+const MIN_DONATION_AMOUNT = 10;
+const MAX_DONATION_AMOUNT = 100_000;
 
 @Component({
   selector: 'app-donation-create',
@@ -21,17 +24,48 @@ export class DonationCreateComponent {
 
   presetAmounts = [10, 50, 100, 500];
 
+  readonly minAmount = MIN_DONATION_AMOUNT;
+  readonly maxAmount = MAX_DONATION_AMOUNT;
+
   selectAmount(value: number): void {
     this.amount = value;
   }
 
-  donate(): void {
-    const amount = this.getDonationAmount();
+  get amountError(): string | null {
+    const value = this.amount;
 
-    if (amount <= 0) {
-      alert('الرجاء إدخال مبلغ صحيح');
+    if (value === null || value === undefined || value === ('' as unknown)) {
+      return 'الرجاء إدخال مبلغ التبرع';
+    }
+
+    const parsed = Number(value);
+
+    if (!Number.isFinite(parsed)) {
+      return 'الرجاء إدخال مبلغ صحيح';
+    }
+
+    if (parsed < MIN_DONATION_AMOUNT) {
+      return `الحد الأدنى للتبرع هو ${MIN_DONATION_AMOUNT}$`;
+    }
+
+    if (parsed > MAX_DONATION_AMOUNT) {
+      return `الحد الأقصى للتبرع هو ${MAX_DONATION_AMOUNT.toLocaleString()}$`;
+    }
+
+    return null;
+  }
+
+  get isAmountValid(): boolean {
+    return this.amountError === null;
+  }
+
+  donate(): void {
+    if (!this.isAmountValid) {
+      alert(this.amountError);
       return;
     }
+
+    const amount = this.getDonationAmount();
 
     this.loading = true;
 
@@ -56,7 +90,6 @@ export class DonationCreateComponent {
   }
 
   private getDonationAmount(): number {
-    const parsedAmount = Number(this.amount);
-    return Number.isFinite(parsedAmount) && parsedAmount > 0 ? parsedAmount : 0;
+    return Number(this.amount);
   }
 }

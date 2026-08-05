@@ -2,7 +2,7 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, switchMap, throwError, BehaviorSubject, filter, take } from 'rxjs';
 import { AuthService } from '../services/auth.service';
-import { SnackbarService } from '../services/toast.service';
+import { SnackbarService } from '../../shared/services/toast.service';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 

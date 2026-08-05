@@ -1,0 +1,9 @@
+
+.scroll-wrapper {
+  direction: ltr;
+}
+
+.scrollable {
+  direction: rtl;
+  overflow-y: auto;
+}

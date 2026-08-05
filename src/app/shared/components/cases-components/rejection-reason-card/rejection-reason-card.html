@@ -1,0 +1,27 @@
+@if (shouldShowOwnerView()) {
+  <!-- Case Owner View: Highlighted Red Alert Card -->
+  <div class="mb-6 rounded-2xl bg-error/10 border border-error/30 p-5 md:p-6 shadow-sm animate-fade-in flex flex-col gap-3">
+    <div class="flex items-center gap-2.5 text-error font-bold text-lg md:text-xl">
+      <span class="text-xl">❌</span>
+      <h2>تم رفض الحالة</h2>
+    </div>
+
+    <div class="flex flex-col gap-1 text-right">
+      <span class="text-sm font-semibold text-error/90">سبب الرفض</span>
+      <p class="text-base leading-relaxed text-on-surface whitespace-pre-wrap bg-surface/50 p-4 rounded-xl border border-error/10 shadow-inner">
+        {{ rejectionReason() }}
+      </p>
+    </div>
+  </div>
+} @else if (shouldShowAdminView()) {
+  <!-- Admin View: Read-Only Section -->
+  <div class="p-5 rounded-2xl bg-surface-container-low border border-outline-variant/20 flex flex-col gap-2 animate-fade-in text-right">
+    <div class="flex items-center gap-2 text-on-surface-variant font-semibold text-sm">
+      <span class="material-symbols-outlined text-error text-lg">info</span>
+      <span>سبب الرفض</span>
+    </div>
+    <p class="text-base leading-relaxed text-on-surface whitespace-pre-wrap bg-surface p-4 rounded-xl border border-outline-variant/10 shadow-inner">
+      {{ rejectionReason() }}
+    </p>
+  </div>
+}

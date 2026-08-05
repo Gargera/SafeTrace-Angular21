@@ -1,18 +1,24 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { UrgentCaseService } from '../../services/urgent-case.service';
 import { UrgentCaseCreateRequest } from '../../models/request/UrgentCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
-import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
-import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
+import { CaseType } from '../../../../shared/enums/case-type';
+import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/dictionaries/relation.type.dictionary';
+import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
+import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
-import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
+import { MatchedCaseResponse } from '../../../../core/models/cases.model';
+import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
+import { DuplicateInfoDialogComponent } from '../../../../shared/components/cases-components/duplicate-info-dialog/duplicate-info-dialog.component';
 import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
@@ -21,10 +27,12 @@ import { FormField } from '../../../../shared/components/form-field/form-field';
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { pastDate } from '../../../../shared/validators/past-date.validator';
+import { urgentEventDate, toDatetimeLocalString } from '../../../../shared/validators/urgent-event-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
+import { ImageService } from '../../../../shared/services/image.service';
 
 import { CardComponent } from '../../../../shared/components/card/card';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 
 type Step = 1 | 2 | 3;
 
@@ -36,11 +44,12 @@ type Step = 1 | 2 | 3;
     ReactiveFormsModule,
     MapLocationPickerComponent,
     ForceCreatePopupComponent,
+    DuplicateInfoDialogComponent,
     ButtonComponent,
     FormField,
     ImageCropperComponent,
     CardComponent,
-    CaseHeaderComponent,
+    HeaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./urgent-create.css'],
@@ -48,6 +57,20 @@ type Step = 1 | 2 | 3;
 })
 export class UrgentCreate {
   private fb = inject(FormBuilder);
+  private imageService = inject(ImageService);
+  private destroyRef = inject(DestroyRef);
+
+  // Allowed datetime range for urgent cases (last 6 hours)
+  readonly minEventDate = computed(() => {
+    const now = new Date();
+    const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+    return toDatetimeLocalString(sixHoursAgo);
+  });
+
+  readonly maxEventDate = computed(() => {
+    const now = new Date();
+    return toDatetimeLocalString(now);
+  });
   private service = inject(UrgentCaseService);
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
@@ -58,7 +81,7 @@ export class UrgentCreate {
   errorMsg = signal<string | null>(null);
 
   // خاصيات الـ Cropper والصورة الأساسية
-  cropImageEvent = signal<any>(null);
+  cropImageEvent = signal<Event | null>(null);
   croppedPrimaryImagePreview = signal<string | null>(null);
   tempCroppedBlob = signal<Blob | null>(null);
   primaryFile = signal<File | null>(null);
@@ -80,12 +103,16 @@ export class UrgentCreate {
   locationError = signal<string | null>(null);
 
   showForceCreatePopup = signal(false);
+  showDuplicateInfoDialog = signal(false);
+  currentDuplicateDecision = signal<DuplicateDecision>(DuplicateDecision.None);
   isBlockedDuplicate = signal(false);
-  matchedCases = signal<MatchedCaseDto[]>([]);
+  matchedCases = signal<MatchedCaseResponse[]>([]);
+  existingCaseType = signal<CaseType | null>(null);
   private pendingRequest: UrgentCaseCreateRequest | null = null;
 
   readonly genders = Gender;
   readonly relationOptions = RELATION_TYPE_OPTIONS;
+  readonly caseTypes = CaseType;
   readonly governorates = EGYPT_GOVERNORATES;
   readonly today = new Date().toISOString().split('T')[0];
 
@@ -124,39 +151,41 @@ export class UrgentCreate {
     city: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
     // Street — required, NOT Arabic-only, max 200
     street: ['', [Validators.required, Validators.maxLength(200)]],
-    // EventDate — required, cannot be future
-    eventDate: ['', [Validators.required, pastDate()]],
+    // EventDate — required, recent (within 6 hours)
+    eventDate: ['', [Validators.required, urgentEventDate()]],
   });
 
   // ─────────────────────────────────────────────────────────────
   // Error message helper
   // ─────────────────────────────────────────────────────────────
+
   getFieldError(field: string): string | null {
-    const control = this.form.get(field);
-    if (!control || !control.errors || !(control.touched || control.dirty)) return null;
-    const e = control.errors;
-    if (e['required']) return 'هذا الحقل مطلوب';
-    if (e['arabicText']) return 'يجب كتابة النص بالحروف العربية فقط';
-    if (e['minlength']) return `الحد الأدنى ${e['minlength'].requiredLength} أحرف`;
-    if (e['maxlength']) return `الحد الأقصى ${e['maxlength'].requiredLength} حرفاً`;
-    if (e['min']) return `يجب أن لا تقل القيمة عن ${e['min'].min}`;
-    if (e['max']) return `يجب أن لا تتجاوز القيمة ${e['max'].max}`;
-    if (e['egyptianPhone']) return 'أدخل رقم هاتف مصري صحيح (مثال: 01xxxxxxxxx)';
-    if (e['pastDate']) return 'لا يمكن أن يكون التاريخ في المستقبل';
-    if (e['description']) return 'لا يمكن أن يتجاوز الوصف 2000 حرف';
-    if (e['validEnum']) return 'اختر قيمة صحيحة';
-    return 'قيمة غير صحيحة';
+    return getFormFieldError(this.form, field);
   }
 
   isInvalid(field: string): boolean {
-    const c = this.form.get(field);
-    return !!(c?.invalid && (c?.touched || c?.dirty));
+    return isFieldInvalid(this.form, field);
   }
 
   onLocationChange(loc: { lat: number; lng: number; address: string }): void {
     this.selectedLat.set(loc.lat);
     this.selectedLng.set(loc.lng);
     this.selectedAddress.set(loc.address);
+  }
+
+  availableCities = signal<string[]>([]);
+
+  ngOnInit(): void {
+    this.form.get('government')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((gov) => {
+        const cities = getCitiesForGovernorate(gov);
+        this.availableCities.set(cities);
+        const currentCity = this.form.get('city')?.value;
+        if (currentCity && !cities.includes(currentCity)) {
+          this.form.get('city')?.setValue('');
+        }
+      });
   }
 
   openMapModal(): void {
@@ -189,16 +218,19 @@ export class UrgentCreate {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
 
-        this.geocoding.reverseGeocode(lat, lng).subscribe({
-          next: (address) => {
-            this.onLocationChange({ lat, lng, address });
-            this.isLocating.set(false);
-          },
-          error: () => {
-            this.onLocationChange({ lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
-            this.isLocating.set(false);
-          },
-        });
+        this.geocoding
+          .reverseGeocode(lat, lng)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: (address) => {
+              this.onLocationChange({ lat, lng, address });
+              this.isLocating.set(false);
+            },
+            error: () => {
+              this.onLocationChange({ lat, lng, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` });
+              this.isLocating.set(false);
+            },
+          });
       },
       (error: GeolocationPositionError) => {
         this.isLocating.set(false);
@@ -247,22 +279,17 @@ export class UrgentCreate {
   // ─────────────────────────────────────────────────────────────
   // Primary photo & Cropper
   // ─────────────────────────────────────────────────────────────
-  private readonly ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  private readonly MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5 MB
-
   onPrimaryPhotoSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
 
-    if (!this.ALLOWED_TYPES.includes(file.type.toLowerCase())) {
-      this.primaryPhotoError.set('نوع الملف غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+    const validation = this.imageService.validate(file, 5);
+    if (!validation.valid) {
+      this.primaryPhotoError.set(validation.errorMessage ?? null);
       return;
     }
-    if (file.size > this.MAX_PHOTO_BYTES) {
-      this.primaryPhotoError.set('حجم الصورة يتجاوز الحد المسموح (5 MB)');
-      return;
-    }
+
     this.primaryPhotoError.set(null);
     this.cropImageEvent.set(event);
   }
@@ -294,19 +321,16 @@ export class UrgentCreate {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Additional photos — max 4, JPEG/PNG/WebP, max 5 MB each
+  // Additional photos — max 4, JPG/JPEG/PNG/WebP, max 5 MB each
   // ─────────────────────────────────────────────────────────────
   onAdditionalPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
-    const invalidType = files.find(f => !this.ALLOWED_TYPES.includes(f.type.toLowerCase()));
-    if (invalidType) {
-      this.additionalPhotosError.set('أحد الملفات من نوع غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
-      return;
-    }
-    const oversized = files.find(f => f.size > this.MAX_PHOTO_BYTES);
-    if (oversized) {
-      this.additionalPhotosError.set('أحد الملفات يتجاوز الحد المسموح (5 MB لكل صورة)');
-      return;
+    for (const f of files) {
+      const validation = this.imageService.validate(f, 5);
+      if (!validation.valid) {
+        this.additionalPhotosError.set(validation.errorMessage ?? null);
+        return;
+      }
     }
     this.additionalPhotosError.set(null);
     this.additionalPhotos.update((p) => [...p, ...files].slice(0, 4));
@@ -326,6 +350,7 @@ export class UrgentCreate {
   // Submit
   // ─────────────────────────────────────────────────────────────
   onSubmit(forceCreate = false): void {
+    if (this.isSubmitting()) return;
     const primary = this.primaryFile();
 
     if (
@@ -349,6 +374,7 @@ export class UrgentCreate {
       request = this.pendingRequest;
     } else {
       const v = this.form.getRawValue();
+
       const formattedDate = v.eventDate ? new Date(v.eventDate).toISOString() : new Date().toISOString();
 
       request = {
@@ -358,7 +384,7 @@ export class UrgentCreate {
         tName: v.tName || '',
         gender: v.gender as Gender,
         age: Number(v.age!),
-        relation: Number(v.relation) as unknown as RelationType,
+        relation: v.relation!,
         communicationPhone: v.communicationPhone!,
         description: v.description || '',
         government: v.government!,
@@ -374,38 +400,65 @@ export class UrgentCreate {
       this.pendingRequest = request;
     }
 
-    this.service.createCase(request, forceCreate).subscribe({
-      next: (res) => {
-        this.isSubmitting.set(false);
-        const data = res.data;
+    this.service
+      .createCase(request, forceCreate)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.isSubmitting.set(false);
+          const data = res.data;
 
-        // في حالة التكرار وعدم الإنشـاء
-        if (data && (data.isCreated === false || data.isCreated === undefined)) {
-          if (data.matchedCases) {
-            this.matchedCases.set(data.matchedCases.map(mapMatchedCaseResponseToDto));
-          } else {
-            this.matchedCases.set([]);
+          if (data && !data.isCreated) {
+            this.currentDuplicateDecision.set(data.duplicateDecision);
+            this.isBlockedDuplicate.set(data.isBlocked);
+            this.matchedCases.set(data.matchedCases ?? []);
+            this.existingCaseType.set(data.existingCaseType ?? null);
+
+            if (data.duplicateDecision === DuplicateDecision.SameUserDuplicate || 
+                data.duplicateDecision === DuplicateDecision.PendingOwnerCase ||
+                data.duplicateDecision === DuplicateDecision.PendingUnknownCase) {
+              this.showDuplicateInfoDialog.set(true);
+            } else if (data.duplicateDecision === DuplicateDecision.ActiveOwnerCase ||
+                       data.duplicateDecision === DuplicateDecision.ActiveUnknownCase) {
+              this.showForceCreatePopup.set(true);
+            }
+            return;
           }
 
-          const rawData = data as any;
-          const isSameType = rawData.isSameTypeDuplicate ?? rawData.IsSameTypeDuplicate ?? false;
-
-          this.isBlockedDuplicate.set(Boolean(isSameType));
-          this.showForceCreatePopup.set(true);
-          return;
-        }
-
-        this.showForceCreatePopup.set(false);
-        this.snackbar.success('تم إرسال بلاغ الحالة بنجاح، هيتم مراجعته من الإدارة قريبًا.');
-        this.router.navigate(['/urgent']);
-      },
-      error: (err) => {
-        this.isSubmitting.set(false);
-        const msg = err?.error?.message ?? 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.';
-        this.errorMsg.set(msg);
-        this.snackbar.error(msg);
-      },
-    });
+          this.showForceCreatePopup.set(false);
+          this.showDuplicateInfoDialog.set(false);
+          this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
+          this.router.navigate(['/urgent']);
+        },
+        error: (err: unknown) => {
+          this.isSubmitting.set(false);
+          const msg = extractErrorMessage(err, 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.');
+          
+          if (err && typeof err === 'object' && 'status' in err && (err as any).status === 400) {
+            const errorObj = (err as any).error;
+            if (errorObj?.errors) {
+              let hasUnmappedErrors = false;
+              for (const key in errorObj.errors) {
+                const controlName = key.charAt(0).toLowerCase() + key.slice(1);
+                const control = this.form.get(controlName);
+                if (control) {
+                  control.setErrors({ serverError: errorObj.errors[key][0] });
+                } else {
+                  hasUnmappedErrors = true;
+                  this.errorMsg.set(errorObj.errors[key][0]);
+                }
+              }
+              if (!hasUnmappedErrors) {
+                this.errorMsg.set(null);
+              }
+            } else {
+              this.errorMsg.set(msg);
+            }
+          } else {
+            this.snackbar.error(msg);
+          }
+        },
+      });
   }
 
   onForceCreateCancel(): void {
@@ -417,6 +470,18 @@ export class UrgentCreate {
       return;
     }
     this.showForceCreatePopup.set(false);
+    this.onSubmit(true);
+  }
+
+  onPendingDialogClose(): void {
+    this.showDuplicateInfoDialog.set(false);
+  }
+
+  onPendingDialogContinueCreate(): void {
+    if (this.isBlockedDuplicate()) {
+      return;
+    }
+    this.showDuplicateInfoDialog.set(false);
     this.onSubmit(true);
   }
 
