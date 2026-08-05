@@ -11,7 +11,7 @@ import { LongTermCaseService } from '../../services/long-term-case.service';
 
 import { LongTermCaseDetailResponse } from '../../models/response/LongTermCaseDetailResponse';
 
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 
 import { GenderBadgeDirective } from '../../../../shared/directives/gender-badge-directive';
 import { CaseStatusBadgeDirective } from '../../../../shared/directives/case-status-badge-directive';
@@ -38,7 +38,7 @@ import { extractErrorMessage } from '../../../../shared/helper/case-error.helper
   standalone: true,
   imports: [
     CommonModule,
-    CaseHeaderComponent,
+    HeaderComponent,
     GenderBadgeDirective,
     CaseStatusBadgeDirective,
     CaseTypeBadgeDirective,

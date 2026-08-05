@@ -1,6 +1,6 @@
 import { Directive, ElementRef, effect, input, Renderer2 } from '@angular/core';
 import { UserRole } from '../enums/user-role';
-import { ROLE_TRANSLATIONS_AR, getRoleTranslationAr } from '../../core/constants/roles.dictionary';
+import { ROLE_TRANSLATIONS_AR, getRoleTranslationAr } from '../../core/constants/dictionaries/roles.dictionary';
 
 @Directive({
   selector: '[appRoleBadgeDirective]'

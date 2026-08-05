@@ -63,22 +63,25 @@ export class ChatWindow implements OnInit {
       this.isAdmin = data['mode'] === 'admin';
     });
 
-    console.log("CURRENT USER ID:", this.currentUserId);
-
     this.chatId = Number(this.route.snapshot.paramMap.get('chatId'));
     if(!this.chatId) {
       return;
     }
 
     this.isLoading.set(true);
-    this.chatService.getChatDetails(this.chatId).subscribe({
+
+    const chatDetailsRequest = this.isAdmin
+      ? this.chatService.getChatDetailsForAdmin(this.chatId)
+      : this.chatService.getChatDetails(this.chatId);
+
+    chatDetailsRequest.subscribe({
       next: (res) => {
         this.chat.set(res.data);
         this.checkLoadingStatus();
       },
       error: (err) => {
         this.snackbarService.error(
-         err.error?.message ?? 'تعذر تحميل بيانات المحادثة'
+         err.error?.detail ?? 'تعذر تحميل بيانات المحادثة'
         );
         this.isLoading.set(false);
       },
@@ -138,7 +141,6 @@ export class ChatWindow implements OnInit {
   };
 
   private handleMessagesRead = (event: MessagesReadEvent) : void => {
-      console.log("MESSAGES READ EVENT RECEIVED", event);
 
     if(event.chatId !== this.chatId || event.userId === this.currentUserId) {
       return;
@@ -148,10 +150,6 @@ export class ChatWindow implements OnInit {
 
       if(message.senderId === this.currentUserId)
       {
-        console.log(
-          "MARKING READ:",
-          message.id
-        );
         return {
           ...message,
           isRead:true
@@ -203,6 +201,8 @@ private handleMessageDeletedForEveryone = (
         content: this.isAdmin 
           ? msg.content 
           : "تم حذف هذه الرسالة",
+          filePath: undefined,
+          fileType: undefined,
         forEveryoneDeletedAt:event.deletedAt
       }
       :
@@ -217,13 +217,7 @@ private handleMessageDeletedForEveryone = (
       const incomingMessages = res.data!.map((m) =>
         this.normalizeMessage(m)
       );
-      console.log(
-      "API MESSAGES",
-      res.data?.map(m=>({
-        id:m.id,
-        isRead:m.isRead
-      }))
-      );
+    
       this.messages.update(current => {
 
         const currentMap = new Map(
@@ -252,7 +246,7 @@ private handleMessageDeletedForEveryone = (
       },
       error: (err) => {
       this.snackbarService.error(
-      err.error?.message ?? 'تعذر تحميل الرسائل'
+      err.error?.detail ?? err.error?.title ?? 'تعذر تحميل الرسائل'
       );
       this.isLoading.set(false);
     }
@@ -319,7 +313,6 @@ private handleMessageDeletedForEveryone = (
     this.messageService.sendMessage({chatId: this.chatId, content: text || undefined, file: file || undefined})
     .subscribe({
       next: (res) => {
-      console.log("API MESSAGE in on send", res.data);
     
         const message = res.data;
 
@@ -332,7 +325,10 @@ private handleMessageDeletedForEveryone = (
         this.sending.set(false);
         //this.loadMessages();
       },
-        error: () => {this.snackbarService.error('تعذر إرسال الرسالة، تحقق من الاتصال وحاول مرة أخرى');
+        error: (err) => {
+
+          this.snackbarService.error(
+            err.error?.detail ?? err.error?.title ?? 'تعذر إرسال الرسالة، تحقق من الاتصال وحاول مرة أخرى');
           this.sending.set(false);
         }
     });
@@ -369,9 +365,9 @@ private handleMessageDeletedForEveryone = (
     this.snackbarService.success(res.message);
     },
 
-    error: () => {
+    error: (err) => {
       this.snackbarService.error(
-        'تعذر حذف الرسالة، حاول مرة أخرى'
+        err.error?.detail ?? err.error?.title ?? 'تعذر حذف الرسالة، حاول مرة أخرى'
       );
     },
   });

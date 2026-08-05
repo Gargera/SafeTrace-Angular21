@@ -12,7 +12,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import {CaseTypeBadgeDirective} from '../../../../shared/directives/case-type-badge-directive';
 import {TruncatePipe} from '../../../../shared/pipes/truncate-pipe';
 import { SnackbarService } from '../../../../shared/services/toast.service';
@@ -33,7 +33,7 @@ const PAGE_SIZE = 10;
     FormField,
     ButtonComponent,
     ConfirmationModalComponent,
-    CaseHeaderComponent,
+    HeaderComponent,
     CaseTypeBadgeDirective,
     TruncatePipe,
     HasPermissionDirective,
@@ -84,6 +84,40 @@ export class AdminChats implements OnInit {
   statistics = signal<AdminChatStatisticsDto | null>(null);
   isLoadingStats = signal(true);
 
+  today = new Date().toISOString().split('T')[0];
+
+fromDateError = computed(() => {
+  const from = this.fromDate();
+
+  if (!from) return '';
+
+  if (from > this.today)
+    return 'لا يمكن اختيار تاريخ في المستقبل';
+
+  if (this.toDate() && from > this.toDate())
+    return 'يجب أن يكون تاريخ البداية قبل تاريخ النهاية';
+
+  return '';
+});
+
+toDateError = computed(() => {
+  const to = this.toDate();
+
+  if (!to) return '';
+
+  if (to > this.today)
+    return 'لا يمكن اختيار تاريخ في المستقبل';
+
+  if (this.fromDate() && to < this.fromDate())
+    return 'يجب أن يكون تاريخ النهاية بعد تاريخ البداية';
+
+  return '';
+});
+
+hasDateErrors = computed(() =>
+  !!this.fromDateError() || !!this.toDateError()
+);
+
   ngOnInit(): void {
     this.loadStatistics();
     this.loadChats();
@@ -118,8 +152,8 @@ export class AdminChats implements OnInit {
         this.totalCount.set(response.data?.totalCount || 0);
         this.isLoading.set(false);
       },
-      error: () => {
-        this.snackbarService.error('تعذر تحميل المحادثات');
+      error: (err) => {
+        this.snackbarService.error(err.error?.detail ?? 'تعذر تحميل المحادثات');
         this.isLoading.set(false);
       },
     });
@@ -136,6 +170,9 @@ export class AdminChats implements OnInit {
   }
 
   applyFilters(): void {
+    if (this.hasDateErrors()) {
+    return;
+  }
     this.currentPage.set(1);
     this.loadChats();
     this.showFilterDialog.set(false);
@@ -209,8 +246,8 @@ confirmDeleteChat(): void {
 
       this.closeDeleteModal();
     },
-    error: () => {
-      this.snackbarService.error('تعذر حذف المحادثة، حاول مرة أخرى');
+    error: (err) => {
+      this.snackbarService.error(err.error?.detail ?? 'تعذر حذف المحادثة، حاول مرة أخرى');
     }
   });
 }

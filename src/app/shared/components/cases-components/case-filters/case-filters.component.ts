@@ -19,7 +19,7 @@ import { Subscription, debounceTime, distinctUntilChanged, map, merge } from 'rx
 import { NgTemplateOutlet } from '@angular/common';
 import { CasesFilterRequest } from '../../../../core/models/cases.model';
 import { AgeCategories } from '../../../enums/age-categories';
-import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.categories.dictionary';
+import { getAgeCategoryTranslationAr } from '../../../../core/constants/dictionaries/age.categories.dictionary';
 import { CardComponent } from '../../card/card';
 import { ButtonComponent } from '../../button/button';
 import { FormField } from '../../form-field/form-field';

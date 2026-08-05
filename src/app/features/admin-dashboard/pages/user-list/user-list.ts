@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
-import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
+import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
 import { RoleService } from '../../services/role.service';
 import { UserService } from '../../services/user.service';
 import { FormField } from '../../../../shared/components/form-field/form-field';
@@ -20,7 +20,7 @@ import { CardComponent } from '../../../../shared/components/card/card';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { UserStatisticsDto } from '../../models/User/responses/UserStatisticsDto';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ReportService } from '../../services/report.service';
 
@@ -42,7 +42,7 @@ import { PaginationComponent } from '../../../../shared/components/pagination/pa
     CardComponent,
     EmptyStateComponent,
     LoadingSpinnerComponent,
-    CaseHeaderComponent,
+    HeaderComponent,
     HasPermissionDirective,
     PaginationComponent
   ],
@@ -184,7 +184,7 @@ export class UserList {
   searchTerm: this.filter().searchTerm || undefined,
   verificationStatus: this.filter().verificationStatus || undefined,
   roleId: this.filter().roleId || undefined,
-  isBlocked: this.filter().isBlocked || undefined
+  isBlocked: this.filter().isBlocked ?? undefined
 };
   console.log(reportFilter);
   this.reportService
