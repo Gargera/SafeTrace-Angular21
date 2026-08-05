@@ -78,7 +78,7 @@ export class ConfirmEmail implements OnInit, OnDestroy {
     
     this.startCountdown();
 
-    this.authService.resendOtp(this.email(), 1).subscribe({
+    this.authService.resendOtp(this.email(), 0).subscribe({
       next: (res) => {
         this.snackbar.success(res.message || 'تم إرسال الرمز بنجاح.');
       },

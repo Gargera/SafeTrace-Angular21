@@ -98,7 +98,20 @@ export class UserDetails implements OnInit {
   });
 
   canManageUser = computed(() => {
-    if (!this.user() || this.isCurrentUser()) return false;
+    const targetUser = this.user();
+    if (!targetUser || this.isCurrentUser()) return false;
+    
+    const myRole = this.authService.getUserRole();
+    const targetRole = targetUser.role;
+
+    if (targetRole === 'SuperAdmin') {
+      return false;
+    }
+
+    if (myRole === 'Admin' && targetRole === 'Admin') {
+      return false;
+    }
+
     return true;
   });
 

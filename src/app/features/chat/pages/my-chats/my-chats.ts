@@ -7,14 +7,14 @@ import { ChatSummaryDto } from '../../models/chat.model';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
-
+import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 type ConversationFilter = 'all' | 'unread';
  
 
 
 @Component({
   selector: 'app-my-chats',
-  imports: [CommonModule, RouterModule, ButtonComponent, LoadingSpinnerComponent],
+  imports: [CommonModule, RouterModule, ButtonComponent, LoadingSpinnerComponent, ConfirmationModalComponent],
   templateUrl: './my-chats.html',
 })
 export class MyChats implements OnInit {
@@ -22,9 +22,14 @@ export class MyChats implements OnInit {
   private chatAlerts = inject(ChatAlertsService);
   private router = inject(Router);
   private snackbarService = inject(SnackbarService);
+
   loading = signal(true);
   chats = signal<ChatSummaryDto[]>([]);
   activeFilter = signal<ConversationFilter>('all');
+
+  showDeleteModal = signal(false);
+  chatToDelete = signal<ChatSummaryDto | null>(null);
+  deleting = signal(false);
  
   readonly filterTabs: { key: ConversationFilter; label: string }[] = [
     { key: 'all', label: 'الكل' },
@@ -62,23 +67,42 @@ export class MyChats implements OnInit {
   }
  
   /** Called when a card's delete button is clicked (soft delete, for me only). */
-  async deleteChat(chat: ChatSummaryDto): Promise<void> {
-    const confirmed = await this.chatAlerts.confirm(
-      'حذف المحادثة',
-      'سيتم حذف هذه المحادثة من قائمتك فقط.'
-    );
-    if (!confirmed) {
-      return;
-    }
+  openDeleteModal(chat: ChatSummaryDto): void {
+  this.chatToDelete.set(chat);
+  this.showDeleteModal.set(true);
+}
+
+closeDeleteModal(): void {
+  this.showDeleteModal.set(false);
+  this.chatToDelete.set(null);
+}
  
-    this.chatService.deleteChatForMe(chat.chatId).subscribe({
-      next: () => {
-        this.chats.update((current) => current.filter((c) => c.chatId !== chat.chatId));
-        this.snackbarService.success('تم حذف المحادثة');
-      },
-      error: () => this.snackbarService.error('تعذر حذف المحادثة، حاول مرة أخرى'),
-    });
+confirmDeleteChat(): void {
+  const chat = this.chatToDelete();
+
+  if (!chat) {
+    return;
   }
+
+  this.deleting.set(true);
+
+  this.chatService.deleteChatForMe(chat.chatId).subscribe({
+    next: () => {
+      this.chats.update(current =>
+        current.filter(c => c.chatId !== chat.chatId)
+      );
+
+      this.deleting.set(false);
+      this.closeDeleteModal();
+
+      this.snackbarService.success('تم حذف المحادثة');
+    },
+    error: () => {
+      this.deleting.set(false);
+      this.snackbarService.error('تعذر حذف المحادثة، حاول مرة أخرى');
+    }
+  });
+}
 
   formatLastMessageDate(date: string | Date | null): string {
   if (!date) return '';

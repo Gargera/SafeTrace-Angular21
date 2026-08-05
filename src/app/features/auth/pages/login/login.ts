@@ -146,7 +146,7 @@ export class Login implements OnInit, OnDestroy {
     ) {
       Swal.fire({
         title: 'حسابك غير مفعل!',
-        text: 'يجب تأكيد بريدك الإلكتروني لتتمكن من استخدام المنصة.',
+        text: errorMessage || 'يجب تأكيد بريدك الإلكتروني لتتمكن من استخدام المنصة.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#0058be',

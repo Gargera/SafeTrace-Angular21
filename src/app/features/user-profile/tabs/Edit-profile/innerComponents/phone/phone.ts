@@ -15,6 +15,7 @@ import { GetUserInfoDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
 import { FormField } from '../../../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../../../shared/components/button/button';
+import { egyptianPhone } from '../../../../../../shared/validators/egyptian-phone.validator';
 
 @Component({
   selector: 'app-phone',
@@ -38,7 +39,7 @@ export class Phone implements OnChanges, OnDestroy {
   readonly isSavingPhone = signal(false);
 
   readonly phoneForm: FormGroup = this.#fb.group({
-    phoneNumber: ['', [Validators.required, Validators.pattern(/^01[0125][0-9]{8}$/)]],
+    phoneNumber: ['', [Validators.required, egyptianPhone()]],
   });
 
   ngOnChanges(changes: SimpleChanges): void {

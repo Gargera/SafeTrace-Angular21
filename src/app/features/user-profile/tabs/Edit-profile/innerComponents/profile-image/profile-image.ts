@@ -1,16 +1,16 @@
 import { Component, effect, inject, input, output, signal } from '@angular/core';
 import { ImageService } from '../../../../../../shared/services/image.service';
-import { ConfirmDialog } from '../../../../shared/confirm-dialog/confirm-dialog';
 import { GetUserInfoDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
 import { ButtonComponent } from '../../../../../../shared/components/button/button';
 import { CardComponent } from '../../../../../../shared/components/card/card';
 import { SnackbarService } from '../../../../../../shared/services/toast.service';
+import { ConfirmationModalComponent } from '../../../../../../shared/components/confirmation-modal/confirmation-modal';
 
 @Component({
   selector: 'app-profile-image',
   standalone: true,
-  imports: [ConfirmDialog, ButtonComponent],
+  imports: [ConfirmationModalComponent, ButtonComponent],
   templateUrl: './profile-image.html',
   host: {
     class: 'space-y-sm',

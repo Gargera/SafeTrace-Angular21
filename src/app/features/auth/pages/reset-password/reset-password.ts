@@ -87,7 +87,7 @@ export class ResetPassword implements OnDestroy {
     this.authService.forgetPassword(this.savedEmail()).subscribe({
       next: (res) => {
         this.isResending.set(false);
-        this.snackbar.success('تم إرسال رمز جديد إلى بريدك الإلكتروني، الرمز صالح لمدة 10 دقائق.');
+        this.snackbar.success(res.message || 'تم إرسال رمز جديد إلى بريدك الإلكتروني، الرمز صالح لمدة 10 دقائق.');
       },
       error: (err) => {
         this.isResending.set(false);

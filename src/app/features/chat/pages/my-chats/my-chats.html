@@ -80,7 +80,7 @@
         <button
           type="button"
           class="text-on-surface-variant hover:text-error shrink"
-          (click)="$event.stopPropagation(); deleteChat(chat)"
+          (click)="$event.stopPropagation(); openDeleteModal(chat)"
           aria-label="حذف المحادثة"
         >
           <svg viewBox="0 0 24 24" class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -93,4 +93,17 @@
     }
   </div>
 </div>
+}
+@if (showDeleteModal()) {
+  <app-confirmation-modal
+    title="حذف المحادثة"
+    message="سيتم حذف هذه المحادثة من قائمتك فقط."
+    icon="delete"
+    variant="danger"
+    confirmText="حذف"
+    cancelText="إلغاء"
+    [confirmLoading]="deleting()"
+    (confirm)="confirmDeleteChat()"
+    (cancel)="closeDeleteModal()">
+  </app-confirmation-modal>
 }

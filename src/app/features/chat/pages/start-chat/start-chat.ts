@@ -65,7 +65,7 @@ export class StartChat implements OnInit {
         this.snackbarService.error('لم يتم إنشاء المحادثة');
         return;
       }
-        this.snackbarService.success(res.message);
+        // this.snackbarService.success(res.message);
 
         this.router.navigate(['/chat/chat', res.data.chatId]);
       },
