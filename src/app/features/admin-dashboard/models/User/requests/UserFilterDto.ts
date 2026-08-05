@@ -6,5 +6,5 @@ export interface UserFilterDto {
   searchTerm?: string;
   verificationStatus?: VerificationStatus;
   roleId?: string;
-  isBlocked?: boolean;
+  isBlocked?: boolean | null;
 }
