@@ -87,7 +87,6 @@ export class ViewProfilePopup {
 
     effect(() => {
       const id = this.userId();
-      console.log(this.profile());
 
       if (!id) {
         this.lastRequestedId = null;
