@@ -170,6 +170,13 @@
                     هذا هو حسابك الشخصي النشط حالياً.
                   </span>
                 </div>
+              } @else {
+                <div class="mt-6 pt-6 border-t border-outline-variant/50 text-center">
+                  <span class="text-label-sm text-error font-medium flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-[18px]">shield_lock</span>
+                    نظام محمي: لا يمكنك التعديل على هذا الحساب نظراً لصلاحياته الإدارية.
+                  </span>
+                </div>
               }
 
             </div>
@@ -179,8 +186,9 @@
       </div>
     </div>
 
-      <ng-container *hasPermission="Permissions.Users.GetPermissions">
-        <section class="mt-xl space-y-md">
+      @if (isCurrentUser() || canManageUser()) {
+        <ng-container *hasPermission="Permissions.Users.GetPermissions">
+          <section class="mt-xl space-y-md">
       <div class="flex justify-between items-end flex-wrap gap-4">
         <div class="flex flex-col gap-2">
           <h2 class="text-headline-sm font-bold text-primary flex items-center gap-sm">
@@ -308,8 +316,9 @@
           </div>
         </ng-container>
       }
-        </section>
-      </ng-container>
+          </section>
+        </ng-container>
+      }
 
   } @else {
     <div class="rounded-2xl border border-outline-variant bg-white p-12 text-center shadow-sm flex flex-col items-center">
