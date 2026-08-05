@@ -64,8 +64,8 @@
         <p id="phoneNumber-error" class="text-label-sm text-error font-medium mt-xs" role="alert">
           @if (phoneForm.get('phoneNumber')?.hasError('required')) {
             رقم الهاتف مطلوب
-          } @else if (phoneForm.get('phoneNumber')?.hasError('pattern')) {
-            صيغة رقم الهاتف غير صحيحة
+          } @else if (phoneForm.get('phoneNumber')?.hasError('egyptianPhone')) {
+            يرجى إدخال رقم هاتف مصري صحيح
           }
         </p>
       }
