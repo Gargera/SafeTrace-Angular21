@@ -14,10 +14,12 @@
       <p class="text-base leading-relaxed text-on-surface-variant px-4">
         {{ message() }}
       </p>
+      
+      <ng-content></ng-content>
     </div>
 
     <div class="flex justify-between items-center gap-4 bg-surface-container-lowest px-6 py-6 border-t border-outline-variant/10">
-      <app-button [variant]="variant()" extraClass="min-w-[140px] px-6 h-13 rounded-xl flex items-center justify-center font-bold text-base shadow-md" (onClick)="confirm.emit()">
+      <app-button [variant]="variant()" [disabled]="confirmDisabled()" [loading]="confirmLoading()" extraClass="min-w-[140px] px-6 h-13 rounded-xl flex items-center justify-center font-bold text-base shadow-md" (onClick)="confirm.emit()">
         {{ confirmText() }}
       </app-button>
 

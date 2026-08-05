@@ -7,7 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DashboardDto } from '../../models/Dashboard/DashboardDto';
+import { DashboardDto } from '../../models/Dashboard/responses/DashboardDto';
 import { DashboardService } from '../../services/dashboard.service';
 
 interface ProblemDetails {
@@ -44,6 +44,36 @@ interface CaseTypeBar {
   deletedPercent: number;
 }
 
+interface StatCard {
+  icon: string;
+  label: string;
+  value: number;
+  color: string;
+  bg: string;
+  pulse?: boolean;
+}
+
+/**
+ * Fixed semantic palette: every case/transaction status keeps the SAME color
+ * everywhere it appears (stat card, donut, stacked bar, table badge) so the
+ * eye learns "red = active/urgent" once and reuses it across the dashboard.
+ */
+const STATUS_COLORS = {
+  active: '#EF4444', // coral-red — urgent, needs attention now
+  found: '#10B981', // emerald — resolved, hopeful outcome
+  pending: '#F59E0B', // amber — waiting on a decision
+  rejected: '#94A3B8', // slate — closed, no action needed
+  expired: '#8B5CF6', // violet — closed by time, distinct from rejected
+  deleted: '#64748B', // cool gray — removed from the system
+  succeeded: '#10B981',
+  failed: '#EF4444',
+  solved: '#10B981',
+  unsolved: '#EF4444',
+  users: '#6366F1', // indigo — platform/people
+  cases: '#3B82F6', // blue — core entity
+  aiSearch: '#06B6D4', // cyan — technology/AI
+} as const;
+
 @Component({
   selector: 'app-dashboard-statistics',
   imports: [CommonModule],
@@ -56,21 +86,97 @@ export class DashboardStatistics implements OnInit {
   private static readonly DONUT_RADIUS = 60;
   private static readonly DONUT_CIRCUMFERENCE = 2 * Math.PI * DashboardStatistics.DONUT_RADIUS;
 
+  readonly statusColors = STATUS_COLORS;
+
   dashboard = signal<DashboardDto | null>(null);
   error = signal<ProblemDetails | null>(null);
   isLoading = signal(false);
+
+  /** Top stat cards — data-driven so color/icon/label live in one place */
+  statCards = computed<StatCard[]>(() => {
+    const d = this.dashboard();
+    if (!d) return [];
+    const c = STATUS_COLORS;
+    return [
+      {
+        icon: 'group',
+        label: 'إجمالي المستخدمين',
+        value: d.totalUsers,
+        color: c.users,
+        bg: 'rgba(99,102,241,0.12)',
+      },
+      {
+        icon: 'folder_shared',
+        label: 'إجمالي الحالات',
+        value: d.totalCases,
+        color: c.cases,
+        bg: 'rgba(59,130,246,0.12)',
+      },
+      {
+        icon: 'psychology',
+        label: 'عمليات بحث الذكاء الاصطناعي اليوم',
+        value: d.totalDailyAISearch,
+        color: c.aiSearch,
+        bg: 'rgba(6,182,212,0.12)',
+      },
+      {
+        icon: 'verified',
+        label: 'تم العثور عليها',
+        value: d.totalFoundedCases,
+        color: c.found,
+        bg: 'rgba(16,185,129,0.12)',
+      },
+      {
+        icon: 'emergency',
+        label: 'الحالات النشطة',
+        value: d.totalActiveCases,
+        color: c.active,
+        bg: 'rgba(239,68,68,0.12)',
+        pulse: true,
+      },
+      {
+        icon: 'pending_actions',
+        label: 'قيد الانتظار',
+        value: d.totalPendingCases,
+        color: c.pending,
+        bg: 'rgba(245,158,11,0.12)',
+      },
+      {
+        icon: 'block',
+        label: 'مرفوضة',
+        value: d.totalRejectedCases,
+        color: c.rejected,
+        bg: 'rgba(148,163,184,0.12)',
+      },
+      {
+        icon: 'hourglass_disabled',
+        label: 'منتهية الصلاحية',
+        value: d.totalExpiredCases,
+        color: c.expired,
+        bg: 'rgba(139,92,246,0.12)',
+      },
+      {
+        icon: 'delete',
+        label: 'المحذوفة',
+        value: d.totalDeletedCases,
+        color: c.deleted,
+        bg: 'rgba(100,116,139,0.12)',
+      },
+    ];
+  });
 
   /** Donut: breakdown of all cases by current status */
   caseStatusDonut = computed<DonutSegment[]>(() => {
     const d = this.dashboard();
     if (!d) return [];
+    const c = STATUS_COLORS;
     return this.buildDonutSegments([
-      ['نشطة', d.totalActiveCases, 'var(--color-error)'],
-      ['تم العثور عليها', d.totalFoundedCases, 'var(--color-tertiary)'],
-      ['قيد الانتظار', d.totalPendingCases, 'var(--color-secondary)'],
-      ['مرفوضة', d.totalRejectedgCases, 'var(--color-outline)'],
-      ['منتهية الصلاحية', d.totalExpiredCases, 'var(--color-primary)'],
-      ['محذوفة', d.totalDeletedCases, 'var(--color-on-surface-variant)'],
+      ['نشطة', d.totalActiveCases, c.active],
+      ['تم العثور عليها', d.totalFoundedCases, c.found],
+      ['قيد الانتظار', d.totalPendingCases, c.pending],
+      ['مرفوضة', d.totalRejectedCases, c.rejected],
+      ['منتهية الصلاحية', d.totalExpiredCases, c.expired],
+      ['محذوفة', d.totalDeletedCases, c.deleted],
     ]);
   });
 
@@ -80,14 +186,30 @@ export class DashboardStatistics implements OnInit {
   donationsDonut = computed<DonutSegment[]>(() => {
     const d = this.dashboard();
     if (!d) return [];
+    const c = STATUS_COLORS;
     return this.buildDonutSegments([
-      ['ناجحة', d.totalCountSucceededDonations, 'var(--color-tertiary)'],
-      ['قيد الانتظار', d.totalCountPendingDonations, 'var(--color-secondary)'],
-      ['فاشلة', d.totalCountFailedDonations, 'var(--color-error)'],
+      ['ناجحة', d.totalCountSucceededDonations, c.succeeded],
+      ['قيد الانتظار', d.totalCountPendingDonations, c.pending],
+      ['فاشلة', d.totalCountFailedDonations, c.failed],
     ]);
   });
 
   donationsCountTotal = computed(() => this.donationsDonut().reduce((sum, s) => sum + s.value, 0));
+
+  /** Donut: complaints by resolution status */
+  complaintsDonut = computed<DonutSegment[]>(() => {
+    const d = this.dashboard();
+    if (!d) return [];
+    const c = STATUS_COLORS;
+    return this.buildDonutSegments([
+      ['تم حلها', d.totalSolvedComplaints, c.solved],
+      ['لم يتم حلها', d.totalUnSolvedComplaints, c.unsolved],
+    ]);
+  });
+
+  complaintsCountTotal = computed(() =>
+    this.complaintsDonut().reduce((sum, s) => sum + s.value, 0),
+  );
 
   formattedDonationsSum = computed(() => {
     const d = this.dashboard();
@@ -99,9 +221,9 @@ export class DashboardStatistics implements OnInit {
   caseTypeBars = computed<CaseTypeBar[]>(() => {
     const d = this.dashboard();
     if (!d || !d.caseTypes?.length) return [];
-    const maxTotal = Math.max(...d.caseTypes.map((c) => c.total), 1);
+    const maxTotal = Math.max(...d.caseTypes.map((c: any) => c.total), 1);
 
-    return d.caseTypes.map((c) => ({
+    return d.caseTypes.map((c: any) => ({
       label: c.caseType,
       total: c.total,
       active: c.active,
@@ -129,6 +251,7 @@ export class DashboardStatistics implements OnInit {
 
     this.dashboardService.getDashboard().subscribe({
       next: (response) => {
+        console.log(response.data);
         this.dashboard.set(response.data);
         this.error.set(null);
         this.isLoading.set(false);

@@ -2,11 +2,11 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { DashboardDto } from '../models/Dashboard/DashboardDto';
-import { CasesStatisticsDto } from '../models/Dashboard/CasesStatisticsDto';
+import { DashboardDto } from '../models/Dashboard/responses/DashboardDto';
+import { CasesStatisticsDto } from '../models/Dashboard/responses/CasesStatisticsDto';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
-import { AuditLogDto, AuditLogQueryDto } from '../models/Dashboard/audit-log.dto';
+import { AuditLogDto, AuditLogQueryDto } from '../models/Dashboard/responses/audit-log.dto';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {

@@ -1,11 +1,16 @@
 import { Injectable, inject, signal, computed, OnDestroy } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import * as signalR from '@microsoft/signalr';
-import { GetUserNotificationsDTO, NotificationPage } from '../models/notification.model';
+import {
+  GetUserNotificationsDTO,
+  NotificationPage,
+  ParsedCaseNotification,
+} from '../models/notification.model';
 import { NotificationType } from '../../shared/enums/Notification-Type';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 import { ApiResponse } from '../../shared/models/responses/api-response.model';
+import { Router } from '@angular/router';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -13,12 +18,16 @@ const DEFAULT_PAGE_SIZE = 10;
 export class NotificationService implements OnDestroy {
   readonly #http = inject(HttpClient);
   readonly #apiUrl = `${environment.apiBaseUrl}/Notification`;
+  readonly #defaultLink = '/profile?tab=notifications';
   readonly #authService = inject(AuthService);
   // ─── Private state signals ────────────────────────────────────────────────
   readonly #notifications = signal<GetUserNotificationsDTO[]>([]);
   readonly #unreadCount = signal<number>(0);
   readonly #isConnected = signal<boolean>(false);
   readonly #isLoading = signal<boolean>(false);
+  readonly #isLoadingMore = signal(false);
+
+  readonly #activeCaseNotification = signal<ParsedCaseNotification | null>(null);
 
   // ─── Pagination signals ───────────────────────────────────────────────────
   readonly #currentPage = signal<number>(1);
@@ -30,9 +39,11 @@ export class NotificationService implements OnDestroy {
   readonly unreadCount = this.#unreadCount.asReadonly();
   readonly isConnected = this.#isConnected.asReadonly();
   readonly isLoading = this.#isLoading.asReadonly();
+  readonly isLoadingMore = this.#isLoadingMore.asReadonly();
   readonly currentPage = this.#currentPage.asReadonly();
   readonly totalPages = this.#totalPages.asReadonly();
   readonly totalCount = this.#totalCount.asReadonly();
+  readonly activeCaseNotification = this.#activeCaseNotification.asReadonly();
 
   readonly hasUnread = computed(() => this.#unreadCount() > 0);
   readonly hasPrevPage = computed(() => this.#currentPage() > 1);
@@ -73,8 +84,9 @@ export class NotificationService implements OnDestroy {
         this.#hubConnection?.invoke('GetMyNotifications', 1, DEFAULT_PAGE_SIZE);
       })
       .catch((err) => {
-        this.#isConnected.set(false);
         console.error('SignalR connection error:', err);
+
+        this.#isConnected.set(false);
       });
   }
 
@@ -99,8 +111,8 @@ export class NotificationService implements OnDestroy {
     // Fired when a new notification is pushed from server
     this.#hubConnection.on('ReceiveNotification', (notification: GetUserNotificationsDTO) => {
       this.#notifications.update((prev) => [notification, ...prev]);
-
       this.#totalCount.update((c) => c + 1);
+      this.#unreadCount.update((c) => c + 1);
       this.#totalPages.set(Math.ceil(this.#totalCount() / DEFAULT_PAGE_SIZE));
     });
 
@@ -162,8 +174,54 @@ export class NotificationService implements OnDestroy {
   }
 
   // ─── REST API Fallback (used if SignalR is not connected) ─────────────────
+  // loadPage(page: number, append = false): void {
+  //   this.#isLoading.set(true);
+
+  //   const params = new HttpParams().set('page', page).set('pageSize', DEFAULT_PAGE_SIZE);
+
+  //   this.#http
+  //     .get<ApiResponse<NotificationPage>>(`${this.#apiUrl}/my-Notifications`, { params })
+  //     .subscribe({
+  //       next: (res) => {
+  //         const data = res.data;
+
+  //         if (!data) {
+  //           this.#notifications.set([]);
+  //           this.#currentPage.set(1);
+  //           this.#totalPages.set(0);
+  //           this.#totalCount.set(0);
+  //           this.#isLoading.set(false);
+  //           return;
+  //         }
+
+  //         if (append) {
+  //           this.#notifications.update((old) => {
+  //             const merged = [...old, ...data.items];
+  //             return merged;
+  //           });
+  //         } else {
+  //           this.#notifications.set(data.items);
+  //         }
+
+  //         this.#currentPage.set(data.page);
+  //         this.#totalPages.set(data.totalPages);
+  //         this.#totalCount.set(data.totalCount);
+
+  //         this.#isLoading.set(false);
+  //       },
+  //       error: (err) => {
+  //         console.error(err);
+  //         this.#isLoading.set(false);
+  //       },
+  //     });
+  // }
+
   loadPage(page: number, append = false): void {
-    this.#isLoading.set(true);
+    if (append) {
+      this.#isLoadingMore.set(true);
+    } else {
+      this.#isLoading.set(true);
+    }
 
     const params = new HttpParams().set('page', page).set('pageSize', DEFAULT_PAGE_SIZE);
 
@@ -178,34 +236,31 @@ export class NotificationService implements OnDestroy {
             this.#currentPage.set(1);
             this.#totalPages.set(0);
             this.#totalCount.set(0);
-            this.#isLoading.set(false);
-            return;
-          }
-
-          if (append) {
-            this.#notifications.update((old) => {
-              const merged = [...old, ...data.items];
-              return merged;
-            });
           } else {
-            this.#notifications.set(data.items);
-          }
+            if (append) {
+              this.#notifications.update((old) => [...old, ...data.items]);
+            } else {
+              this.#notifications.set(data.items);
+            }
 
-          this.#currentPage.set(data.page);
-          this.#totalPages.set(data.totalPages);
-          this.#totalCount.set(data.totalCount);
+            this.#currentPage.set(data.page);
+            this.#totalPages.set(data.totalPages);
+            this.#totalCount.set(data.totalCount);
+          }
 
           this.#isLoading.set(false);
+          this.#isLoadingMore.set(false);
         },
         error: (err) => {
           console.error(err);
           this.#isLoading.set(false);
+          this.#isLoadingMore.set(false);
         },
       });
   }
-  loadMore(): void {
-    if (this.#isLoading()) return;
 
+  loadMore(): void {
+    if (this.#isLoading() || this.#isLoadingMore()) return;
     if (!this.hasNextPage()) return;
 
     this.loadPage(this.#currentPage() + 1, true);
@@ -221,6 +276,139 @@ export class NotificationService implements OnDestroy {
     this.stopConnection();
   }
 
+  closeCaseNotificationModal(): void {
+    this.#activeCaseNotification.set(null);
+  }
+
+  parseCaseNotification(n: GetUserNotificationsDTO): ParsedCaseNotification | null {
+    if (n.type !== NotificationType.Message) {
+      return null;
+    }
+
+    const directLink = n.notificationDirectLink || '';
+    const content = n.content || '';
+
+    let isApproved = false;
+    let isRejected = false;
+
+    let urlObj: URL | null = null;
+    try {
+      if (directLink) {
+        urlObj = new URL(directLink, 'http://localhost');
+      }
+    } catch {
+      urlObj = null;
+    }
+
+    const actionParam = urlObj?.searchParams.get('action');
+    if (actionParam === 'approved') {
+      isApproved = true;
+    } else if (actionParam === 'rejected') {
+      isRejected = true;
+    } else {
+      if (
+        content.includes('تمت الموافقة') ||
+        content.includes('✅ تمت الموافقة') ||
+        content.includes('تم موافقة')
+      ) {
+        isApproved = true;
+      } else if (
+        content.includes('تم رفض') ||
+        content.includes('❌ تم رفض') ||
+        content.includes('سبب الرفض')
+      ) {
+        isRejected = true;
+      }
+    }
+
+    if (!isApproved && !isRejected) {
+      return null;
+    }
+
+    let caseId = urlObj?.searchParams.get('caseId') || '';
+    const cleanPath = (directLink.split('?')[0] || '').trim();
+    if (!caseId && cleanPath) {
+      const match = cleanPath.match(/\/(\d+)$/);
+      if (match) {
+        caseId = match[1];
+      }
+    }
+
+    let caseCode = urlObj?.searchParams.get('caseCode') || '';
+    if (!caseCode) {
+      const codeMatch =
+        content.match(/كود الحالة:\s*([^\n\r]+)/) || content.match(/\b([A-Z0-9-]{4,15})\b/i);
+      if (codeMatch) {
+        caseCode = codeMatch[1].trim();
+      }
+    }
+
+    let rejectionReason = urlObj?.searchParams.get('rejectionReason') || '';
+    if (!rejectionReason && isRejected) {
+      const reasonMatch = content.match(/سبب الرفض:\s*([\s\S]+)/);
+      if (reasonMatch) {
+        rejectionReason = reasonMatch[1].trim();
+      } else {
+        rejectionReason = content;
+      }
+    }
+
+    let detailsUrl = cleanPath;
+    if (!detailsUrl && caseId) {
+      detailsUrl = `/urgent/${caseId}`;
+    }
+
+    let updateUrl = detailsUrl;
+    if (cleanPath.includes('/edit/')) {
+      updateUrl = cleanPath;
+      detailsUrl = cleanPath.replace('/edit/', '/');
+    } else if (detailsUrl) {
+      const lastSlashIndex = detailsUrl.lastIndexOf('/');
+      if (lastSlashIndex !== -1) {
+        const prefix = detailsUrl.substring(0, lastSlashIndex);
+        const idPart = detailsUrl.substring(lastSlashIndex + 1);
+        updateUrl = `${prefix}/edit/${idPart}`;
+      }
+    }
+
+    return {
+      kind: isApproved ? 'approved' : 'rejected',
+      caseId,
+      caseCode: caseCode || 'غير متوفر',
+      rejectionReason: rejectionReason || '',
+      detailsUrl,
+      updateUrl,
+      fullMessage: content,
+      raw: n,
+    };
+  }
+
+  handleNotificationClick(n: GetUserNotificationsDTO, router: Router): boolean {
+    if (!n.isRead) {
+      this.markAsRead(n.id);
+    }
+
+    const parsed = this.parseCaseNotification(n);
+    if (parsed) {
+      this.#activeCaseNotification.set(parsed);
+      return true;
+    }
+
+    if (n.notificationDirectLink) {
+      if (
+        n.notificationDirectLink.startsWith('http://') ||
+        n.notificationDirectLink.startsWith('https://')
+      ) {
+        window.open(n.notificationDirectLink, '_blank');
+      } else {
+        router.navigateByUrl(n.notificationDirectLink);
+      }
+    } else {
+      router.navigateByUrl(this.#defaultLink);
+    }
+    return false;
+  }
+
   getNotificationDetails(n: GetUserNotificationsDTO): {
     icon: string;
     bgClass: string;
@@ -228,6 +416,14 @@ export class NotificationService implements OnDestroy {
   } {
     const text = (n.content || '').toLowerCase();
     const type = n.type;
+
+    const parsed = this.parseCaseNotification(n);
+    if (parsed?.kind === 'approved') {
+      return { icon: 'check_circle', bgClass: 'bg-emerald-500', title: 'تمت الموافقة على الحالة' };
+    }
+    if (parsed?.kind === 'rejected') {
+      return { icon: 'cancel', bgClass: 'bg-red-500', title: 'تم رفض الحالة' };
+    }
 
     // 1. Verification
     if (
@@ -320,7 +516,7 @@ export class NotificationService implements OnDestroy {
   }
 
   formatDate(dateStr: string): string {
-    const date = new Date(dateStr + 'Z'); // اعتبره UTC
+    const date = new Date(dateStr); // اعتبره UTC
 
     const diff = Date.now() - date.getTime();
 

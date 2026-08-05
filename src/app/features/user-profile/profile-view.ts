@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProfileSidebar } from './shared/profile-sidebar/profile-sidebar';
 
@@ -9,7 +9,7 @@ import { NotificationService } from '../../core/services/notification.service';
 import { ProfileService } from './service/profile.service';
 import { MyCasesTab } from './tabs/cases-tab/cases-tab';
 import { EditProfile } from './tabs/Edit-profile/edit-profile';
-import { DonationHistoryComponent } from './tabs/donation-tab/donation-tab';
+import { MyDonationsComponent } from '../donations/pages/my-donations/my-donations.component';
 export type ProfileTab = 'edit' | 'cases' | 'chat' | 'notifications' | 'donations'; // ADDED 'donations'
 
 @Component({
@@ -21,8 +21,8 @@ export type ProfileTab = 'edit' | 'cases' | 'chat' | 'notifications' | 'donation
     NotificationsTab,
     MyCasesTab,
     MyChats,
-    DonationHistoryComponent,
-  ], // ADDED MyCasesTab and DonationHistoryComponent
+    MyDonationsComponent,
+  ], // ADDED MyCasesTab and MyDonationsComponent
   templateUrl: './profile-view.html',
   styleUrl: './profile-view.css',
 })
@@ -38,13 +38,13 @@ export class ProfileView implements OnInit, OnDestroy {
   readonly activeTab = signal<ProfileTab>('edit');
 
   readonly tabs: { id: ProfileTab; label: string }[] = [
-    { id: 'edit', label: 'تعديل البيانات' },
+    { id: 'edit', label: 'تعديل بياناتي' },
     { id: 'cases', label: 'حالاتي' }, // RENAMED from 'بلاغاتي' / uncommented
-    { id: 'chat', label: 'المحادثات' },
-    { id: 'notifications', label: 'الإشعارات' },
-    { id: 'donations', label: 'التبرعات' },
+    { id: 'chat', label: 'محادثاتي' },
+    { id: 'notifications', label: 'اشعاراتي' },
+    { id: 'donations', label: 'تبرعاتي' }, // ADDED ' },
   ];
-
+  
   ngOnInit(): void {
     // Read tab from query param
     this.#route.queryParamMap.subscribe((params) => {
@@ -60,7 +60,6 @@ export class ProfileView implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.notificationService.stopConnection();
-   
   }
 
   switchTab(tab: ProfileTab): void {
@@ -100,7 +99,6 @@ export class ProfileView implements OnInit, OnDestroy {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0058be&color=fff`;
   }
   openImageZoom() {
-    console.log('avatarUrl:', this.avatarUrl);
     this.selectedZoomImage.set(this.avatarUrl);
     document.body.style.overflow = 'hidden';
   }

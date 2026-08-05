@@ -1,0 +1,86 @@
+<div
+  class="fixed inset-0 z-[1100] bg-[#091426]/70 backdrop-blur-md flex items-center justify-center p-4"
+  (click)="onBackdropClick($event)">
+
+  <div
+    class="bg-white rounded-3xl shadow-2xl w-full max-w-[480px] flex flex-col dir-rtl overflow-hidden"
+    (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="px-8 pt-8 pb-5 border-b border-slate-200">
+      <div class="flex items-center gap-3 mb-3">
+        <!-- Amber icon to signal "informational / blocked" -->
+        <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-[26px] text-amber-500">warning</span>
+        </div>
+        <h2 class="text-xl font-extrabold text-[#0b1c30] m-0 leading-snug">
+          @if (duplicateDecision() === 'SameUserDuplicate') {
+            لديك بلاغ مسجل
+          } @else if (duplicateDecision() === 'PendingOwnerCase' || duplicateDecision() === 'PendingUnknownCase') {
+            يوجد بلاغ مشابه قيد المراجعة
+          }
+        </h2>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="px-8 py-6 flex flex-col gap-4">
+
+      <div class="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+        <span class="material-symbols-outlined text-[22px] text-amber-500 mt-0.5 shrink-0">info</span>
+        <div class="flex flex-col gap-2">
+          @if (duplicateDecision() === 'SameUserDuplicate') {
+            @if (existingCaseType() === currentCaseType()) {
+              <p class="text-sm text-amber-800 leading-relaxed m-0">
+                لقد قمت بالفعل بإنشاء بلاغ من نفس النوع لهذا الشخص.
+              </p>
+              <p class="text-sm text-amber-800 leading-relaxed m-0">
+                إذا كنت ترغب في تعديل بياناته يمكنك تعديل البلاغ الحالي.
+              </p>
+            } @else {
+              <p class="text-sm text-amber-800 leading-relaxed m-0">
+                لقد قمت بالفعل بإنشاء بلاغ لهذا الشخص.
+              </p>
+              <p class="text-sm text-amber-800 leading-relaxed m-0">
+                إذا كنت ترغب في تغيير نوع البلاغ قم بحذف البلاغ الحالي ثم أنشئ بلاغاً جديداً.
+              </p>
+            }
+          } @else if (duplicateDecision() === 'PendingOwnerCase') {
+            <p class="text-sm text-amber-800 leading-relaxed m-0">
+              يوجد بالفعل بلاغ مفقود لهذا الشخص وهو قيد المراجعة.
+            </p>
+            <p class="text-sm text-amber-800 leading-relaxed m-0">
+              يرجى انتظار انتهاء المراجعة.
+            </p>
+          } @else if (duplicateDecision() === 'PendingUnknownCase') {
+            <p class="text-sm text-amber-800 leading-relaxed m-0">
+              يوجد بالفعل بلاغ لشخص بنفس المواصفات وهو حالياً قيد المراجعة.
+            </p>
+            <p class="text-sm text-amber-800 leading-relaxed m-0">
+              يمكنك انتظار نتيجة المراجعة أو متابعة إنشاء البلاغ.
+            </p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end gap-3 px-8 py-5 border-t border-slate-200 bg-slate-50">
+      @if (duplicateDecision() === 'PendingUnknownCase') {
+        <app-button variant="outline" (onClick)="close.emit()">
+          انتظار
+        </app-button>
+        <app-button variant="primary" (onClick)="continueCreate.emit()">
+          <span class="material-symbols-outlined text-[20px]">add_circle</span>
+          متابعة الإنشاء
+        </app-button>
+      } @else {
+        <app-button variant="primary" (onClick)="close.emit()">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+          إغلاق
+        </app-button>
+      }
+    </div>
+
+  </div>
+</div>

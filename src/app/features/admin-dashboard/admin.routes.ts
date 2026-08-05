@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { permissionGuard } from '../../core/guards/permission.guard';
-import { superAdminGuard } from '../../core/guards/super-admin.guard';
 import { Permissions } from '../../core/constants/Permissions';
 
 export const ADMIN_ROUTES: Routes = [
@@ -8,7 +7,7 @@ export const ADMIN_ROUTES: Routes = [
     path: '',
     canActivate: [permissionGuard],
     data: { requiredPermission: Permissions.Cases.GetAll },
-    loadComponent: () => import('./pages/overview/overview').then((c) => c.Overview),
+    loadComponent: () => import('../../core/layouts/admin-layout/admin-layout').then((c) => c.AdminLayoutComponent),
     children: [
       {
         path: '',
@@ -66,7 +65,7 @@ export const ADMIN_ROUTES: Routes = [
         data: { requiredPermission: Permissions.Donations.GetDonations },
         title: 'إدارة التبرعات | لقاء',
         loadComponent: () =>
-          import('./pages/donations/pages/donation-list/donation-admin-list.component').then(
+          import('../donations/pages/donation-admin-list/donation-admin-list.component').then(
             (m) => m.DonationAdminListComponent,
           ),
       },
@@ -99,18 +98,24 @@ export const ADMIN_ROUTES: Routes = [
       },
       {
         path: 'long-term/:id',
+        canActivate: [permissionGuard],
+        data: { requiredPermission: Permissions.LongTermCases.GetById, mode: 'dashboard' },
         loadComponent: () =>
           import('../long-term-cases/pages/long-term-details/long-term-details')
             .then(c => c.LongTermDetails),
       },
       {
         path: 'unknown/:id',
+        canActivate: [permissionGuard],
+        data: { requiredPermission: Permissions.UnknownCases.GetById, mode: 'dashboard' },
         loadComponent: () =>
           import('../unknown-cases/pages/unknown-details/unknown-details')
             .then(c => c.UnknownDetails),
       },
       {
         path: 'urgent/:id',
+        canActivate: [permissionGuard],
+        data: { requiredPermission: Permissions.UrgentCases.GetById, mode: 'dashboard' },
         loadComponent: () =>
           import('../urgent-cases/pages/urgent-details/urgent-details')
             .then(c => c.UrgentDetails),
@@ -125,7 +130,8 @@ export const ADMIN_ROUTES: Routes = [
       },
       {
         path: 'audit-logs',
-        canActivate: [superAdminGuard],
+        canActivate: [permissionGuard],
+        data: { requiredPermission: Permissions.Dashboard.GetAuditLogs },
         title: 'سجلات النظام | لقاء',
         loadComponent: () =>
           import('./pages/audit-logs/audit-logs.component').then((m) => m.AuditLogsComponent),

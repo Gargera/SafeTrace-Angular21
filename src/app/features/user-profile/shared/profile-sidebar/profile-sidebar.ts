@@ -4,7 +4,7 @@ import { VerificationStatus } from '../../../../shared/enums/verification-status
 import { UserRole } from '../../../../shared/enums/user-role';
 import { RoleBadgeDirective } from '../../../../shared/directives/role-badge-directive';
 import { VerificationBadgeDirective } from '../../../../shared/directives/verification-badge-directive';
-import { GeocodingService } from '../../../../core/services/geocoding.service';
+import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 
 @Component({
   selector: 'app-profile-sidebar',
@@ -74,3 +74,4 @@ export class ProfileSidebar {
 // Meaw_Meaw309
 //liqaaplatform@gmail.com
 //Liqaa_Platform_ITI_2026
+//03e5f5a3-4539-41a3-bb95-67f6723bd918

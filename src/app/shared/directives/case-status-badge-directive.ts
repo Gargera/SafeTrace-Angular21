@@ -1,6 +1,6 @@
 import { Directive, ElementRef, effect, input, Renderer2 } from '@angular/core';
 import { CaseStatus } from '../enums/case-status';
-import { getCaseStatusTranslationAr } from '../../core/constants/case.status.dictionary';
+import { getCaseStatusTranslationAr } from '../../core/constants/dictionaries/case.status.dictionary';
 
 @Directive({
   selector: '[appCaseStatusBadgeDirective]',

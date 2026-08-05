@@ -43,9 +43,9 @@
       @if (showId) {
         <app-identification-image
           [userInfo]="userInfo()"
-          [croppedImage]="idCroppedImage()"
-          (openCropper)="onOpenCropper('id', $event)"
-          (cropReset)="idCroppedImage.set(null)"
+          [croppedFrontImage]="idFrontCroppedImage()" [croppedBackImage]="idBackCroppedImage()"
+          (openCropperFront)="onOpenCropper('idFront', $event)" (openCropperBack)="onOpenCropper('idBack', $event)"
+          (cropResetFront)="idFrontCroppedImage.set(null)" (cropResetBack)="idBackCroppedImage.set(null)"
           (profileUpdated)="onProfileUpdated()"
         />
       }
@@ -54,12 +54,9 @@
 </ng-template>
 
 <div class="p-lg space-y-xl animate-fade-in" dir="rtl">
-  @if (isAdmin) {
-    <!-- Admin banner -->
-    <div
-      class="bg-linear-to-r from-blue-600 via-indigo-600 to-violet-600 rounded-2xl p-6 text-white shadow-lg border border-blue-500"
-      role="status"
-    >
+  @if (userInfo()?.role && userInfo()?.role !== 'User' && userInfo()?.role !== 'VerifiedUser') {
+    <!-- Generic Role / Status Banner -->
+    <div [class]="bannerClasses" role="status">
       <div class="flex items-start gap-4">
         <div
           class="w-14 h-14 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm shrink-0"
@@ -69,19 +66,16 @@
             style="font-variation-settings: 'FILL' 1"
             aria-hidden="true"
           >
-            admin_panel_settings
+            {{ roleIcon }}
           </span>
         </div>
 
         <div class="flex-1">
           <div class="flex items-center gap-2 flex-wrap">
-            <h3 class="text-xl font-bold">{{ verificationLabel }}</h3>
-            <span class="px-3 py-1 rounded-full bg-white/15 text-xs font-semibold tracking-wide">{{
-              verificationLabel
-            }}</span>
+            <h3 class="text-xl font-bold">{{ displayRoleName }}</h3>
           </div>
 
-          <p class="mt-2 text-sm text-blue-100 leading-6">هذا الحساب يمتلك صلاحيات الإدارة.</p>
+          <p class="mt-2 text-sm leading-6 opacity-90">{{ roleDescription }}</p>
 
           <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div class="bg-white/10 rounded-xl p-3 flex items-center gap-3 backdrop-blur-sm">
@@ -92,8 +86,10 @@
                 >verified</span
               >
               <div>
-                <p class="text-xs text-blue-100">الحالة</p>
-                <p class="font-semibold">موثق</p>
+                <p class="text-xs opacity-80 mb-1">الحالة</p>
+                <p class="font-semibold">
+                  {{ getVerificationStatus(userInfo()?.verificationStatus) }}
+                </p>
               </div>
             </div>
 
@@ -102,11 +98,11 @@
                 class="material-symbols-outlined"
                 style="font-variation-settings: 'FILL' 1"
                 aria-hidden="true"
-                >security</span
+                >manage_accounts</span
               >
               <div>
-                <p class="text-xs text-blue-100">الصلاحيات</p>
-                <p class="font-semibold">{{ verificationLabel }}</p>
+                <p class="text-xs opacity-80 mb-1">الصلاحيات</p>
+                <p class="font-semibold">{{ displayRoleName }}</p>
               </div>
             </div>
 
@@ -118,115 +114,31 @@
                 >shield</span
               >
               <div>
-                <p class="text-xs text-blue-100">الأمان</p>
-                <p class="font-semibold">حساب محمي</p>
+                <p class="text-xs opacity-80">الأمان</p>
+                <p class="font-semibold">{{ securityLevelLabel }}</p>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-
-    <ng-container
-      [ngTemplateOutlet]="profileImagesCard"
-      [ngTemplateOutletContext]="{ showId: false }"
-    ></ng-container>
-    <app-personal-info [userInfo]="userInfo()" (personalUpdated)="onProfileUpdated()" />
-    <app-password [adminOnlyLabel]="true" (passwordSaved)="onProfileUpdated()" />
-    <app-phone [userInfo]="userInfo()" (phoneUpdated)="onProfileUpdated()" />
-    <app-location-picker [userInfo]="userInfo()" (locationUpdated)="onProfileUpdated()" />
-  } @else if (isModerator) {
-    <!-- Moderator banner -->
-    <div
-      class="bg-linear-to-r from-emerald-600 via-teal-600 to-cyan-600 rounded-2xl p-6 text-white shadow-lg border border-emerald-500"
-      role="status"
-    >
-      <div class="flex items-start gap-4">
-        <div
-          class="w-14 h-14 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm shrink-0"
-        >
-          <span
-            class="material-symbols-outlined text-[32px]"
-            style="font-variation-settings: 'FILL' 1"
-            aria-hidden="true"
-          >
-            gavel
-          </span>
-        </div>
-
-        <div class="flex-1">
-          <div class="flex items-center gap-2 flex-wrap">
-            <h3 class="text-xl font-bold">{{ verificationLabel }}</h3>
-
-            <span class="px-3 py-1 rounded-full bg-white/15 text-xs font-semibold tracking-wide">
-              {{ verificationLabel }}
-            </span>
-          </div>
-
-          <p class="mt-2 text-sm text-emerald-100 leading-6">
-            هذا الحساب يمتلك صلاحيات الإشراف ومتابعة المحتوى وإدارة المستخدمين وفقًا للصلاحيات
-            الممنوحة.
-          </p>
-
-          <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div class="bg-white/10 rounded-xl p-3 flex items-center gap-3 backdrop-blur-sm">
-              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">
-                verified_user
-              </span>
-
-              <div>
-                <p class="text-xs text-emerald-100">الحالة</p>
-                <p class="font-semibold">{{ verificationLabel }} معتمد</p>
-              </div>
-            </div>
-
-            <div class="bg-white/10 rounded-xl p-3 flex items-center gap-3 backdrop-blur-sm">
-              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">
-                groups
-              </span>
-
-              <div>
-                <p class="text-xs text-emerald-100">الصلاحيات</p>
-                <p class="font-semibold">{{ verificationLabel }}</p>
-              </div>
-            </div>
-
-            <div class="bg-white/10 rounded-xl p-3 flex items-center gap-3 backdrop-blur-sm">
-              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">
-                fact_check
-              </span>
-
-              <div>
-                <p class="text-xs text-emerald-100">المهام</p>
-                <p class="font-semibold">إدارة ومراجعة</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <ng-container
-      [ngTemplateOutlet]="profileImagesCard"
-      [ngTemplateOutletContext]="{ showId: true }"
-    >
-    </ng-container>
-    <app-personal-info [userInfo]="userInfo()" (personalUpdated)="onProfileUpdated()" />
-
-    <app-password [adminOnlyLabel]="true" (passwordSaved)="onProfileUpdated()" />
-    <app-phone [userInfo]="userInfo()" (phoneUpdated)="onProfileUpdated()" />
-    <app-location-picker [userInfo]="userInfo()" (locationUpdated)="onProfileUpdated()" />
-  } @else {
-    <ng-container
-      [ngTemplateOutlet]="profileImagesCard"
-      [ngTemplateOutletContext]="{ showId: true }"
-    >
-    </ng-container>
-    <app-personal-info [userInfo]="userInfo()" (personalUpdated)="onProfileUpdated()" />
-    <app-password [adminOnlyLabel]="false" (passwordSaved)="onProfileUpdated()" />
-    <app-phone [userInfo]="userInfo()" (phoneUpdated)="onProfileUpdated()" />
-    <app-location-picker [userInfo]="userInfo()" (locationUpdated)="onProfileUpdated()" />
   }
+
+  <ng-container
+    [ngTemplateOutlet]="profileImagesCard"
+    [ngTemplateOutletContext]="{
+      showId: userInfo()?.role !== 'SuperAdmin' && userInfo()?.role !== 'Admin',
+    }"
+  ></ng-container>
+
+  <app-personal-info [userInfo]="userInfo()" (personalUpdated)="onProfileUpdated()" />
+
+  <app-password
+    [adminOnlyLabel]="isAdmin || userInfo()?.role === 'SuperAdmin'"
+    (passwordSaved)="onProfileUpdated()"
+  />
+  <app-phone [userInfo]="userInfo()" (phoneUpdated)="onProfileUpdated()" />
+  <app-location-picker [userInfo]="userInfo()" (locationUpdated)="onProfileUpdated()" />
 </div>
 
 <!-- Profile-photo crop dialog: opened after a new file passes validation.
@@ -240,3 +152,4 @@
 />
 
 <app-toast />
+

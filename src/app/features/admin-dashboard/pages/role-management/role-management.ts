@@ -9,18 +9,20 @@ import { ConfirmationModalComponent } from '../../../../shared/components/confir
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { AuthService } from '../../../../core/services/auth.service';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 
 import {
   PERMISSION_GROUPS_AR,
   PERMISSION_ACTIONS_AR,
   ALL_SYSTEM_PERMISSIONS,
-} from '../../../../core/constants/permission.dictionary';
+} from '../../../../core/constants/dictionaries/permission.dictionary';
 import Swal from 'sweetalert2';
-import { SnackbarService } from '../../../../core/services/toast.service';
-import { RolePermissionDto } from '../../models/Role/RolePermissionDto';
+import { SnackbarService } from '../../../../shared/services/toast.service';
+import { RolePermissionDto } from '../../models/Role/responses/RolePermissionDto';
 import { RoleService } from '../../services/role.service';
-import { RoleDto } from '../../models/Role/RoleDto';
-import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
+import { RoleDto } from '../../models/Role/responses/RoleDto';
+import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
+import { UserRole } from '../../../../shared/enums/user-role';
 
 interface PermissionGroup {
   groupName: string;
@@ -32,7 +34,7 @@ interface PermissionGroup {
 @Component({
   selector: 'app-role-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective, HeaderComponent],
   templateUrl: './role-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -60,7 +62,7 @@ export class RoleManagement implements OnInit {
   apiErrorMessage = signal<string>('');
 
   createRoleForm: FormGroup = this.fb.group({
-    roleName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+    roleName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50), Validators.pattern(/^[\u0600-\u06FF]+$/)]],
   });
 
   showConfirmModal = signal(false);
@@ -85,13 +87,13 @@ export class RoleManagement implements OnInit {
 
   isReadOnly = computed(() => {
     const selectedRole = this.roles().find((r) => r.id === this.selectedRoleId());
-    return selectedRole?.name === 'Admin' || !this.authService.hasPermission(this.Permissions.Roles.UpdateRolePermissions);
+    return selectedRole?.name === UserRole.SuperAdmin || !this.authService.hasPermission(this.Permissions.Roles.UpdateRolePermissions);
   });
 
   isDeletableRole = computed(() => {
     const selectedRole = this.roles().find((r) => r.id === this.selectedRoleId());
     if (!selectedRole) return false;
-    const coreRoles = ['Admin', 'User', 'VerifiedUser', 'Moderator'];
+    const coreRoles = [UserRole.Admin, UserRole.Moderator, UserRole.SuperAdmin, UserRole.User, UserRole.VerifiedUser];
     return !coreRoles.includes(selectedRole.name);
   });
 

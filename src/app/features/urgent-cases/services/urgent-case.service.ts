@@ -3,15 +3,15 @@ import { Observable } from 'rxjs';
 import { ApiService } from '../../../shared/services/api.service';
 import { UrgentCaseListItemResponse } from '../models/response/UrgentCaseListItemResponse';
 import { UrgentCaseDetailResponse } from '../models/response/UrgentCaseDetailResponse';
+import { UrgentCreateCaseResponse } from '../models/response/UrgentCreateCaseResponse';
 import { UrgentCaseCreateRequest } from '../models/request/UrgentCaseCreateRequest';
 import { UrgentCaseUpdateRequest } from '../models/request/UrgentCaseUpdateRequest';
-import { FoundPersonInfoRequest } from '../../../core/models/Cases.model';
-import { ApiResponse } from '../../../shared/models/responses/api-response.model';
-import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
-import { CreateCaseResponse } from '../../../shared/models/responses/create-case-response.model';
+import { FoundPersonInfoRequest } from '../../../core/models/cases.model';
 import { environment } from '../../../../environments/environment';
 import { UrgentCasesFilterRequest } from '../models/request/UrgentCaseFilterRequest';
 import { UrgentCreationStatusResponse } from '../models/response/UrgentCreationStatusResponse';
+import { ApiResponse } from '../../../shared/models/responses/api-response.model';
+import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
 
 @Injectable({
   providedIn: 'root',
@@ -36,7 +36,7 @@ export class UrgentCaseService extends ApiService {
   ): Observable<ApiResponse<PaginationResponse<UrgentCaseListItemResponse>>> {
     return this.get<ApiResponse<PaginationResponse<UrgentCaseListItemResponse>>>(
       `${this.baseUrl}/GetCases`,
-      filter as Record<string, any>,
+      filter,
     );
   }
 
@@ -49,7 +49,7 @@ export class UrgentCaseService extends ApiService {
   ): Observable<ApiResponse<PaginationResponse<UrgentCaseDetailResponse>>> {
     return this.get<ApiResponse<PaginationResponse<UrgentCaseDetailResponse>>>(
       `${this.baseUrl}/Admin/GetCases`,
-      filter as Record<string, any>,
+      filter,
     );
   }
 
@@ -83,9 +83,9 @@ export class UrgentCaseService extends ApiService {
   createCase(
     request: UrgentCaseCreateRequest,
     forceCreate = false,
-  ): Observable<ApiResponse<CreateCaseResponse>> {
+  ): Observable<ApiResponse<UrgentCreateCaseResponse>> {
     const formData = this.buildFormData(request);
-    return this.postFormData<ApiResponse<CreateCaseResponse>>(
+    return this.postFormData<ApiResponse<UrgentCreateCaseResponse>>(
       `${this.baseUrl}/CreateCase`,
       formData,
       {
@@ -128,4 +128,9 @@ export class UrgentCaseService extends ApiService {
     return this.delete<ApiResponse<string>>(`${this.baseUrl}/${id}/permanent`);
   }
 
+  getMyCaseById(id: number) {
+    return this.http.get<ApiResponse<UrgentCaseDetailResponse>>(
+      `${environment.baseUrl}/api/UrgentCase/MyCaseDetails/${id}`
+    );
+  }
 }
