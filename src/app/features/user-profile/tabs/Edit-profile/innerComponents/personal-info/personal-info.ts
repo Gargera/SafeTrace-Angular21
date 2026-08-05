@@ -31,14 +31,17 @@ export class PersonalInfo implements OnChanges {
       '',
       [
         Validators.required,
+        Validators.minLength(2),
         Validators.maxLength(100),
         Validators.pattern(/^[\u0600-\u06FF]+$/),
       ],
     ],
+
     lastName: [
       '',
       [
         Validators.required,
+        Validators.minLength(2),
         Validators.maxLength(100),
         Validators.pattern(/^[\u0600-\u06FF]+( [\u0600-\u06FF]+)*$/),
       ],

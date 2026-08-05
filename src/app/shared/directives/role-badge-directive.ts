@@ -1,51 +1,54 @@
-import { Directive, ElementRef, effect, input, Renderer2 } from '@angular/core';
+import { Directive, ElementRef, effect, input } from '@angular/core';
 import { UserRole } from '../enums/user-role';
-import { ROLE_TRANSLATIONS_AR, getRoleTranslationAr } from '../../core/constants/dictionaries/roles.dictionary';
+import { getRoleTranslationAr } from '../../core/constants/dictionaries/roles.dictionary';
+import { BadgeRenderService } from '../services/badge-render.service';
 
 @Directive({
-  selector: '[appRoleBadgeDirective]'
+  selector: '[appRoleBadgeDirective]',
 })
 export class RoleBadgeDirective {
   role = input.required<string>({ alias: 'appRoleBadgeDirective' });
 
-  constructor(private el: ElementRef, private renderer: Renderer2) {
-    this.renderer.addClass(this.el.nativeElement, 'px-sm');
-    this.renderer.addClass(this.el.nativeElement, 'py-1');
-    this.renderer.addClass(this.el.nativeElement, 'rounded-lg');
-    this.renderer.addClass(this.el.nativeElement, 'text-[10px]');
-    this.renderer.addClass(this.el.nativeElement, 'font-bold');
-    this.renderer.addClass(this.el.nativeElement, 'whitespace-nowrap');
+  private readonly baseClasses = [
+    'px-sm',
+    'py-1',
+    'rounded-lg',
+    'text-[10px]',
+    'font-bold',
+    'whitespace-nowrap',
+  ];
+
+  constructor(
+    private el: ElementRef,
+    private badgeService: BadgeRenderService,
+  ) {
     effect(() => {
-      const el = this.el.nativeElement;
-      el.className = el.className.replace(/\bbg-\S+|text-\S+/g, '');
-
       const roleValue = this.role() as UserRole;
-
-      if (roleValue === UserRole.SuperAdmin) {
-        this.renderer.addClass(el, 'bg-error');
-        this.renderer.addClass(el, 'text-white');
-      } else if (roleValue === UserRole.Admin) {
-        this.renderer.addClass(el, 'bg-primary');
-        this.renderer.addClass(el, 'text-on-primary');
-      } else if (roleValue === UserRole.Moderator) {
-        this.renderer.addClass(el, 'bg-secondary-container');
-        this.renderer.addClass(el, 'text-on-secondary-container');
-      } else if (roleValue === UserRole.VerifiedUser) {
-        this.renderer.addClass(el, 'bg-tertiary-fixed-dim');
-        this.renderer.addClass(el, 'text-tertiary');
-      } else if (roleValue === UserRole.User) {
-        this.renderer.addClass(el, 'bg-surface-variant');
-        this.renderer.addClass(el, 'text-on-surface-variant');
-      } else {
-        // Any new future role (e.g. Organization)
-        this.renderer.addClass(el, 'bg-indigo-600');
-        this.renderer.addClass(el, 'text-white');
-        this.renderer.addClass(el, 'border');
-        this.renderer.addClass(el, 'border-indigo-400');
-      }
-
-      const translatedRole = getRoleTranslationAr(roleValue);
-      el.innerText = translatedRole || this.role() || 'مستخدم غير موثق';
+      console.log('Role:', roleValue);
+      const config = {
+        baseClasses: this.baseClasses,
+        getClasses: (value: UserRole) => {
+          switch (value) {
+            case UserRole.SuperAdmin:
+              return { bg: 'bg-error', text: 'text-white' };
+            case UserRole.Admin:
+              return { bg: 'bg-primary', text: 'text-on-primary' };
+            case UserRole.Moderator:
+              return { bg: 'bg-secondary-container', text: 'text-on-secondary-container' };
+            case UserRole.VerifiedUser:
+              return { bg: 'bg-tertiary-fixed-dim', text: 'text-tertiary' };
+            case UserRole.User:
+              return { bg: 'bg-surface-variant', text: 'text-on-surface-variant' };
+            default:
+              return { bg: 'bg-indigo-600', text: 'text-white border border-indigo-400' };
+          }
+        },
+        getContent: (value: UserRole) =>
+          getRoleTranslationAr(value) === value ? 'مستخدم غير موثق' : getRoleTranslationAr(value),
+        // getRoleTranslationAr(value) || this.role() || 'مستخدم غير موثق',
+        useTextOnly: true,
+      };
+      this.badgeService.updateBadge(this.el.nativeElement, roleValue, config);
     });
   }
 }
