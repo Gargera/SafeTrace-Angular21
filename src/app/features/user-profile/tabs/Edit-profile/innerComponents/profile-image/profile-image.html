@@ -124,7 +124,7 @@
   </div>
 </div>
 
-<app-confirm-dialog
+<!-- <app-confirm-dialog
   [open]="showRemoveConfirm()"
   title="إزالة الصورة الشخصية"
   message="هل أنت متأكد من رغبتك في إزالة صورتك الشخصية؟ يمكنك إضافة صورة جديدة في أي وقت."
@@ -134,4 +134,15 @@
   [loading]="isRemovingProfileImage()"
   (confirmed)="confirmRemoveProfilePhoto()"
   (cancelled)="cancelRemoveProfilePhoto()"
-/>
+/> -->
+@if (showRemoveConfirm()) {
+  <app-confirmation-modal
+    title="إزالة الصورة الشخصية"
+    message="هل أنت متأكد من رغبتك في إزالة صورتك الشخصية؟ يمكنك إضافة صورة جديدة في أي وقت."
+    confirmText="إزالة"
+    icon="delete"
+    [variant]="'danger'"
+    (confirm)="confirmRemoveProfilePhoto()"
+    (cancel)="cancelRemoveProfilePhoto()"
+  />
+}
