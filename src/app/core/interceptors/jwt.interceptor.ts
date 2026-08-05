@@ -104,7 +104,7 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
             catchError((refreshErr: HttpErrorResponse) => {
               isRefreshing = false;
 
-              if (refreshErr.status === 401 || refreshErr.status === 403) {
+              if (refreshErr.status === 401) {
                 Swal.fire({
                   title: 'انتهت الجلسة',
                   text: 'تم تسجيل الخروج لانتهاء الجلسة أو كإجراء أمني، يرجى تسجيل الدخول من جديد.',
