@@ -33,7 +33,6 @@ import { ProfileService } from '../../service/profile.service';
 
 import { UserRole } from '../../../../shared/enums/user-role';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';
-import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
 import { ImageCropDialog } from '../../shared/image-crop-dialog/image-crop-dialog';
 import { Toast } from '../../../../shared/components/toast/toast';
 import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
@@ -82,7 +81,7 @@ export class EditProfile {
   // Cropped images passed to child components
   readonly profileCroppedImage = signal<Blob | null>(null);
   readonly idFrontCroppedImage = signal<Blob | null>(null);
-    readonly idBackCroppedImage = signal<Blob | null>(null);
+  readonly idBackCroppedImage = signal<Blob | null>(null);
 
   // ── Role / verification helpers ───────────────────────────────────────────
 
@@ -217,4 +216,3 @@ export class EditProfile {
     });
   }
 }
-
