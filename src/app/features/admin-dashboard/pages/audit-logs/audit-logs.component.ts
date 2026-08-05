@@ -4,15 +4,15 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
 
 import { DashboardService } from '../../services/dashboard.service';
-import { AuditLogDto, AuditLogQueryDto } from '../../models/Dashboard/audit-log.dto';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { AuditLogDto, AuditLogQueryDto } from '../../models/Dashboard/responses/audit-log.dto';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { AuditOperationBadgeDirective } from '../../../../shared/directives/audit-operation-badge.directive';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 
@@ -27,7 +27,7 @@ import { PaginationComponent } from '../../../../shared/components/pagination/pa
     CardComponent,
     EmptyStateComponent,
     LoadingSpinnerComponent,
-    CaseHeaderComponent,
+    HeaderComponent,
     AuditOperationBadgeDirective,
     DatePipe,
     PaginationComponent
@@ -77,8 +77,8 @@ export class AuditLogsComponent implements OnInit {
         }
         this.isLoading.set(false);
       },
-      error: () => {
-        this.toast.error('حدث خطأ أثناء الاتصال بالخادم.');
+      error: (err) => {
+        this.toast.error(err.error?.detail || 'حدث خطأ أثناء الاتصال بالخادم.');
         this.isLoading.set(false);
       },
     });

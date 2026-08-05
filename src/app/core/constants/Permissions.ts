@@ -35,6 +35,7 @@ export const Permissions = {
     GetStatistics: 'Dashboard.GetStatistics',
     GetCasesStatistics: 'Dashboard.GetCasesStatistics',
     GetAuditLogs: 'Dashboard.GetAuditLogs',
+    GenerateCasesPdfReport: 'Dashboard.GenerateCasesPdfReport',
   },
 
   AiMatching: {
@@ -47,11 +48,13 @@ export const Permissions = {
     HardDelete: 'Complaints.HardDelete',
     MarkAsSolved: 'Complaints.MarkAsSolved',
     GetComplaintsStatistics: 'Complaints.GetComplaintsStatistics',
+    GenerateComplaintsPdfReport: 'Complaints.GenerateComplaintsPdfReport',
   },
 
   Donations: {
     GetDonations: 'Donations.GetDonations',
     GetDonationStatistics: 'Donations.GetDonationStatistics',
+    GenerateDonationsPdfReport: 'Donations.GenerateDonationsPdfReport',
   },
 
   Roles: {
@@ -72,6 +75,7 @@ export const Permissions = {
     Reject: 'Users.Reject',
     ToggleBlock: 'Users.ToggleBlock',
     GetUsersStatistics: 'Users.GetUsersStatistics',
+    GenerateUsersPdfReport: 'Users.GenerateUsersPdfReport',
   },
 
   Chat: {

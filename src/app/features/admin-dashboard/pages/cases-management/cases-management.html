@@ -1,6 +1,6 @@
 <!-- Header -->
 <div class="mb-xl">
-  <app-case-header title="إدارة الحالات" subtitle="نظرة عامة على جميع حالات النظام وإحصائياتها" />
+  <app-header title="إدارة الحالات" subtitle="نظرة عامة على جميع حالات النظام وإحصائياتها" />
 </div>
 
 <!-- Statistics Cards -->
@@ -66,8 +66,21 @@
 <!-- Filters Card (styled exactly like user-list) -->
 <section class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm mb-lg">
   <app-case-filters [showCaseType]="true" [showCaseStatus]="true" [genderInAdvanced]="true"
-    [ageCategoryInAdvanced]="true" (filterChange)="onFilterChange($event)" />
+    [ageCategoryInAdvanced]="true" (filterChange)="onFilterChange($event)">
+    
+    <app-button
+      actions
+      *hasPermission="Permissions.Dashboard.GenerateCasesPdfReport"
+      variant="outline"
+      (onClick)="downloadReport()">
+      <span class="material-symbols-outlined text-[18px]">download</span>
+      <span>تحميل التقرير</span>
+    </app-button>
+    
+  </app-case-filters>
 </section>
+
+
 
 <!-- Cases Table -->
 <section class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75">

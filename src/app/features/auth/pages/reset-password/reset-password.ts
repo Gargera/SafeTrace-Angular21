@@ -3,7 +3,7 @@ import { Component, inject, signal, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import Swal from 'sweetalert2';
 import { mustMatch } from '../../../../shared/validators/must-match.validator';
 
@@ -87,7 +87,7 @@ export class ResetPassword implements OnDestroy {
     this.authService.forgetPassword(this.savedEmail()).subscribe({
       next: (res) => {
         this.isResending.set(false);
-        this.snackbar.success('تم إرسال رمز جديد إلى بريدك الإلكتروني، الرمز صالح لمدة 10 دقائق.');
+        this.snackbar.success(res.message || 'تم إرسال رمز جديد إلى بريدك الإلكتروني، الرمز صالح لمدة 10 دقائق.');
       },
       error: (err) => {
         this.isResending.set(false);

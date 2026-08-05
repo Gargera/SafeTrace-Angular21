@@ -5,12 +5,11 @@ import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { environment } from '../../../environments/environment';
 import { Observable, tap, firstValueFrom } from 'rxjs';
 import { ApiResponse } from '../../shared/models/responses/api-response.model';
-import { AuthResponse } from '../../features/auth/models/AuthResponse';
-import { LoginRequest } from '../../features/auth/models/LoginRequest';
-import { RegisterRequest } from '../../features/auth/models/RegisterRequest';
-import { ResetPasswordRequest } from '../../features/auth/models/ResetPasswordRequest';
+import { AuthResponse } from '../../features/auth/models/responses/AuthResponse';
+import { LoginRequest } from '../../features/auth/models/requests/LoginRequest';
+import { RegisterRequest } from '../../features/auth/models/requests/RegisterRequest';
+import { ResetPasswordRequest } from '../../features/auth/models/requests/ResetPasswordRequest';
 import { VerificationStatus } from '../../shared/enums/verification-status';
-import { UserRole } from '../../shared/enums/user-role';
 import { LocationTrackingService } from './LocationTracking.service';
 
 @Injectable({
@@ -37,13 +36,28 @@ export class AuthService {
   }
 
   async checkSession(): Promise<void> {
+    const expirationStr = this.getRefreshTokenExpiration();
+    if (expirationStr) {
+      const expDate = new Date(expirationStr);
+      if (!isNaN(expDate.getTime()) && expDate < new Date()) {
+        this.clearSession();
+        return;
+      }
+    }
+
+    if (!this.getUserData()) {
+      return;
+    }
+
     try {
       const res = await firstValueFrom(this.refreshToken());
       if (res.success && res.data) {
         this.isLoggedIn.set(true);
       }
-    } catch (error) {
-      this.handleSessionExpiration();
+    } catch (error: any) {
+      if (error?.status === 401 || error?.status === 403) {
+        this.handleSessionExpiration();
+      }
     }
   }
 
@@ -56,10 +70,15 @@ export class AuthService {
     const token = this.getToken();
     if (!token) return null;
 
-
     try {
       const payload = token.split('.')[1];
-      const decodedPayload = atob(payload);
+      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const decodedPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
       return JSON.parse(decodedPayload);
     } catch {
       return null;
@@ -94,22 +113,6 @@ export class AuthService {
       : Array.isArray(roleClaim) && roleClaim.length > 0
         ? roleClaim[0]
         : null;
-  }
-
-  hasRole(role: string): boolean {
-    return this.getUserRole() === role;
-  }
-
-  isAdmin(): boolean {
-    return this.hasRole(UserRole.Admin);
-  }
-
-  isModerator(): boolean {
-    return this.hasRole(UserRole.Moderator);
-  }
-
-  isVerifiedUser(): boolean {
-    return this.hasRole(UserRole.VerifiedUser);
   }
 
   hasPermission(permission: string): boolean {
@@ -150,9 +153,7 @@ export class AuthService {
   handleSessionExpiration(): void {
     if (!this.isLoggedIn()) return; // Already cleared
 
-
     this.clearSession();
-
 
     import('sweetalert2').then((SwalModule) => {
       const Swal = SwalModule.default;
@@ -191,15 +192,6 @@ export class AuthService {
     return this.http.post<ApiResponse<string>>(`${this.baseUrl}/register`, data);
   }
 
-  // login(data: LoginRequest): Observable<ApiResponse<AuthResponse>> {
-  //   return this.http
-  //     .post<ApiResponse<AuthResponse>>(`${this.baseUrl}/login`, data, { withCredentials: true })
-  //     .pipe(
-  //       tap((res) => {
-  //         if (res.success && res.data) this.setSession(res.data);
-  //       }),
-  //     );
-  // }
   login(data: LoginRequest): Observable<ApiResponse<AuthResponse>> {
     return this.http
       .post<ApiResponse<AuthResponse>>(`${this.baseUrl}/login`, data, {
@@ -216,6 +208,7 @@ export class AuthService {
         }),
       );
   }
+  
   googleLogin(data: { providerToken: string }): Observable<ApiResponse<AuthResponse>> {
     return this.http
       .post<ApiResponse<AuthResponse>>(`${this.baseUrl}/google-login`, data, {

@@ -11,7 +11,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { CaseListItemResponse, CasesFilterRequest } from '../../../../core/models/Cases.model';
+import { CaseListItemResponse, CasesFilterRequest } from '../../../../core/models/cases.model';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { CardComponent } from '../../../../shared/components/card/card';
@@ -19,15 +19,16 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
+import { ReportService } from '../../services/report.service';
 
 // Badge directives
 import { CaseTypeBadgeDirective } from '../../../../shared/directives/case-type-badge-directive';
 import { CaseStatusBadgeDirective } from '../../../../shared/directives/case-status-badge-directive';
 
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { DashboardService } from '../../services/dashboard.service';
-import { CasesStatisticsDto as DashboardStatistics } from '../../models/Dashboard/CasesStatisticsDto';
+import { CasesStatisticsDto as DashboardStatistics } from '../../models/Dashboard/responses/CasesStatisticsDto';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { CasesManagementService } from '../../services/cases-management.service';
 import { Permissions } from '../../../../core/constants/Permissions';
@@ -51,7 +52,7 @@ const FILTER_DEBOUNCE_MS = 400;
     ConfirmationModalComponent,
     CaseTypeBadgeDirective,
     CaseStatusBadgeDirective,
-    CaseHeaderComponent,
+    HeaderComponent,
     CaseFiltersComponent,
     HasPermissionDirective,
     PaginationComponent,
@@ -62,6 +63,7 @@ const FILTER_DEBOUNCE_MS = 400;
 export class CasesManagement implements OnInit, OnDestroy {
   protected readonly CaseType = CaseType;
   protected readonly CaseStatus = CaseStatus;
+  
   Permissions = Permissions;
   caseActionPermissions = [
     Permissions.LongTermCases.GetById,
@@ -77,6 +79,7 @@ export class CasesManagement implements OnInit, OnDestroy {
   private readonly casesService = inject(CasesManagementService);
   private readonly dashboardService = inject(DashboardService);
   private readonly toast = inject(SnackbarService);
+  private readonly reportService = inject(ReportService);
 
   // Statistics
   statistics = signal<DashboardStatistics | null>(null);
@@ -273,37 +276,46 @@ export class CasesManagement implements OnInit, OnDestroy {
     this.modalConfig.set(null);
   }
   getDetailsRoute(caseItem: CaseListItemResponse) {
-  switch (caseItem.caseType) {
-    case CaseType.LongTerm:
-      return ['/admin/long-term', caseItem.id];
+    switch (caseItem.caseType) {
+      case CaseType.LongTerm:
+        return ['/admin/long-term', caseItem.id];
 
-    case CaseType.Unknown:
-      return ['/admin/unknown', caseItem.id];
+      case CaseType.Unknown:
+        return ['/admin/unknown', caseItem.id];
 
-    case CaseType.Urgent:
-      return ['/admin/urgent', caseItem.id];
+      case CaseType.Urgent:
+        return ['/admin/urgent', caseItem.id];
 
-    default:
-      return ['/admin/cases-management'];
+      default:
+        return ['/admin/cases-management'];
+    }
   }
-}
 
-getDeletePermission(caseType: CaseType): string {
-  switch (caseType) {
-    case CaseType.LongTerm: return Permissions.LongTermCases.HardDelete;
-    case CaseType.Unknown: return Permissions.UnknownCases.HardDelete;
-    case CaseType.Urgent: return Permissions.UrgentCases.HardDelete;
-    default: return '';
+  getDeletePermission(caseType: CaseType): string {
+    switch (caseType) {
+      case CaseType.LongTerm: return Permissions.LongTermCases.HardDelete;
+      case CaseType.Unknown: return Permissions.UnknownCases.HardDelete;
+      case CaseType.Urgent: return Permissions.UrgentCases.HardDelete;
+      default: return '';
+    }
   }
-}
 
-getViewPermission(caseType: CaseType): string {
-  switch (caseType) {
-    case CaseType.LongTerm: return Permissions.LongTermCases.GetById;
-    case CaseType.Unknown: return Permissions.UnknownCases.GetById;
-    case CaseType.Urgent: return Permissions.UrgentCases.GetById;
-    default: return '';
+  getViewPermission(caseType: CaseType): string {
+    switch (caseType) {
+      case CaseType.LongTerm: return Permissions.LongTermCases.GetById;
+      case CaseType.Unknown: return Permissions.UnknownCases.GetById;
+      case CaseType.Urgent: return Permissions.UrgentCases.GetById;
+      default: return '';
+    }
   }
+
+downloadReport(): void {
+
+  this.reportService
+    .generateCasesPdfReport(this.baseFilter())
+    .subscribe(response => {
+      this.reportService.download(response);
+    });
 }
 
 }

@@ -2,16 +2,16 @@ import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy } 
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { ALL_SYSTEM_PERMISSIONS, PERMISSION_ACTIONS_AR, PERMISSION_GROUPS_AR } from '../../../../core/constants/permission.dictionary';
+import { ALL_SYSTEM_PERMISSIONS, PERMISSION_ACTIONS_AR, PERMISSION_GROUPS_AR } from '../../../../core/constants/dictionaries/permission.dictionary';
 import { environment } from '../../../../../environments/environment';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { UserService } from '../../services/user.service';
 import { RoleService } from '../../services/role.service';
 import { AuthService } from '../../../../core/services/auth.service';
-import { UserPermissionDto } from '../../models/User/UserPermissionDto';
-import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
-import { GetUserByIdDto } from '../../models/User/GetUserByIdDto';
-import { RoleDto } from '../../models/Role/RoleDto';
+import { UserPermissionDto } from '../../models/User/responses/UserPermissionDto';
+import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
+import { GetUserByIdDto } from '../../models/User/responses/GetUserByIdDto';
+import { RoleDto } from '../../models/Role/responses/RoleDto';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';
 import { VerificationBadgeDirective } from "../../../../shared/directives/verification-badge-directive";
 import { RoleBadgeDirective } from "../../../../shared/directives/role-badge-directive";
@@ -24,7 +24,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 interface PermissionGroup {
   groupName: string;
   groupTitle: string;
@@ -35,7 +35,7 @@ interface PermissionGroup {
 @Component({
   selector: 'app-user-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, FormField, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective, CaseHeaderComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, FormField, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective, HeaderComponent],
   templateUrl: './user-details.html',
   styleUrl: './user-details.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -241,30 +241,43 @@ export class UserDetails implements OnInit {
     );
   }
 
+  rejectReason = signal<string>('');
+
   onReject() {
+    this.rejectReason.set('');
     this.openConfirmModal(
       'تأكيد رفض الحساب',
-      'هل أنت متأكد من رفض توثيق هذا الحساب؟',
+      'يرجى كتابة سبب رفض توثيق هذا الحساب (اختياري):',
       'رفض',
       () => {
-        this.executeAction(this.userService.rejectUser(this.userId()), 'تم رفض طلب التوثيق.', 'reject');
+        const reason = this.rejectReason()?.trim() || '';
+        this.executeAction(this.userService.rejectUser(this.userId(), reason), 'تم رفض طلب التوثيق بنجاح وإرسال السبب.', 'reject');
       },
       'cancel',
       'danger'
     );
   }
 
+  blockReason = signal<string>('');
+
   onToggleBlock() {
-    const actionText = this.user()?.isBlocked ? 'فك حظر' : 'حظر';
+    const isBlocking = !this.user()?.isBlocked;
+    const actionText = isBlocking ? 'حظر' : 'فك حظر';
+    
+    if (isBlocking) {
+      this.blockReason.set('');
+    }
+
     this.openConfirmModal(
       `تأكيد ${actionText} المستخدم`,
-      `هل أنت متأكد من ${actionText} هذا المستخدم؟`,
+      isBlocking ? 'يرجى كتابة سبب حظر هذا الحساب (اختياري):' : `هل أنت متأكد من ${actionText} هذا المستخدم؟`,
       actionText,
       () => {
-        this.executeAction(this.userService.toggleBlockStatus(this.userId()), `تم ${actionText} المستخدم بنجاح.`, 'block');
+        const reason = isBlocking ? (this.blockReason()?.trim() || '') : '';
+        this.executeAction(this.userService.toggleBlockStatus(this.userId(), reason), `تم ${actionText} المستخدم بنجاح.`, 'block');
       },
-      this.user()?.isBlocked ? 'lock_open' : 'block',
-      this.user()?.isBlocked ? 'primary' : 'danger'
+      isBlocking ? 'block' : 'lock_open',
+      isBlocking ? 'danger' : 'primary'
     );
   }
 

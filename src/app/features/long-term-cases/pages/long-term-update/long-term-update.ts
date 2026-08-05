@@ -1,29 +1,34 @@
-import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 
-import { environment } from '../../../../../environments/environment'; 
+import { environment } from '../../../../../environments/environment';
 import { LongTermCaseService } from '../../services/long-term-case.service';
 import { LongTermCaseUpdateRequest } from '../../models/request/LongTermCaseUpdateRequest';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
-import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
-import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
-import { SnackbarService } from '../../../../core/services/toast.service';
-import { CaseFileResponse } from '../../../../shared/models/responses/case-file.model';
+import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/dictionaries/relation.type.dictionary';
+import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
+import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
+import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 
 // Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
+import { ImageService } from '../../../../shared/services/image.service';
+import { CaseFileResponse } from '../../../../core/models/cases.model';
 
 type Step = 1 | 2 | 3;
 
@@ -37,7 +42,8 @@ type Step = 1 | 2 | 3;
     ButtonComponent,
     FormField,
     CardComponent,
-    CaseHeaderComponent,
+    HeaderComponent,
+    ConfirmationModalComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./long-term-update.css'],
@@ -45,10 +51,12 @@ type Step = 1 | 2 | 3;
 })
 export class LongTermUpdate implements OnInit {
   private fb = inject(FormBuilder);
+  private imageService = inject(ImageService);
   private service = inject(LongTermCaseService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private snackbar = inject(SnackbarService);
+  private destroyRef = inject(DestroyRef);
 
   caseId!: number;
   currentStep: Step = 1;
@@ -56,13 +64,16 @@ export class LongTermUpdate implements OnInit {
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
 
+  showDeleteImageConfirm = signal(false);
+  photoToDelete = signal<CaseFileResponse | null>(null);
+
   // Existing photos
   existingPhotos = signal<CaseFileResponse[]>([]);
   deletedPhotoIds = signal<number[]>([]);
   primaryPhotoId = signal<number | null>(null);
 
   // Inline Cropper & New Primary photo state (Matching Create structure)
-  cropImageEvent = signal<any>(null);
+  cropImageEvent = signal<Event | null>(null);
   tempCroppedBlob = signal<Blob | null>(null);
   newPrimaryImage = signal<File | null>(null);
   newPrimaryPreview = signal<string | null>(null);
@@ -124,79 +135,84 @@ export class LongTermUpdate implements OnInit {
   // Error message helpers
   // ─────────────────────────────────────────────────────────────
   getFieldError(field: string): string | null {
-    const control = this.form.get(field);
-    if (!control || !control.errors || !(control.touched || control.dirty)) return null;
-    const e = control.errors;
-    if (e['required']) return 'هذا الحقل مطلوب';
-    if (e['arabicText']) return 'يجب كتابة النص بالحروف العربية فقط';
-    if (e['minlength']) return `الحد الأدنى ${e['minlength'].requiredLength} أحرف`;
-    if (e['maxlength']) return `الحد الأقصى ${e['maxlength'].requiredLength} حرفاً`;
-    if (e['min']) return `يجب أن لا تقل القيمة عن ${e['min'].min}`;
-    if (e['max']) return `يجب أن لا تتجاوز القيمة ${e['max'].max}`;
-    if (e['egyptianPhone']) return 'أدخل رقم هاتف مصري صحيح (مثال: 01xxxxxxxxx)';
-    if (e['pastDate']) return 'لا يمكن أن يكون التاريخ في المستقبل';
-    if (e['description']) return 'لا يمكن أن يتجاوز الوصف 2000 حرف';
-    if (e['validEnum']) return 'اختر قيمة صحيحة';
-    return 'قيمة غير صحيحة';
+    return getFormFieldError(this.form, field);
   }
 
   isInvalid(field: string): boolean {
-    const c = this.form.get(field);
-    return !!(c?.invalid && (c?.touched || c?.dirty));
+    return isFieldInvalid(this.form, field);
   }
+
+  availableCities = signal<string[]>([]);
 
   ngOnInit(): void {
     this.caseId = Number(this.route.snapshot.paramMap.get('id'));
+
+    this.form.get('government')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((gov) => {
+        const cities = getCitiesForGovernorate(gov);
+        this.availableCities.set(cities);
+        const currentCity = this.form.get('city')?.value;
+        if (currentCity && !cities.includes(currentCity)) {
+          this.form.get('city')?.setValue('');
+        }
+      });
+
     this.loadCase();
   }
 
   private loadCase(): void {
     this.isLoading.set(true);
-    this.service.getCaseById(this.caseId).subscribe({
-      next: (res) => {
-        const c = res.data as any;
-        const relValue = c.relation !== undefined && c.relation !== null ? c.relation : (c.relationType ?? null);
+    this.service
+      .getMyCaseById(this.caseId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          const c = res.data;
+          if (!c) {
+            this.isLoading.set(false);
+            return;
+          }
+          const gov = c.government ?? '';
+          this.availableCities.set(getCitiesForGovernorate(gov));
 
-        this.form.patchValue({
-          fName: c.fName ?? '',
-          sName: c.sName ?? '',
-          tName: c.tName ?? '',
-          lName: c.lName ?? '',
-          age: c.age ?? null,
-          gender: c.gender ?? '',
-          relation: relValue,
-          communicationPhone: c.communicationPhone ?? '',
-          description: c.description ?? '',
-          government: c.government ?? '',
-          city: c.city ?? '',
-          street: c.street ?? '',
-          eventDate: c.eventDate ? String(c.eventDate).split('T')[0] : '',
-        });
+          this.form.patchValue({
+            fName: c.fName ?? '',
+            sName: c.sName ?? '',
+            tName: c.tName ?? '',
+            lName: c.lName ?? '',
+            age: c.age ?? null,
+            gender: c.gender ?? '',
+            relation: c.relation ?? null,
+            communicationPhone: c.communicationPhone ?? '',
+            description: c.description ?? '',
+            government: c.government ?? '',
+            city: c.city ?? '',
+            street: c.street ?? '',
+            eventDate: c.eventDate ? String(c.eventDate).split('T')[0] : '',
+          });
 
-        // FIX: the backend's CaseDetailBaseDto exposes the property as "Photos"
-        // (camelCase JSON: "photos"), NOT "files"/"caseFiles". Those never existed
-        // in the response, so existingPhotos was always [] and no photo ever showed
-        // up on the edit form.
-        const rawFiles: CaseFileResponse[] = c.photos ?? c.files ?? c.caseFiles ?? [];
-        const files: CaseFileResponse[] = rawFiles.map((f) => ({
-          ...f,
-          imagePath: this.resolveMediaUrl(f.imagePath) ?? f.imagePath,
-        }));
-        this.existingPhotos.set(files);
+          const rawFiles: CaseFileResponse[] = c.photos ?? [];
+          const files: CaseFileResponse[] = rawFiles.map((f) => ({
+            ...f,
+            imagePath: this.resolveMediaUrl(f.imagePath) ?? f.imagePath,
+          }));
+          this.existingPhotos.set(files);
 
-        const primary = files.find((f) => f.isPrimary);
-        this.primaryPhotoId.set(primary ? primary.id : (files[0]?.id ?? null));
+          const primary = files.find((f) => f.isPrimary);
+          this.primaryPhotoId.set(primary ? primary.id : (files[0]?.id ?? null));
 
-        this.existingPoliceReportUrl.set(this.resolveMediaUrl(c.policeReportImage ?? c.policeReportImagePath ?? null));
-        this.existingVideoUrl.set(this.resolveMediaUrl(c.video ?? c.videoPath ?? null));
+          this.existingPoliceReportUrl.set(this.resolveMediaUrl(c.policeReportImage ?? null));
+          this.existingVideoUrl.set(this.resolveMediaUrl(c.video ?? null));
 
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.isLoading.set(false);
-        this.errorMsg.set(err?.error?.message ?? 'تعذر تحميل بيانات الحالة.');
-      },
-    });
+          this.isLoading.set(false);
+        },
+        error: (err: unknown) => {
+          this.isLoading.set(false);
+          const msg = extractErrorMessage(err, 'تعذر تحميل بيانات الحالة.');
+          this.errorMsg.set(msg);
+        },
+      });
   }
 
   nextStep(): void {
@@ -215,12 +231,7 @@ export class LongTermUpdate implements OnInit {
     if (this.currentStep > 1) this.currentStep = (this.currentStep - 1) as Step;
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // File validation constants
-  // ─────────────────────────────────────────────────────────────
-  private readonly ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  private readonly MAX_PHOTO_BYTES = 5 * 1024 * 1024;
-  private readonly MAX_POLICE_BYTES = 10 * 1024 * 1024;
+
 
   /**
    * The backend (local FileStorageService) returns RELATIVE paths only
@@ -242,6 +253,25 @@ export class LongTermUpdate implements OnInit {
   // ─────────────────────────────────────────────────────────────
   // Existing Photos Handler
   // ─────────────────────────────────────────────────────────────
+  confirmRemoveExistingPhoto(photo: CaseFileResponse): void {
+    this.photoToDelete.set(photo);
+    this.showDeleteImageConfirm.set(true);
+  }
+
+  executeRemoveExistingPhoto(): void {
+    const photo = this.photoToDelete();
+    if (photo) {
+      this.existingPhotos.update((list) => list.filter((p) => p.id !== photo.id));
+      this.deletedPhotoIds.update((ids) => [...ids, photo.id]);
+      if (this.primaryPhotoId() === photo.id) {
+        const next = this.existingPhotos()[0];
+        this.primaryPhotoId.set(next ? next.id : null);
+      }
+    }
+    this.showDeleteImageConfirm.set(false);
+    this.photoToDelete.set(null);
+  }
+
   removeExistingPhoto(photo: CaseFileResponse): void {
     this.existingPhotos.update((list) => list.filter((p) => p.id !== photo.id));
     this.deletedPhotoIds.update((ids) => [...ids, photo.id]);
@@ -292,12 +322,9 @@ export class LongTermUpdate implements OnInit {
     const file = input.files?.[0] ?? null;
     if (!file) return;
 
-    if (!this.ALLOWED_TYPES.includes(file.type.toLowerCase())) {
-      this.newPrimaryError.set('نوع الملف غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
-      return;
-    }
-    if (file.size > this.MAX_PHOTO_BYTES) {
-      this.newPrimaryError.set('حجم الصورة يتجاوز الحد المسموح (5 MB)');
+    const validation = this.imageService.validate(file, 5);
+    if (!validation.valid) {
+      this.newPrimaryError.set(validation.errorMessage ?? null);
       return;
     }
 
@@ -363,15 +390,12 @@ export class LongTermUpdate implements OnInit {
   // ─────────────────────────────────────────────────────────────
   onNewPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
-    const invalidType = files.find(f => !this.ALLOWED_TYPES.includes(f.type.toLowerCase()));
-    if (invalidType) {
-      this.newPhotosError.set('أحد الملفات من نوع غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
-      return;
-    }
-    const oversized = files.find(f => f.size > this.MAX_PHOTO_BYTES);
-    if (oversized) {
-      this.newPhotosError.set('أحد الملفات يتجاوز الحد المسموح (5 MB لكل صورة)');
-      return;
+    for (const f of files) {
+      const validation = this.imageService.validate(f, 5);
+      if (!validation.valid) {
+        this.newPhotosError.set(validation.errorMessage ?? null);
+        return;
+      }
     }
     this.newPhotosError.set(null);
     this.newPhotos.update((p) => [...p, ...files].slice(0, 5));
@@ -389,14 +413,13 @@ export class LongTermUpdate implements OnInit {
   onPoliceReportSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     if (!file) return;
-    if (!this.ALLOWED_TYPES.includes(file.type.toLowerCase())) {
-      this.policeReportError.set('نوع الملف غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+
+    const validation = this.imageService.validate(file, 10);
+    if (!validation.valid) {
+      this.policeReportError.set(validation.errorMessage ?? null);
       return;
     }
-    if (file.size > this.MAX_POLICE_BYTES) {
-      this.policeReportError.set('حجم الملف يتجاوز الحد المسموح (10 MB)');
-      return;
-    }
+
     this.policeReportError.set(null);
     this.policeReportFile.set(file);
   }
@@ -409,6 +432,7 @@ export class LongTermUpdate implements OnInit {
   // Submit
   // ─────────────────────────────────────────────────────────────
   onSubmit(): void {
+    if (this.isSubmitting()) return;
     const hasAtLeastOnePhoto = this.existingPhotos().length > 0 || !!this.newPrimaryImage() || this.newPhotos().length > 0;
 
     if (this.form.invalid || !hasAtLeastOnePhoto) {
@@ -431,7 +455,7 @@ export class LongTermUpdate implements OnInit {
       tName: v.tName || null,
       gender: v.gender as Gender,
       age: v.age!,
-      relation: v.relation ?? undefined,
+      relation: v.relation as RelationType,
       communicationPhone: v.communicationPhone || null,
       description: v.description || null,
       government: v.government!,
@@ -446,19 +470,50 @@ export class LongTermUpdate implements OnInit {
       policeReportImage: this.policeReportFile(),
     };
 
-    this.service.updateCase(this.caseId, request).subscribe({
-      next: () => {
-        this.isSubmitting.set(false);
-        this.snackbar.success('تم تحديث بيانات الحالة بنجاح.');
-        this.router.navigate(['/long-term']);
-      },
-      error: (err) => {
-        this.isSubmitting.set(false);
-        const msg = err?.error?.message ?? 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.';
-        this.errorMsg.set(msg);
-        this.snackbar.error(msg);
-      },
-    });
+    this.service
+      .updateCase(this.caseId, request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.isSubmitting.set(false);
+          this.snackbar.success('تم تحديث بيانات الحالة بنجاح.');
+          this.router.navigate(['/long-term']);
+        },
+        error: (err: unknown) => {
+          this.isSubmitting.set(false);
+          const msg = extractErrorMessage(err, 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.');
+          
+          if (msg.includes('يجب أن تكون لنفس الشخص') || msg.includes('لا تبدو لنفس الشخص')) {
+            this.newPrimaryError.set(msg);
+            this.newPhotosError.set(msg);
+            return;
+          }
+
+          if (err && typeof err === 'object' && 'status' in err && (err as any).status === 400) {
+            const errorObj = (err as any).error;
+            if (errorObj?.errors) {
+              let hasUnmappedErrors = false;
+              for (const key in errorObj.errors) {
+                const controlName = key.charAt(0).toLowerCase() + key.slice(1);
+                const control = this.form.get(controlName);
+                if (control) {
+                  control.setErrors({ serverError: errorObj.errors[key][0] });
+                } else {
+                  hasUnmappedErrors = true;
+                  this.errorMsg.set(errorObj.errors[key][0]);
+                }
+              }
+              if (!hasUnmappedErrors) {
+                this.errorMsg.set(null);
+              }
+            } else {
+              this.errorMsg.set(msg);
+            }
+          } else {
+            this.snackbar.error(msg);
+          }
+        },
+      });
   }
 
   goBack(): void {

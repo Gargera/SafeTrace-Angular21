@@ -1,5 +1,5 @@
 <div class="mb-xl">
-  <app-case-header
+  <app-header
     title="إدارة المستخدمين"
     subtitle="متابعة حسابات المستخدمين، التحقق من التوثيق، وإدارة الصلاحيات."
     primaryActionLabel="إنشاء حساب جديد"
@@ -125,7 +125,16 @@
     </div>
   </div>
 
-  <div class="flex flex-wrap justify-end gap-3 pt-2">
+  <div class="flex flex-wrap justify-end gap-3 pt-4 border-t border-outline-variant/30 mt-4">
+    <app-button
+      *hasPermission="Permissions.Users.GenerateUsersPdfReport"
+      variant="outline"
+      (onClick)="downloadReport()"
+    >
+      <span class="material-symbols-outlined text-[18px]">download</span>
+      <span>تحميل التقرير</span>
+    </app-button>
+
     <app-button
       variant="text"
       (onClick)="resetFilters()"
@@ -139,6 +148,8 @@
     </app-button>
   </div>
 </app-card>
+
+
 
 <section
   class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75"

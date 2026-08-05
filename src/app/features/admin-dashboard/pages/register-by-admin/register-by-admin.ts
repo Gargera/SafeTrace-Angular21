@@ -3,12 +3,12 @@ import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@ang
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { UserService } from '../../services/user.service';
 import { RoleService } from '../../services/role.service';
-import { RoleDto } from '../../models/Role/RoleDto';
-import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
-
+import { RoleDto } from '../../models/Role/responses/RoleDto';
+import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
+import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
@@ -54,10 +54,10 @@ export class RegisterByAdmin implements OnInit {
   roles = signal<RoleDto[]>([]);
 
   registerForm: FormGroup = this.fb.group({
-    fName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+$')]],
-    lName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+( [a-zA-Z\u0600-\u06FF]+)*$')]],
+    fName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), Validators.pattern(/^[\u0600-\u06FF]+(\s+)?$/)]],
+    lName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), Validators.pattern(/^[\u0600-\u06FF]+(\s[\u0600-\u06FF]+)*(\s+)?$/)]],
     email: ['', [Validators.required, Validators.email, Validators.pattern('^\\S+$')]],
-    phoneNumber: ['', [Validators.pattern('^01[0125][0-9]{8}$')]],
+    phoneNumber: ['', [egyptianPhone()]],
     role: ['', Validators.required],
   });
 

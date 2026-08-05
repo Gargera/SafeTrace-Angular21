@@ -1,5 +1,5 @@
 import { signal, WritableSignal } from '@angular/core';
-import { CasesFilterRequest } from '../../core/models/Cases.model';
+import { CasesFilterRequest } from '../../core/models/cases.model';
 export interface SearchValueMapping {
     fullName: string | null;
     caseCode: string | null;

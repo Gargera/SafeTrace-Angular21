@@ -1,6 +1,7 @@
 import { Component, input, output } from '@angular/core';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'text' | 'icon' | 'danger' | 'success' | 'outline';
+export type ButtonVariant =
+  'primary' | 'secondary' | 'text' | 'icon' | 'danger' | 'success' | 'outline';
 
 @Component({
   selector: 'app-button',
@@ -45,8 +46,6 @@ export class ButtonComponent {
       return `group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 focus:outline-none disabled:pointer-events-none disabled:opacity-50 ${this.extraClass()}`;
     }
 
-    return `${common} ${
-      variants[this.variant()] ?? ''
-    } ${this.extraClass()}`;
+    return `${common} ${variants[this.variant()] ?? ''} ${this.extraClass()}`;
   }
 }

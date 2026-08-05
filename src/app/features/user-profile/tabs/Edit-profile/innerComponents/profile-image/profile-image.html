@@ -5,40 +5,36 @@
     >
 
     @if (!isEditingProfileImage()) {
-      <button
-        type="button"
+      <span
         (click)="toggleProfileImageEdit(true)"
-        class="px-sm py-xs bg-secondary-container text-on-secondary-container hover:bg-secondary-container-high focus-visible:ring-2 focus-visible:ring-secondary rounded-lg text-label-sm font-bold flex items-center gap-xs transition-colors cursor-pointer"
+        class="material-symbols-outlined text-[12px] cursor-pointer"
+        aria-hidden="true"
+        >edit</span
       >
-        <span class="material-symbols-outlined text-[14px]" aria-hidden="true">edit</span>
-        تعديل
-      </button>
     } @else {
       <div class="flex items-center gap-xs">
-        <button
+        <app-button
           type="button"
+          variant="danger"
           [disabled]="isUploadingProfileImage()"
           (click)="cancelProfileImage()"
-          class="px-sm py-xs text-secondary border border-secondary rounded-lg text-label-sm font-bold hover:bg-secondary-fixed focus-visible:ring-2 focus-visible:ring-secondary transition-colors disabled:opacity-50 cursor-pointer"
         >
           إلغاء
-        </button>
-        <button
-          type="button"
+        </app-button>
+        <app-button
           [disabled]="isUploadingProfileImage()"
+          type="button"
+          variant="success"
           (click)="saveProfileImage()"
           [attr.aria-busy]="isUploadingProfileImage()"
-          class="px-sm py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 focus-visible:ring-2 focus-visible:ring-secondary transition-all flex items-center gap-xs disabled:opacity-50 cursor-pointer"
         >
           @if (isUploadingProfileImage()) {
-            <span
-              class="material-symbols-outlined text-[14px] animate-spin"
-              aria-hidden="true"
+            <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
               >progress_activity</span
             >
           }
           حفظ
-        </button>
+        </app-button>
       </div>
     }
   </div>
@@ -46,9 +42,7 @@
   <div class="flex items-center gap-md">
     <div class="relative w-24 h-24 shrink-0">
       @if (profileImagePreview()) {
-        <div
-          class="w-24 h-24 rounded-full overflow-hidden border-2 border-secondary shadow-sm"
-        >
+        <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-secondary shadow-sm">
           <img
             [src]="profileImagePreview()!"
             alt="معاينة صورة الملف الشخصي"
@@ -130,7 +124,7 @@
   </div>
 </div>
 
-<app-confirm-dialog
+<!-- <app-confirm-dialog
   [open]="showRemoveConfirm()"
   title="إزالة الصورة الشخصية"
   message="هل أنت متأكد من رغبتك في إزالة صورتك الشخصية؟ يمكنك إضافة صورة جديدة في أي وقت."
@@ -140,4 +134,15 @@
   [loading]="isRemovingProfileImage()"
   (confirmed)="confirmRemoveProfilePhoto()"
   (cancelled)="cancelRemoveProfilePhoto()"
-/>
+/> -->
+@if (showRemoveConfirm()) {
+  <app-confirmation-modal
+    title="إزالة الصورة الشخصية"
+    message="هل أنت متأكد من رغبتك في إزالة صورتك الشخصية؟ يمكنك إضافة صورة جديدة في أي وقت."
+    confirmText="إزالة"
+    icon="delete"
+    [variant]="'danger'"
+    (confirm)="confirmRemoveProfilePhoto()"
+    (cancel)="cancelRemoveProfilePhoto()"
+  />
+}

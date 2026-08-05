@@ -1,6 +1,6 @@
 import { Directive, ElementRef, effect, input, Renderer2 } from '@angular/core';
 import { AgeCategories } from '../enums/age-categories';
-import { getAgeCategoryTranslationAr } from '../../core/constants/age.categories.dictionary';
+import { getAgeCategoryTranslationAr } from '../../core/constants/dictionaries/age.categories.dictionary';
 
 @Directive({
   selector: '[appAgeBadgeDirective]',

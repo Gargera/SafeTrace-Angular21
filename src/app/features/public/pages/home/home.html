@@ -1,0 +1,228 @@
+<div class="max-w-7xl mx-auto space-y-xl px-4 md:px-8 py-12" dir="rtl">
+  
+  <!-- Hero Section -->
+  <section class="flex flex-col md:flex-row items-center gap-12 bg-surface-container-lowest p-8 md:p-12 rounded-3xl border border-outline-variant shadow-sm">
+    <div class="flex-1 space-y-6">
+      <div class="inline-flex items-center gap-2 bg-secondary/10 text-secondary px-4 py-2 rounded-full font-bold text-[16px]">
+        <span class="material-symbols-outlined text-[20px]">volunteer_activism</span>
+        <span>منصة إنسانية ذكية</span>
+      </div>
+      <h1 class="text-[48px] md:text-[64px] font-black text-primary leading-tight">
+        نعيد الروابط،<br>
+        <span class="text-secondary">نحيي الأمل.</span>
+      </h1>
+      <p class="text-[20px] text-on-surface-variant max-w-112.5 leading-relaxed">
+        منصة لقاء تستخدم الذكاء الاصطناعي لمساعدتك في تتبع المفقودين وإعادة لمّ شمل العائلات. من خلال البحث بالصورة والتعاون المجتمعي.
+      </p>
+      <div class="flex flex-wrap gap-4 pt-4">
+        <app-button routerLink="/aisearch" variant="primary" extraClass="px-8 py-4 font-bold text-[18px] rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
+          <span class="material-symbols-outlined">photo_camera</span>
+          ابدأ البحث الآن
+        </app-button>
+        <app-button routerLink="/about" variant="secondary" extraClass="px-8 py-4 font-bold text-[18px] rounded-xl gap-2 text-primary border-outline-variant hover:bg-surface-container-low transition-all">
+          تعرف على المنصة
+          <span class="material-symbols-outlined">chevron_left</span>
+        </app-button>
+      </div>
+    </div>
+    <div class="flex-1 w-full flex justify-center">
+      <img src="/images/hero-family.png" alt="عائلة سعيدة" class="w-full max-w-200 rounded-2xl object-cover" />
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="flex flex-col md:flex-row items-center gap-12 bg-surface-container-low p-8 md:p-12 rounded-3xl border border-outline-variant shadow-sm">
+    <div class="flex-1 space-y-6">
+      <h2 class="text-[36px] md:text-[48px] font-black text-primary leading-tight">
+        كيف يستخدم<br>
+        <span class="text-secondary">لقاء الذكاء الاصطناعي؟</span>
+      </h2>
+      <p class="text-[20px] text-on-surface-variant leading-relaxed">
+        تعتمد منصة لقاء على تقنيات الذكاء الاصطناعي والرؤية الحاسوبية لمقارنة صور الأشخاص المفقودين مع البلاغات الجديدة، وتحليل البيانات بسرعة للمساعدة في الوصول الى نتائج دقيقة خلال وقت قصير.
+      </p>
+      <ul class="space-y-4">
+        <li class="flex items-center gap-3 text-[18px] text-primary font-medium">
+          <span class="material-symbols-outlined text-secondary text-[24px]">check_circle</span>
+          <span>مطابقة ذكية للوجوه باستخدام الذكاء الاصطناعي</span>
+        </li>
+        <li class="flex items-center gap-3 text-[18px] text-primary font-medium">
+          <span class="material-symbols-outlined text-secondary text-[24px]">check_circle</span>
+          <span>تحليل الصور حتى مع اختلاف الإضاءة أو زاوية التصوير</span>
+        </li>
+        <li class="flex items-center gap-3 text-[18px] text-primary font-medium">
+          <span class="material-symbols-outlined text-secondary text-[24px]">check_circle</span>
+          <span>مقارنة فورية مع قاعدة بيانات البلاغات</span>
+        </li>
+      </ul>
+      <div class="pt-4">
+        <app-button routerLink="/aisearch" variant="primary" extraClass="px-8 py-4 font-bold text-[18px] rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
+          ابدأ البحث الآن
+          <span class="material-symbols-outlined">arrow_back</span>
+        </app-button>
+      </div>
+    </div>
+    <div class="flex-1 w-full flex justify-center">
+      <img src="/images/section2.png" alt="الذكاء الاصطناعي" class="w-full max-w-160 rounded-2xl object-contain drop-shadow-xl" onerror="this.style.display='none'" />
+    </div>
+  </section>
+
+  <!-- Urgent Cases -->
+  @if (urgentCases().length > 0) {
+    <section class="space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-[28px] md:text-[36px] font-bold text-primary flex items-center gap-2">
+          <span class="material-symbols-outlined text-error">emergency</span>
+          حالات عاجلة
+        </h2>
+        <a routerLink="/urgent" class="text-secondary font-bold hover:underline flex items-center gap-1">
+          عرض جميع الحالات
+          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        </a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        @for (c of urgentCases(); track c.id) {
+          <app-case-card 
+            [caseItem]="c" 
+            [showUrgentTag]="true" 
+            [showCaseType]="false"
+            [showContactButton]="false"
+            [detailRoute]="['/urgent', c.id]"
+            (onContact)="onContactReporter($event, 'urgent')"
+            class="block" />
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Long Term Cases -->
+  @if (longTermCases().length > 0) {
+    <section class="space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-[28px] md:text-[36px] font-bold text-primary flex items-center gap-2">
+          <span class="material-symbols-outlined text-tertiary">history_toggle_off</span>
+          حالات طويلة المدى
+        </h2>
+        <a routerLink="/long-term" class="text-secondary font-bold hover:underline flex items-center gap-1">
+          عرض جميع الحالات
+          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        </a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        @for (c of longTermCases(); track c.id) {
+          <app-case-card 
+            [caseItem]="c" 
+            [showCaseType]="false"
+            [showContactButton]="false"
+            [detailRoute]="['/long-term', c.id]"
+            (onContact)="onContactReporter($event, 'long-term')"
+            class="block" />
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Unknown Cases -->
+  @if (unknownCases().length > 0) {
+    <section class="space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-[28px] md:text-[36px] font-bold text-primary flex items-center gap-2">
+          <span class="material-symbols-outlined text-outline">question_mark</span>
+          حالات مجهولة الهوية
+        </h2>
+        <a routerLink="/unknown" class="text-secondary font-bold hover:underline flex items-center gap-1">
+          عرض جميع الحالات
+          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        </a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        @for (c of unknownCases(); track c.id) {
+          <app-case-card 
+            [caseItem]="c" 
+            [showCaseType]="false"
+            [showContactButton]="false"
+            [detailRoute]="['/unknown', c.id]"
+            (onContact)="onContactReporter($event, 'unknown')"
+            class="block" />
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Founded Cases -->
+  @if (foundedCases().length > 0) {
+    <section class="space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-[28px] md:text-[36px] font-bold text-primary flex items-center gap-2">
+          <span class="material-symbols-outlined text-[24px]" style="color: #16a34a">check_circle</span>
+          تم العثور عليهم بنجاح
+        </h2>
+        <a routerLink="/founded" class="text-secondary font-bold hover:underline flex items-center gap-1">
+          عرض جميع الحالات
+          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        </a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        @for (c of foundedCases(); track c.id) {
+          <app-card [routerLink]="['/founded', c.id]" extraClass="cursor-pointer hover:-translate-y-1 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+            <div class="relative">
+              <img [src]="getImageUrl(c.mainImage)" [alt]="c.fullName" class="w-full h-48 object-cover rounded-t-2xl" (error)="onImgError($event)" />
+              <div class="absolute bottom-2 right-2 bg-[#16a34a] text-white px-3 py-1 rounded-full text-[14px] font-bold shadow-md">
+                تم الإيجاد ✓
+              </div>
+            </div>
+            <div class="p-4 space-y-3 flex-1 flex flex-col">
+              <h3 class="font-bold text-[18px] text-primary line-clamp-1">{{ c.fullName }}</h3>
+              <p class="text-[14px] text-on-surface-variant flex-1">{{ c.age }}</p>
+              <app-button variant="primary" extraClass="w-full justify-center">عرض التفاصيل</app-button>
+            </div>
+          </app-card>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Complaint Form Section -->
+  <section class="flex flex-col md:flex-row items-center gap-12 bg-surface-container-highest p-8 md:p-12 rounded-3xl border border-outline-variant shadow-sm mt-12">
+    <div class="flex-1 w-full justify-center hidden md:flex">
+      <img src="/images/complaint.png" alt="تواصل معنا" class="w-full max-w-125 object-contain drop-shadow-xl" onerror="this.style.display='none'" />
+    </div>
+    <div class="flex-1 w-full">
+      <app-card extraClass="p-8 space-y-6">
+        <div class="text-center space-y-2">
+          <span class="material-symbols-outlined text-[40px] text-secondary">support_agent</span>
+          <h2 class="text-[28px] md:text-[32px] font-bold text-primary">تواصل معنا أو أرسل تحديثاً</h2>
+          <p class="text-[14px] text-on-surface-variant">هل لديك معلومات عن حالة معينة؟ أو تواجه مشكلة تقنية؟ فريقنا متاح على مدار الساعة.</p>
+        </div>
+        
+        <form [formGroup]="complaintForm" class="space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <app-form-field type="text" label="كود الحالة (اختياري)" placeholder="مثال: Case-12345" formControlName="caseCode"></app-form-field>
+            <app-form-field type="select" label="نوع التواصل" formControlName="contactType">
+              <option value="">اختر النوع...</option>
+              @for (opt of contactTypeOptions; track opt) {
+                <option [value]="opt">{{ opt }}</option>
+              }
+            </app-form-field>
+          </div>
+
+          <div>
+            <app-form-field type="textarea" label="نص الرسالة *" placeholder="اكتب شكواك هنا..." formControlName="message"></app-form-field>
+            @if (complaintForm.get('message')?.invalid && (complaintForm.get('message')?.touched || complaintForm.get('message')?.dirty)) {
+              <span class="text-error text-[14px] font-medium mt-1 block">
+                @if (complaintForm.get('message')?.errors?.['required']) {
+                  هذا الحقل مطلوب.
+                }
+              </span>
+            }
+          </div>
+
+          <app-button (onClick)="submitComplaint()" [disabled]="isSendingComplaint()" [loading]="isSendingComplaint()" variant="primary" extraClass="w-full justify-center py-4 font-bold text-[18px] rounded-xl gap-2 shadow-md">
+            <span class="material-symbols-outlined">send</span>
+            {{ isSendingComplaint() ? 'جاري الإرسال...' : 'إرسال الرسالة' }}
+          </app-button>
+        </form>
+      </app-card>
+    </div>
+  </section>
+
+</div>

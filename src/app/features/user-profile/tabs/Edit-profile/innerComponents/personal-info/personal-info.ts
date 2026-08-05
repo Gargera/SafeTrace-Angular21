@@ -1,13 +1,15 @@
 import { Component, inject, input, OnChanges, output, signal, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { SnackbarService } from '../../../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../../../shared/services/toast.service';
 import { GetUserInfoDTO, UpdateNameDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
+import { ButtonComponent } from '../../../../../../shared/components/button/button';
+import { FormField } from '../../../../../../shared/components/form-field/form-field';
 
 @Component({
   selector: 'app-personal-info',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, ButtonComponent, FormField],
   templateUrl: './personal-info.html',
 })
 export class PersonalInfo implements OnChanges {
@@ -29,16 +31,19 @@ export class PersonalInfo implements OnChanges {
       '',
       [
         Validators.required,
+        Validators.minLength(2),
         Validators.maxLength(100),
-        Validators.pattern('^[a-zA-Z\u0600-\u06FF]+$'),
+        Validators.pattern(/^[\u0600-\u06FF]+(\s+)?$/),
       ],
     ],
+
     lastName: [
       '',
       [
         Validators.required,
+        Validators.minLength(2),
         Validators.maxLength(100),
-        Validators.pattern('^[a-zA-Z\u0600-\u06FF]+( [a-zA-Z\u0600-\u06FF]+)*$'),
+        Validators.pattern(/^[\u0600-\u06FF]+(\s[\u0600-\u06FF]+)*(\s+)?$/),
       ],
     ],
   });
@@ -115,7 +120,10 @@ export class PersonalInfo implements OnChanges {
       },
       error: (err) => {
         this.isSavingPersonal.set(false);
-        const msg = err?.error?.message ?? 'حدث خطأ أثناء حفظ البيانات. يرجى المحاولة مجدداً.';
+        const msg =
+          err?.error?.message ||
+          err.error?.detail ||
+          'حدث خطأ أثناء حفظ البيانات. يرجى المحاولة مجدداً.';
         this.#snackbar.error(msg);
       },
     });

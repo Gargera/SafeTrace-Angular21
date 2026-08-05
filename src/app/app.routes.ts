@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth-guard';
-import { About } from './shared/components/about/about';
+import { About } from './features/public/pages/about/about';
 import { permissionGuard } from './core/guards/permission.guard';
 import { Permissions } from './core/constants/Permissions';
-import { Home } from './shared/components/home/home';
+import { Home } from './features/public/pages/home/home';
 
 export const routes: Routes = [
   { 
@@ -28,7 +28,7 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./shared/components/main-layout/main-layout').then((c) => c.MainLayout),
+      import('./core/layouts/main-layout/main-layout').then((c) => c.MainLayout),
     children: [
       {
         path: '',
@@ -49,7 +49,7 @@ export const routes: Routes = [
         path: 'privacy-policy',
         title: 'سياسة الخصوصية | لقاء',
         loadComponent: () =>
-          import('./shared/components/privacy-policy/privacy-policy').then(
+          import('./features/public/pages/privacy-policy/privacy-policy').then(
             (c) => c.PrivacyPolicyComponent,
           ),
       },
@@ -108,10 +108,10 @@ export const routes: Routes = [
   {
     path: '403',
     loadComponent: () =>
-      import('./shared/components/access-denied/access-denied').then((c) => c.AccessDenied),
+      import('./core/pages/access-denied/access-denied').then((c) => c.AccessDenied),
   },
   {
     path: '**',
-    loadComponent: () => import('./shared/components/not-found/not-found').then((c) => c.NotFound),
+    loadComponent: () => import('./core/pages/not-found/not-found').then((c) => c.NotFound),
   },
 ];

@@ -1,7 +1,11 @@
 import { Injectable, inject, signal, computed, OnDestroy } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import * as signalR from '@microsoft/signalr';
-import { GetUserNotificationsDTO, NotificationPage, ParsedCaseNotification } from '../models/notification.model';
+import {
+  GetUserNotificationsDTO,
+  NotificationPage,
+  ParsedCaseNotification,
+} from '../models/notification.model';
 import { NotificationType } from '../../shared/enums/Notification-Type';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
@@ -14,12 +18,15 @@ const DEFAULT_PAGE_SIZE = 10;
 export class NotificationService implements OnDestroy {
   readonly #http = inject(HttpClient);
   readonly #apiUrl = `${environment.apiBaseUrl}/Notification`;
+  readonly #defaultLink = '/profile?tab=notifications';
   readonly #authService = inject(AuthService);
   // ─── Private state signals ────────────────────────────────────────────────
   readonly #notifications = signal<GetUserNotificationsDTO[]>([]);
   readonly #unreadCount = signal<number>(0);
   readonly #isConnected = signal<boolean>(false);
   readonly #isLoading = signal<boolean>(false);
+  readonly #isLoadingMore = signal(false);
+
   readonly #activeCaseNotification = signal<ParsedCaseNotification | null>(null);
 
   // ─── Pagination signals ───────────────────────────────────────────────────
@@ -32,6 +39,7 @@ export class NotificationService implements OnDestroy {
   readonly unreadCount = this.#unreadCount.asReadonly();
   readonly isConnected = this.#isConnected.asReadonly();
   readonly isLoading = this.#isLoading.asReadonly();
+  readonly isLoadingMore = this.#isLoadingMore.asReadonly();
   readonly currentPage = this.#currentPage.asReadonly();
   readonly totalPages = this.#totalPages.asReadonly();
   readonly totalCount = this.#totalCount.asReadonly();
@@ -166,8 +174,54 @@ export class NotificationService implements OnDestroy {
   }
 
   // ─── REST API Fallback (used if SignalR is not connected) ─────────────────
+  // loadPage(page: number, append = false): void {
+  //   this.#isLoading.set(true);
+
+  //   const params = new HttpParams().set('page', page).set('pageSize', DEFAULT_PAGE_SIZE);
+
+  //   this.#http
+  //     .get<ApiResponse<NotificationPage>>(`${this.#apiUrl}/my-Notifications`, { params })
+  //     .subscribe({
+  //       next: (res) => {
+  //         const data = res.data;
+
+  //         if (!data) {
+  //           this.#notifications.set([]);
+  //           this.#currentPage.set(1);
+  //           this.#totalPages.set(0);
+  //           this.#totalCount.set(0);
+  //           this.#isLoading.set(false);
+  //           return;
+  //         }
+
+  //         if (append) {
+  //           this.#notifications.update((old) => {
+  //             const merged = [...old, ...data.items];
+  //             return merged;
+  //           });
+  //         } else {
+  //           this.#notifications.set(data.items);
+  //         }
+
+  //         this.#currentPage.set(data.page);
+  //         this.#totalPages.set(data.totalPages);
+  //         this.#totalCount.set(data.totalCount);
+
+  //         this.#isLoading.set(false);
+  //       },
+  //       error: (err) => {
+  //         console.error(err);
+  //         this.#isLoading.set(false);
+  //       },
+  //     });
+  // }
+
   loadPage(page: number, append = false): void {
-    this.#isLoading.set(true);
+    if (append) {
+      this.#isLoadingMore.set(true);
+    } else {
+      this.#isLoading.set(true);
+    }
 
     const params = new HttpParams().set('page', page).set('pageSize', DEFAULT_PAGE_SIZE);
 
@@ -182,34 +236,31 @@ export class NotificationService implements OnDestroy {
             this.#currentPage.set(1);
             this.#totalPages.set(0);
             this.#totalCount.set(0);
-            this.#isLoading.set(false);
-            return;
-          }
-
-          if (append) {
-            this.#notifications.update((old) => {
-              const merged = [...old, ...data.items];
-              return merged;
-            });
           } else {
-            this.#notifications.set(data.items);
-          }
+            if (append) {
+              this.#notifications.update((old) => [...old, ...data.items]);
+            } else {
+              this.#notifications.set(data.items);
+            }
 
-          this.#currentPage.set(data.page);
-          this.#totalPages.set(data.totalPages);
-          this.#totalCount.set(data.totalCount);
+            this.#currentPage.set(data.page);
+            this.#totalPages.set(data.totalPages);
+            this.#totalCount.set(data.totalCount);
+          }
 
           this.#isLoading.set(false);
+          this.#isLoadingMore.set(false);
         },
         error: (err) => {
           console.error(err);
           this.#isLoading.set(false);
+          this.#isLoadingMore.set(false);
         },
       });
   }
-  loadMore(): void {
-    if (this.#isLoading()) return;
 
+  loadMore(): void {
+    if (this.#isLoading() || this.#isLoadingMore()) return;
     if (!this.hasNextPage()) return;
 
     this.loadPage(this.#currentPage() + 1, true);
@@ -352,6 +403,8 @@ export class NotificationService implements OnDestroy {
       } else {
         router.navigateByUrl(n.notificationDirectLink);
       }
+    } else {
+      router.navigateByUrl(this.#defaultLink);
     }
     return false;
   }
