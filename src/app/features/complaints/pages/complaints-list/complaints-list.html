@@ -47,7 +47,7 @@
 </ng-container>
 
 <app-card extraClass="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg">
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-md items-end">
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-md items-end">
     <div class="flex flex-col gap-xs md:col-span-2">
       <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">بحث</label>
       <app-form-field
@@ -56,6 +56,20 @@
         (ngModelChange)="onSearchChange($event)"
         placeholder="ابحث بالبريد الإلكتروني أو كود الحالة..."
       >
+      </app-form-field>
+    </div>
+
+    <div class="flex flex-col gap-xs">
+      <app-form-field
+        type="select"
+        [ngModel]="filter().contactType"
+        (ngModelChange)="updateFilter({ contactType: $event })"
+        label="موضوع الشكوى"
+      >
+        <option value="">الكل</option>
+        @for (opt of contactTypeOptions; track opt) {
+          <option [value]="opt">{{ opt }}</option>
+        }
       </app-form-field>
     </div>
 

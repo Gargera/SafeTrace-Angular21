@@ -1,7 +1,7 @@
 <div class="max-w-7xl mx-auto space-y-xl px-4 md:px-8 py-12" dir="rtl">
   
   <!-- Hero Section -->
-  <section class="flex flex-col md:flex-row items-center gap-12 bg-surface-container-lowest p-8 md:p-12 rounded-3xl border border-outline-variant shadow-sm">
+  <section class="flex flex-col md:flex-row items-center gap-12 bg-gradient-to-br from-surface-container-lowest to-surface-container p-8 md:p-12 rounded-3xl border border-primary/10 shadow-sm relative overflow-hidden">
     <div class="flex-1 space-y-6">
       <div class="inline-flex items-center gap-2 bg-secondary/10 text-secondary px-4 py-2 rounded-full font-bold text-[16px]">
         <span class="material-symbols-outlined text-[20px]">volunteer_activism</span>
@@ -182,35 +182,79 @@
   }
 
   <!-- Complaint Form Section -->
-  <section class="flex flex-col md:flex-row items-center gap-12 bg-surface-container-highest p-8 md:p-12 rounded-3xl border border-outline-variant shadow-sm mt-12">
+  <section class="flex flex-col md:flex-row items-center gap-12 bg-gradient-to-br from-surface-container-low to-surface-container p-8 md:p-12 rounded-3xl border border-primary/10 shadow-sm mt-12">
     <div class="flex-1 w-full justify-center hidden md:flex">
       <img src="/images/complaint.png" alt="تواصل معنا" class="w-full max-w-125 object-contain drop-shadow-xl" onerror="this.style.display='none'" />
     </div>
     <div class="flex-1 w-full">
-      <app-card extraClass="p-8 space-y-6">
+      <app-card extraClass="p-8 space-y-6 border-none shadow-md bg-white">
         <div class="text-center space-y-2">
-          <span class="material-symbols-outlined text-[40px] text-secondary">support_agent</span>
-          <h2 class="text-[28px] md:text-[32px] font-bold text-primary">تواصل معنا أو أرسل تحديثاً</h2>
-          <p class="text-[14px] text-on-surface-variant">هل لديك معلومات عن حالة معينة؟ أو تواجه مشكلة تقنية؟ فريقنا متاح على مدار الساعة.</p>
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-secondary/10 text-secondary mb-2">
+            <span class="material-symbols-outlined text-[32px]">forum</span>
+          </div>
+          <h2 class="text-[28px] md:text-[32px] font-bold text-primary">كيف يمكننا مساعدتك؟</h2>
+          <p class="text-[14px] text-on-surface-variant">نحن هنا للاستماع إليك. سواء كان لديك استفسار، اقتراح، أو معلومة تفيدنا، لا تتردد في التواصل معنا وسيقوم فريقنا بالرد عليك.</p>
         </div>
         
         <form [formGroup]="complaintForm" class="space-y-6">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <app-form-field type="text" label="كود الحالة (اختياري)" placeholder="مثال: Case-12345" formControlName="caseCode"></app-form-field>
-            <app-form-field type="select" label="نوع التواصل" formControlName="contactType">
-              <option value="">اختر النوع...</option>
-              @for (opt of contactTypeOptions; track opt) {
-                <option [value]="opt">{{ opt }}</option>
-              }
+          <div>
+            <app-form-field type="select" label="نوع الشكوى *" formControlName="complaintTargetType">
+              <option value="">اختر نوع الشكوى...</option>
+              <option value="case">شكوى بسبب حالة معينة</option>
+              <option value="general">شكوى عامة</option>
             </app-form-field>
+            @if (complaintForm.get('complaintTargetType')?.invalid && (complaintForm.get('complaintTargetType')?.touched || complaintForm.get('complaintTargetType')?.dirty)) {
+              <span class="text-error text-[14px] font-medium mt-1 block">
+                هذا الحقل مطلوب.
+              </span>
+            }
           </div>
 
+          @if (complaintForm.get('complaintTargetType')?.value) {
+            <div class="grid grid-cols-1 gap-4" [class.sm:grid-cols-2]="false">
+              @if (complaintForm.get('complaintTargetType')?.value === 'case') {
+                <div>
+                  <app-form-field type="text" label="كود الحالة *" placeholder="مثال: Case-12345" formControlName="caseCode"></app-form-field>
+                  @if (complaintForm.get('caseCode')?.invalid && (complaintForm.get('caseCode')?.touched || complaintForm.get('caseCode')?.dirty)) {
+                    <span class="text-error text-[14px] font-medium mt-1 block">
+                      @if (complaintForm.get('caseCode')?.errors?.['required']) {
+                        هذا الحقل مطلوب.
+                      } @else if (complaintForm.get('caseCode')?.errors?.['invalidCaseCode']) {
+                        كود الحالة غير صحيح (مثال: URG-123).
+                      }
+                    </span>
+                  }
+                </div>
+              }
+
+              @if (complaintForm.get('complaintTargetType')?.value === 'general') {
+                <div>
+                  <app-form-field type="select" label="موضوع الشكوى *" formControlName="contactType">
+                    <option value="">اختر الموضوع...</option>
+                    @for (opt of contactTypeOptions; track opt) {
+                      <option [value]="opt">{{ opt }}</option>
+                    }
+                  </app-form-field>
+                  @if (complaintForm.get('contactType')?.invalid && (complaintForm.get('contactType')?.touched || complaintForm.get('contactType')?.dirty)) {
+                    <span class="text-error text-[14px] font-medium mt-1 block">
+                      هذا الحقل مطلوب.
+                    </span>
+                  }
+                </div>
+              }
+            </div>
+          }
+
           <div>
-            <app-form-field type="textarea" label="نص الرسالة *" placeholder="اكتب شكواك هنا..." formControlName="message"></app-form-field>
+            <app-form-field type="textarea" label="وصف الشكوى *" placeholder="اكتب شكواك هنا..." formControlName="message"></app-form-field>
             @if (complaintForm.get('message')?.invalid && (complaintForm.get('message')?.touched || complaintForm.get('message')?.dirty)) {
               <span class="text-error text-[14px] font-medium mt-1 block">
                 @if (complaintForm.get('message')?.errors?.['required']) {
                   هذا الحقل مطلوب.
+                } @else if (complaintForm.get('message')?.errors?.['minlength']) {
+                  وصف الشكوى يجب أن يكون 20 حرفاً على الأقل.
+                } @else if (complaintForm.get('message')?.errors?.['maxlength']) {
+                  وصف الشكوى يجب ألا يتجاوز 2000 حرف.
                 }
               </span>
             }
@@ -218,7 +262,7 @@
 
           <app-button (onClick)="submitComplaint()" [disabled]="isSendingComplaint()" [loading]="isSendingComplaint()" variant="primary" extraClass="w-full justify-center py-4 font-bold text-[18px] rounded-xl gap-2 shadow-md">
             <span class="material-symbols-outlined">send</span>
-            {{ isSendingComplaint() ? 'جاري الإرسال...' : 'إرسال الرسالة' }}
+            {{ isSendingComplaint() ? 'جاري الإرسال...' : 'إرسال الشكوى' }}
           </app-button>
         </form>
       </app-card>
