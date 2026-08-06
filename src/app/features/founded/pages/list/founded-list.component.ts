@@ -115,7 +115,7 @@ export class FoundedListComponent implements OnInit {
     return {
       id: person.id,
       caseCode: '',
-      caseType: CaseType.Unknown,
+      caseType: person.caseType,
       status: CaseStatus.Found,
       fName: person.fullName,
       sName: null,

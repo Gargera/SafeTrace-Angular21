@@ -81,7 +81,17 @@ export class ComplaintsList implements OnInit {
     pageSize: 10,
     search: '',
     status: '' as any,
+    contactType: ''
   });
+
+  contactTypeOptions = [
+    'شكوى حالة',
+    'بلاغ عن حالة احتيال أو ابتزاز',
+    'محتوى غير لائق',
+    'مشكلة فنية',
+    'اقتراح لتحسين المنصة',
+    'أخرى'
+  ];
 
   ComplaintStatusEnum = ComplaintStatus;
   private searchSubject = new Subject<string>();
@@ -166,6 +176,7 @@ export class ComplaintsList implements OnInit {
       pageSize: 10,
       search: '',
       status: '' as any,
+      contactType: ''
     });
     this.loadComplaints();
   }

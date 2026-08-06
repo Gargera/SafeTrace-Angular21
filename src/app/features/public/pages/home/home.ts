@@ -42,18 +42,37 @@ export class Home implements OnInit {
   isSendingComplaint = signal(false);
 
   contactTypeOptions = [
-    'تحديث معلومة',
+    'بلاغ عن حالة احتيال أو ابتزاز',
+    'محتوى غير لائق',
     'مشكلة تقنية',
-    'استفسار عام',
-    'بلاغ عن خطأ',
+    'اقتراح لتحسين المنصة',
     'أخرى'
   ];
 
   ngOnInit() {
     this.complaintForm = this.fb.group({
-      caseCode: ['', [caseCodeValidator()]],
+      complaintTargetType: ['', Validators.required],
+      caseCode: [''],
       contactType: [''],
-      message: ['', [Validators.required]]
+      message: ['', [Validators.required, Validators.minLength(20), Validators.maxLength(2000)]]
+    });
+
+    this.complaintForm.get('complaintTargetType')?.valueChanges.subscribe(type => {
+      const caseCodeControl = this.complaintForm.get('caseCode');
+      const contactTypeControl = this.complaintForm.get('contactType');
+
+      if (type === 'case') {
+        caseCodeControl?.setValidators([Validators.required, caseCodeValidator()]);
+        contactTypeControl?.clearValidators();
+        contactTypeControl?.setValue('');
+      } else if (type === 'general') {
+        contactTypeControl?.setValidators([Validators.required]);
+        caseCodeControl?.clearValidators();
+        caseCodeControl?.setValue('');
+      }
+      
+      caseCodeControl?.updateValueAndValidity();
+      contactTypeControl?.updateValueAndValidity();
     });
 
     this.urgentSvc.getAllCases({ pageNumber: 1, pageSize: 4 } as any).subscribe({
@@ -92,12 +111,12 @@ export class Home implements OnInit {
     }
     this.isSendingComplaint.set(true);
     const formValue = this.complaintForm.value;
-    const message = formValue.contactType
+    const message = formValue.complaintTargetType === 'general' && formValue.contactType
       ? `[${formValue.contactType}] ${formValue.message}`
       : formValue.message;
 
     this.complaintSvc.createComplaint({
-      caseCode: formValue.caseCode || undefined,
+      caseCode: formValue.complaintTargetType === 'case' ? formValue.caseCode : undefined,
       message
     }).subscribe({
       next: (res: any) => {
