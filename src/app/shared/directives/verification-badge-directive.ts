@@ -16,7 +16,7 @@ export class VerificationBadgeDirective {
     'px-sm',
     'py-1',
     'rounded-lg',
-    'text-[10px]',
+    'text-sm',
     'font-bold',
     'whitespace-nowrap'
   ];
@@ -39,7 +39,7 @@ export class VerificationBadgeDirective {
         getContent: (value: VerificationStatus) => {
           const translation = getVerificationStatusTranslationAr(value) || 'غير موثق';
           const icon = this.getIcon(value);
-          return `<span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1">${icon}</span> ${translation}`;
+          return `<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1">${icon}</span> ${translation}`;
         },
         useTextOnly: false
       };
