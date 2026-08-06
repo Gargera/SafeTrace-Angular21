@@ -13,6 +13,7 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { environment } from '../../../../../environments/environment';
+import { caseCodeValidator } from '../../../../shared/validators/case-code.validator';
 
 @Component({
   selector: 'app-home',
@@ -50,7 +51,7 @@ export class Home implements OnInit {
 
   ngOnInit() {
     this.complaintForm = this.fb.group({
-      caseCode: [''],
+      caseCode: ['', [caseCodeValidator()]],
       contactType: [''],
       message: ['', [Validators.required]]
     });
