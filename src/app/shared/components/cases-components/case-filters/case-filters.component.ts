@@ -51,9 +51,9 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   searchMode = input<'auto' | 'name-only'>('auto');
 
   // ---------- Required signal inputs (used in template) ----------
-  genders = input<number[]>([0, 1]);
-  ageSorts = input<number[]>([0, 1]);
-  dateSorts = input<number[]>([0, 1]);
+  genders = input<Gender[]>([Gender.Male, Gender.Female]);
+  ageSorts = input<AgeSort[]>([AgeSort.Ascending, AgeSort.Descending]);
+  dateSorts = input<DateSort[]>([DateSort.Ascending, DateSort.Descending]);
 
   // ---------- Visibility inputs ----------
   showSearch = input(true);
@@ -462,8 +462,8 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   }
 
   // ---------- Label methods ----------
-  getGenderLabel(gender: number): string {
-    const labels: Record<number, string> = { 0: 'ذكر', 1: 'أنثى' };
+  getGenderLabel(gender: Gender): string {
+    const labels: Record<Gender, string> = { [Gender.Male]: 'ذكر', [Gender.Female]: 'أنثى' };
     return labels[gender] ?? String(gender);
   }
 
@@ -471,13 +471,13 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     return getAgeCategoryTranslationAr(ageCategory ?? null) || 'الكل';
   }
 
-  getAgeSortLabel(sort: number): string {
-    const labels: Record<number, string> = { 0: 'الأكبر أولاً', 1: ' الأصغر أولاً' };
+  getAgeSortLabel(sort: AgeSort): string {
+    const labels: Record<AgeSort, string> = { [AgeSort.Ascending]: 'الأكبر أولاً', [AgeSort.Descending]: ' الأصغر أولاً' };
     return labels[sort] ?? String(sort);
   }
 
-  getDateSortLabel(sort: number): string {
-    const labels: Record<number, string> = { 0: 'الأحدث أولاً', 1: 'الأقدم أولاً' };
+  getDateSortLabel(sort: DateSort): string {
+    const labels: Record<DateSort, string> = { [DateSort.Ascending]: 'الأحدث أولاً', [DateSort.Descending]: 'الأقدم أولاً' };
     return labels[sort] ?? String(sort);
   }
 
