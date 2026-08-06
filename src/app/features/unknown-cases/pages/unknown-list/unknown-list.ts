@@ -8,6 +8,8 @@ import { UnknownCaseService } from '../../services/unknown-case.service';
 import { CasesFilterRequest } from '../../../../core/models/cases.model';
 import { UnknownCaseListItemResponse } from '../../models/response/UnknownCaseListItemResponse';
 import { CaseCreationFlowService } from '../../../../core/services/case-creation-flow.service';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
@@ -19,6 +21,8 @@ import { CasesFilterState } from '../../../../shared/helper/cases-filter-state';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 import { CaseType } from '../../../../shared/enums/case-type';
+
+const UI_STATE_CACHE_KEY = 'UnknownList_UI_State';
 
 @Component({
   selector: 'app-unknown-list',
@@ -40,6 +44,7 @@ export class UnknownList implements OnInit {
   private readonly router = inject(Router);
   private readonly unknownCaseService = inject(UnknownCaseService);
   private readonly caseCreationFlowService = inject(CaseCreationFlowService);
+  private readonly cacheService = inject(CacheService);
   private readonly snackbar = inject(SnackbarService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -58,7 +63,23 @@ export class UnknownList implements OnInit {
 
   readonly filter = this.filterState.filter;
 
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set(
+        UI_STATE_CACHE_KEY,
+        { filter: this.filter() },
+        CACHE_TTL.UI_STATE,
+        [CACHE_TAGS.UI_STATE]
+      );
+    });
+  }
+
   ngOnInit(): void {
+    const cachedState = this.cacheService.get<{ filter: CasesFilterRequest }>(UI_STATE_CACHE_KEY);
+    if (cachedState) {
+      this.filterState.restoreState(cachedState.filter);
+    }
+    
     this.setupFetchPipeline();
     this.fetchCases();
   }

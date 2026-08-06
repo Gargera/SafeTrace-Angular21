@@ -19,7 +19,12 @@
     <section
       class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm"
     >
-      <app-case-filters [showRadius]="true" (filterChange)="onFilterChange($event)" (reset)="onFilterReset()"></app-case-filters>
+      <app-case-filters
+        [initialFilter]="filter()"
+        [showRadius]="true"
+        (filterChange)="onFilterChange($event)"
+        (reset)="onFilterReset()"
+      ></app-case-filters>
     </section>
 
     <!-- Main Content -->

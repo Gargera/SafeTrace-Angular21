@@ -12,7 +12,7 @@
 
     <!-- Filters Card -->
     <section class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
-      <app-case-filters [searchMode]="'name-only'" [showCaseType]="true" [showGovernment]="false" [showCity]="false" [showFromDate]="false"
+      <app-case-filters [initialFilter]="filter()" [searchMode]="'name-only'" [showCaseType]="true" [showGovernment]="false" [showCity]="false" [showFromDate]="false"
         [showToDate]="false" [showAgeSort]="false" [showDateSort]="false" (filterChange)="onFilterChange($event)"
         (reset)="onFilterReset()">
       </app-case-filters>

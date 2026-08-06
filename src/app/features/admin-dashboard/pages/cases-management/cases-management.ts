@@ -35,8 +35,11 @@ import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { AuthService } from '../../../../core/services/auth.service';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 const FILTER_DEBOUNCE_MS = 400;
+const UI_STATE_CACHE_KEY = 'Dashboard_UI_State';
 
 @Component({
   selector: 'app-cases-management',
@@ -63,7 +66,7 @@ const FILTER_DEBOUNCE_MS = 400;
 export class CasesManagement implements OnInit, OnDestroy {
   protected readonly CaseType = CaseType;
   protected readonly CaseStatus = CaseStatus;
-  
+
   Permissions = Permissions;
   caseActionPermissions = [
     Permissions.LongTermCases.GetById,
@@ -80,6 +83,7 @@ export class CasesManagement implements OnInit, OnDestroy {
   private readonly dashboardService = inject(DashboardService);
   private readonly toast = inject(SnackbarService);
   private readonly reportService = inject(ReportService);
+  private readonly cacheService = inject(CacheService);
 
   // Statistics
   statistics = signal<DashboardStatistics | null>(null);
@@ -153,10 +157,23 @@ export class CasesManagement implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    const cachedState = this.cacheService.get<{ filter: CasesFilterRequest, page: number }>(UI_STATE_CACHE_KEY);
+    if (cachedState) {
+      this.baseFilter.set(cachedState.filter);
+      this.currentPage.set(cachedState.page);
+    }
+
     this.loadStatistics();
   }
 
   ngOnDestroy(): void {
+    this.cacheService.set(
+      UI_STATE_CACHE_KEY,
+      { filter: this.baseFilter(), page: this.currentPage() },
+      CACHE_TTL.UI_STATE,
+      [CACHE_TAGS.UI_STATE]
+    );
+
     if (this.searchDebounceTimer) {
       clearTimeout(this.searchDebounceTimer);
     }
@@ -309,13 +326,13 @@ export class CasesManagement implements OnInit, OnDestroy {
     }
   }
 
-downloadReport(): void {
+  downloadReport(): void {
 
-  this.reportService
-    .generateCasesPdfReport(this.baseFilter())
-    .subscribe(response => {
-      this.reportService.download(response);
-    });
-}
+    this.reportService
+      .generateCasesPdfReport(this.baseFilter())
+      .subscribe(response => {
+        this.reportService.download(response);
+      });
+  }
 
 }

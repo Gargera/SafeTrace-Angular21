@@ -117,6 +117,15 @@ export class CasesFilterState<T extends CasesFilterRequest = CasesFilterRequest>
             onFetch();
         }
     }
+    restoreState(cachedFilter: T): void {
+        this.filter.set(cachedFilter);
+        if (cachedFilter.page) {
+            this.currentPage.set(cachedFilter.page);
+        }
+        if (cachedFilter.pageSize) {
+            this.pageSize.set(cachedFilter.pageSize);
+        }
+    }
     onPageChange(page: number, onFetch?: () => void): void {
         this.currentPage.set(page);
         this.filter.update((f) => ({

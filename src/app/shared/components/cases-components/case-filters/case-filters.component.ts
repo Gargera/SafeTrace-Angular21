@@ -49,6 +49,7 @@ import { DateSort } from '../../../enums/date-sort';
 export class CaseFiltersComponent implements OnInit, AfterContentInit {
   // ---------- Search mode input ----------
   searchMode = input<'auto' | 'name-only'>('auto');
+  initialFilter = input<Partial<CasesFilterRequest> | null>(null);
 
   // ---------- Required signal inputs (used in template) ----------
   genders = input<Gender[]>([Gender.Male, Gender.Female]);
@@ -181,19 +182,21 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
         ? [arabicText(), Validators.maxLength(243)]
         : [fullNameOrCaseCodeValidator()];
 
+    const initial = this.initialFilter() || {};
+
     this.filterForm = this.fb.group(
       {
-        fullName: ['', searchValidator],
-        gender: ['', [validEnum(Gender)]],
-        ageCategory: ['', [validEnum(AgeCategories)]],
-        government: ['', [arabicText(), Validators.maxLength(100)]],
-        city: ['', [arabicText(), Validators.maxLength(100)]],
-        fromDate: ['', [pastDate()]],
-        toDate: ['', [pastDate()]],
-        ageSort: ['', [validEnum(AgeSort)]],
-        dateSort: ['', [validEnum(DateSort)]],
-        caseType: ['', [validEnum(CaseType)]],
-        status: ['', [validEnum(CaseStatus)]],
+        fullName: [initial.fullName || initial.caseCode || '', searchValidator],
+        gender: [initial.gender || '', [validEnum(Gender)]],
+        ageCategory: [initial.ageCategory || '', [validEnum(AgeCategories)]],
+        government: [initial.government || '', [arabicText(), Validators.maxLength(100)]],
+        city: [initial.city || '', [arabicText(), Validators.maxLength(100)]],
+        fromDate: [initial.fromDate || '', [pastDate()]],
+        toDate: [initial.toDate || '', [pastDate()]],
+        ageSort: [initial.ageSort || '', [validEnum(AgeSort)]],
+        dateSort: [initial.dateSort || '', [validEnum(DateSort)]],
+        caseType: [initial.caseType || '', [validEnum(CaseType)]],
+        status: [initial.status || '', [validEnum(CaseStatus)]],
         radiusInKm: ['', [searchRadiusValidator(1, 1000)]],
       },
       { validators: dateRangeValidator('fromDate', 'toDate') },
@@ -232,13 +235,6 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     this.projectedModels.changes.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.bindProjectedModelChanges();
     });
-
-    // Emit initial value safely
-    if (this.filterForm.valid) {
-      this.emitFilterChange(true);
-    } else {
-      this.filterForm.markAllAsTouched();
-    }
   }
 
   // ---------- Projected models binding ----------

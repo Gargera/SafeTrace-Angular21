@@ -1,0 +1,21 @@
+export const CACHE_TTL = {
+  LIST: 5 * 60 * 1000,          // 5 minutes
+  DETAILS: 15 * 60 * 1000,       // 15 minutes
+  STATIC: 24 * 60 * 60 * 1000,   // 24 hours
+  UI_STATE: 30 * 60 * 1000       // 30 minutes
+};
+
+export const CACHE_TAGS = {
+  UNKNOWN_CASES: 'UNKNOWN_CASES',
+  URGENT_CASES: 'URGENT_CASES',
+  FOUNDED_CASES: 'FOUNDED_CASES',
+  LONG_TERM_CASES: 'LONG_TERM_CASES',
+  STATIC_DATA: 'STATIC_DATA',
+  UI_STATE: 'UI_STATE',
+  COMPLAINTS: 'COMPLAINTS',
+  USERS: 'USERS',
+  DASHBOARD: 'DASHBOARD',
+  PROFILE: 'PROFILE',
+  DONATIONS: 'DONATIONS',
+  CHAT: 'CHAT'
+};
