@@ -51,7 +51,7 @@
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         @for (person of items(); track person.id) {
         <app-case-card [caseItem]="mapToCaseItem(person)" [showCaseType]="false" [showGender]="false" [showAge]="false"
-          createdAtLabel="تاريخ العثور" [detailRoute]="['/founded', person.id]" [showContactButton]="false">
+          createdAtLabel="تاريخ العثور" [showCaseType]="true" [detailRoute]="['/founded', person.id]" [showContactButton]="false">
         </app-case-card>
         }
       </div>
