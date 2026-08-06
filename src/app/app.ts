@@ -1,4 +1,4 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Toast } from './shared/components/toast/toast';
 import { AuthService } from './core/services/auth.service';
@@ -13,7 +13,7 @@ import { CaseCreationFlowComponent } from './shared/components/cases-components/
 })
 export class App implements OnInit {
   protected readonly title = signal('لقاء');
-
+  
   constructor(
     private locationTrackingService: LocationTrackingService,
     private authService: AuthService,

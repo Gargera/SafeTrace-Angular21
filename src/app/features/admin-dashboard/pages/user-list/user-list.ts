@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { GetUserDto } from '../../models/User/responses/GetUserDto';
 import { RoleDto } from '../../models/Role/responses/RoleDto';
@@ -27,6 +27,10 @@ import { ReportService } from '../../services/report.service';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+
+const UI_STATE_CACHE_KEY = 'UserList_UI_State';
 
 @Component({
   selector: 'app-user-list',
@@ -58,6 +62,8 @@ export class UserList {
   private readonly router = inject(Router);
   private toast = inject(SnackbarService);
   private reportService = inject(ReportService);
+  private readonly cacheService = inject(CacheService);
+  private readonly destroyRef = inject(DestroyRef);
 
   users = signal<GetUserDto[]>([]);
   roles = signal<RoleDto[]>([]);
@@ -79,7 +85,23 @@ export class UserList {
   private searchSubject = new Subject<string>();
   VerificationStatusEnum = VerificationStatus;
 
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set(
+        UI_STATE_CACHE_KEY,
+        { filter: this.filter() },
+        CACHE_TTL.UI_STATE,
+        [CACHE_TAGS.UI_STATE]
+      );
+    });
+  }
+
   ngOnInit() {
+    const cachedState = this.cacheService.get<{ filter: UserFilterDto }>(UI_STATE_CACHE_KEY);
+    if (cachedState) {
+      this.filter.set(cachedState.filter);
+    }
+
     this.loadRoles();
     this.loadUsers();
     this.loadStatistics();

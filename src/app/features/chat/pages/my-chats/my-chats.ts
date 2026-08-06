@@ -8,7 +8,11 @@ import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 type ConversationFilter = 'all' | 'unread';
+
+const UI_STATE_CACHE_KEY = 'MyChats_UI_State';
  
 
 
@@ -22,6 +26,7 @@ export class MyChats implements OnInit {
   private chatAlerts = inject(ChatAlertsService);
   private router = inject(Router);
   private snackbarService = inject(SnackbarService);
+  private cacheService = inject(CacheService);
 
   loading = signal(true);
   chats = signal<ChatSummaryDto[]>([]);
@@ -42,6 +47,11 @@ export class MyChats implements OnInit {
   });
  
   ngOnInit(): void {
+    const cachedState = this.cacheService.get<{ activeFilter: ConversationFilter }>(UI_STATE_CACHE_KEY);
+    if (cachedState) {
+      this.activeFilter.set(cachedState.activeFilter);
+    }
+
     this.loading.set(true);
     this.chatService.getMyChats().subscribe({
       next: (response) => {
@@ -57,6 +67,12 @@ export class MyChats implements OnInit {
  
   setFilter(filter: ConversationFilter): void {
     this.activeFilter.set(filter);
+    this.cacheService.set(
+      UI_STATE_CACHE_KEY,
+      { activeFilter: filter },
+      CACHE_TTL.UI_STATE,
+      [CACHE_TAGS.UI_STATE]
+    );
   }
  
   /** ChatSummaryDto has no "hasStarted" flag - every chat in this list already
