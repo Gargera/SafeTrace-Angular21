@@ -9,6 +9,7 @@ import { PaginationResponse } from '../../../shared/models/responses/pagination-
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { getAgeCategory } from '../../../shared/helper/age-category.helper';
 import { ApiService } from '../../../shared/services/api.service';
+import { CaseType } from '../../../shared/enums/case-type';
 
 @Injectable({ providedIn: 'root' })
 export class FoundedService extends ApiService {
@@ -33,6 +34,7 @@ export class FoundedService extends ApiService {
       fullName: item.name,
       mainImage: item.image,
       age: item.age,
+      caseType: item.caseType as CaseType,
       ageCategory: getAgeCategory(item.age),
       foundDate: item.foundedAt,
     };

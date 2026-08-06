@@ -3,6 +3,7 @@ export interface FoundedApiListItemDto {
   caseId: number;
   name: string;
   age: number;
+  caseType: string;
   foundedAt: string;
   image: string;
 }
