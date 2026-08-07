@@ -163,19 +163,16 @@
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         @for (c of foundedCases(); track c.id) {
-          <app-card [routerLink]="['/founded', c.id]" extraClass="cursor-pointer hover:-translate-y-1 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
-            <div class="relative">
-              <img [src]="getImageUrl(c.mainImage)" [alt]="c.fullName" class="w-full h-48 object-cover rounded-t-2xl" (error)="onImgError($event)" />
-              <div class="absolute bottom-2 right-2 bg-[#16a34a] text-white px-3 py-1 rounded-full text-[14px] font-bold shadow-md">
-                تم الإيجاد ✓
-              </div>
-            </div>
-            <div class="p-4 space-y-3 flex-1 flex flex-col">
-              <h3 class="font-bold text-[18px] text-primary line-clamp-1">{{ c.fullName }}</h3>
-              <p class="text-[14px] text-on-surface-variant flex-1">{{ c.age }}</p>
-              <app-button variant="primary" extraClass="w-full justify-center">عرض التفاصيل</app-button>
-            </div>
-          </app-card>
+          <app-case-card 
+            [caseItem]="mapToCaseItem(c)" 
+            [showCaseType]="true" 
+            [showGender]="false" 
+            [showAge]="false"
+            createdAtLabel="تاريخ العثور" 
+            [detailRoute]="['/founded', c.id]" 
+            [showContactButton]="false"
+            class="block">
+          </app-case-card>
         }
       </div>
     </section>
