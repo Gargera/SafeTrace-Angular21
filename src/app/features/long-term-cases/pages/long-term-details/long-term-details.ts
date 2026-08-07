@@ -32,6 +32,7 @@ import { Permissions } from '../../../../core/constants/Permissions';
 import { RejectCasePopupComponent } from '../../../../shared/components/cases-components/reject-case-popup/reject-case-popup';
 import { RejectionReasonCardComponent } from '../../../../shared/components/cases-components/rejection-reason-card/rejection-reason-card';
 import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
 
 @Component({
   selector: 'app-long-term-details',
@@ -49,6 +50,7 @@ import { extractErrorMessage } from '../../../../shared/helper/case-error.helper
     ButtonComponent,
     RejectCasePopupComponent,
     RejectionReasonCardComponent,
+    ViewProfilePopup,
   ],
   templateUrl: './long-term-details.html',
   styleUrls: ['./long-term-details.css'],
@@ -65,6 +67,15 @@ export class LongTermDetails implements OnInit {
   readonly FileType = FileType;
   readonly CaseStatus = CaseStatus;
   readonly Permissions = Permissions;
+
+  readonly selectedUserId = signal<string | null>(null);
+
+  openPublisherProfile(): void {
+    const id = (this.caseDetails()?.user as any)?.id || (this.caseDetails() as any)?.userId;
+    if (id) {
+      this.selectedUserId.set(id);
+    }
+  }
 
   // Signals للـ Modals والحالات
   showDeleteConfirmation = signal(false);
@@ -83,9 +94,19 @@ export class LongTermDetails implements OnInit {
   loading = signal(true);
 
   readonly isOwner = computed(() => {
+    if (!this.authService.isLoggedIn()) return false;
     const currentUserEmail = this.authService.currentUser()?.email?.toLowerCase();
     const caseOwnerEmail = this.caseDetails()?.user?.email?.toLowerCase();
-    return !!currentUserEmail && currentUserEmail === caseOwnerEmail;
+    const currentUserId = this.authService.getCurrentUserId();
+    const caseUserId = (this.caseDetails() as any)?.userId;
+
+    if (caseUserId && currentUserId) {
+      return caseUserId === currentUserId;
+    }
+    if (currentUserEmail && caseOwnerEmail) {
+      return currentUserEmail === caseOwnerEmail;
+    }
+    return false;
   });
 
   selectedMedia = signal<CasePhotoResponse | null>(null);
@@ -429,6 +450,10 @@ export class LongTermDetails implements OnInit {
   }
 
   startChat(id: number): void {
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
     this.router.navigate(['/chat/start', id]);
   }
 }

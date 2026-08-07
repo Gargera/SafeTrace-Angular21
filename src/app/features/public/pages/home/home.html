@@ -85,7 +85,6 @@
             [caseItem]="c" 
             [showUrgentTag]="true" 
             [showCaseType]="false"
-            [showContactButton]="false"
             [detailRoute]="['/urgent', c.id]"
             (onContact)="onContactReporter($event, 'urgent')"
             class="block" />
@@ -112,7 +111,6 @@
           <app-case-card 
             [caseItem]="c" 
             [showCaseType]="false"
-            [showContactButton]="false"
             [detailRoute]="['/long-term', c.id]"
             (onContact)="onContactReporter($event, 'long-term')"
             class="block" />
@@ -139,7 +137,6 @@
           <app-case-card 
             [caseItem]="c" 
             [showCaseType]="false"
-            [showContactButton]="false"
             [detailRoute]="['/unknown', c.id]"
             (onContact)="onContactReporter($event, 'unknown')"
             class="block" />

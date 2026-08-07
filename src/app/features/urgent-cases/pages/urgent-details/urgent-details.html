@@ -184,6 +184,28 @@
             <span [appGenderBadgeDirective]="caseDetails()!.gender"></span>
           </div>
 
+          <!-- كارت الناشر -->
+          @if (caseDetails()?.user) {
+          <div (click)="openPublisherProfile()"
+            class="flex items-center gap-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-low p-3.5 cursor-pointer transition-all hover:border-primary hover:bg-primary/5 group/pub">
+            @if (caseDetails()?.user?.profileImage) {
+            <img [src]="getImageUrl(caseDetails()?.user?.profileImage!)"
+              class="h-11 w-11 rounded-full object-cover border border-outline-variant group-hover/pub:border-primary" alt="صورة الناشر" />
+            } @else {
+            <div class="flex h-11 w-11 items-center justify-center rounded-full bg-primary/15 text-primary font-bold text-sm border border-primary/20 group-hover/pub:bg-primary group-hover/pub:text-on-primary">
+              {{ ((caseDetails()?.user?.fName?.[0] ?? '') + (caseDetails()?.user?.lName?.[0] ?? '')).toUpperCase() }}
+            </div>
+            }
+            <div class="flex flex-col min-w-0 flex-1">
+              <span class="text-xs text-on-surface-variant">ناشر الحالة (المُبلّغ)</span>
+              <h4 class="font-bold text-on-surface text-base flex items-center gap-1.5 group-hover/pub:text-primary">
+                {{ isOwner() ? 'أنت (صاحب الحالة)' : (caseDetails()?.user?.fName + ' ' + caseDetails()?.user?.lName) }}
+                <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover/pub:text-primary">open_in_new</span>
+              </h4>
+            </div>
+          </div>
+          }
+
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="rounded-lg border border-outline-variant p-4">
               <p class="text-sm text-on-surface-variant">العمر</p>
@@ -291,5 +313,10 @@
     <button class="absolute right-5 text-5xl text-white" (click)="nextMedia()">❯</button>
   </div>
   }
+
+  <app-view-profile-popup
+    [userId]="selectedUserId()"
+    (closed)="selectedUserId.set(null)">
+  </app-view-profile-popup>
 
 </div>
