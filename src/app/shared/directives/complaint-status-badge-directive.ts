@@ -8,7 +8,7 @@ import { BadgeRenderService } from '../services/badge-render.service';
 })
 export class ComplaintStatusBadgeDirective implements OnChanges {
   @Input('appComplaintStatusBadge') status!: ComplaintStatus | string | null;
-  private readonly baseClasses = ['inline-flex', 'items-center', 'gap-xs', 'px-sm', 'py-1', 'rounded-lg', 'text-sm', 'font-bold', 'whitespace-nowrap'];
+  private readonly baseClasses = ['inline-flex', 'items-center', 'justify-center', 'gap-1.5', 'px-3', 'py-1', 'rounded-lg', 'text-sm', 'font-bold', 'whitespace-nowrap'];
 
   constructor(
     private el: ElementRef,
@@ -29,7 +29,7 @@ export class ComplaintStatusBadgeDirective implements OnChanges {
         let icon = 'help';
         if (val === ComplaintStatus.Solved) { translation = 'تم الحل'; icon = 'task_alt'; }
         else if (val === ComplaintStatus.UnSolved) { translation = 'لم يتم الحل'; icon = 'error'; }
-        return `<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1">${icon}</span> ${translation}`;
+        return `<span class="material-symbols-outlined text-[16px] leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
       },
       useTextOnly: false
     });

@@ -17,10 +17,12 @@ export interface AgeCategoryResponse {
 }
 
 export interface UserResponse {
+  id?: string;
   fName: string;
   lName: string;
   email: string;
   phoneNumber: string;
+  profileImage?: string | null;
 }
 
 export interface CasePhotoResponse {
@@ -130,6 +132,8 @@ export interface CaseListItemResponse {
   government: string;
   createdAt: string; // DateTime
   mainPhoto: string;
+  userId?: string;
+  user?: UserResponse | null;
 }
 
 // ============ REQUEST MODELS ============

@@ -9,7 +9,7 @@ import { BadgeRenderService } from '../services/badge-render.service';
 })
 export class CaseTypeBadgeDirective {
   caseType = input.required<CaseType>({ alias: 'appCaseTypeBadgeDirective' });
-  private readonly baseClasses = ['inline-flex', 'items-center', 'gap-xs', 'px-sm', 'py-1', 'rounded-lg', 'text-sm', 'font-bold', 'whitespace-nowrap'];
+  private readonly baseClasses = ['inline-flex', 'items-center', 'justify-center', 'gap-1.5', 'px-3', 'py-1', 'rounded-lg', 'text-sm', 'font-bold', 'whitespace-nowrap'];
 
   constructor(
     private el: ElementRef,
@@ -28,7 +28,7 @@ export class CaseTypeBadgeDirective {
           let icon = 'info';
           if (val === CaseType.Urgent) icon = 'warning';
           if (val === CaseType.LongTerm) icon = 'update';
-          return `<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1">${icon}</span> ${translation}`;
+          return `<span class="material-symbols-outlined text-[16px] leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
         },
         useTextOnly: false
       });

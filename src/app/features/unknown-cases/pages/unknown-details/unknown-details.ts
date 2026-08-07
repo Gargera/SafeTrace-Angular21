@@ -1,5 +1,3 @@
-import { FormField } from '../../../../shared/components/form-field/form-field';
-import { CardComponent } from '../../../../shared/components/card/card';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -31,6 +29,7 @@ import { Permissions } from '../../../../core/constants/Permissions';
 import { RejectCasePopupComponent } from '../../../../shared/components/cases-components/reject-case-popup/reject-case-popup';
 import { RejectionReasonCardComponent } from '../../../../shared/components/cases-components/rejection-reason-card/rejection-reason-card';
 import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
 
 @Component({
   selector: 'app-unknown-details',
@@ -48,6 +47,7 @@ import { extractErrorMessage } from '../../../../shared/helper/case-error.helper
     ButtonComponent,
     RejectCasePopupComponent,
     RejectionReasonCardComponent,
+    ViewProfilePopup,
   ],
   templateUrl: './unknown-details.html',
   styleUrls: ['./unknown-details.css'],
@@ -65,6 +65,15 @@ export class UnknownDetails implements OnInit {
   readonly CaseStatus = CaseStatus;
   readonly Permissions = Permissions;
 
+  readonly selectedUserId = signal<string | null>(null);
+
+  openPublisherProfile(): void {
+    const id = this.caseDetails()?.user?.id || (this.caseDetails() as any)?.userId;
+    if (id) {
+      this.selectedUserId.set(id);
+    }
+  }
+
   // Modals signals
   showDeleteConfirmation = signal(false);
   deleting = signal(false);
@@ -81,9 +90,19 @@ export class UnknownDetails implements OnInit {
   loading = signal(true);
 
   readonly isOwner = computed(() => {
+    if (!this.authService.isLoggedIn()) return false;
+    const currentUserId = this.authService.getCurrentUserId();
     const currentUserEmail = this.authService.currentUser()?.email?.toLowerCase();
+    const caseOwnerId = this.caseDetails()?.user?.id || (this.caseDetails() as any)?.userId;
     const caseOwnerEmail = this.caseDetails()?.user?.email?.toLowerCase();
-    return !!currentUserEmail && currentUserEmail === caseOwnerEmail;
+
+    if (caseOwnerId && currentUserId) {
+      return caseOwnerId === currentUserId;
+    }
+    if (currentUserEmail && caseOwnerEmail) {
+      return currentUserEmail === caseOwnerEmail;
+    }
+    return false;
   });
 
   selectedMedia = signal<CasePhotoResponse | null>(null);
@@ -441,6 +460,10 @@ export class UnknownDetails implements OnInit {
   }
   
   startChat(id: number): void {
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
     this.router.navigate(['/chat/start', id]);
   }
 }

@@ -14,6 +14,9 @@ import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { environment } from '../../../../../environments/environment';
 import { caseCodeValidator } from '../../../../shared/validators/case-code.validator';
+import { CaseStatus } from '../../../../shared/enums/case-status';
+import { Gender } from '../../../../shared/enums/gender';
+import { CaseListItemResponse } from '../../../../core/models/cases.model';
 
 @Component({
   selector: 'app-home',
@@ -137,6 +140,25 @@ export class Home implements OnInit {
     this.router.navigate([`/${type}`, caseId], {
       queryParams: { contact: true },
     });
+  }
+
+  mapToCaseItem(person: any): CaseListItemResponse {
+    return {
+      id: person.id,
+      caseCode: '',
+      caseType: person.caseType,
+      status: CaseStatus.Found,
+      fName: person.fullName,
+      sName: null,
+      tName: null,
+      lName: null,
+      gender: Gender.Male,
+      age: person.age,
+      city: '',
+      government: '',
+      createdAt: person.foundDate,
+      mainPhoto: person.mainImage,
+    };
   }
 
   getImageUrl(path: string | undefined): string {
