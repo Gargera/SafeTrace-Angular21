@@ -84,6 +84,27 @@ export class CaseCardComponent {
     return !this.isOwner();
   });
 
+  readonly isOwner = computed(() => {
+    if (!this.authService.isLoggedIn()) return false;
+    const currentUserId = this.authService.getCurrentUserId();
+    const currentUserEmail = this.authService.currentUser()?.email?.toLowerCase();
+    const item = this.caseItem();
+
+    if (item.userId && currentUserId) {
+      return item.userId === currentUserId;
+    }
+    if ((item as any).userEmail && currentUserEmail) {
+      return (item as any).userEmail.toLowerCase() === currentUserEmail;
+    }
+    return false;
+  });
+
+  readonly shouldShowContactButton = computed(() => {
+    if (!this.showContactButton()) return false;
+    if (!this.authService.isLoggedIn()) return true;
+    return !this.isOwner();
+  });
+
   // Computed signals
   readonly imageSrc = computed(() => {
     const item = this.caseItem();
@@ -183,6 +204,10 @@ export class CaseCardComponent {
   }
 
   startChat(id: number): void {
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
     if (!this.authService.isLoggedIn()) {
       this.router.navigate(['/auth/login'], { queryParams: { returnUrl: this.router.url } });
       return;
