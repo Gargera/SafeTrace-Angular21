@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, DestroyRef } from '@angular/core';
 import { DatePipe, CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms'; // 1. قمنا باستيراد الـ FormsModule هنا
@@ -19,7 +19,11 @@ import { SnackbarService } from '../../../../shared/services/toast.service';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+
 const PAGE_SIZE = 10;
+const UI_STATE_CACHE_KEY = 'AdminChats_UI_State';
 
 @Component({
   selector: 'app-admin-chats',
@@ -46,6 +50,8 @@ export class AdminChats implements OnInit {
   private chatAlerts = inject(ChatAlertsService);
   private router = inject(Router);
   private snackbarService = inject(SnackbarService);
+  private cacheService = inject(CacheService);
+  private destroyRef = inject(DestroyRef);
   Permissions = Permissions;
   chatActionPermissions = [
     Permissions.Chat.GetById,
@@ -114,11 +120,47 @@ toDateError = computed(() => {
   return '';
 });
 
-hasDateErrors = computed(() =>
-  !!this.fromDateError() || !!this.toDateError()
-);
+  hasDateErrors = computed(() =>
+    !!this.fromDateError() || !!this.toDateError()
+  );
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set(
+        UI_STATE_CACHE_KEY,
+        {
+          searchTerm: this.searchTerm(),
+          fromDate: this.fromDate(),
+          toDate: this.toDate(),
+          isDeletedBySender: this.isDeletedBySender(),
+          isDeletedByReceiver: this.isDeletedByReceiver(),
+          currentPage: this.currentPage()
+        },
+        CACHE_TTL.UI_STATE,
+        [CACHE_TAGS.UI_STATE]
+      );
+    });
+  }
 
   ngOnInit(): void {
+    const cachedState = this.cacheService.get<{
+      searchTerm: string;
+      fromDate: string;
+      toDate: string;
+      isDeletedBySender: boolean | undefined;
+      isDeletedByReceiver: boolean | undefined;
+      currentPage: number;
+    }>(UI_STATE_CACHE_KEY);
+
+    if (cachedState) {
+      this.searchTerm.set(cachedState.searchTerm);
+      this.fromDate.set(cachedState.fromDate);
+      this.toDate.set(cachedState.toDate);
+      this.isDeletedBySender.set(cachedState.isDeletedBySender);
+      this.isDeletedByReceiver.set(cachedState.isDeletedByReceiver);
+      this.currentPage.set(cachedState.currentPage);
+    }
+
     this.loadStatistics();
     this.loadChats();
   }

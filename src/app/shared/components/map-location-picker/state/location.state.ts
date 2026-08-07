@@ -30,8 +30,8 @@ export class LocationState {
 
   readonly containerClasses = computed(() =>
     this.isFullscreen()
-      ? 'fixed inset-0 z-50 flex h-full w-full flex-col overflow-hidden bg-white shadow-2xl transition-all duration-300'
-      : 'relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl transition-all duration-300 animate-in zoom-in-95'
+      ? 'fixed inset-0 z-50 flex h-[100dvh] w-full flex-col overflow-hidden bg-white shadow-2xl transition-all duration-300'
+      : 'relative flex max-h-[95dvh] sm:max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl transition-all duration-300 animate-in zoom-in-95'
   );
 
   resetState(initialLatitude: number | null, initialLongitude: number | null, initialAddress: string): void {

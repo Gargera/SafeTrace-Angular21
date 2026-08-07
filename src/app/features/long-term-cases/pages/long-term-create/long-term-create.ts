@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, DestroyRef, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -23,6 +23,8 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 // Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
@@ -32,6 +34,19 @@ import { validEnum } from '../../../../shared/validators/enum.validator';
 import { ImageService } from '../../../../shared/services/image.service';
 
 type Step = 1 | 2 | 3;
+
+const DRAFT_CACHE_KEY = 'LongTermCreate_Draft';
+
+interface LongTermCreateDraft {
+  formValue: any;
+  currentStep: Step;
+  showForceCreatePopup: boolean;
+  showDuplicateInfoDialog: boolean;
+  currentDuplicateDecision: DuplicateDecision;
+  isBlockedDuplicate: boolean;
+  matchedCases: MatchedCaseResponse[];
+  existingCaseType: CaseType | null;
+}
 
 @Component({
   selector: 'app-long-term-create',
@@ -51,13 +66,14 @@ type Step = 1 | 2 | 3;
   styleUrls: ['./long-term-create.css'],
   templateUrl: './long-term-create.html',
 })
-export class LongTermCreate {
+export class LongTermCreate implements OnInit {
   private fb = inject(FormBuilder);
   private imageService = inject(ImageService);
   private service = inject(LongTermCaseService);
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
   private destroyRef = inject(DestroyRef);
+  private cacheService = inject(CacheService);
 
   currentStep: Step = 1;
   isSubmitting = signal(false);
@@ -137,6 +153,25 @@ export class LongTermCreate {
 
   availableCities = signal<string[]>([]);
 
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      // Only cache if we didn't just submit successfully
+      if (this.form.dirty || this.currentStep > 1 || this.matchedCases().length > 0) {
+        const draft: LongTermCreateDraft = {
+          formValue: this.form.getRawValue(),
+          currentStep: this.currentStep,
+          showForceCreatePopup: this.showForceCreatePopup(),
+          showDuplicateInfoDialog: this.showDuplicateInfoDialog(),
+          currentDuplicateDecision: this.currentDuplicateDecision(),
+          isBlockedDuplicate: this.isBlockedDuplicate(),
+          matchedCases: this.matchedCases(),
+          existingCaseType: this.existingCaseType()
+        };
+        this.cacheService.set(DRAFT_CACHE_KEY, draft, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+      }
+    });
+  }
+
   ngOnInit(): void {
     this.form.get('government')?.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -148,6 +183,22 @@ export class LongTermCreate {
           this.form.get('city')?.setValue('');
         }
       });
+
+    const draft = this.cacheService.get<LongTermCreateDraft>(DRAFT_CACHE_KEY);
+    if (draft) {
+      this.form.patchValue(draft.formValue);
+      this.currentStep = draft.currentStep;
+      this.showForceCreatePopup.set(draft.showForceCreatePopup);
+      this.showDuplicateInfoDialog.set(draft.showDuplicateInfoDialog);
+      this.currentDuplicateDecision.set(draft.currentDuplicateDecision);
+      this.isBlockedDuplicate.set(draft.isBlockedDuplicate);
+      this.matchedCases.set(draft.matchedCases);
+      this.existingCaseType.set(draft.existingCaseType);
+
+      if (draft.showForceCreatePopup || draft.showDuplicateInfoDialog) {
+        this.snackbar.info('تم استعادة بيانات النموذج. يرجى إعادة إرفاق الصور والمستندات للمتابعة.');
+      }
+    }
   }
 
   nextStep(): void {
@@ -265,6 +316,13 @@ export class LongTermCreate {
     if (this.isSubmitting()) return;
     const primaryImg = this.primaryPhotoFile();
 
+    if (forceCreate && !this.pendingRequest && !primaryImg) {
+      this.errorMsg.set('يرجى إعادة إرفاق الصورة الأساسية قبل المتابعة.');
+      this.showForceCreatePopup.set(false);
+      this.showDuplicateInfoDialog.set(false);
+      return;
+    }
+
     if (!forceCreate && (this.form.invalid || !primaryImg)) {
       this.form.markAllAsTouched();
       if (!primaryImg) {
@@ -329,6 +387,7 @@ export class LongTermCreate {
             return;
           }
 
+          this.cacheService.remove(DRAFT_CACHE_KEY);
           this.showForceCreatePopup.set(false);
           this.showDuplicateInfoDialog.set(false);
           this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');

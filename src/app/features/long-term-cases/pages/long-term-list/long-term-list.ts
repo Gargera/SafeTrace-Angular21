@@ -20,6 +20,10 @@ import { CasesFilterState } from '../../../../shared/helper/cases-filter-state';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 import { CaseType } from '../../../../shared/enums/case-type';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+
+const UI_STATE_CACHE_KEY = 'LongTermList_UI_State';
 
 @Component({
   selector: 'app-long-term-list',
@@ -43,6 +47,7 @@ export class LongTermList implements OnInit {
   private readonly router = inject(Router);
   private readonly longTermCaseService = inject(LongTermCaseService);
   private readonly caseCreationFlowService = inject(CaseCreationFlowService);
+  private readonly cacheService = inject(CacheService);
   private readonly snackbar = inject(SnackbarService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -61,7 +66,23 @@ export class LongTermList implements OnInit {
 
   readonly filter = this.filterState.filter;
 
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set(
+        UI_STATE_CACHE_KEY,
+        { filter: this.filter() },
+        CACHE_TTL.UI_STATE,
+        [CACHE_TAGS.UI_STATE]
+      );
+    });
+  }
+
   ngOnInit(): void {
+    const cachedState = this.cacheService.get<{ filter: CasesFilterRequest }>(UI_STATE_CACHE_KEY);
+    if (cachedState) {
+      this.filterState.restoreState(cachedState.filter);
+    }
+    
     this.setupFetchPipeline();
     this.fetchCases();
   }

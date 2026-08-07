@@ -200,13 +200,13 @@ export class CasesManagementService {
      */
     private sortItems(items: CaseListItemResponse[], filter: CasesFilterRequest): void {
         if (filter.ageSort !== null && filter.ageSort !== undefined) {
-            const direction = filter.ageSort === AgeSort.Ascending ? 1 : -1;
+            const direction = filter.ageSort === AgeSort.Ascending ? -1 : 1;
             items.sort((a, b) => (a.age - b.age) * direction);
             return;
         }
 
         if (filter.dateSort !== null && filter.dateSort !== undefined) {
-            const direction = filter.dateSort === DateSort.Ascending ? 1 : -1;
+            const direction = filter.dateSort === DateSort.Ascending ? -1 : 1;
             items.sort(
                 (a, b) =>
                     (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * direction,

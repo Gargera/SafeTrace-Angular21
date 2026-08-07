@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -22,7 +22,10 @@ import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 import { ReportService } from '../../../admin-dashboard/services/report.service';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
+const UI_STATE_CACHE_KEY = 'ComplaintsList_UI_State';
 
 @Component({
   selector: 'app-complaints-list',
@@ -48,6 +51,8 @@ import { ReportService } from '../../../admin-dashboard/services/report.service'
 })
 export class ComplaintsList implements OnInit {
   private svc = inject(ComplaintsService);
+  private readonly cacheService = inject(CacheService);
+  private readonly destroyRef = inject(DestroyRef);
   Permissions = Permissions;
   complaintActionPermissions = [
     Permissions.Complaints.GetById,
@@ -76,12 +81,38 @@ export class ComplaintsList implements OnInit {
     pageSize: 10,
     search: '',
     status: '' as any,
+    contactType: ''
   });
+
+  contactTypeOptions = [
+    'شكوى حالة',
+    'بلاغ عن حالة احتيال أو ابتزاز',
+    'محتوى غير لائق',
+    'مشكلة فنية',
+    'اقتراح لتحسين المنصة',
+    'أخرى'
+  ];
 
   ComplaintStatusEnum = ComplaintStatus;
   private searchSubject = new Subject<string>();
 
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set(
+        UI_STATE_CACHE_KEY,
+        { filter: this.filter() },
+        CACHE_TTL.UI_STATE,
+        [CACHE_TAGS.UI_STATE]
+      );
+    });
+  }
+
   ngOnInit() {
+    const cachedState = this.cacheService.get<{ filter: ComplaintFilterDto }>(UI_STATE_CACHE_KEY);
+    if (cachedState) {
+      this.filter.set(cachedState.filter);
+    }
+
     this.loadStatistics();
     this.loadComplaints();
 
@@ -145,6 +176,7 @@ export class ComplaintsList implements OnInit {
       pageSize: 10,
       search: '',
       status: '' as any,
+      contactType: ''
     });
     this.loadComplaints();
   }

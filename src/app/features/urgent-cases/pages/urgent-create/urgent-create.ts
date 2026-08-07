@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, DestroyRef, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -22,11 +22,12 @@ import { DuplicateInfoDialogComponent } from '../../../../shared/components/case
 import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 // Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
-import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { urgentEventDate, toDatetimeLocalString } from '../../../../shared/validators/urgent-event-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
 import { ImageService } from '../../../../shared/services/image.service';
@@ -35,6 +36,22 @@ import { CardComponent } from '../../../../shared/components/card/card';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 
 type Step = 1 | 2 | 3;
+
+const DRAFT_CACHE_KEY = 'UrgentCreate_Draft';
+
+interface UrgentCreateDraft {
+  formValue: any;
+  currentStep: Step;
+  showForceCreatePopup: boolean;
+  showDuplicateInfoDialog: boolean;
+  currentDuplicateDecision: DuplicateDecision;
+  isBlockedDuplicate: boolean;
+  matchedCases: MatchedCaseResponse[];
+  existingCaseType: CaseType | null;
+  selectedLat: number | null;
+  selectedLng: number | null;
+  selectedAddress: string;
+}
 
 @Component({
   selector: 'app-urgent-create',
@@ -55,10 +72,11 @@ type Step = 1 | 2 | 3;
   styleUrls: ['./urgent-create.css'],
   templateUrl: './urgent-create.html',
 })
-export class UrgentCreate {
+export class UrgentCreate implements OnInit {
   private fb = inject(FormBuilder);
   private imageService = inject(ImageService);
   private destroyRef = inject(DestroyRef);
+  private cacheService = inject(CacheService);
 
   // Allowed datetime range for urgent cases (last 6 hours)
   readonly minEventDate = computed(() => {
@@ -175,6 +193,28 @@ export class UrgentCreate {
 
   availableCities = signal<string[]>([]);
 
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      // Only cache if we didn't just submit successfully
+      if (this.form.dirty || this.currentStep > 1 || this.matchedCases().length > 0) {
+        const draft: UrgentCreateDraft = {
+          formValue: this.form.getRawValue(),
+          currentStep: this.currentStep,
+          showForceCreatePopup: this.showForceCreatePopup(),
+          showDuplicateInfoDialog: this.showDuplicateInfoDialog(),
+          currentDuplicateDecision: this.currentDuplicateDecision(),
+          isBlockedDuplicate: this.isBlockedDuplicate(),
+          matchedCases: this.matchedCases(),
+          existingCaseType: this.existingCaseType(),
+          selectedLat: this.selectedLat(),
+          selectedLng: this.selectedLng(),
+          selectedAddress: this.selectedAddress()
+        };
+        this.cacheService.set(DRAFT_CACHE_KEY, draft, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+      }
+    });
+  }
+
   ngOnInit(): void {
     this.form.get('government')?.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -186,6 +226,30 @@ export class UrgentCreate {
           this.form.get('city')?.setValue('');
         }
       });
+
+    const draft = this.cacheService.get<UrgentCreateDraft>(DRAFT_CACHE_KEY);
+    if (draft) {
+      this.form.patchValue(draft.formValue);
+      this.currentStep = draft.currentStep;
+      this.showForceCreatePopup.set(draft.showForceCreatePopup);
+      this.showDuplicateInfoDialog.set(draft.showDuplicateInfoDialog);
+      this.currentDuplicateDecision.set(draft.currentDuplicateDecision);
+      this.isBlockedDuplicate.set(draft.isBlockedDuplicate);
+      this.matchedCases.set(draft.matchedCases);
+      this.existingCaseType.set(draft.existingCaseType);
+      
+      this.selectedLat.set(draft.selectedLat);
+      this.selectedLng.set(draft.selectedLng);
+      this.selectedAddress.set(draft.selectedAddress);
+      
+      if (draft.selectedLat !== null && draft.selectedLng !== null) {
+          this.externalLocation.set({ lat: draft.selectedLat, lng: draft.selectedLng });
+      }
+
+      if (draft.showForceCreatePopup || draft.showDuplicateInfoDialog) {
+        this.snackbar.info('تم استعادة بيانات النموذج. يرجى إعادة إرفاق الصور للمتابعة.');
+      }
+    }
   }
 
   openMapModal(): void {
@@ -353,13 +417,20 @@ export class UrgentCreate {
     if (this.isSubmitting()) return;
     const primary = this.primaryFile();
 
+    if (forceCreate && !this.pendingRequest && !primary) {
+      this.errorMsg.set('يرجى إعادة إرفاق الصورة الأساسية قبل المتابعة.');
+      this.showForceCreatePopup.set(false);
+      this.showDuplicateInfoDialog.set(false);
+      return;
+    }
+
     if (
       !forceCreate &&
       (this.form.invalid || !primary || this.selectedLat() === null)
     ) {
       this.form.markAllAsTouched();
       if (!primary) {
-        this.errorMsg.set('برجاء إضافة وتأطير الصورة الأساسية للشخص.');
+        this.errorMsg.set('برجاء إضافة الصورة الأساسية للشخص وتحديد الوجه.');
       } else if (this.selectedLat() === null) {
         this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
       }
@@ -425,6 +496,7 @@ export class UrgentCreate {
             return;
           }
 
+          this.cacheService.remove(DRAFT_CACHE_KEY);
           this.showForceCreatePopup.set(false);
           this.showDuplicateInfoDialog.set(false);
           this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');

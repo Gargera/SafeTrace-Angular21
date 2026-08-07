@@ -8,7 +8,7 @@
       <div class="absolute w-96 h-96 bg-tertiary blur-3xl rounded-full bottom-[-10%] left-[-10%] animate-pulse" style="animation-delay: 2s;"></div>
     </div>
 
-    <div class="max-w-[896px] mx-auto relative z-10 flex flex-col items-center text-center gap-8">
+    <div class="max-w-4xl mx-auto relative z-10 flex flex-col items-center text-center gap-8">
       <div class="inline-flex items-center gap-2 bg-white/10 px-5 py-2 rounded-full backdrop-blur-md border border-white/20 shadow-sm cursor-default">
         <span class="material-symbols-outlined text-[20px] text-secondary">psychology</span>
         <span class="text-[14px] font-bold tracking-wider">تقنيات ذكية لخدمة الإنسانية</span>
@@ -21,7 +21,7 @@
         </span>
       </h1>
       
-      <p class="text-[18px] md:text-[20px] text-inverse-on-surface opacity-95 max-w-[896px] mx-auto leading-relaxed font-medium mt-4">
+      <p class="text-[18px] md:text-[20px] text-inverse-on-surface opacity-95 max-w-4xl mx-auto leading-relaxed font-medium mt-4">
         المكان الذي تتلاقى فيه التكنولوجيا المتقدمة مع قلوب تبحث عن أحبائها. نحن هنا لنسرع عملية البحث، ونتعرف على مجهولي الهوية، ونعيد الابتسامة للعائلات في أسرع وقت.
       </p>
     </div>
@@ -64,7 +64,7 @@
         <span class="text-[14px] font-bold text-secondary tracking-wider">كيف نساعدك؟</span>
       </div>
       <h2 class="text-[40px] md:text-[48px] font-extrabold text-on-surface mb-6">حلول صُممت من أجل طمأنينتك</h2>
-      <p class="text-[20px] text-on-surface-variant max-w-[896px] mx-auto">
+      <p class="text-[20px] text-on-surface-variant max-w-4xl mx-auto">
         نظامنا مبني ليكون سهل الاستخدام ويوفر لك أقصى درجات الأمان والسرعة في الوصول للمعلومات.
       </p>
     </div>
@@ -194,16 +194,18 @@
 
       <div class="flex-1 relative z-10 text-center lg:text-right">
         <h2 class="text-[40px] md:text-[48px] font-extrabold text-white mb-6">كن جزءاً من الحل وأنقذ حياة</h2>
-        <p class="text-[20px] text-white/90 max-w-[896px] mx-auto lg:mx-0 leading-relaxed">
+        <p class="text-[20px] text-white/90 max-w-4xl mx-auto lg:mx-0 leading-relaxed">
           كل ثانية تمر قد تكون فارقة في حياة إنسان، ومشاركتك معنا سواء بالإبلاغ أو المساعدة تعيد الأمل لعائلة بأكملها. انضم إلى عائلة لقاء الآن.
         </p>
       </div>
       
       <div class="flex flex-col sm:flex-row gap-5 relative z-10 w-full lg:w-auto shrink-0">
-        <app-button routerLink="/auth/register" variant="secondary" extraClass="px-8 py-4 h-auto text-lg justify-center shadow-lg whitespace-nowrap gap-3 bg-white text-primary font-bold hover:bg-surface-container-lowest hover:scale-105 transition-all">
-          <span class="material-symbols-outlined">person_add</span>
-          إنشاء حساب جديد
-        </app-button>
+        @if (!authService.isLoggedIn()) {
+          <app-button routerLink="/auth/register" variant="secondary" extraClass="px-8 py-4 h-auto text-lg justify-center shadow-lg whitespace-nowrap gap-3 bg-white text-primary font-bold hover:bg-surface-container-lowest hover:scale-105 transition-all">
+            <span class="material-symbols-outlined">person_add</span>
+            إنشاء حساب جديد
+          </app-button>
+        }
         <app-button routerLink="/urgent" variant="primary" extraClass="px-8 py-4 h-auto text-lg justify-center shadow-lg whitespace-nowrap gap-3 bg-secondary text-white font-bold hover:bg-secondary/90 hover:scale-105 transition-all">
           <span class="material-symbols-outlined">emergency</span>
           الحالات الطارئة

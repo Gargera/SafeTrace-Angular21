@@ -170,6 +170,13 @@
                     هذا هو حسابك الشخصي النشط حالياً.
                   </span>
                 </div>
+              } @else {
+                <div class="mt-6 pt-6 border-t border-outline-variant/50 text-center">
+                  <span class="text-label-sm text-error font-medium flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-[18px]">shield_lock</span>
+                    نظام محمي: لا يمكنك التعديل على هذا الحساب نظراً لصلاحياته الإدارية.
+                  </span>
+                </div>
               }
 
             </div>
@@ -179,8 +186,9 @@
       </div>
     </div>
 
-      <ng-container *hasPermission="Permissions.Users.GetPermissions">
-        <section class="mt-xl space-y-md">
+      @if (isCurrentUser() || canManageUser()) {
+        <ng-container *hasPermission="Permissions.Users.GetPermissions">
+          <section class="mt-xl space-y-md">
       <div class="flex justify-between items-end flex-wrap gap-4">
         <div class="flex flex-col gap-2">
           <h2 class="text-headline-sm font-bold text-primary flex items-center gap-sm">
@@ -308,8 +316,9 @@
           </div>
         </ng-container>
       }
-        </section>
-      </ng-container>
+          </section>
+        </ng-container>
+      }
 
   } @else {
     <div class="rounded-2xl border border-outline-variant bg-white p-12 text-center shadow-sm flex flex-col items-center">
@@ -321,13 +330,16 @@
 </main>
 
 @if (selectedZoomImage()) {
-  <div class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" (click)="selectedZoomImage.set(null)">
-    <div class="relative max-w-4xl max-h-[90vh] w-full rounded-2xl overflow-hidden shadow-2xl animate-scale-in" (click)="$event.stopPropagation()">
-      <img [src]="selectedZoomImage()" alt="صورة مكبرة" class="w-full h-full object-contain bg-surface-container-low" />
-      <button (click)="selectedZoomImage.set(null)" class="absolute top-4 right-4 bg-black/50 hover:bg-error text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors backdrop-blur-md">
-        <span class="material-symbols-outlined">close</span>
-      </button>
+  <div class="fixed inset-0 bg-black/80 z-100 flex items-center justify-center p-0 sm:p-6 backdrop-blur-sm animate-fade-in" (click)="selectedZoomImage.set(null)">
+    
+    <button (click)="selectedZoomImage.set(null)" class="absolute top-4 right-4 sm:top-6 sm:right-6 z-110 bg-white/10 hover:bg-error text-white w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all backdrop-blur-md border border-white/20 shadow-lg">
+      <span class="material-symbols-outlined text-[20px] sm:text-[24px]">close</span>
+    </button>
+
+    <div class="max-w-[100vw] max-h-screen sm:max-w-[95vw] sm:max-h-[95vh] w-full sm:w-auto h-full sm:h-auto overflow-auto sm:rounded-2xl shadow-2xl animate-scale-in flex sm:block items-center justify-center bg-surface-container-low sm:bg-transparent" (click)="$event.stopPropagation()">
+      <img [src]="selectedZoomImage()" alt="صورة مكبرة" class="block max-w-none m-auto" />
     </div>
+
   </div>
 }
 

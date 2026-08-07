@@ -30,7 +30,7 @@ export function getControlFieldError(control: AbstractControl | null): string | 
   if (e['numeric']) return 'أدخل قيمة رقمية صحيحة';
   if (e['integer']) return 'يجب أن يكون نطاق البحث عدداً صحيحاً';
   if (e['fullNameOrCaseCode']) return 'أدخل اسماً عربياً صحيحاً أو كود حالة صحيح.';
-  if (e['dateRangeInvalid'] || e['dateRangeValid']) return 'تاريخ البداية (من تاريخ) لا يمكن أن يكون بعد تاريخ النهاية (إلى تاريخ)';
+  if (e['dateRangeInvalid'] || e['dateRangeValid']) return 'تاريخ البداية لا يمكن أن يكون بعد تاريخ النهاية';
   if (e['allowedFileTypes']) return 'يسمح فقط بصور JPG و JPEG و PNG و WebP.';
   if (e['maxFileSize']) return `حجم الصورة يتجاوز الحد المسموح (${e['maxFileSize']?.maxMb ?? 5} MB)`;
   if (e['rejectionReason']) return 'يجب ألا يقل سبب الرفض عن 10 حروف وألا يتجاوز 500 حرف';

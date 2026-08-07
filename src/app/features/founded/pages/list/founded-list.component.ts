@@ -20,6 +20,10 @@ import { FoundPersonListItemDto } from '../../models/responses/found-person-list
 import { FoundedFilterState } from '../../../../shared/helper/cases-filter-state';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+
+const UI_STATE_CACHE_KEY = 'FoundedList_UI_State';
 
 @Component({
   selector: 'app-founded-list',
@@ -39,6 +43,7 @@ import { extractErrorMessage } from '../../../../shared/helper/case-error.helper
 export class FoundedListComponent implements OnInit {
   private readonly foundedService = inject(FoundedService);
   private readonly router = inject(Router);
+  private readonly cacheService = inject(CacheService);
   private readonly snackbar = inject(SnackbarService);
   private readonly destroyRef = inject(DestroyRef);
   public readonly environment = environment;
@@ -54,10 +59,27 @@ export class FoundedListComponent implements OnInit {
   pageSize = this.filterState.pageSize;
   isLoading = this.filterState.loading;
   hasError = this.filterState.hasError;
+  readonly filter = this.filterState.filter;
 
   totalPages = computed(() => Math.ceil(this.totalCount() / this.pageSize()));
 
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set(
+        UI_STATE_CACHE_KEY,
+        { filter: this.filterState.filter() },
+        CACHE_TTL.UI_STATE,
+        [CACHE_TAGS.UI_STATE]
+      );
+    });
+  }
+
   ngOnInit(): void {
+    const cachedState = this.cacheService.get<{ filter: CasesFilterRequest }>(UI_STATE_CACHE_KEY);
+    if (cachedState) {
+      this.filterState.restoreState(cachedState.filter);
+    }
+    
     this.setupLoadPipeline();
     this.load();
   }
@@ -93,7 +115,7 @@ export class FoundedListComponent implements OnInit {
     return {
       id: person.id,
       caseCode: '',
-      caseType: CaseType.Unknown,
+      caseType: person.caseType,
       status: CaseStatus.Found,
       fName: person.fullName,
       sName: null,

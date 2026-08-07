@@ -8,7 +8,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ConfirmationModalComponent } from '../../confirmation-modal/confirmation-modal';
-import { rejectionReasonValidator } from '../../../validators/rejection-reason.validator';
+
 
 import { getFormFieldError, isFieldInvalid } from '../../../helper/form-validation.helper';
 
@@ -28,8 +28,10 @@ export class RejectCasePopupComponent {
 
   private readonly fb = inject(FormBuilder);
 
+  readonly DEFAULT_REASON = 'لم تستوفِ الحالة متطلبات المراجعة. يرجى مراجعة البيانات وإعادة إرسال الطلب.';
+
   readonly form = this.fb.nonNullable.group({
-    rejectionReason: ['', [rejectionReasonValidator()]],
+    rejectionReason: [this.DEFAULT_REASON],
   });
 
   get reasonControl() {
@@ -50,7 +52,10 @@ export class RejectCasePopupComponent {
       return;
     }
 
-    const trimmedReason = this.reasonControl.value.trim();
+    let trimmedReason = this.reasonControl.value.trim();
+    if (!trimmedReason) {
+      trimmedReason = this.DEFAULT_REASON;
+    }
     this.confirm.emit(trimmedReason);
   }
 

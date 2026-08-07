@@ -27,6 +27,7 @@ import { MapLocationPickerComponent } from '../../../../shared/components/map-lo
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
 
 @Component({
   selector: 'urgent-details',
@@ -43,6 +44,7 @@ import { extractErrorMessage } from '../../../../shared/helper/case-error.helper
     MapLocationPickerComponent,
     HasPermissionDirective,
     ButtonComponent,
+    ViewProfilePopup,
   ],
   templateUrl: './urgent-details.html',
   styleUrls: ['./urgent-details.css'],
@@ -60,6 +62,15 @@ export class UrgentDetails implements OnInit {
   readonly CaseStatus = CaseStatus;
   readonly Permissions = Permissions;
 
+  readonly selectedUserId = signal<string | null>(null);
+
+  openPublisherProfile(): void {
+    const id = this.caseDetails()?.user?.id || (this.caseDetails() as any)?.userId;
+    if (id) {
+      this.selectedUserId.set(id);
+    }
+  }
+
   // Signals
   showDeleteConfirmation = signal(false);
   deleting = signal(false);
@@ -72,9 +83,19 @@ export class UrgentDetails implements OnInit {
   loading = signal(true);
 
   readonly isOwner = computed(() => {
+    if (!this.authService.isLoggedIn()) return false;
+    const currentUserId = this.authService.getCurrentUserId();
     const currentUserEmail = this.authService.currentUser()?.email?.toLowerCase();
+    const caseOwnerId = this.caseDetails()?.user?.id || (this.caseDetails() as any)?.userId;
     const caseOwnerEmail = this.caseDetails()?.user?.email?.toLowerCase();
-    return !!currentUserEmail && currentUserEmail === caseOwnerEmail;
+
+    if (caseOwnerId && currentUserId) {
+      return caseOwnerId === currentUserId;
+    }
+    if (currentUserEmail && caseOwnerEmail) {
+      return currentUserEmail === caseOwnerEmail;
+    }
+    return false;
   });
 
   selectedMedia = signal<CasePhotoResponse | null>(null);
@@ -315,6 +336,10 @@ export class UrgentDetails implements OnInit {
   }
 
   startChat(id: number): void {
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
     this.router.navigate(['/chat/start', id]);
   }
   getAgeCategoryEnum(): AgeCategories {

@@ -515,7 +515,7 @@ export class NotificationService implements OnDestroy {
     return { icon: 'info', bgClass: 'bg-blue-500', title: 'إشعار جديد' };
   }
 
-  formatDate(dateStr: string): string {
+  formatDate(dateStr: Date): string {
     const date = new Date(dateStr); // اعتبره UTC
 
     const diff = Date.now() - date.getTime();

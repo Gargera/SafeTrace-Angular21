@@ -4,7 +4,8 @@ import { getVerificationStatusTranslationAr } from '../../core/constants/diction
 import { BadgeRenderService } from '../services/badge-render.service';
 
 @Directive({
-  selector: '[appVerificationBadgeDirective]'
+  selector: '[appVerificationBadgeDirective]',
+  standalone: true
 })
 export class VerificationBadgeDirective {
   status = input.required<VerificationStatus>({ alias: 'appVerificationBadgeDirective' });
@@ -12,11 +13,12 @@ export class VerificationBadgeDirective {
   private readonly baseClasses = [
     'inline-flex',
     'items-center',
-    'gap-xs',
-    'px-sm',
+    'justify-center',
+    'gap-1.5',
+    'px-3',
     'py-1',
     'rounded-lg',
-    'text-[10px]',
+    'text-sm',
     'font-bold',
     'whitespace-nowrap'
   ];
@@ -39,7 +41,7 @@ export class VerificationBadgeDirective {
         getContent: (value: VerificationStatus) => {
           const translation = getVerificationStatusTranslationAr(value) || 'غير موثق';
           const icon = this.getIcon(value);
-          return `<span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1">${icon}</span> ${translation}`;
+          return `<span class="material-symbols-outlined text-[16px] leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
         },
         useTextOnly: false
       };
@@ -57,4 +59,4 @@ export class VerificationBadgeDirective {
         return 'error';
     }
   }
-}
+}
