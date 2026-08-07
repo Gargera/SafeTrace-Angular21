@@ -339,6 +339,8 @@
     >
       <a
         routerLink="/home"
+        routerLinkActive="bg-secondary/10 text-secondary font-semibold"
+        [routerLinkActiveOptions]="{ exact: true }"
         (click)="isMobileMenuOpen.set(false)"
         class="px-margin-mobile py-4 border-b border-outline-variant text-on-surface hover:bg-surface-container-low font-medium"
         >الرئيسية</a
@@ -348,18 +350,21 @@
         <div class="flex flex-col gap-3 ps-4 border-r-2 border-outline-variant">
           <a
             routerLink="/urgent"
+            routerLinkActive="text-secondary font-semibold"
             (click)="isMobileMenuOpen.set(false)"
             class="text-on-surface hover:text-primary pr-2"
             >حالات طارئة</a
           >
           <a
             routerLink="/long-term"
+            routerLinkActive="text-secondary font-semibold"
             (click)="isMobileMenuOpen.set(false)"
             class="text-on-surface hover:text-primary pr-2"
             >حالات طويلة المدى</a
           >
           <a
             routerLink="/unknown"
+            routerLinkActive="text-secondary font-semibold"
             (click)="isMobileMenuOpen.set(false)"
             class="text-on-surface hover:text-primary pr-2"
             >حالات غير معروفة</a
@@ -368,26 +373,31 @@
       </div>
       <a
         routerLink="/founded"
+        routerLinkActive="bg-secondary/10 text-secondary font-semibold"
         (click)="isMobileMenuOpen.set(false)"
         class="px-margin-mobile py-4 border-b border-outline-variant text-on-surface hover:bg-surface-container-low font-medium"
         >الحالات المعثور عليها</a
       >
       <a
         routerLink="/aisearch"
+        routerLinkActive="bg-secondary/10 text-secondary font-semibold"
         (click)="isMobileMenuOpen.set(false)"
         class="px-margin-mobile py-4 border-b border-outline-variant text-on-surface hover:bg-surface-container-low font-medium"
         >البحث الذكي بالصورة</a
       >
       <a
         routerLink="/about"
+        routerLinkActive="bg-secondary/10 text-secondary font-semibold"
         (click)="isMobileMenuOpen.set(false)"
         class="px-margin-mobile py-4 text-on-surface hover:bg-surface-container-low font-medium"
         >دليل المنصة</a
       >
       <a
         routerLink="/donation"
-        routerLinkActive="text-secondary border-b-2 border-secondary font-medium"
-        class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200"
+        routerLinkActive="bg-secondary/10 text-secondary font-semibold"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="isMobileMenuOpen.set(false)"
+        class="px-margin-mobile py-4 text-on-surface hover:bg-surface-container-low font-medium transition-colors duration-200"
         >التبرع</a
       >
     </div>
