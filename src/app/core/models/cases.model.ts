@@ -130,6 +130,7 @@ export interface CaseListItemResponse {
   government: string;
   createdAt: string; // DateTime
   mainPhoto: string;
+  userId?: string;
 }
 
 // ============ REQUEST MODELS ============

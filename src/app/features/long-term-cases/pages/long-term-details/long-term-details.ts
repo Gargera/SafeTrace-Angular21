@@ -83,9 +83,19 @@ export class LongTermDetails implements OnInit {
   loading = signal(true);
 
   readonly isOwner = computed(() => {
+    if (!this.authService.isLoggedIn()) return false;
     const currentUserEmail = this.authService.currentUser()?.email?.toLowerCase();
     const caseOwnerEmail = this.caseDetails()?.user?.email?.toLowerCase();
-    return !!currentUserEmail && currentUserEmail === caseOwnerEmail;
+    const currentUserId = this.authService.getCurrentUserId();
+    const caseUserId = (this.caseDetails() as any)?.userId;
+
+    if (caseUserId && currentUserId) {
+      return caseUserId === currentUserId;
+    }
+    if (currentUserEmail && caseOwnerEmail) {
+      return currentUserEmail === caseOwnerEmail;
+    }
+    return false;
   });
 
   selectedMedia = signal<CasePhotoResponse | null>(null);
@@ -429,6 +439,10 @@ export class LongTermDetails implements OnInit {
   }
 
   startChat(id: number): void {
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
     this.router.navigate(['/chat/start', id]);
   }
 }
