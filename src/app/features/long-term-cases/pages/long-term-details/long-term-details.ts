@@ -71,7 +71,7 @@ export class LongTermDetails implements OnInit {
   readonly selectedUserId = signal<string | null>(null);
 
   openPublisherProfile(): void {
-    const id = (this.caseDetails()?.user as any)?.id || (this.caseDetails() as any)?.userId;
+    const id = this.caseDetails()?.user?.id || (this.caseDetails() as any)?.userId;
     if (id) {
       this.selectedUserId.set(id);
     }
@@ -95,13 +95,12 @@ export class LongTermDetails implements OnInit {
 
   readonly isOwner = computed(() => {
     if (!this.authService.isLoggedIn()) return false;
-    const currentUserEmail = this.authService.currentUser()?.email?.toLowerCase();
-    const caseOwnerEmail = this.caseDetails()?.user?.email?.toLowerCase();
     const currentUserId = this.authService.getCurrentUserId();
-    const caseUserId = (this.caseDetails() as any)?.userId;
-
-    if (caseUserId && currentUserId) {
-      return caseUserId === currentUserId;
+    const currentUserEmail = this.authService.currentUser()?.email?.toLowerCase();
+    const caseOwnerId = this.caseDetails()?.user?.id || (this.caseDetails() as any)?.userId;
+    const caseOwnerEmail = this.caseDetails()?.user?.email?.toLowerCase();
+    if (caseOwnerId && currentUserId) {
+      return caseOwnerId === currentUserId;
     }
     if (currentUserEmail && caseOwnerEmail) {
       return currentUserEmail === caseOwnerEmail;
