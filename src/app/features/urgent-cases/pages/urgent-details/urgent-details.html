@@ -187,11 +187,11 @@
           <div (click)="openPublisherProfile()"
             class="flex items-center gap-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-low p-3.5 cursor-pointer transition-all hover:border-primary hover:bg-primary/5 group/pub">
             @if (caseDetails()?.user?.profileImage) {
-            <img [src]="getImageUrl(caseDetails()?.user?.profileImage!)"
+            <img [src]="getImageUrl(caseDetails()!.user!.profileImage!)"
               class="h-11 w-11 rounded-full object-cover border border-outline-variant group-hover/pub:border-primary" alt="صورة الناشر" />
             } @else {
             <div class="flex h-11 w-11 items-center justify-center rounded-full bg-primary/15 text-primary font-bold text-sm border border-primary/20 group-hover/pub:bg-primary group-hover/pub:text-on-primary">
-              {{ ((caseDetails()?.user?.fName?.[0] ?? '') + (caseDetails()?.user?.lName?.[0] ?? '')).toUpperCase() }}
+              {{ ((caseDetails()?.user?.fName || '').charAt(0) + (caseDetails()?.user?.lName || '').charAt(0)).toUpperCase() }}
             </div>
             }
             <div class="flex flex-col min-w-0 flex-1">

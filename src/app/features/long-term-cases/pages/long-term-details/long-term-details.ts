@@ -34,7 +34,6 @@ import { RejectCasePopupComponent } from '../../../../shared/components/cases-co
 import { RejectionReasonCardComponent } from '../../../../shared/components/cases-components/rejection-reason-card/rejection-reason-card';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
-import { CaseDetailsSkeletonComponent } from '../../../../shared/components/skeletons/case-details-skeleton/case-details-skeleton.component';
 
 @Component({
   selector: 'app-long-term-details',
@@ -53,7 +52,6 @@ import { CaseDetailsSkeletonComponent } from '../../../../shared/components/skel
     RejectCasePopupComponent,
     RejectionReasonCardComponent,
     ViewProfilePopup,
-    CaseDetailsSkeletonComponent,
   ],
   templateUrl: './long-term-details.html',
   styleUrls: ['./long-term-details.css'],
