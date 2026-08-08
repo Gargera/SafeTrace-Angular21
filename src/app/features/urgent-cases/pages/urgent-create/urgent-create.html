@@ -364,24 +364,59 @@
           </div>
 
           <!-- Video -->
-          <div>
-            <label class="mb-2 block text-sm font-medium text-on-surface-variant">
-              فيديو <span class="font-normal text-on-surface-variant/70">(اختياري)</span>
-            </label>
-            <div
-              class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
-              [class.border-secondary]="!!videoFile()"
-              [class.bg-surface-container-low]="!!videoFile()"
-              (click)="videoInput.click()"
-            >
-              <input #videoInput type="file" accept="video/*" class="hidden" (change)="onVideoSelected($event)" />
-              <div class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
-                <span class="material-symbols-outlined text-3xl"
-                  [ngClass]="videoFile() ? 'text-secondary' : 'text-outline'">videocam</span>
+              <div>
+                <label class="mb-2 block text-sm font-medium text-on-surface-variant">
+                  فيديو
+                  <span class="font-normal text-on-surface-variant/70">
+                    (اختياري — MP4 / MOV / WebM، حتى 50 MB)
+                  </span>
+                </label>
+
+                <div
+                  class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60
+                        bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200
+                        hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low
+                        hover:shadow-xs"
+                  [class.border-secondary]="!!videoFile()"
+                  [class.bg-surface-container-low]="!!videoFile()"
+                  (click)="videoInput.click()">
+
+                  <input
+                    #videoInput
+                    type="file"
+                    accept=".mp4,.mov,.webm,video/mp4,video/quicktime,video/webm"
+                    class="hidden"
+                    (change)="onVideoSelected($event)"
+                  />
+
+                  <div
+                    class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl
+                          bg-secondary/10 text-secondary transition-transform duration-200
+                          group-hover:scale-110">
+
+                    <span
+                      class="material-symbols-outlined text-3xl"
+                      [ngClass]="videoFile() ? 'text-secondary' : 'text-outline'">
+                      videocam
+                    </span>
+
+                  </div>
+
+                  <p class="text-sm font-bold text-on-surface">
+                    {{ videoFile()?.name ?? 'رفع فيديو' }}
+                  </p>
+
+                  <p class="mt-0.5 text-xs text-on-surface-variant/70">
+                    MP4 / MOV / WebM — حتى 50 MB
+                  </p>
+                </div>
+
+                @if (videoError()) {
+                  <p class="mt-1.5 flex items-center gap-1 text-xs text-error">
+                    {{ videoError() }}
+                  </p>
+                }
               </div>
-              <p class="text-sm font-bold text-on-surface">{{ videoFile()?.name ?? 'رفع فيديو' }}</p>
-            </div>
-          </div>
         </div>
         }
 
@@ -391,6 +426,11 @@
           <span class="material-symbols-outlined text-lg">error</span>
           {{ errorMsg() }}
         </div>
+        }
+        @if (videoError()) {
+          <p class="mt-1.5 flex items-center gap-1 text-xs text-error">
+            {{ videoError() }}
+          </p>
         }
       </form>
     </div>
