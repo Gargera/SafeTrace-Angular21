@@ -32,6 +32,17 @@ import { RejectionReasonCardComponent } from '../../../../shared/components/case
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
 
+/**
+ * The backend DTO includes a `video` field (a plain path string) that is
+ * separate from `photos`. The generated `UnknownCaseDetailResponse` model
+ * may or may not declare it explicitly, so we widen the type locally
+ * instead of touching the shared model file.
+ */
+type UnknownCaseDetailWithVideo = UnknownCaseDetailResponse & { video?: string | null };
+
+/** Sentinel id used for the synthetic video media item, since the backend doesn't provide one. */
+const VIDEO_MEDIA_ID = -1;
+
 @Component({
   selector: 'app-unknown-details',
   standalone: true,
@@ -88,7 +99,7 @@ export class UnknownDetails implements OnInit {
   rejectApiError = signal<string | null>(null);
   showPermanentDeleteConfirmation = signal(false);
 
-  caseDetails = signal<UnknownCaseDetailResponse | null>(null);
+  caseDetails = signal<UnknownCaseDetailWithVideo | null>(null);
   loading = signal(true);
 
   readonly isOwner = computed(() => {
@@ -105,6 +116,35 @@ export class UnknownDetails implements OnInit {
       return currentUserEmail === caseOwnerEmail;
     }
     return false;
+  });
+
+  /**
+   * Unified media collection combining `photos` (images) with the single
+   * `video` path returned separately by the backend. The video is wrapped
+   * into a `CasePhotoResponse`-shaped object so the rest of the component
+   * (and the existing HTML) can treat all media uniformly.
+   * Order: all photos first, then the video appended at the end
+   * (Image → Image → Video ...).
+   */
+  readonly mediaList = computed<CasePhotoResponse[]>(() => {
+    const details = this.caseDetails();
+    if (!details) return [];
+
+    const photos: CasePhotoResponse[] = details.photos ?? [];
+    const media: CasePhotoResponse[] = [...photos];
+
+    if (details.video) {
+      const videoMedia: CasePhotoResponse = {
+        id: VIDEO_MEDIA_ID,
+        imagePath: details.video,
+        isPrimary: false,
+        type: FileType.Video,
+      } as CasePhotoResponse;
+
+      media.push(videoMedia);
+    }
+
+    return media;
   });
 
   selectedMedia = signal<CasePhotoResponse | null>(null);
@@ -179,13 +219,13 @@ export class UnknownDetails implements OnInit {
               this.showPermanentDeleteConfirmation.set(cachedModals.showPermanentDelete || false);
             }
 
-            if (apiRes.data.photos?.length) {
-              const primary =
-                apiRes.data.photos.find((x) => x.isPrimary) ?? apiRes.data.photos[0];
+            const media = this.mediaList();
+            if (media.length) {
+              const primary = media.find((x) => x.isPrimary) ?? media[0];
 
               this.selectedMedia.set(primary);
               this.currentIndex.set(
-                apiRes.data.photos.findIndex((x) => x.id === primary.id),
+                media.findIndex((x) => x.id === primary.id && x.type === primary.type),
               );
             }
           }
@@ -208,14 +248,15 @@ export class UnknownDetails implements OnInit {
 
   changeMedia(media: CasePhotoResponse): void {
     this.selectedMedia.set(media);
-    const index =
-      this.caseDetails()?.photos.findIndex((x) => x.id === media.id) ?? 0;
-    this.currentIndex.set(index);
+    const index = this.mediaList().findIndex(
+      (x) => x.id === media.id && x.type === media.type,
+    );
+    this.currentIndex.set(index >= 0 ? index : 0);
   }
 
   openLightbox(index: number): void {
     this.currentIndex.set(index);
-    const media = this.caseDetails()?.photos[index];
+    const media = this.mediaList()[index];
 
     if (media) {
       this.selectedMedia.set(media);
@@ -228,29 +269,29 @@ export class UnknownDetails implements OnInit {
   }
 
   previousMedia(): void {
-    const photos = this.caseDetails()?.photos;
-    if (!photos?.length) return;
+    const media = this.mediaList();
+    if (!media.length) return;
 
     let index = this.currentIndex() - 1;
     if (index < 0) {
-      index = photos.length - 1;
+      index = media.length - 1;
     }
 
     this.currentIndex.set(index);
-    this.selectedMedia.set(photos[index]);
+    this.selectedMedia.set(media[index]);
   }
 
   nextMedia(): void {
-    const photos = this.caseDetails()?.photos;
-    if (!photos?.length) return;
+    const media = this.mediaList();
+    if (!media.length) return;
 
     let index = this.currentIndex() + 1;
-    if (index >= photos.length) {
+    if (index >= media.length) {
       index = 0;
     }
 
     this.currentIndex.set(index);
-    this.selectedMedia.set(photos[index]);
+    this.selectedMedia.set(media[index]);
   }
 
   openFoundedPopup(): void {
