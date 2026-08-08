@@ -27,7 +27,7 @@ import { ConfirmationModalComponent } from '../../../../shared/components/confir
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 interface PermissionGroup {
   groupName: string;
   groupTitle: string;
@@ -184,6 +184,9 @@ export class UserDetails implements OnInit {
   hasChanges = computed(() => Object.keys(this.dirtyGroups()).length > 0);
 
   ngOnInit() {
+    this.destroyRef.onDestroy(() => {
+      document.body.style.overflow = '';
+    });
     this.loadRoles();
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
@@ -357,6 +360,21 @@ export class UserDetails implements OnInit {
     observable.subscribe({
       next: () => {
         this.loadingAction.set(null);
+        this.showConfirmModal.set(false);
+        this.currentOpenModal.set(null);
+        this.rejectReason.set('');
+        this.blockReason.set('');
+
+        const id = this.userId();
+        if (id) {
+          this.cacheService.set(`UserDetails_State_${id}`, {
+            openModal: null,
+            rejectReason: '',
+            blockReason: '',
+            selectedRole: this.selectedRole()
+          }, 300000);
+        }
+
         this.snackbar.success(successMessage);
         this.loadUserData();
       },

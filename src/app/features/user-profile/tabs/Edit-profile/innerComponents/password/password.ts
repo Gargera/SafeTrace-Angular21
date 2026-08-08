@@ -13,7 +13,7 @@ import { mustMatch } from '../../../../../../shared/validators/must-match.valida
 import { ChangePasswordDTO } from '../../../../model/profile.model';
 import { ButtonComponent } from '../../../../../../shared/components/button/button';
 import { FormField } from '../../../../../../shared/components/form-field/form-field';
-import { extractErrorMessage } from '../../../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../../../shared/helper/error.helper';
 
 // ── Custom validator: new password must differ from current ────────────────
 function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {

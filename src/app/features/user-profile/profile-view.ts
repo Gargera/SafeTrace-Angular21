@@ -1,4 +1,5 @@
-import { Component, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, effect, inject, OnDestroy, OnInit, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProfileSidebar } from './shared/profile-sidebar/profile-sidebar';
 
@@ -45,14 +46,18 @@ export class ProfileView implements OnInit, OnDestroy {
     { id: 'donations', label: 'تبرعاتي' }, // ADDED ' },
   ];
   
+  readonly #destroyRef = inject(DestroyRef);
+
   ngOnInit(): void {
     // Read tab from query param
-    this.#route.queryParamMap.subscribe((params) => {
-      const tab = params.get('tab') as ProfileTab | null;
-      if (tab && this.tabs.some((t) => t.id === tab)) {
-        this.activeTab.set(tab);
-      }
-    });
+    this.#route.queryParamMap
+      .pipe(takeUntilDestroyed(this.#destroyRef))
+      .subscribe((params) => {
+        const tab = params.get('tab') as ProfileTab | null;
+        if (tab && this.tabs.some((t) => t.id === tab)) {
+          this.activeTab.set(tab);
+        }
+      });
 
     this.#loadUserInfo();
     this.notificationService.startConnection();

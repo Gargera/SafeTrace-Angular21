@@ -27,7 +27,7 @@ import { UrgentCaseDetailResponse } from '../../models/response/UrgentCaseDetail
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { Permissions } from '../../../../core/constants/Permissions';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
 
 @Component({

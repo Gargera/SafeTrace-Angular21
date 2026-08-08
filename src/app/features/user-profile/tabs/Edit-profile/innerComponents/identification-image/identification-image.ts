@@ -5,7 +5,7 @@ import { VerificationStatus } from '../../../../../../shared/enums/verification-
 import { GetUserInfoDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
 import { ButtonComponent } from '../../../../../../shared/components/button/button';
-import { extractErrorMessage } from '../../../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../../../shared/helper/error.helper';
 
 @Component({
   selector: 'app-identification-image',

@@ -8,7 +8,7 @@ import { CardComponent } from '../../../../shared/components/card/card';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { SnackbarService } from '../../../../shared/services/toast.service';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 const MIN_DONATION_AMOUNT = 10;
 const MAX_DONATION_AMOUNT = 100_000;

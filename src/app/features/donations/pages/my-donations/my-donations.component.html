@@ -102,7 +102,7 @@
 
 <!-- Message Modal -->
 @if (selectedMessage(); as msg) {
-  <div
+  <div role="dialog" aria-modal="true" aria-label="نافذة منبثقة"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
     (click)="closeMessage()"
   >

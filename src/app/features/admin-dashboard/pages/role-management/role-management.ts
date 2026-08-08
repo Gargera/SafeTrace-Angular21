@@ -25,7 +25,7 @@ import { RoleService } from '../../services/role.service';
 import { RoleDto } from '../../models/Role/responses/RoleDto';
 import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
 import { UserRole } from '../../../../shared/enums/user-role';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 interface PermissionGroup {
   groupName: string;

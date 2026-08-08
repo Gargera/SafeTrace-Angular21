@@ -7,7 +7,7 @@ import { ButtonComponent } from '../../../../../../shared/components/button/butt
 import { CardComponent } from '../../../../../../shared/components/card/card';
 import { SnackbarService } from '../../../../../../shared/services/toast.service';
 import { ConfirmationModalComponent } from '../../../../../../shared/components/confirmation-modal/confirmation-modal';
-import { extractErrorMessage } from '../../../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../../../shared/helper/error.helper';
 
 @Component({
   selector: 'app-profile-image',

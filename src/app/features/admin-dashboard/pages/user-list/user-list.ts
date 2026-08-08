@@ -30,7 +30,8 @@ import { HasPermissionDirective } from '../../../../shared/directives/has-permis
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+
 
 const UI_STATE_CACHE_KEY = 'UserList_UI_State';
 
@@ -81,7 +82,7 @@ export class UserList {
     searchTerm: '',
     verificationStatus: '' as any,
     roleId: '' as any,
-    isBlocked: undefined ,
+    isBlocked: undefined,
   });
 
   readonly hasActiveFilters = computed(() => {
@@ -139,6 +140,9 @@ export class UserList {
           this.roles.set(res.data);
         }
       },
+      error: (err) => {
+        this.toast.error(extractErrorMessage(err, 'تعذر تحميل الأدوار'));
+      }
     });
   }
 
@@ -153,7 +157,10 @@ export class UserList {
         }
         this.isLoading.set(false);
       },
-      error: () => this.isLoading.set(false),
+      error: (err) => {
+        this.isLoading.set(false);
+        this.toast.error(extractErrorMessage(err, 'تعذر تحميل قائمة المستخدمين'));
+      },
     });
   }
 
@@ -207,22 +214,25 @@ export class UserList {
     this.router.navigate(['/admin/users/registerByAdmin']);
   }
 
- downloadReport(): void {
+  downloadReport(): void {
+    const reportFilter = {
+      pageNumber: this.filter().pageNumber,
+      pageSize: this.filter().pageSize,
+      searchTerm: this.filter().searchTerm || undefined,
+      verificationStatus: this.filter().verificationStatus || undefined,
+      roleId: this.filter().roleId || undefined,
+      isBlocked: this.filter().isBlocked ?? null
+    };
 
-  const reportFilter = {
-  pageNumber: this.filter().pageNumber,
-  pageSize: this.filter().pageSize,
-  searchTerm: this.filter().searchTerm || undefined,
-  verificationStatus: this.filter().verificationStatus || undefined,
-  roleId: this.filter().roleId || undefined,
-  isBlocked: this.filter().isBlocked ?? null
-
-};
-  console.log(reportFilter);
-  this.reportService
-    .generateUsersPdfReport(reportFilter)
-    .subscribe(response => {
-      this.reportService.download(response);
-    });
-}
+    this.reportService
+      .generateUsersPdfReport(reportFilter)
+      .subscribe({
+        next: (response) => {
+          this.reportService.download(response);
+        },
+        error: (err) => {
+          this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتنزيل تقرير المستخدمين'));
+        }
+      });
+  }
 }

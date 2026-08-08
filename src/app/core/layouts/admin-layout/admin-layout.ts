@@ -12,6 +12,9 @@ import { Permissions } from '../../constants/Permissions';
 import { getRoleTranslationAr } from '../../constants/dictionaries/roles.dictionary';
 import { HasPermissionDirective } from '../../../shared/directives/has-permission.directive';
 
+import { ScrollRestorationService } from '../../services/scroll-restoration.service';
+import { AfterViewInit } from '@angular/core';
+
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
@@ -20,39 +23,26 @@ import { HasPermissionDirective } from '../../../shared/directives/has-permissio
   styleUrl: './admin-layout.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AdminLayoutComponent implements OnInit {
+export class AdminLayoutComponent implements OnInit, AfterViewInit {
   public authService = inject(AuthService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
+  private scrollRestoration = inject(ScrollRestorationService);
   currentUser = this.authService.currentUser;
   
   isSidebarExpanded = signal<boolean>(true);
   Permissions = Permissions;
 
   @ViewChild('mainContent') mainContentRef?: ElementRef<HTMLElement>;
-  private scrollPositions = new Map<string, number>();
 
-  constructor() {
-    this.router.events
-      .pipe(
-        filter((e: RouterEvent): e is NavigationEnd => e instanceof NavigationEnd),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe((e: NavigationEnd) => {
-        const savedPos = this.scrollPositions.get(e.urlAfterRedirects) ?? 0;
-        setTimeout(() => {
-          if (this.mainContentRef?.nativeElement) {
-            this.mainContentRef.nativeElement.scrollTop = savedPos;
-          }
-        }, 50);
-      });
+  ngAfterViewInit(): void {
+    if (this.mainContentRef) {
+      this.scrollRestoration.registerContainer(this.mainContentRef, this.destroyRef);
+    }
   }
 
   onMainScroll(event: Event): void {
-    const el = event.target as HTMLElement;
-    if (el) {
-      this.scrollPositions.set(this.router.url, el.scrollTop);
-    }
+    // Handled by ScrollRestorationService
   }
 
   isSuperAdmin(): boolean {

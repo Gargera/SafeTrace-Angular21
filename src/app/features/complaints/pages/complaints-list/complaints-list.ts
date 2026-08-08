@@ -25,7 +25,7 @@ import { PaginationComponent } from '../../../../shared/components/pagination/pa
 import { ReportService } from '../../../admin-dashboard/services/report.service';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 const UI_STATE_CACHE_KEY = 'ComplaintsList_UI_State';
 
@@ -33,9 +33,9 @@ const UI_STATE_CACHE_KEY = 'ComplaintsList_UI_State';
   selector: 'app-complaints-list',
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
-    ComplaintStatusBadgeDirective, 
+    CommonModule,
+    FormsModule,
+    ComplaintStatusBadgeDirective,
     TruncatePipe,
     FormField,
     ButtonComponent,
@@ -118,7 +118,7 @@ export class ComplaintsList implements OnInit {
     this.destroyRef.onDestroy(() => {
       this.cacheService.set(
         UI_STATE_CACHE_KEY,
-        { 
+        {
           filter: this.filter(),
           showDetailsModal: this.showDetailsModal(),
           selectedComplaint: this.selectedComplaint(),
@@ -136,7 +136,7 @@ export class ComplaintsList implements OnInit {
     const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY);
     if (cachedState) {
       if (cachedState.filter) this.filter.set(cachedState.filter);
-      
+
       if (cachedState.showDetailsModal && cachedState.selectedComplaint) {
         this.selectedComplaint.set(cachedState.selectedComplaint);
         this.solutionMessage.set(cachedState.solutionMessage || '');
@@ -231,14 +231,14 @@ export class ComplaintsList implements OnInit {
       this.toast.error('يرجى كتابة رسالة الحل');
       return;
     }
-    
+
     this.isResolving.set(true);
     const dto: ResolveComplaintDto = { solutionMessage: msg };
     this.svc.resolve(complaint.id, dto).subscribe({
       next: (res) => {
         if (res.success) {
           this.toast.success('تم حل الشكوى وإشعار المستخدم بنجاح');
-          
+
           const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
           cachedState.showDetailsModal = false;
           cachedState.solutionMessage = '';
@@ -249,7 +249,7 @@ export class ComplaintsList implements OnInit {
           this.loadComplaints();
           this.loadStatistics();
         } else {
-           this.toast.error(res.message || 'حدث خطأ أثناء حل الشكوى');
+          this.toast.error(res.message || 'حدث خطأ أثناء حل الشكوى');
         }
         this.isResolving.set(false);
       },
@@ -270,12 +270,16 @@ export class ComplaintsList implements OnInit {
     this.complaintToDelete.set(null);
   }
 
+  isDeleting = signal<boolean>(false);
+
   confirmDelete() {
     const complaint = this.complaintToDelete();
-    if (!complaint) return;
-    
+    if (!complaint || this.isDeleting()) return;
+
+    this.isDeleting.set(true);
     this.svc.deleteComplaint(complaint.id).subscribe({
       next: (res) => {
+        this.isDeleting.set(false);
         if (res.success) {
           this.toast.success('تم حذف الشكوى بنجاح');
 
@@ -288,30 +292,31 @@ export class ComplaintsList implements OnInit {
           this.loadComplaints();
           this.loadStatistics();
         } else {
-          this.toast.error(res.message || 'حدث خطأ أثناء החذف');
+          this.toast.error(res.message || 'حدث خطأ أثناء الحذف');
         }
       },
       error: (err) => {
+        this.isDeleting.set(false);
         this.toast.error(extractErrorMessage(err, 'حدث خطأ أثناء الحذف'));
       }
     });
   }
- downloadReport(): void {
-  const filter = {
-    ...this.filter(),
-    status: this.filter().status || null
-  };
-  this.reportService
-    .generateComplaintPdfReport(filter)
-    .subscribe({
-      next: (response) => {
-        this.reportService.download(response);
-      },
-      error: (err) => {
-        const message = extractErrorMessage(err, 'حدث خطأ أثناء تنزيل التقرير');
-        this.toast.error(message);
-      }
-    });
-}
+  downloadReport(): void {
+    const filter = {
+      ...this.filter(),
+      status: this.filter().status || null
+    };
+    this.reportService
+      .generateComplaintPdfReport(filter)
+      .subscribe({
+        next: (response) => {
+          this.reportService.download(response);
+        },
+        error: (err) => {
+          const message = extractErrorMessage(err, 'حدث خطأ أثناء تنزيل التقرير');
+          this.toast.error(message);
+        }
+      });
+  }
 
 }

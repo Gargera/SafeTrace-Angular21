@@ -18,7 +18,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { validateImageFile} from '../../../../shared/validators/image-validation.validator';
 import { validateVideoFile } from '../../../../shared/validators/video-validation.validator';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 @Component({
   selector: 'app-chat-window',
   standalone: true,

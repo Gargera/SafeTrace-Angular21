@@ -18,7 +18,8 @@ import { AuditOperationBadgeDirective } from '../../../../shared/directives/audi
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+
 
 const UI_STATE_CACHE_KEY = 'AuditLogs_UI_State';
 

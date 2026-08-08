@@ -302,7 +302,7 @@
 
   <!-- موديول الـ Lightbox لتكبير الصور -->
   @if(lightboxVisible()){
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
+  <div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
     <button class="absolute right-6 top-6 text-4xl text-white" (click)="closeLightbox()">✕</button>
     <button class="absolute left-5 text-5xl text-white" (click)="previousMedia()">❮</button>
 

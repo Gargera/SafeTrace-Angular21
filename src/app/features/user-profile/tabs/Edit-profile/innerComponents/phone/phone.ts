@@ -16,7 +16,7 @@ import { ProfileService } from '../../../../service/profile.service';
 import { FormField } from '../../../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../../../shared/components/button/button';
 import { egyptianPhone } from '../../../../../../shared/validators/egyptian-phone.validator';
-import { extractErrorMessage } from '../../../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../../../shared/helper/error.helper';
 
 @Component({
   selector: 'app-phone',

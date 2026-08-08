@@ -8,7 +8,7 @@ import { mustMatch } from '../../../../shared/validators/must-match.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 @Component({
   selector: 'app-register',
