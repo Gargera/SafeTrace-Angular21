@@ -24,7 +24,7 @@
     </h3>
 
     <!-- Information -->
-    <div class="space-y-3 text-sm">
+    <div class="space-y-3 text-sm mb-4">
       <!-- Location -->
       @if (hasLocation()) {
       <div class="flex items-center justify-between">
@@ -41,23 +41,6 @@
         <span [appCaseTypeBadgeDirective]="caseItem().caseType"></span>
       </div>
       }
-      @if (showGender()) {
-      <div class="flex items-center justify-between">
-        <span class="text-on-surface-variant"> الجنس </span>
-
-        <span [appGenderBadgeDirective]="caseItem().gender"></span>
-      </div>
-      }
-
-      <!-- Age -->
-      @if (showAge()) {
-      <div class="flex items-center justify-between">
-        <span class="text-on-surface-variant"> العمر </span>
-
-        <span class="font-medium text-on-surface"> {{ caseItem().age }} سنة </span>
-      </div>
-      }
-
       <!-- Age Category -->
       <div class="flex items-center justify-between">
         <span class="text-on-surface-variant"> الفئة العمرية </span>
@@ -119,11 +102,14 @@
 
       <!-- Chat Button -->
       @if (shouldShowContactButton()) {
-      <app-button variant="secondary" (onClick)="startChat(caseItem().id)"
-        extraClass="w-full justify-center gap-2 hover:border-primary hover:bg-primary/5 hover:text-primary">
-        <span class="material-symbols-outlined text-[18px]">chat</span>
-        <span>تواصل مع المُبلّغ</span>
-      </app-button>
+      <div [title]="isOwner() ? 'هذه الحالة تخصك' : ''" class="w-full">
+        <app-button variant="secondary" (onClick)="startChat(caseItem().id)"
+          [disabled]="isOwner()"
+          extraClass="w-full justify-center gap-2 hover:border-primary hover:bg-primary/5 hover:text-primary">
+          <span class="material-symbols-outlined text-[18px]">chat</span>
+          <span>تواصل مع المُبلّغ</span>
+        </app-button>
+      </div>
       }
     </div>
   </div>

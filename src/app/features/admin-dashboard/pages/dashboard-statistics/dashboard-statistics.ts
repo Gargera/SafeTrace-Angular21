@@ -8,7 +8,14 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardDto } from '../../models/Dashboard/responses/DashboardDto';
+import { getCaseTypeTranslationAr } from '../../../../core/constants/dictionaries/case.type.dictionary';
 import { DashboardService } from '../../services/dashboard.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
+import { CardComponent } from '../../../../shared/components/card/card';
+import { ButtonComponent } from '../../../../shared/components/button/button';
 
 interface ProblemDetails {
   status?: number;
@@ -59,29 +66,31 @@ interface StatCard {
  * eye learns "red = active/urgent" once and reuses it across the dashboard.
  */
 const STATUS_COLORS = {
-  active: '#EF4444', // coral-red — urgent, needs attention now
-  found: '#10B981', // emerald — resolved, hopeful outcome
-  pending: '#F59E0B', // amber — waiting on a decision
-  rejected: '#94A3B8', // slate — closed, no action needed
-  expired: '#8B5CF6', // violet — closed by time, distinct from rejected
-  deleted: '#64748B', // cool gray — removed from the system
-  succeeded: '#10B981',
-  failed: '#EF4444',
-  solved: '#10B981',
-  unsolved: '#EF4444',
-  users: '#6366F1', // indigo — platform/people
-  cases: '#3B82F6', // blue — core entity
-  aiSearch: '#06B6D4', // cyan — technology/AI
+  total: '#5856D6', // vibrant indigo
+  users: '#5856D6', // vibrant indigo
+  cases: '#007AFF', // vibrant blue
+  active: '#FF3B30', // vibrant red
+  found: '#34C759', // vibrant green
+  pending: '#FF9500', // vibrant orange
+  rejected: '#8E8E93', // vibrant gray
+  expired: '#AF52DE', // vibrant purple
+  deleted: '#636366', // dark gray
+  succeeded: '#34C759', // vibrant green
+  failed: '#FF3B30', // vibrant red
+  solved: '#34C759', // vibrant green
+  unsolved: '#FF3B30', // vibrant red
+  aiSearch: '#32ADE6', // vibrant cyan
 } as const;
 
 @Component({
   selector: 'app-dashboard-statistics',
-  imports: [CommonModule],
+  imports: [CommonModule, LoadingSpinnerComponent, EmptyStateComponent, HeaderComponent, CardComponent, ButtonComponent],
   templateUrl: './dashboard-statistics.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardStatistics implements OnInit {
   private readonly dashboardService = inject(DashboardService);
+  private readonly toast = inject(SnackbarService);
 
   private static readonly DONUT_RADIUS = 60;
   private static readonly DONUT_CIRCUMFERENCE = 2 * Math.PI * DashboardStatistics.DONUT_RADIUS;
@@ -91,6 +100,13 @@ export class DashboardStatistics implements OnInit {
   dashboard = signal<DashboardDto | null>(null);
   error = signal<ProblemDetails | null>(null);
   isLoading = signal(false);
+
+  translateCaseType = getCaseTypeTranslationAr;
+
+  // Hover states for donut charts and legends
+  hoveredCaseStatus = signal<string | null>(null);
+  hoveredDonations = signal<string | null>(null);
+  hoveredComplaints = signal<string | null>(null);
 
   /** Top stat cards — data-driven so color/icon/label live in one place */
   statCards = computed<StatCard[]>(() => {
@@ -224,7 +240,7 @@ export class DashboardStatistics implements OnInit {
     const maxTotal = Math.max(...d.caseTypes.map((c: any) => c.total), 1);
 
     return d.caseTypes.map((c: any) => ({
-      label: c.caseType,
+      label: getCaseTypeTranslationAr(c.caseType),
       total: c.total,
       active: c.active,
       found: c.found,
@@ -257,11 +273,13 @@ export class DashboardStatistics implements OnInit {
         this.isLoading.set(false);
       },
       error: (err) => {
+        const errMsg = err?.error?.detail || err?.error?.title || 'حدث خطأ غير متوقع أثناء تحميل الإحصائيات';
         this.error.set(
           err?.error ?? {
-            detail: 'حدث خطأ غير متوقع أثناء تحميل البيانات.',
+            detail: errMsg,
           },
         );
+        this.toast.error(errMsg);
         this.isLoading.set(false);
       },
     });

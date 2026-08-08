@@ -24,7 +24,6 @@ import { ViewProfilePopup } from '../../view-profile-popup/view-profile-popup';
     DatePipe,
     DecimalPipe,
     RouterModule,
-    GenderBadgeDirective,
     AgeBadgeDirective,
     CaseTypeBadgeDirective,
     CardComponent,
@@ -83,9 +82,7 @@ export class CaseCardComponent {
   });
 
   readonly shouldShowContactButton = computed(() => {
-    if (!this.showContactButton()) return false;
-    if (!this.authService.isLoggedIn()) return true;
-    return !this.isOwner();
+    return this.showContactButton();
   });
 
   // Computed signals

@@ -105,7 +105,7 @@
             </div>
 
             <!-- كارت الناشر -->
-            @if (caseDetails()?.user) {
+            @if (caseDetails()?.user && !(isOwner() && isMyCasePage())) {
             <div (click)="openPublisherProfile()"
               class="flex items-center gap-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-low p-3.5 cursor-pointer transition-all hover:border-primary hover:bg-primary/5 group/pub">
               @if (caseDetails()?.user?.profileImage) {
@@ -327,6 +327,7 @@
       message="هل أنت متأكد أنك تريد قبول هذه الحالة وإظهارها للجميع؟"
       confirmText="قبول"
       cancelText="إلغاء"
+      icon="check_circle"
       variant="primary"
       (confirm)="confirmApprove()"
       (cancel)="cancelApprove()">
@@ -349,6 +350,7 @@
       message="هل أنت متأكد أنك تريد حذف هذه الحالة نهائياً من النظام؟ هذا الإجراء لا يمكن التراجع عنه."
       confirmText="حذف نهائي"
       cancelText="إلغاء"
+      icon="delete_forever"
       variant="danger"
       (confirm)="confirmPermanentDelete()"
       (cancel)="cancelPermanentDelete()">
