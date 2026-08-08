@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -25,6 +25,8 @@ import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 const UI_STATE_CACHE_KEY = 'LongTermList_UI_State';
 
+import { ButtonComponent } from '../../../../shared/components/button/button';
+
 @Component({
   selector: 'app-long-term-list',
   standalone: true,
@@ -38,6 +40,7 @@ const UI_STATE_CACHE_KEY = 'LongTermList_UI_State';
     CaseSkeletonGridComponent,
     EmptyStateComponent,
     CaseCardComponent,
+    ButtonComponent,
   ],
   templateUrl: './long-term-list.html',
   styleUrls: ['./long-term-list.css'],
@@ -65,6 +68,29 @@ export class LongTermList implements OnInit {
   readonly pageSize = this.filterState.pageSize;
 
   readonly filter = this.filterState.filter;
+
+  readonly hasActiveFilters = computed(() => {
+    const f = this.filter();
+    return !!(
+      f.fullName ||
+      f.government ||
+      f.city ||
+      f.caseCode ||
+      f.gender ||
+      f.ageCategory ||
+      f.minAge ||
+      f.maxAge ||
+      f.fromDate ||
+      f.toDate ||
+      f.status ||
+      f.ageSort ||
+      f.dateSort
+    );
+  });
+
+  resetFilters(): void {
+    this.onFilterReset();
+  }
 
   constructor() {
     this.destroyRef.onDestroy(() => {

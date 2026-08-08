@@ -285,7 +285,11 @@
 
   <!-- موديول بوب أب تم العثور عليه -->
   @if(showFoundedPopup()){
-  <app-founded-popup (confirmed)="confirmFounded($event)" (cancel)="cancelFounded()">
+  <app-founded-popup
+    [caseId]="caseDetails()?.id"
+    [contextKey]="'FoundedPopup_Urgent_' + caseDetails()?.id"
+    (confirmed)="confirmFounded($event)"
+    (cancel)="cancelFounded()">
   </app-founded-popup>
   }
 

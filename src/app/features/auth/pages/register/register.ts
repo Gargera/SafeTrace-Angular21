@@ -8,6 +8,7 @@ import { mustMatch } from '../../../../shared/validators/must-match.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 
 @Component({
   selector: 'app-register',
@@ -45,6 +46,8 @@ export class Register {
   }
 
   onSubmit() {
+    if (this.isLoading()) return;
+
     this.registerForm.markAllAsTouched();
     this.apiErrorMessage.set('');
 
@@ -87,7 +90,7 @@ export class Register {
             }
           }
         } else {
-          this.apiErrorMessage.set(err.error?.detail || err.error?.message || 'حدث خطأ أثناء التسجيل.');
+          this.apiErrorMessage.set(extractErrorMessage(err, 'حدث خطأ أثناء التسجيل.'));
         }
       }
     });

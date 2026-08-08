@@ -90,6 +90,8 @@ export class Login implements OnInit, OnDestroy {
   }
 
   onSubmit() {
+    if (this.isLoading()) return;
+
     this.loginForm.markAllAsTouched();
     this.apiErrorMessage.set('');
 

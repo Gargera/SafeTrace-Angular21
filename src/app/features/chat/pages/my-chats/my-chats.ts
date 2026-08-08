@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ChatService } from '../../services/chat.service';
@@ -27,6 +27,7 @@ export class MyChats implements OnInit {
   private router = inject(Router);
   private snackbarService = inject(SnackbarService);
   private cacheService = inject(CacheService);
+  private destroyRef = inject(DestroyRef);
 
   loading = signal(true);
   chats = signal<ChatSummaryDto[]>([]);
@@ -46,10 +47,30 @@ export class MyChats implements OnInit {
     return this.activeFilter() === 'unread' ? chats.filter((c) => c.unreadCount > 0) : chats;
   });
  
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set(
+        UI_STATE_CACHE_KEY,
+        { 
+          activeFilter: this.activeFilter(),
+          showDeleteModal: this.showDeleteModal(),
+          chatToDelete: this.chatToDelete()
+        },
+        CACHE_TTL.UI_STATE,
+        [CACHE_TAGS.UI_STATE]
+      );
+    });
+  }
+
   ngOnInit(): void {
-    const cachedState = this.cacheService.get<{ activeFilter: ConversationFilter }>(UI_STATE_CACHE_KEY);
+    const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY);
     if (cachedState) {
-      this.activeFilter.set(cachedState.activeFilter);
+      if (cachedState.activeFilter) this.activeFilter.set(cachedState.activeFilter);
+      
+      if (cachedState.showDeleteModal && cachedState.chatToDelete) {
+        this.chatToDelete.set(cachedState.chatToDelete);
+        this.showDeleteModal.set(true);
+      }
     }
 
     this.loading.set(true);
@@ -67,12 +88,6 @@ export class MyChats implements OnInit {
  
   setFilter(filter: ConversationFilter): void {
     this.activeFilter.set(filter);
-    this.cacheService.set(
-      UI_STATE_CACHE_KEY,
-      { activeFilter: filter },
-      CACHE_TTL.UI_STATE,
-      [CACHE_TAGS.UI_STATE]
-    );
   }
  
   /** ChatSummaryDto has no "hasStarted" flag - every chat in this list already
@@ -109,6 +124,12 @@ confirmDeleteChat(): void {
       );
 
       this.deleting.set(false);
+
+      const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
+      cachedState.showDeleteModal = false;
+      cachedState.chatToDelete = null;
+      this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+
       this.closeDeleteModal();
 
       this.snackbarService.success('تم حذف المحادثة');

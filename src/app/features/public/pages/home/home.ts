@@ -17,6 +17,7 @@ import { caseCodeValidator } from '../../../../shared/validators/case-code.valid
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { Gender } from '../../../../shared/enums/gender';
 import { CaseListItemResponse } from '../../../../core/models/cases.model';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 
 @Component({
   selector: 'app-home',
@@ -130,7 +131,7 @@ export class Home implements OnInit {
         this.isSendingComplaint.set(false);
       },
       error: (err) => {
-        this.snackbar.error(err.error?.message || err.error?.detail || 'حدث خطأ أثناء إرسال الرسالة، يرجى المحاولة مرة أخرى');
+        this.snackbar.error(err.error?.message || extractErrorMessage(err, 'حدث خطأ أثناء إرسال الرسالة، يرجى المحاولة مرة أخرى'));
         this.isSendingComplaint.set(false);
       }
     });

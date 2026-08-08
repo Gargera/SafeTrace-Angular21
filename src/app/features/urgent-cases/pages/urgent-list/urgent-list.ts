@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterModule } from '@angular/router';
 import { catchError, EMPTY, Subject, switchMap, tap } from 'rxjs';
@@ -25,6 +25,8 @@ import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 const UI_STATE_CACHE_KEY = 'UrgentList_UI_State';
 
+import { ButtonComponent } from '../../../../shared/components/button/button';
+
 @Component({
   selector: 'app-urgent-list',
   standalone: true,
@@ -37,6 +39,7 @@ const UI_STATE_CACHE_KEY = 'UrgentList_UI_State';
     CaseSkeletonGridComponent,
     EmptyStateComponent,
     CaseCardComponent,
+    ButtonComponent,
   ],
   templateUrl: './urgent-list.html',
   styleUrls: ['./urgent-list.css'],
@@ -67,6 +70,30 @@ export class UrgentListComponent implements OnInit {
   readonly totalItems = this.filterState.totalItems;
   readonly pageSize = this.filterState.pageSize;
   readonly filter = this.filterState.filter;
+
+  readonly hasActiveFilters = computed(() => {
+    const f = this.filter();
+    return !!(
+      f.fullName ||
+      f.government ||
+      f.city ||
+      f.caseCode ||
+      f.gender ||
+      f.ageCategory ||
+      f.minAge ||
+      f.maxAge ||
+      f.fromDate ||
+      f.toDate ||
+      f.status ||
+      f.ageSort ||
+      f.dateSort ||
+      f.radiusInKm
+    );
+  });
+
+  resetFilters(): void {
+    this.onFilterReset();
+  }
 
   constructor() {
     this.destroyRef.onDestroy(() => {

@@ -13,6 +13,7 @@ import { mustMatch } from '../../../../../../shared/validators/must-match.valida
 import { ChangePasswordDTO } from '../../../../model/profile.model';
 import { ButtonComponent } from '../../../../../../shared/components/button/button';
 import { FormField } from '../../../../../../shared/components/form-field/form-field';
+import { extractErrorMessage } from '../../../../../../shared/helper/case-error.helper';
 
 // ── Custom validator: new password must differ from current ────────────────
 function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
@@ -143,8 +144,7 @@ export class Password {
         this.isSavingPassword.set(false);
         const msg =
           err?.error?.message ||
-          err.error?.detail ||
-          'كلمة المرور الحالية غير صحيحة أو حدث خطأ أثناء تغيير كلمة المرور.';
+          extractErrorMessage(err, 'كلمة المرور الحالية غير صحيحة أو حدث خطأ أثناء تغيير كلمة المرور.');
         this.#snackbar.error(msg);
       },
     });

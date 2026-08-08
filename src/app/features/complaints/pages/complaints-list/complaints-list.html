@@ -186,9 +186,20 @@
             <tr>
               <td colspan="6" class="py-xl">
                 <app-empty-state
-                  title="لا يوجد شكاوى"
-                  message="لا توجد شكاوى تطابق شروط البحث."
-                ></app-empty-state>
+                  [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد شكاوى'"
+                  [message]="hasActiveFilters() ? 'لم نتمكن من العثور على شكاوى تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم تقديم أي شكاوى حتى الآن.'"
+                >
+                  @if (hasActiveFilters()) {
+                    <app-button
+                      emptyActions
+                      variant="outline"
+                      size="md"
+                      (click)="resetFilters()"
+                    >
+                      إلغاء تصفية البحث
+                    </app-button>
+                  }
+                </app-empty-state>
               </td>
             </tr>
           }

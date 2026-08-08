@@ -6,6 +6,7 @@ import {
   computed,
   OnInit,
   OnDestroy,
+  DestroyRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -16,6 +17,8 @@ import { UrgentCaseService } from '../../../urgent-cases/services/urgent-case.se
 import { LongTermCaseService } from '../../../long-term-cases/services/long-term-case.service';
 import { UnknownCaseService } from '../../../unknown-cases/services/unknown-case.service';
 import { SnackbarService } from '../../../../shared/services/toast.service';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 import { MyCaseListItemResponse, MyCasesFilterRequest } from '../../model/profile.model';
 import { CaseType } from '../../../../shared/enums/case-type';
@@ -32,6 +35,7 @@ import { CaseFiltersComponent } from '../../../../shared/components/cases-compon
 import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup';
 
 const CASE_TYPE_ORDER: CaseType[] = [CaseType.Urgent, CaseType.LongTerm, CaseType.Unknown];
+const UI_STATE_CACHE_KEY = 'MyCasesTab_UI_State';
 
 @Component({
   selector: 'app-my-cases-tab',
@@ -63,6 +67,8 @@ export class MyCasesTab implements OnInit, OnDestroy {
   private longTermService = inject(LongTermCaseService);
   private unknownService = inject(UnknownCaseService);
   private toast = inject(SnackbarService);
+  private cacheService = inject(CacheService);
+  private destroyRef = inject(DestroyRef);
 
   // Filters
   filterRequest = signal<MyCasesFilterRequest>({});
@@ -139,9 +145,41 @@ export class MyCasesTab implements OnInit, OnDestroy {
     }));
   });
 
-  constructor() { }
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set(
+        UI_STATE_CACHE_KEY,
+        {
+          filterRequest: this.filterRequest(),
+          currentPage: this.currentPage(),
+          modalConfig: this.showConfirmModal() ? this.modalConfig() : null,
+          showMarkAsFoundModal: this.showMarkAsFoundModal(),
+          markAsFoundCaseId: this.markAsFoundCaseId(),
+          markAsFoundCaseType: this.markAsFoundCaseType()
+        },
+        CACHE_TTL.UI_STATE,
+        [CACHE_TAGS.UI_STATE]
+      );
+    });
+  }
 
   ngOnInit(): void {
+    const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY);
+    if (cachedState) {
+      if (cachedState.filterRequest) this.filterRequest.set(cachedState.filterRequest);
+      if (cachedState.currentPage) this.currentPage.set(cachedState.currentPage);
+      
+      if (cachedState.modalConfig) {
+        this.modalConfig.set(cachedState.modalConfig);
+        this.showConfirmModal.set(true);
+      }
+      if (cachedState.showMarkAsFoundModal) {
+        this.markAsFoundCaseId.set(cachedState.markAsFoundCaseId);
+        this.markAsFoundCaseType.set(cachedState.markAsFoundCaseType);
+        this.showMarkAsFoundModal.set(true);
+      }
+    }
+
     this.loadCases();
   }
 
@@ -329,6 +367,13 @@ export class MyCasesTab implements OnInit, OnDestroy {
           ),
         );
         this.toast.success('تم تحديث الحالة بنجاح');
+        
+        const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
+        cachedState.showMarkAsFoundModal = false;
+        cachedState.markAsFoundCaseId = null;
+        cachedState.markAsFoundCaseType = null;
+        this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+        
         this.showMarkAsFoundModal.set(false);
         this.markAsFoundCaseId.set(null);
         this.markAsFoundCaseType.set(null);
@@ -389,6 +434,11 @@ export class MyCasesTab implements OnInit, OnDestroy {
         }
 
         this.toast.success('تم حذف الحالة بنجاح');
+        
+        const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
+        cachedState.modalConfig = null;
+        this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+
         this.modalConfig.set(null);
       },
       error: () => {

@@ -21,6 +21,7 @@ import { HasPermissionDirective } from '../../../../shared/directives/has-permis
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 
 const PAGE_SIZE = 10;
 const UI_STATE_CACHE_KEY = 'AdminChats_UI_State';
@@ -134,7 +135,9 @@ toDateError = computed(() => {
           toDate: this.toDate(),
           isDeletedBySender: this.isDeletedBySender(),
           isDeletedByReceiver: this.isDeletedByReceiver(),
-          currentPage: this.currentPage()
+          currentPage: this.currentPage(),
+          showDeleteModal: this.showDeleteModal(),
+          selectedChatToDelete: this.selectedChatToDelete()
         },
         CACHE_TTL.UI_STATE,
         [CACHE_TAGS.UI_STATE]
@@ -143,14 +146,7 @@ toDateError = computed(() => {
   }
 
   ngOnInit(): void {
-    const cachedState = this.cacheService.get<{
-      searchTerm: string;
-      fromDate: string;
-      toDate: string;
-      isDeletedBySender: boolean | undefined;
-      isDeletedByReceiver: boolean | undefined;
-      currentPage: number;
-    }>(UI_STATE_CACHE_KEY);
+    const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY);
 
     if (cachedState) {
       this.searchTerm.set(cachedState.searchTerm);
@@ -159,6 +155,11 @@ toDateError = computed(() => {
       this.isDeletedBySender.set(cachedState.isDeletedBySender);
       this.isDeletedByReceiver.set(cachedState.isDeletedByReceiver);
       this.currentPage.set(cachedState.currentPage);
+
+      if (cachedState.showDeleteModal && cachedState.selectedChatToDelete) {
+        this.selectedChatToDelete.set(cachedState.selectedChatToDelete);
+        this.showDeleteModal.set(true);
+      }
     }
 
     this.loadStatistics();
@@ -195,7 +196,7 @@ toDateError = computed(() => {
         this.isLoading.set(false);
       },
       error: (err) => {
-        this.snackbarService.error(err.error?.detail ?? 'تعذر تحميل المحادثات');
+        this.snackbarService.error(extractErrorMessage(err, 'تعذر تحميل المحادثات'));
         this.isLoading.set(false);
       },
     });
@@ -286,10 +287,15 @@ confirmDeleteChat(): void {
 
       this.snackbarService.success('تم حذف المحادثة نهائياً');
 
+      const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
+      cachedState.showDeleteModal = false;
+      cachedState.selectedChatToDelete = null;
+      this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+
       this.closeDeleteModal();
     },
     error: (err) => {
-      this.snackbarService.error(err.error?.detail ?? 'تعذر حذف المحادثة، حاول مرة أخرى');
+      this.snackbarService.error(extractErrorMessage(err, 'تعذر حذف المحادثة، حاول مرة أخرى'));
     }
   });
 }

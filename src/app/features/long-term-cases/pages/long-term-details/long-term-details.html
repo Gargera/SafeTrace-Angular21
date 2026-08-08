@@ -337,8 +337,9 @@
     <app-reject-case-popup
       [isSubmitting]="isRejecting()"
       [apiError]="rejectApiError()"
-      (confirm)="confirmReject($event)"
-      (cancel)="cancelReject()">
+      [contextKey]="'RejectPopup_LongTerm_' + caseDetails()?.id"
+      (cancel)="cancelReject()"
+      (confirm)="confirmReject($event)">
     </app-reject-case-popup>
   }
 
@@ -354,11 +355,14 @@
     </app-confirmation-modal>
   }
 
+  <!-- موديول بوب أب تم العثور عليه -->
   @if(showFoundedPopup()){
-    <app-founded-popup
-      (confirmed)="confirmFounded($event)"
-      (cancel)="cancelFounded()">
-    </app-founded-popup>
+  <app-founded-popup
+    [caseId]="caseDetails()?.id"
+    [contextKey]="'FoundedPopup_LongTerm_' + caseDetails()?.id"
+    (confirmed)="confirmFounded($event)"
+    (cancel)="cancelFounded()">
+  </app-founded-popup>
   }
 
   <app-view-profile-popup

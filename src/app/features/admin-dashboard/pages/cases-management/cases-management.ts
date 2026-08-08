@@ -37,6 +37,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 
 const FILTER_DEBOUNCE_MS = 400;
 const UI_STATE_CACHE_KEY = 'Dashboard_UI_State';
@@ -116,6 +117,25 @@ export class CasesManagement implements OnInit, OnDestroy {
   hasResults = computed(() => this.cases().length > 0);
   hasNextPage = computed(() => this.currentPage() < this.totalPages());
   hasAnyCases = computed(() => this.totalCount() > 0);
+  hasActiveFilters = computed(() => {
+    const f = this.baseFilter();
+    return !!(
+      f.fullName ||
+      f.government ||
+      f.city ||
+      f.caseCode ||
+      f.gender ||
+      f.ageCategory ||
+      f.minAge ||
+      f.maxAge ||
+      f.fromDate ||
+      f.toDate ||
+      f.status ||
+      f.caseType ||
+      f.ageSort ||
+      f.dateSort
+    );
+  });
 
   // -------- UNIFIED FILTER --------
   public baseFilter = signal<CasesFilterRequest>(this.getDefaultFilter());
@@ -141,9 +161,15 @@ export class CasesManagement implements OnInit, OnDestroy {
     };
   }
 
+  private isInitialized = false;
+
   constructor() {
     effect(() => {
       this.baseFilter();
+
+      if (!this.isInitialized) {
+        return;
+      }
 
       if (this.searchDebounceTimer) {
         clearTimeout(this.searchDebounceTimer);
@@ -157,19 +183,29 @@ export class CasesManagement implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    const cachedState = this.cacheService.get<{ filter: CasesFilterRequest, page: number }>(UI_STATE_CACHE_KEY);
+    const cachedState = this.cacheService.get<{ filter: CasesFilterRequest, page: number, modalConfig: any }>(UI_STATE_CACHE_KEY);
     if (cachedState) {
       this.baseFilter.set(cachedState.filter);
       this.currentPage.set(cachedState.page);
+      if (cachedState.modalConfig) {
+        this.modalConfig.set(cachedState.modalConfig);
+        this.showConfirmModal.set(true);
+      }
     }
 
+    this.isInitialized = true;
     this.loadStatistics();
+    this.loadCases();
   }
 
   ngOnDestroy(): void {
     this.cacheService.set(
       UI_STATE_CACHE_KEY,
-      { filter: this.baseFilter(), page: this.currentPage() },
+      { 
+        filter: this.baseFilter(), 
+        page: this.currentPage(),
+        modalConfig: this.showConfirmModal() ? this.modalConfig() : null
+      },
       CACHE_TTL.UI_STATE,
       [CACHE_TAGS.UI_STATE]
     );
@@ -221,7 +257,7 @@ export class CasesManagement implements OnInit, OnDestroy {
         this.loadingStats.set(false);
       },
       error: (err) => {
-        this.toast.error(err.error?.detail || 'تعذر الاتصال بالخادم لتحميل الإحصائيات');
+        this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتحميل الإحصائيات'));
         this.loadingStats.set(false);
       },
     });
@@ -239,7 +275,7 @@ export class CasesManagement implements OnInit, OnDestroy {
         this.loading.set(false);
       },
       error: (err) => {
-        this.toast.error(err.error?.detail || 'تعذر الاتصال بالخادم');
+        this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم'));
         this.cases.set([]);
         this.totalCount.set(0);
         this.totalPages.set(0);
@@ -282,7 +318,7 @@ export class CasesManagement implements OnInit, OnDestroy {
         this.modalConfig.set(null);
       },
       error: (err) => {
-        this.toast.error(err.error?.detail || 'فشل حذف الحالة');
+        this.toast.error(extractErrorMessage(err, 'فشل حذف الحالة'));
         this.modalConfig.set(null);
       },
     });

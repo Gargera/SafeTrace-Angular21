@@ -23,6 +23,8 @@ import { extractErrorMessage } from '../../../../shared/helper/case-error.helper
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
+import { ButtonComponent } from '../../../../shared/components/button/button';
+
 const UI_STATE_CACHE_KEY = 'FoundedList_UI_State';
 
 @Component({
@@ -37,6 +39,7 @@ const UI_STATE_CACHE_KEY = 'FoundedList_UI_State';
     PaginationComponent,
     CaseFiltersComponent,
     CaseCardComponent,
+    ButtonComponent,
   ],
   templateUrl: './founded-list.component.html',
 })
@@ -62,6 +65,21 @@ export class FoundedListComponent implements OnInit {
   readonly filter = this.filterState.filter;
 
   totalPages = computed(() => Math.ceil(this.totalCount() / this.pageSize()));
+
+  readonly hasActiveFilters = computed(() => {
+    const f = this.filter();
+    return !!(
+      f.fullName ||
+      f.gender ||
+      f.minAge ||
+      f.maxAge ||
+      f.caseType
+    );
+  });
+
+  resetFilters(): void {
+    this.onFilterReset();
+  }
 
   constructor() {
     this.destroyRef.onDestroy(() => {
