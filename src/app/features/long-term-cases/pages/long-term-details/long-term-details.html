@@ -105,7 +105,7 @@
             </div>
 
             <!-- كارت الناشر -->
-            @if (caseDetails()?.user) {
+            @if (caseDetails()?.user && !(isOwner() && isMyCasePage())) {
             <div (click)="openPublisherProfile()"
               class="flex items-center gap-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-low p-3.5 cursor-pointer transition-all hover:border-primary hover:bg-primary/5 group/pub">
               @if (caseDetails()?.user?.profileImage) {
