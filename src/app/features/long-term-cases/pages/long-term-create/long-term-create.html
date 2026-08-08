@@ -5,8 +5,7 @@
 
     <!-- 1. Header -->
     <div class="px-6 md:px-8 pt-6 md:pt-8">
-      <app-header title="إضافة حالة طويلة المدى" [subtitle]="stepTitle" [showBackButton]="true"
-        (backAction)="goBack()">
+      <app-header title="إضافة حالة طويلة المدى" [subtitle]="stepTitle" [showBackButton]="true" (backAction)="goBack()">
       </app-header>
     </div>
 
@@ -270,8 +269,15 @@
           @if (primaryPhotoError()) { <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{
             primaryPhotoError() }}</p> }
           }
+          @if (videoError()) {
+            <p class="mt-1.5 flex items-center gap-1 text-xs text-error">
+              {{ videoError() }}
+            </p>
+            }
+
 
           <!-- 2. Image Cropper Container -->
+          @defer (when cropImageEvent()) {
           @if (cropImageEvent()) {
           <div class="rounded-2xl bg-inverse-surface p-5 text-center text-inverse-on-surface shadow-md">
             <p class="mb-3 text-sm font-medium">حرك المربع لتحديد الوجه بالكامل داخل الإطار:</p>
@@ -289,6 +295,7 @@
               </app-button>
             </div>
           </div>
+          }
           }
 
           <!-- 3. Cropped Preview Box -->
@@ -342,7 +349,8 @@
         <!-- Police Report -->
         <div>
           <label class="mb-2 block text-sm font-medium text-on-surface-variant">
-            بلاغ الشرطة <span class="font-normal text-on-surface-variant/70">(اختياري — JPG/JPEG/PNG/WebP، حتى 10 MB)</span>
+            بلاغ الشرطة <span class="font-normal text-on-surface-variant/70">(اختياري — JPG/JPEG/PNG/WebP، حتى 10
+              MB)</span>
           </label>
           <div
             class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
@@ -371,8 +379,13 @@
             class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
             [class.border-secondary]="!!videoFile()" [class.bg-surface-container-low]="!!videoFile()"
             (click)="videoInput.click()">
-            <input #videoInput type="file" accept="video/*" class="hidden" (change)="onVideoSelected($event)" />
-            <div
+              <input
+                #videoInput
+                type="file"
+                accept=".mp4,.mov,.webm,video/mp4,video/quicktime,video/webm"
+                class="hidden"
+                (change)="onVideoSelected($event)"
+              />            <div
               class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
               <span class="material-symbols-outlined text-3xl"
                 [ngClass]="videoFile() ? 'text-secondary' : 'text-outline'">videocam</span>
@@ -436,26 +449,22 @@
 </app-card>
 
 <!-- 5. Popup outside the card -->
+@defer (when showForceCreatePopup()) {
 @if (showForceCreatePopup()) {
-<app-force-create-popup 
-  [matches]="matchedCases()" 
-  [isBlocked]="isBlockedDuplicate()" 
-  [readOnly]="currentDuplicateDecision() === 'ActiveOwnerCase'"
-  [duplicateDecision]="currentDuplicateDecision()"
-  (cancel)="onForceCreateCancel()"
-  (forceCreate)="onForceCreateConfirm()">
+<app-force-create-popup [matches]="matchedCases()" [isBlocked]="isBlockedDuplicate()"
+  [readOnly]="currentDuplicateDecision() === 'ActiveOwnerCase'" [duplicateDecision]="currentDuplicateDecision()"
+  (cancel)="onForceCreateCancel()" (forceCreate)="onForceCreateConfirm()">
 </app-force-create-popup>
 }
+}
 
-<!-- 6. Informational duplicate dialog -->
+@defer (when showDuplicateInfoDialog()) {
 @if (showDuplicateInfoDialog()) {
-  <app-duplicate-info-dialog
-    [duplicateDecision]="currentDuplicateDecision()"
-    [existingCaseType]="existingCaseType()!"
-    [currentCaseType]="caseTypes.LongTerm"
-    (close)="onPendingDialogClose()"
-    (continueCreate)="onPendingDialogContinueCreate()">
-  </app-duplicate-info-dialog>
+<app-duplicate-info-dialog [duplicateDecision]="currentDuplicateDecision()" [existingCaseType]="existingCaseType()!"
+  [currentCaseType]="caseTypes.LongTerm" (close)="onPendingDialogClose()"
+  (continueCreate)="onPendingDialogContinueCreate()">
+</app-duplicate-info-dialog>
+}
 }
 
 </div>
