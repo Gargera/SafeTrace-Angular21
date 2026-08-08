@@ -17,8 +17,7 @@ import { CaseDetailsSkeletonComponent } from '../../../../shared/components/skel
 @Component({
   selector: 'app-founded-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, HeaderComponent, ButtonComponent, GenderBadgeDirective],
-  imports: [CommonModule, RouterModule, HeaderComponent, ButtonComponent, CaseDetailsSkeletonComponent],
+  imports: [CommonModule, RouterModule, HeaderComponent, ButtonComponent, GenderBadgeDirective, CaseDetailsSkeletonComponent],
   templateUrl: './founded-detail.component.html',
 })
 export class FoundedDetailComponent implements OnInit {

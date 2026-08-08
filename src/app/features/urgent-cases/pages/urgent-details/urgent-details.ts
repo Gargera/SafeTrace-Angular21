@@ -23,7 +23,6 @@ import { CasePhotoResponse, FoundPersonInfoRequest } from '../../../../core/mode
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { UrgentCaseService } from '../../services/urgent-case.service';
-import { CaseDetailsSkeletonComponent } from '../../../../shared/components/skeletons/case-details-skeleton/case-details-skeleton.component';
 import { UrgentCaseDetailResponse } from '../../models/response/UrgentCaseDetailResponse';
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
@@ -47,7 +46,6 @@ import { ViewProfilePopup } from '../../../../shared/components/view-profile-pop
     HasPermissionDirective,
     ButtonComponent,
     ViewProfilePopup,
-    CaseDetailsSkeletonComponent,
   ],
   templateUrl: './urgent-details.html',
   styleUrls: ['./urgent-details.css'],
