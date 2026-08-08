@@ -77,7 +77,6 @@ export class MyCasesTab implements OnInit, OnDestroy {
   currentPage = signal(1);
   totalPages = signal(0);
   totalCount = signal(0); // total number of cases matching current filters
-  overallTotalCount = signal(0); // total number of cases in the system (without any filter)
   readonly pageSize = 10;
 
   // Data – this is the filtered result from the backend
@@ -110,8 +109,10 @@ export class MyCasesTab implements OnInit, OnDestroy {
   // No local filtering – all filtering is done by the backend.
   filteredCases = computed(() => this.allCases());
 
-  // Whether there are any cases at all (from overall total)
-  hasAnyCases = computed(() => this.overallTotalCount() > 0);
+  hasActiveFilters = computed(() => {
+    const req = this.filterRequest();
+    return !!req && !!(req.fullName || req.caseCode || req.caseType !== undefined || req.status !== undefined);
+  });
 
   // Whether the current filtered list has results
   hasResults = computed(() => this.allCases().length > 0);
@@ -154,10 +155,6 @@ export class MyCasesTab implements OnInit, OnDestroy {
         {
           filterRequest: this.filterRequest(),
           currentPage: this.currentPage(),
-          modalConfig: this.showConfirmModal() ? this.modalConfig() : null,
-          showMarkAsFoundModal: this.showMarkAsFoundModal(),
-          markAsFoundCaseId: this.markAsFoundCaseId(),
-          markAsFoundCaseType: this.markAsFoundCaseType()
         },
         CACHE_TTL.UI_STATE,
         [CACHE_TAGS.UI_STATE]
@@ -170,16 +167,6 @@ export class MyCasesTab implements OnInit, OnDestroy {
     if (cachedState) {
       if (cachedState.filterRequest) this.filterRequest.set(cachedState.filterRequest);
       if (cachedState.currentPage) this.currentPage.set(cachedState.currentPage);
-      
-      if (cachedState.modalConfig) {
-        this.modalConfig.set(cachedState.modalConfig);
-        this.showConfirmModal.set(true);
-      }
-      if (cachedState.showMarkAsFoundModal) {
-        this.markAsFoundCaseId.set(cachedState.markAsFoundCaseId);
-        this.markAsFoundCaseType.set(cachedState.markAsFoundCaseType);
-        this.showMarkAsFoundModal.set(true);
-      }
     }
 
     this.loadCases();
@@ -239,16 +226,6 @@ export class MyCasesTab implements OnInit, OnDestroy {
           this.allCases.set(pagination.items ?? []);
           this.totalPages.set(pagination.totalPages);
           this.totalCount.set(pagination.totalCount ?? 0);
-
-          // Update overall total only when no filters are applied
-          const hasActiveFilter = !!req && (
-            (req.fullName && req.fullName.trim() !== '') ||
-            (req.caseCode && req.caseCode.trim() !== '') ||
-            req.caseType !== undefined || req.status !== undefined
-          );
-          if (!hasActiveFilter) {
-            this.overallTotalCount.set(pagination.totalCount ?? 0);
-          }
         } else {
           this.allCases.set([]);
           this.totalPages.set(0);
@@ -374,12 +351,6 @@ export class MyCasesTab implements OnInit, OnDestroy {
         );
         this.toast.success('تم تحديث الحالة بنجاح');
         
-        const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
-        cachedState.showMarkAsFoundModal = false;
-        cachedState.markAsFoundCaseId = null;
-        cachedState.markAsFoundCaseType = null;
-        this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
-        
         this.showMarkAsFoundModal.set(false);
         this.markAsFoundCaseId.set(null);
         this.markAsFoundCaseType.set(null);
@@ -436,18 +407,11 @@ export class MyCasesTab implements OnInit, OnDestroy {
         this.isSubmitting.set(false);
         this.allCases.update((items) => items.filter((item) => item.id !== caseId));
         this.totalCount.update((c) => Math.max(0, c - 1));
-        this.overallTotalCount.update((c) => Math.max(0, c - 1));
-
         if (this.totalCount() === 0) {
           this.totalPages.set(0);
         }
 
         this.toast.success('تم حذف الحالة بنجاح');
-        
-        const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
-        cachedState.modalConfig = null;
-        this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
-
         this.modalConfig.set(null);
       },
       error: (err) => {

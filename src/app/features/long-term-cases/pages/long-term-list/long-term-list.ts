@@ -40,7 +40,6 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
     CaseSkeletonGridComponent,
     EmptyStateComponent,
     CaseCardComponent,
-    ButtonComponent,
   ],
   templateUrl: './long-term-list.html',
   styleUrls: ['./long-term-list.css'],
@@ -108,7 +107,7 @@ export class LongTermList implements OnInit {
     if (cachedState) {
       this.filterState.restoreState(cachedState.filter);
     }
-    
+
     this.setupFetchPipeline();
     this.fetchCases();
   }

@@ -108,21 +108,7 @@ export class UrgentDetails implements OnInit {
   currentIndex = signal(0);
 
   constructor() {
-    this.destroyRef.onDestroy(() => {
-      const id = this.caseDetails()?.id;
-      if (id) {
-        this.cacheService.set(
-          `UrgentDetails_Modals_${id}`,
-          {
-            showDelete: this.showDeleteConfirmation(),
-            showFounded: this.showFoundedPopup(),
-            showLocation: this.showLocationModal(),
-            showPermanentDelete: this.showPermanentDeleteConfirmation()
-          },
-          300000
-        );
-      }
-    });
+    // Modal states should not be cached across navigation
   }
 
   ngOnInit(): void {
@@ -160,14 +146,6 @@ export class UrgentDetails implements OnInit {
         next: (apiRes) => {
           if (apiRes.success && apiRes.data) {
             this.caseDetails.set(apiRes.data);
-
-            const cachedModals = this.cacheService.get<any>(`UrgentDetails_Modals_${apiRes.data.id}`);
-            if (cachedModals) {
-              this.showDeleteConfirmation.set(cachedModals.showDelete || false);
-              this.showFoundedPopup.set(cachedModals.showFounded || false);
-              this.showLocationModal.set(cachedModals.showLocation || false);
-              this.showPermanentDeleteConfirmation.set(cachedModals.showPermanentDelete || false);
-            }
 
             if (apiRes.data.photos?.length) {
               const primary =

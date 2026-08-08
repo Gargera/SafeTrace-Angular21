@@ -9,6 +9,7 @@ import { UserService } from '../../services/user.service';
 import { RoleService } from '../../services/role.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 import { DestroyRef } from '@angular/core';
 import { UserPermissionDto } from '../../models/User/responses/UserPermissionDto';
 import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
@@ -105,11 +106,10 @@ export class UserDetails implements OnInit {
       const id = this.userId();
       if (id) {
         this.cacheService.set(`UserDetails_State_${id}`, {
-          openModal: this.showConfirmModal() ? this.currentOpenModal() : null,
           rejectReason: this.rejectReason(),
           blockReason: this.blockReason(),
           selectedRole: this.selectedRole()
-        }, 300000);
+        }, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
       }
     });
   }
@@ -239,19 +239,6 @@ export class UserDetails implements OnInit {
 
             this.rejectReason.set(state.rejectReason || '');
             this.blockReason.set(state.blockReason || '');
-
-            const modal = state.openModal;
-            if (modal === 'ROLE') {
-              this.onChangeRole(this.selectedRole());
-            } else if (modal === 'APPROVE') {
-              this.onApprove();
-            } else if (modal === 'REJECT') {
-              this.onReject(true);
-            } else if (modal === 'BLOCK') {
-              this.onToggleBlock(true);
-            } else if (modal === 'SAVE') {
-              this.savePermissions();
-            }
           } else {
             this.selectedRole.set(res.data?.role || '');
           }
@@ -312,10 +299,7 @@ export class UserDetails implements OnInit {
 
   rejectReason = signal<string>('');
 
-  onReject(fromRestore: boolean = false) {
-    if (!fromRestore) {
-      this.rejectReason.set('');
-    }
+  onReject() {
     this.openConfirmModal(
       'تأكيد رفض الحساب',
       'يرجى كتابة سبب رفض توثيق هذا الحساب (اختياري):',
@@ -332,13 +316,9 @@ export class UserDetails implements OnInit {
 
   blockReason = signal<string>('');
 
-  onToggleBlock(fromRestore: boolean = false) {
+  onToggleBlock() {
     const isBlocking = !this.user()?.isBlocked;
     const actionText = isBlocking ? 'حظر' : 'فك حظر';
-    
-    if (isBlocking && !fromRestore) {
-      this.blockReason.set('');
-    }
 
     this.openConfirmModal(
       `تأكيد ${actionText} المستخدم`,
@@ -368,7 +348,6 @@ export class UserDetails implements OnInit {
         const id = this.userId();
         if (id) {
           this.cacheService.set(`UserDetails_State_${id}`, {
-            openModal: null,
             rejectReason: '',
             blockReason: '',
             selectedRole: this.selectedRole()

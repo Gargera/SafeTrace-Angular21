@@ -116,22 +116,7 @@ export class UnknownDetails implements OnInit {
   isMyCasePage = signal(false);
 
   constructor() {
-    this.destroyRef.onDestroy(() => {
-      const id = this.caseDetails()?.id;
-      if (id) {
-        this.cacheService.set(
-          `UnknownDetails_Modals_${id}`,
-          {
-            showDelete: this.showDeleteConfirmation(),
-            showFounded: this.showFoundedPopup(),
-            showApprove: this.showApproveConfirmation(),
-            showReject: this.showRejectConfirmation(),
-            showPermanentDelete: this.showPermanentDeleteConfirmation()
-          },
-          300000 // 5 minutes
-        );
-      }
-    });
+    // Modal states should not be cached across navigation
   }
 
   ngOnInit(): void {
@@ -169,15 +154,6 @@ export class UnknownDetails implements OnInit {
         next: (apiRes) => {
           if (apiRes.success && apiRes.data) {
             this.caseDetails.set(apiRes.data);
-
-            const cachedModals = this.cacheService.get<any>(`UnknownDetails_Modals_${apiRes.data.id}`);
-            if (cachedModals) {
-              this.showDeleteConfirmation.set(cachedModals.showDelete || false);
-              this.showFoundedPopup.set(cachedModals.showFounded || false);
-              this.showApproveConfirmation.set(cachedModals.showApprove || false);
-              this.showRejectConfirmation.set(cachedModals.showReject || false);
-              this.showPermanentDeleteConfirmation.set(cachedModals.showPermanentDelete || false);
-            }
 
             if (apiRes.data.photos?.length) {
               const primary =
@@ -491,7 +467,7 @@ export class UnknownDetails implements OnInit {
       },
     });
   }
-  
+
   startChat(id: number): void {
     if (!this.authService.isLoggedIn()) {
       this.router.navigate(['/auth/login'], { queryParams: { returnUrl: this.router.url } });

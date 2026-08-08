@@ -37,7 +37,6 @@ const UI_STATE_CACHE_KEY = 'UnknownList_UI_State';
     CaseSkeletonGridComponent,
     EmptyStateComponent,
     CaseCardComponent,
-    ButtonComponent,
   ],
   templateUrl: './unknown-list.html',
   styleUrls: ['./unknown-list.css'],
@@ -105,7 +104,7 @@ export class UnknownList implements OnInit {
     if (cachedState) {
       this.filterState.restoreState(cachedState.filter);
     }
-    
+
     this.setupFetchPipeline();
     this.fetchCases();
   }

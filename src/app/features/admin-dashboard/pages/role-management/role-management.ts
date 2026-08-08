@@ -103,7 +103,7 @@ export class RoleManagement implements OnInit {
     this.destroyRef.onDestroy(() => {
       this.cacheService.set('RoleManagement_State', {
          selectedRoleId: this.selectedRoleId(),
-         openModal: this.showConfirmModal() ? this.currentOpenModal() : null
+         roleName: this.createRoleForm.value.roleName
       }, 300000);
     });
   }
@@ -168,6 +168,15 @@ export class RoleManagement implements OnInit {
   hasChanges = computed(() => Object.keys(this.dirtyGroups()).length > 0);
 
   ngOnInit() {
+    const state = this.cacheService.get<any>('RoleManagement_State');
+    if (state) {
+      if (state.roleName) {
+        this.createRoleForm.patchValue({ roleName: state.roleName });
+      }
+      if (state.selectedRoleId) {
+        this.selectedRoleId.set(state.selectedRoleId);
+      }
+    }
     this.loadRoles();
   }
 
@@ -177,11 +186,8 @@ export class RoleManagement implements OnInit {
       next: (res) => {
         if (res.success && res.data) {
           this.roles.set(res.data);
-          
-          const state = this.cacheService.get<any>('RoleManagement_State');
-          if (state && state.selectedRoleId) {
-            this.selectedRoleId.set(state.selectedRoleId);
-            this.onRoleSelected(state.selectedRoleId, state.openModal);
+          if (this.selectedRoleId()) {
+            this.onRoleSelected(this.selectedRoleId());
           }
         }
         this.isLoadingRoles.set(false);
@@ -207,6 +213,7 @@ export class RoleManagement implements OnInit {
           next: () => {
             this.isCreating.set(false);
             this.createRoleForm.reset();
+            this.cacheService.remove('RoleManagement_State');
             this.loadRoles();
             this.snackbar.success('تم إنشاء الدور بنجاح');
           },

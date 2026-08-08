@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, tap, catchError, EMPTY } from 'rxjs';
 import { GetUserDto } from '../../models/User/responses/GetUserDto';
 import { RoleDto } from '../../models/Role/responses/RoleDto';
 import { UserFilterDto } from '../../models/User/requests/UserFilterDto';
@@ -19,7 +19,7 @@ import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+
 import { UserStatisticsDto } from '../../models/User/responses/UserStatisticsDto';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { SnackbarService } from '../../../../shared/services/toast.service';
@@ -31,6 +31,7 @@ import { PaginationComponent } from '../../../../shared/components/pagination/pa
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+import { TableSkeletonComponent } from '../../../../shared/components/table-skeleton/table-skeleton.component';
 
 
 const UI_STATE_CACHE_KEY = 'UserList_UI_State';
@@ -48,10 +49,11 @@ const UI_STATE_CACHE_KEY = 'UserList_UI_State';
     ButtonComponent,
     CardComponent,
     EmptyStateComponent,
-    LoadingSpinnerComponent,
+
     HeaderComponent,
     HasPermissionDirective,
-    PaginationComponent
+    PaginationComponent,
+    TableSkeletonComponent
   ],
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',
@@ -91,6 +93,7 @@ export class UserList {
   });
 
   resetFilters(): void {
+    this.cacheService.remove(UI_STATE_CACHE_KEY);
     this.filter.set({
       pageNumber: 1,
       pageSize: 10,
@@ -103,6 +106,7 @@ export class UserList {
   }
 
   private searchSubject = new Subject<string>();
+  private readonly fetchTrigger$ = new Subject<void>();
   VerificationStatusEnum = VerificationStatus;
 
   constructor() {
@@ -123,8 +127,11 @@ export class UserList {
     }
 
     this.loadRoles();
-    this.loadUsers();
+    this.setupFetchPipeline();
     this.loadStatistics();
+    
+    // Initial fetch
+    this.loadUsers();
 
     this.searchSubject
       .pipe(debounceTime(500), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
@@ -147,21 +154,32 @@ export class UserList {
   }
 
   loadUsers() {
-    this.isLoading.set(true);
-    this.userService.getAllUsers(this.filter()).subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
+    this.fetchTrigger$.next();
+  }
+
+  private setupFetchPipeline() {
+    this.fetchTrigger$
+      .pipe(
+        tap(() => this.isLoading.set(true)),
+        switchMap(() =>
+          this.userService.getAllUsers(this.filter()).pipe(
+            catchError((err) => {
+              this.isLoading.set(false);
+              this.toast.error(extractErrorMessage(err, 'تعذر تحميل قائمة المستخدمين'));
+              return EMPTY;
+            })
+          )
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((res) => {
+        if (res && res.success && res.data) {
           this.users.set(res.data.items);
           this.totalCount.set(res.data.totalCount);
           this.totalPages.set(res.data.totalPages);
         }
         this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.isLoading.set(false);
-        this.toast.error(extractErrorMessage(err, 'تعذر تحميل قائمة المستخدمين'));
-      },
-    });
+      });
   }
 
   navigateToCreateUser(): void {

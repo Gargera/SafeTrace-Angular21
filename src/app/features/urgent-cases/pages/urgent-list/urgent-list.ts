@@ -39,7 +39,6 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
     CaseSkeletonGridComponent,
     EmptyStateComponent,
     CaseCardComponent,
-    ButtonComponent,
   ],
   templateUrl: './urgent-list.html',
   styleUrls: ['./urgent-list.css'],
@@ -111,7 +110,7 @@ export class UrgentListComponent implements OnInit {
     if (cachedState) {
       this.filterState.restoreState(cachedState.filter);
     }
-    
+
     this.setupFetchPipeline();
     this.fetchCases();
   }

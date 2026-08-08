@@ -61,9 +61,9 @@
   </div>
   } @else {
   <!-- Empty State: either no cases at all OR no results for the applied filters -->
-  <app-empty-state icon="images/empty.png" [title]="hasAnyCases() ? 'لا توجد نتائج' : 'لا توجد حالات'" [message]="
-          hasAnyCases()
-            ? 'لم يتم العثور على حالات تطابق معايير البحث.'
+  <app-empty-state icon="images/empty.png" [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات'" [message]="
+          hasActiveFilters()
+            ? 'لم نتمكن من العثور على حالات تطابق خيارات التصفية أو البحث الحالية.'
             : 'لم تقم بإنشاء أي حالات حتى الآن.'
         " containerClass="py-16">
   </app-empty-state>

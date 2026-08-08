@@ -89,7 +89,9 @@
         </button>
       </div>
     } @empty {
-      <p class="text-center text-on-surface-variant py-2xl">لا توجد محادثات في هذا القسم.</p>
+      <p class="text-center text-on-surface-variant py-2xl">
+        {{ activeFilter() !== 'all' ? 'لم نتمكن من العثور على محادثات تطابق خيارات التصفية أو البحث الحالية.' : 'لا توجد محادثات مسجلة حالياً.' }}
+      </p>
     }
   </div>
 </div>

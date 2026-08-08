@@ -1,4 +1,4 @@
-import { Component, inject, input, output, signal } from '@angular/core';
+import { Component, inject, input, output, signal, OnInit, OnDestroy } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -14,6 +14,8 @@ import { ChangePasswordDTO } from '../../../../model/profile.model';
 import { ButtonComponent } from '../../../../../../shared/components/button/button';
 import { FormField } from '../../../../../../shared/components/form-field/form-field';
 import { extractErrorMessage } from '../../../../../../shared/helper/error.helper';
+
+
 
 // ── Custom validator: new password must differ from current ────────────────
 function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
@@ -31,7 +33,7 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
   imports: [ReactiveFormsModule, FormField, ButtonComponent],
   templateUrl: './password.html',
 })
-export class Password {
+export class Password implements OnInit, OnDestroy {
   // ── adminOnlyLabel: shows "(مدير فقط)" qualifier in the heading ──────────
   readonly adminOnlyLabel = input<boolean>(false);
 
@@ -70,6 +72,12 @@ export class Password {
   constructor() {
     // Form starts disabled; enabled only when user clicks "تغيير كلمة المرور"
     this.passwordForm.disable();
+  }
+
+  ngOnInit(): void {
+  }
+
+  ngOnDestroy(): void {
   }
 
   // ── Form helpers ──────────────────────────────────────────────────────────

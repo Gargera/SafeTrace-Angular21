@@ -39,7 +39,6 @@ const UI_STATE_CACHE_KEY = 'FoundedList_UI_State';
     PaginationComponent,
     CaseFiltersComponent,
     CaseCardComponent,
-    ButtonComponent,
   ],
   templateUrl: './founded-list.component.html',
 })
@@ -97,7 +96,7 @@ export class FoundedListComponent implements OnInit {
     if (cachedState) {
       this.filterState.restoreState(cachedState.filter);
     }
-    
+
     this.setupLoadPipeline();
     this.load();
   }
