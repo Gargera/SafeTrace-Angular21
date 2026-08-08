@@ -30,6 +30,8 @@ import { ConfirmationModalComponent } from '../../../../shared/components/confir
 
 import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 import { CaseFileResponse } from '../../../../core/models/cases.model';
+import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
+
 
 type Step = 1 | 2 | 3;
 
@@ -94,6 +96,7 @@ export class UrgentUpdate implements OnInit {
 
   existingVideoUrl = signal<string | null>(null);
   videoFile = signal<File | null>(null);
+  videoError = signal<string | null>(null);
 
   selectedLat = signal<number | null>(null);
   selectedLng = signal<number | null>(null);
@@ -409,9 +412,32 @@ export class UrgentUpdate implements OnInit {
     this.newPhotoPreviews.update((p) => p.filter((_, i) => i !== index));
   }
 
-  onVideoSelected(event: Event): void {
-    this.videoFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
+ 
+onVideoSelected(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0] ?? null;
+
+  if (!file) {
+    return;
   }
+
+  const validation = validateVideoFile(file, 50);
+
+  if (!validation.valid) {
+    this.videoFile.set(null);
+    this.videoError.set(
+      validation.errorMessage ?? 'الفيديو غير صالح.'
+    );
+
+    input.value = '';
+    return;
+  }
+
+  this.videoError.set(null);
+  this.videoFile.set(file);
+}
+
+
 
   onSubmit(): void {
     if (this.isSubmitting()) return;

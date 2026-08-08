@@ -269,6 +269,11 @@
           @if (primaryPhotoError()) { <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{
             primaryPhotoError() }}</p> }
           }
+          @if (videoError()) {
+            <p class="mt-1.5 flex items-center gap-1 text-xs text-error">
+              {{ videoError() }}
+            </p>
+            }
 
 
           <!-- 2. Image Cropper Container -->
@@ -374,8 +379,13 @@
             class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
             [class.border-secondary]="!!videoFile()" [class.bg-surface-container-low]="!!videoFile()"
             (click)="videoInput.click()">
-            <input #videoInput type="file" accept="video/*" class="hidden" (change)="onVideoSelected($event)" />
-            <div
+              <input
+                #videoInput
+                type="file"
+                accept=".mp4,.mov,.webm,video/mp4,video/quicktime,video/webm"
+                class="hidden"
+                (change)="onVideoSelected($event)"
+              />            <div
               class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
               <span class="material-symbols-outlined text-3xl"
                 [ngClass]="videoFile() ? 'text-secondary' : 'text-outline'">videocam</span>
