@@ -9,7 +9,7 @@ import { environment } from '../../../../../environments/environment';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 @Component({
   selector: 'app-founded-detail',

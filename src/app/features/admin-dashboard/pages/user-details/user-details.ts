@@ -27,7 +27,7 @@ import { ConfirmationModalComponent } from '../../../../shared/components/confir
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 interface PermissionGroup {
   groupName: string;
   groupTitle: string;

@@ -15,7 +15,7 @@ import { CacheService } from '../../../../core/cache/cache.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 @Component({
   selector: 'app-register-by-admin',
   imports: [FormField, ReactiveFormsModule, RouterModule, CommonModule, ButtonComponent, CardComponent, ConfirmationModalComponent],

@@ -19,7 +19,7 @@ import { FoundedHeaderQueryDTO } from '../../models/requests/founded-header-quer
 import { FoundPersonListItemDto } from '../../models/responses/found-person-list-item-dto';
 import { FoundedFilterState } from '../../../../shared/helper/cases-filter-state';
 import { SnackbarService } from '../../../../shared/services/toast.service';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 

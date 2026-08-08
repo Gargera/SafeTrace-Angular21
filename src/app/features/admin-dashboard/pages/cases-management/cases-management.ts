@@ -37,7 +37,8 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+
 
 const FILTER_DEBOUNCE_MS = 400;
 const UI_STATE_CACHE_KEY = 'Dashboard_UI_State';
@@ -201,8 +202,8 @@ export class CasesManagement implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.cacheService.set(
       UI_STATE_CACHE_KEY,
-      { 
-        filter: this.baseFilter(), 
+      {
+        filter: this.baseFilter(),
         page: this.currentPage(),
         modalConfig: this.showConfirmModal() ? this.modalConfig() : null
       },

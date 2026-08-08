@@ -13,15 +13,15 @@ import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
-import {CaseTypeBadgeDirective} from '../../../../shared/directives/case-type-badge-directive';
-import {TruncatePipe} from '../../../../shared/pipes/truncate-pipe';
+import { CaseTypeBadgeDirective } from '../../../../shared/directives/case-type-badge-directive';
+import { TruncatePipe } from '../../../../shared/pipes/truncate-pipe';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 const PAGE_SIZE = 10;
 const UI_STATE_CACHE_KEY = 'AdminChats_UI_State';
@@ -93,33 +93,33 @@ export class AdminChats implements OnInit {
 
   today = new Date().toISOString().split('T')[0];
 
-fromDateError = computed(() => {
-  const from = this.fromDate();
+  fromDateError = computed(() => {
+    const from = this.fromDate();
 
-  if (!from) return '';
+    if (!from) return '';
 
-  if (from > this.today)
-    return 'لا يمكن اختيار تاريخ في المستقبل';
+    if (from > this.today)
+      return 'لا يمكن اختيار تاريخ في المستقبل';
 
-  if (this.toDate() && from > this.toDate())
-    return 'يجب أن يكون تاريخ البداية قبل تاريخ النهاية';
+    if (this.toDate() && from > this.toDate())
+      return 'يجب أن يكون تاريخ البداية قبل تاريخ النهاية';
 
-  return '';
-});
+    return '';
+  });
 
-toDateError = computed(() => {
-  const to = this.toDate();
+  toDateError = computed(() => {
+    const to = this.toDate();
 
-  if (!to) return '';
+    if (!to) return '';
 
-  if (to > this.today)
-    return 'لا يمكن اختيار تاريخ في المستقبل';
+    if (to > this.today)
+      return 'لا يمكن اختيار تاريخ في المستقبل';
 
-  if (this.fromDate() && to < this.fromDate())
-    return 'يجب أن يكون تاريخ النهاية بعد تاريخ البداية';
+    if (this.fromDate() && to < this.fromDate())
+      return 'يجب أن يكون تاريخ النهاية بعد تاريخ البداية';
 
-  return '';
-});
+    return '';
+  });
 
   hasDateErrors = computed(() =>
     !!this.fromDateError() || !!this.toDateError()
@@ -182,12 +182,12 @@ toDateError = computed(() => {
   private loadChats(): void {
     this.isLoading.set(true);
     const filter: ChatFilterDto = {
-       search: this.searchTerm() || undefined ,
-       fromDate:this.fromDate() || undefined,
-       toDate: this.toDate() || undefined,
-       isDeletedBySender: this.isDeletedBySender(),
+      search: this.searchTerm() || undefined,
+      fromDate: this.fromDate() || undefined,
+      toDate: this.toDate() || undefined,
+      isDeletedBySender: this.isDeletedBySender(),
       isDeletedByReceiver: this.isDeletedByReceiver(),
-      };
+    };
 
     this.chatService.getAllChatsForAdmin(this.currentPage(), PAGE_SIZE, filter).subscribe({
       next: (response) => {
@@ -214,8 +214,8 @@ toDateError = computed(() => {
 
   applyFilters(): void {
     if (this.hasDateErrors()) {
-    return;
-  }
+      return;
+    }
     this.currentPage.set(1);
     this.loadChats();
     this.showFilterDialog.set(false);
@@ -245,12 +245,12 @@ toDateError = computed(() => {
 
   // async hardDeleteChat(chat: AdminChatsDto, event: Event): Promise<void> {
   //   event.stopPropagation(); // لمنع فتح الشات عند الضغط على زر الحذف
-    
+
   //   const confirmed = await this.chatAlerts.confirm(
   //     'حذف المحادثة نهائياً',
   //     `سيتم حذف المحادثة رقم ${chat.chatId} نهائياً ولا يمكن التراجع عن هذا الإجراء.`
   //   );
-    
+
   //   if (!confirmed) {
   //     return;
   //   }
@@ -267,64 +267,64 @@ toDateError = computed(() => {
   // }
 
   openDeleteModal(chat: AdminChatsDto, event: Event): void {
-  event.stopPropagation();
+    event.stopPropagation();
 
-  this.selectedChatToDelete.set(chat);
-  this.showDeleteModal.set(true);
-}
-confirmDeleteChat(): void {
-  const chat = this.selectedChatToDelete();
+    this.selectedChatToDelete.set(chat);
+    this.showDeleteModal.set(true);
+  }
+  confirmDeleteChat(): void {
+    const chat = this.selectedChatToDelete();
 
-  if (!chat) return;
+    if (!chat) return;
 
-  this.chatService.hardDeleteChat(chat.chatId).subscribe({
-    next: () => {
-      this.chats.update(current =>
-        current.filter(c => c.chatId !== chat.chatId)
-      );
+    this.chatService.hardDeleteChat(chat.chatId).subscribe({
+      next: () => {
+        this.chats.update(current =>
+          current.filter(c => c.chatId !== chat.chatId)
+        );
 
-      this.totalCount.update(count => count - 1);
+        this.totalCount.update(count => count - 1);
 
-      this.snackbarService.success('تم حذف المحادثة نهائياً');
+        this.snackbarService.success('تم حذف المحادثة نهائياً');
 
-      const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
-      cachedState.showDeleteModal = false;
-      cachedState.selectedChatToDelete = null;
-      this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+        const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
+        cachedState.showDeleteModal = false;
+        cachedState.selectedChatToDelete = null;
+        this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
 
-      this.closeDeleteModal();
-    },
-    error: (err) => {
-      this.snackbarService.error(extractErrorMessage(err, 'تعذر حذف المحادثة، حاول مرة أخرى'));
-    }
-  });
-}
+        this.closeDeleteModal();
+      },
+      error: (err) => {
+        this.snackbarService.error(extractErrorMessage(err, 'تعذر حذف المحادثة، حاول مرة أخرى'));
+      }
+    });
+  }
 
-closeDeleteModal(): void {
-  this.showDeleteModal.set(false);
-  this.selectedChatToDelete.set(null);
-}
+  closeDeleteModal(): void {
+    this.showDeleteModal.set(false);
+    this.selectedChatToDelete.set(null);
+  }
 
   getRelativeTime(date?: string): string {
-  if (!date) return '';
+    if (!date) return '';
 
-  const deletedDate = new Date(date);
-  const now = new Date();
+    const deletedDate = new Date(date);
+    const now = new Date();
 
-  const diffMs = now.getTime() - deletedDate.getTime();
-  const diffMinutes = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMinutes / 60);
-  const diffDays = Math.floor(diffHours / 24);
+    const diffMs = now.getTime() - deletedDate.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
 
-  if (diffMinutes < 1) return 'منذ لحظات';
-  if (diffMinutes < 60) return `منذ ${diffMinutes} دقيقة`;
-  if (diffHours < 24) return `منذ ${diffHours} ساعة`;
-  if (diffDays < 30) return `منذ ${diffDays} يوم`;
+    if (diffMinutes < 1) return 'منذ لحظات';
+    if (diffMinutes < 60) return `منذ ${diffMinutes} دقيقة`;
+    if (diffHours < 24) return `منذ ${diffHours} ساعة`;
+    if (diffDays < 30) return `منذ ${diffDays} يوم`;
 
-  const diffMonths = Math.floor(diffDays / 30);
-  if (diffMonths < 12) return `منذ ${diffMonths} شهر`;
+    const diffMonths = Math.floor(diffDays / 30);
+    if (diffMonths < 12) return `منذ ${diffMonths} شهر`;
 
-  const diffYears = Math.floor(diffMonths / 12);
-  return `منذ ${diffYears} سنة`;
-}
+    const diffYears = Math.floor(diffMonths / 12);
+    return `منذ ${diffYears} سنة`;
+  }
 }

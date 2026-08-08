@@ -6,7 +6,7 @@ import { SnackbarService } from '../../../../shared/services/toast.service';
 import Swal from 'sweetalert2';
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 @Component({
   selector: 'app-confirm-email',

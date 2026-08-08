@@ -231,7 +231,7 @@
 
 <!-- Message Modal -->
 @if (selectedMessage(); as msg) {
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" (click)="closeMessage()">
+<div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" (click)="closeMessage()">
   <div class="w-full max-w-120 rounded-3xl border border-outline-variant/20 bg-surface shadow-2xl animate-scale-in flex flex-col overflow-hidden" (click)="$event.stopPropagation()">
     
     <div class="px-6 pt-10 pb-8 flex flex-col items-center text-center">

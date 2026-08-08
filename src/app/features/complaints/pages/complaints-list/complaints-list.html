@@ -227,7 +227,7 @@
 
 <!-- Details Modal -->
 @if (showDetailsModal() && selectedComplaint()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" (click)="closeDetailsModal()">
+  <div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" (click)="closeDetailsModal()">
     <app-card extraClass="w-full max-w-6xl max-h-[90vh] overflow-y-auto bg-surface-container-lowest shadow-2xl rounded-2xl mx-4" dir="rtl" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between border-b border-outline-variant px-6 py-4">
         <span class="font-bold text-lg text-primary">تفاصيل الشكوى</span>

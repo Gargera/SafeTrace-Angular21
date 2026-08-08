@@ -29,7 +29,7 @@
         <app-button
           type="submit"
           variant="success"
-          [disabled]="phoneForm.invalid || isSavingPhone()"
+          [disabled]="isSavingPhone()"
           [attr.aria-busy]="isSavingPhone()"
         >
           @if (isSavingPhone()) {

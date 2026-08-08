@@ -17,7 +17,7 @@ import { caseCodeValidator } from '../../../../shared/validators/case-code.valid
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { Gender } from '../../../../shared/enums/gender';
 import { CaseListItemResponse } from '../../../../core/models/cases.model';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 @Component({
   selector: 'app-home',

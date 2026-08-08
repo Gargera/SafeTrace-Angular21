@@ -5,7 +5,7 @@ import { GetUserInfoDTO, UpdateNameDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
 import { ButtonComponent } from '../../../../../../shared/components/button/button';
 import { FormField } from '../../../../../../shared/components/form-field/form-field';
-import { extractErrorMessage } from '../../../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../../../shared/helper/error.helper';
 
 @Component({
   selector: 'app-personal-info',

@@ -32,7 +32,7 @@
         <app-button
           type="submit"
           variant="success"
-          [disabled]="personalForm.invalid || isSavingPersonal()"
+          [disabled]="isSavingPersonal()"
           [attr.aria-busy]="isSavingPersonal()"
         >
           @if (isSavingPersonal()) {
