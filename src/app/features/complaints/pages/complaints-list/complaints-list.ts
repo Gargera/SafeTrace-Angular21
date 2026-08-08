@@ -270,12 +270,16 @@ export class ComplaintsList implements OnInit {
     this.complaintToDelete.set(null);
   }
 
+  isDeleting = signal<boolean>(false);
+
   confirmDelete() {
     const complaint = this.complaintToDelete();
-    if (!complaint) return;
+    if (!complaint || this.isDeleting()) return;
 
+    this.isDeleting.set(true);
     this.svc.deleteComplaint(complaint.id).subscribe({
       next: (res) => {
+        this.isDeleting.set(false);
         if (res.success) {
           this.toast.success('تم حذف الشكوى بنجاح');
 
@@ -288,10 +292,11 @@ export class ComplaintsList implements OnInit {
           this.loadComplaints();
           this.loadStatistics();
         } else {
-          this.toast.error(res.message || 'حدث خطأ أثناء החذف');
+          this.toast.error(res.message || 'حدث خطأ أثناء الحذف');
         }
       },
       error: (err) => {
+        this.isDeleting.set(false);
         this.toast.error(extractErrorMessage(err, 'حدث خطأ أثناء الحذف'));
       }
     });

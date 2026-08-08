@@ -1,4 +1,4 @@
-import { Component, inject, input, OnChanges, output, signal, SimpleChanges } from '@angular/core';
+import { Component, inject, input, OnChanges, OnInit, output, signal, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SnackbarService } from '../../../../../../shared/services/toast.service';
 import { GetUserInfoDTO, UpdateNameDTO } from '../../../../model/profile.model';
@@ -6,6 +6,8 @@ import { ProfileService } from '../../../../service/profile.service';
 import { ButtonComponent } from '../../../../../../shared/components/button/button';
 import { FormField } from '../../../../../../shared/components/form-field/form-field';
 import { extractErrorMessage } from '../../../../../../shared/helper/error.helper';
+import { CacheService } from '../../../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../../../core/cache/cache.constants';
 
 @Component({
   selector: 'app-personal-info',
@@ -13,7 +15,7 @@ import { extractErrorMessage } from '../../../../../../shared/helper/error.helpe
   imports: [ReactiveFormsModule, ButtonComponent, FormField],
   templateUrl: './personal-info.html',
 })
-export class PersonalInfo implements OnChanges {
+export class PersonalInfo implements OnChanges, OnInit {
   readonly userInfo = input<GetUserInfoDTO | null>(null);
   // Emitted after a successful save — parent re-fetches GetUserInfo and
   // pushes the fresh profile up to ProfileView (UpdateName only returns
@@ -23,6 +25,7 @@ export class PersonalInfo implements OnChanges {
   readonly #fb = inject(FormBuilder);
   readonly #profileService = inject(ProfileService);
   readonly #snackbar = inject(SnackbarService);
+  readonly #cacheService = inject(CacheService);
 
   readonly isEditingPersonal = signal(false);
   readonly isSavingPersonal = signal(false);
@@ -74,6 +77,22 @@ export class PersonalInfo implements OnChanges {
     return !!(ctrl?.invalid && ctrl?.touched);
   }
 
+  ngOnInit(): void {
+    const cached = this.#cacheService.get<{ firstName: string; lastName: string; isEditing: boolean }>('Profile_PersonalInfo_Draft');
+    if (cached) {
+      if (cached.isEditing) {
+        this.togglePersonalEdit(true);
+        this.personalForm.patchValue({ firstName: cached.firstName, lastName: cached.lastName });
+      }
+    }
+
+    this.personalForm.valueChanges.subscribe((val) => {
+      if (this.isEditingPersonal()) {
+        this.#cacheService.set('Profile_PersonalInfo_Draft', { ...val, isEditing: true }, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+      }
+    });
+  }
+
   // ── Edit/Cancel toggle ───────────────────────────────────────────────────
 
   togglePersonalEdit(edit: boolean): void {
@@ -86,6 +105,7 @@ export class PersonalInfo implements OnChanges {
   }
 
   cancelPersonal(): void {
+    this.#cacheService.remove('Profile_PersonalInfo_Draft');
     this.togglePersonalEdit(false);
     const info = this.userInfo();
     if (info) {
@@ -114,6 +134,7 @@ export class PersonalInfo implements OnChanges {
 
     this.#profileService.updateName(dto).subscribe({
       next: () => {
+        this.#cacheService.remove('Profile_PersonalInfo_Draft');
         this.isSavingPersonal.set(false);
         this.togglePersonalEdit(false);
         this.#snackbar.success('تم حفظ التغييرات بنجاح');

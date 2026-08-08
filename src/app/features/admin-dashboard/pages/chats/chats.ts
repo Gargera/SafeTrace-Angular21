@@ -1,11 +1,11 @@
 import { Component, inject, OnInit, signal, computed, DestroyRef } from '@angular/core';
 import { DatePipe, CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { FormsModule } from '@angular/forms'; // 1. قمنا باستيراد الـ FormsModule هنا
-import { ChatService } from '../../services/chat.service';
-import { ChatAlertsService } from '../../services/chat-alert.service';
-import { AdminChatsDto, ChatFilterDto } from '../../models/chat.model';
-import { AdminChatStatisticsDto } from '../../models/admin-chat-statistics-dto';
+import { FormsModule } from '@angular/forms';
+import { ChatService } from '../../../chat/services/chat.service';
+import { ChatAlertsService } from '../../../chat/services/chat-alert.service';
+import { AdminChatsDto, ChatFilterDto } from '../../../chat/models/chat.model';
+import { AdminChatStatisticsDto } from '../../../chat/models/admin-chat-statistics-dto';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -27,7 +27,8 @@ const PAGE_SIZE = 10;
 const UI_STATE_CACHE_KEY = 'AdminChats_UI_State';
 
 @Component({
-  selector: 'app-admin-chats',
+  selector: 'app-chats',
+  standalone: true,
   imports: [
     DatePipe,
     CommonModule,
@@ -44,7 +45,7 @@ const UI_STATE_CACHE_KEY = 'AdminChats_UI_State';
     HasPermissionDirective,
     PaginationComponent
   ],
-  templateUrl: './admin-chats.html',
+  templateUrl: './chats.html',
 })
 export class AdminChats implements OnInit {
   private chatService = inject(ChatService);
@@ -60,32 +61,32 @@ export class AdminChats implements OnInit {
   ];
   readonly pageSize = PAGE_SIZE;
 
-  // Signals الأساسية
+  // Signals
   chats = signal<AdminChatsDto[]>([]);
   totalCount = signal(0);
-  currentPage = signal(1); // تم تغيير الاسم ليتطابق مع الـ template (currentPage)
+  currentPage = signal(1);
   searchTerm = signal('');
-  isLoading = signal(false); // سجنال التحميل لربطها بالـ Spinner
+  isLoading = signal(false);
+  isDeleting = signal(false);
 
   showDeleteModal = signal(false);
   selectedChatToDelete = signal<AdminChatsDto | null>(null);
-  // فلاتر إضافية (التاريخ + حالة الحذف)
+  
+  // Date and status filters
   fromDate = signal<string>('');
   toDate = signal<string>('');
   isDeletedBySender = signal<boolean | undefined>(undefined);
   isDeletedByReceiver = signal<boolean | undefined>(undefined);
 
-  // حالة فتح/قفل حوار الفلترة
   showFilterDialog = signal(false);
 
-  // هل فيه فلاتر مفعّلة حالياً (لعرض badge على زر الفلترة)
   hasActiveFilters = computed(() =>
     !!this.fromDate() ||
     !!this.toDate() ||
     this.isDeletedBySender() !== undefined ||
     this.isDeletedByReceiver() !== undefined
   );
-  // حسابات الـ Pagination تلقائياً بناءً على الـ Signals
+  
   totalPages = computed(() => Math.ceil(this.totalCount() / PAGE_SIZE));
 
   statistics = signal<AdminChatStatisticsDto | null>(null);
@@ -95,29 +96,17 @@ export class AdminChats implements OnInit {
 
   fromDateError = computed(() => {
     const from = this.fromDate();
-
     if (!from) return '';
-
-    if (from > this.today)
-      return 'لا يمكن اختيار تاريخ في المستقبل';
-
-    if (this.toDate() && from > this.toDate())
-      return 'يجب أن يكون تاريخ البداية قبل تاريخ النهاية';
-
+    if (from > this.today) return 'لا يمكن اختيار تاريخ في المستقبل';
+    if (this.toDate() && from > this.toDate()) return 'يجب أن يكون تاريخ البداية قبل تاريخ النهاية';
     return '';
   });
 
   toDateError = computed(() => {
     const to = this.toDate();
-
     if (!to) return '';
-
-    if (to > this.today)
-      return 'لا يمكن اختيار تاريخ في المستقبل';
-
-    if (this.fromDate() && to < this.fromDate())
-      return 'يجب أن يكون تاريخ النهاية بعد تاريخ البداية';
-
+    if (to > this.today) return 'لا يمكن اختيار تاريخ في المستقبل';
+    if (this.fromDate() && to < this.fromDate()) return 'يجب أن يكون تاريخ النهاية بعد تاريخ البداية';
     return '';
   });
 
@@ -149,12 +138,12 @@ export class AdminChats implements OnInit {
     const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY);
 
     if (cachedState) {
-      this.searchTerm.set(cachedState.searchTerm);
-      this.fromDate.set(cachedState.fromDate);
-      this.toDate.set(cachedState.toDate);
+      this.searchTerm.set(cachedState.searchTerm || '');
+      this.fromDate.set(cachedState.fromDate || '');
+      this.toDate.set(cachedState.toDate || '');
       this.isDeletedBySender.set(cachedState.isDeletedBySender);
       this.isDeletedByReceiver.set(cachedState.isDeletedByReceiver);
-      this.currentPage.set(cachedState.currentPage);
+      this.currentPage.set(cachedState.currentPage || 1);
 
       if (cachedState.showDeleteModal && cachedState.selectedChatToDelete) {
         this.selectedChatToDelete.set(cachedState.selectedChatToDelete);
@@ -173,8 +162,9 @@ export class AdminChats implements OnInit {
         this.statistics.set(response.data!);
         this.isLoadingStats.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.isLoadingStats.set(false);
+        this.snackbarService.error(extractErrorMessage(err, 'تعذر تحميل إحصائيات المحادثات'));
       }
     });
   }
@@ -197,6 +187,8 @@ export class AdminChats implements OnInit {
       },
       error: (err) => {
         this.snackbarService.error(extractErrorMessage(err, 'تعذر تحميل المحادثات'));
+        this.chats.set([]);
+        this.totalCount.set(0);
         this.isLoading.set(false);
       },
     });
@@ -204,7 +196,7 @@ export class AdminChats implements OnInit {
 
   onSearch(value: string): void {
     this.searchTerm.set(value);
-    this.currentPage.set(1); // إعادة التعيين للصفحة الأولى عند البحث
+    this.currentPage.set(1);
     this.loadChats();
   }
 
@@ -222,6 +214,7 @@ export class AdminChats implements OnInit {
   }
 
   resetFilters(): void {
+    this.cacheService.remove(UI_STATE_CACHE_KEY);
     this.searchTerm.set('');
     this.fromDate.set('');
     this.toDate.set('');
@@ -243,48 +236,24 @@ export class AdminChats implements OnInit {
     this.router.navigate(['/admin/chats', chat.chatId]);
   }
 
-  // async hardDeleteChat(chat: AdminChatsDto, event: Event): Promise<void> {
-  //   event.stopPropagation(); // لمنع فتح الشات عند الضغط على زر الحذف
-
-  //   const confirmed = await this.chatAlerts.confirm(
-  //     'حذف المحادثة نهائياً',
-  //     `سيتم حذف المحادثة رقم ${chat.chatId} نهائياً ولا يمكن التراجع عن هذا الإجراء.`
-  //   );
-
-  //   if (!confirmed) {
-  //     return;
-  //   }
-
-  //   this.chatService.hardDeleteChat(chat.chatId).subscribe({
-  //     next: () => {
-  //       this.chats.update((current) => current.filter((c) => c.chatId !== chat.chatId));
-  //       // تقليل العدد الإجمالي لتحديث العدادات فوراً في الكروت والـ pagination
-  //       this.totalCount.update(count => count - 1);
-  //       this.chatAlerts.success('تم حذف المحادثة نهائياً');
-  //     },
-  //     error: () => this.chatAlerts.error('تعذر حذف المحادثة، حاول مرة أخرى'),
-  //   });
-  // }
-
   openDeleteModal(chat: AdminChatsDto, event: Event): void {
     event.stopPropagation();
-
     this.selectedChatToDelete.set(chat);
     this.showDeleteModal.set(true);
   }
+
   confirmDeleteChat(): void {
     const chat = this.selectedChatToDelete();
+    if (!chat || this.isDeleting()) return;
 
-    if (!chat) return;
-
+    this.isDeleting.set(true);
     this.chatService.hardDeleteChat(chat.chatId).subscribe({
       next: () => {
         this.chats.update(current =>
           current.filter(c => c.chatId !== chat.chatId)
         );
 
-        this.totalCount.update(count => count - 1);
-
+        this.totalCount.update(count => Math.max(0, count - 1));
         this.snackbarService.success('تم حذف المحادثة نهائياً');
 
         const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
@@ -292,9 +261,11 @@ export class AdminChats implements OnInit {
         cachedState.selectedChatToDelete = null;
         this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
 
+        this.isDeleting.set(false);
         this.closeDeleteModal();
       },
       error: (err) => {
+        this.isDeleting.set(false);
         this.snackbarService.error(extractErrorMessage(err, 'تعذر حذف المحادثة، حاول مرة أخرى'));
       }
     });

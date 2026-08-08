@@ -177,7 +177,6 @@ export class CasesManagement implements OnInit, OnDestroy {
       }
 
       this.searchDebounceTimer = setTimeout(() => {
-        this.currentPage.set(1);
         this.loadCases();
       }, FILTER_DEBOUNCE_MS);
     });
@@ -218,12 +217,15 @@ export class CasesManagement implements OnInit, OnDestroy {
 
   // ---------- Event handlers ----------
   onFilterChange(filter: CasesFilterRequest): void {
+    this.currentPage.set(1);
     this.baseFilter.set(filter);
   }
 
   resetFilters(): void {
+    this.cacheService.remove(UI_STATE_CACHE_KEY);
     this.baseFilter.set(this.getDefaultFilter());
     this.currentPage.set(1);
+    this.loadCases();
   }
 
   changePage(page: number): void {
@@ -305,13 +307,17 @@ export class CasesManagement implements OnInit, OnDestroy {
     this.showConfirmModal.set(true);
   }
 
+  isDeleting = signal(false);
+
   confirmAction(): void {
     const config = this.modalConfig();
-    if (!config || !config.caseId || !config.caseType) return;
+    if (!config || !config.caseId || !config.caseType || this.isDeleting()) return;
+    this.isDeleting.set(true);
     this.showConfirmModal.set(false);
 
     this.casesService.deleteCase(config.caseId, config.caseType).subscribe({
       next: () => {
+        this.isDeleting.set(false);
         this.cases.update((items) => items.filter((item) => item.id !== config.caseId));
         this.totalCount.update((c) => Math.max(0, c - 1));
         if (this.totalCount() === 0) this.totalPages.set(0);
@@ -319,6 +325,7 @@ export class CasesManagement implements OnInit, OnDestroy {
         this.modalConfig.set(null);
       },
       error: (err) => {
+        this.isDeleting.set(false);
         this.toast.error(extractErrorMessage(err, 'فشل حذف الحالة'));
         this.modalConfig.set(null);
       },
@@ -329,6 +336,7 @@ export class CasesManagement implements OnInit, OnDestroy {
     this.showConfirmModal.set(false);
     this.modalConfig.set(null);
   }
+
   getDetailsRoute(caseItem: CaseListItemResponse) {
     switch (caseItem.caseType) {
       case CaseType.LongTerm:
@@ -364,11 +372,15 @@ export class CasesManagement implements OnInit, OnDestroy {
   }
 
   downloadReport(): void {
-
     this.reportService
       .generateCasesPdfReport(this.baseFilter())
-      .subscribe(response => {
-        this.reportService.download(response);
+      .subscribe({
+        next: (response) => {
+          this.reportService.download(response);
+        },
+        error: (err) => {
+          this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتنزيل تقرير الحالات'));
+        }
       });
   }
 

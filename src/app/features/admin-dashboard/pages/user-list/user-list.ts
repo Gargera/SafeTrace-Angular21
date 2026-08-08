@@ -140,6 +140,9 @@ export class UserList {
           this.roles.set(res.data);
         }
       },
+      error: (err) => {
+        this.toast.error(extractErrorMessage(err, 'تعذر تحميل الأدوار'));
+      }
     });
   }
 
@@ -154,7 +157,10 @@ export class UserList {
         }
         this.isLoading.set(false);
       },
-      error: () => this.isLoading.set(false),
+      error: (err) => {
+        this.isLoading.set(false);
+        this.toast.error(extractErrorMessage(err, 'تعذر تحميل قائمة المستخدمين'));
+      },
     });
   }
 
@@ -209,7 +215,6 @@ export class UserList {
   }
 
   downloadReport(): void {
-
     const reportFilter = {
       pageNumber: this.filter().pageNumber,
       pageSize: this.filter().pageSize,
@@ -217,13 +222,17 @@ export class UserList {
       verificationStatus: this.filter().verificationStatus || undefined,
       roleId: this.filter().roleId || undefined,
       isBlocked: this.filter().isBlocked ?? null
-
     };
-    console.log(reportFilter);
+
     this.reportService
       .generateUsersPdfReport(reportFilter)
-      .subscribe(response => {
-        this.reportService.download(response);
+      .subscribe({
+        next: (response) => {
+          this.reportService.download(response);
+        },
+        error: (err) => {
+          this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتنزيل تقرير المستخدمين'));
+        }
       });
   }
 }

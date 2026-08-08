@@ -34,6 +34,8 @@ import { HeaderComponent } from '../../../../shared/components/header/header.com
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup';
 
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+
 const CASE_TYPE_ORDER: CaseType[] = [CaseType.Urgent, CaseType.LongTerm, CaseType.Unknown];
 const UI_STATE_CACHE_KEY = 'MyCasesTab_UI_State';
 
@@ -334,10 +336,12 @@ export class MyCasesTab implements OnInit, OnDestroy {
     this.showMarkAsFoundModal.set(true);
   }
 
+  isSubmitting = signal(false);
+
   handleMarkAsFoundConfirm(data: FoundPersonInfoRequest): void {
     const id = this.markAsFoundCaseId();
     const type = this.markAsFoundCaseType();
-    if (!id || !type) return;
+    if (!id || !type || this.isSubmitting()) return;
 
     let markRequest;
     switch (type) {
@@ -354,8 +358,10 @@ export class MyCasesTab implements OnInit, OnDestroy {
         return;
     }
 
+    this.isSubmitting.set(true);
     markRequest.subscribe({
       next: () => {
+        this.isSubmitting.set(false);
         this.allCases.update((items) =>
           items.map((item) =>
             item.id === id
@@ -378,8 +384,9 @@ export class MyCasesTab implements OnInit, OnDestroy {
         this.markAsFoundCaseId.set(null);
         this.markAsFoundCaseType.set(null);
       },
-      error: () => {
-        this.toast.error('فشل تحديث الحالة');
+      error: (err) => {
+        this.isSubmitting.set(false);
+        this.toast.error(extractErrorMessage(err, 'فشل تحديث الحالة'));
       },
     });
   }
@@ -406,6 +413,8 @@ export class MyCasesTab implements OnInit, OnDestroy {
   }
 
   private executeDelete(caseId: number, caseType: CaseType): void {
+    if (this.isSubmitting()) return;
+
     let deleteRequest;
     switch (caseType) {
       case CaseType.Urgent:
@@ -421,12 +430,12 @@ export class MyCasesTab implements OnInit, OnDestroy {
         return;
     }
 
+    this.isSubmitting.set(true);
     deleteRequest.subscribe({
       next: () => {
+        this.isSubmitting.set(false);
         this.allCases.update((items) => items.filter((item) => item.id !== caseId));
-        // Decrement total count because a case was deleted
         this.totalCount.update((c) => Math.max(0, c - 1));
-        // Also decrement overall total count if the deleted case was part of the unfiltered set
         this.overallTotalCount.update((c) => Math.max(0, c - 1));
 
         if (this.totalCount() === 0) {
@@ -441,8 +450,9 @@ export class MyCasesTab implements OnInit, OnDestroy {
 
         this.modalConfig.set(null);
       },
-      error: () => {
-        this.toast.error('فشل حذف الحالة');
+      error: (err) => {
+        this.isSubmitting.set(false);
+        this.toast.error(extractErrorMessage(err, 'فشل حذف الحالة'));
         this.modalConfig.set(null);
       },
     });

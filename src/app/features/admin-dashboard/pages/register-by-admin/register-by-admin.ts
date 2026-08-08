@@ -101,6 +101,9 @@ export class RegisterByAdmin implements OnInit {
           this.roles.set(filteredRoles);
         }
       },
+      error: (err) => {
+        this.snackbar.error(extractErrorMessage(err, 'تعذر تحميل الأدوار'));
+      }
     });
   }
 
