@@ -278,7 +278,7 @@
   @if(showPermanentDeleteConfirmation()){
   <app-confirmation-modal title="حذف نهائي"
     message="هل أنت متأكد أنك تريد حذف هذه الحالة نهائياً من النظام؟ هذا الإجراء لا يمكن التراجع عنه."
-    confirmText="حذف نهائي" cancelText="إلغاء" variant="danger" (confirm)="confirmPermanentDelete()"
+    confirmText="حذف نهائي" cancelText="إلغاء" variant="danger" icon="delete_forever" (confirm)="confirmPermanentDelete()"
     (cancel)="cancelPermanentDelete()">
   </app-confirmation-modal>
   }

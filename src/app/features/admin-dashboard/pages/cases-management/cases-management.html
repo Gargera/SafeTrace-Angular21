@@ -171,5 +171,5 @@
 @if (showConfirmModal()) {
 <app-confirmation-modal [title]="modalConfig()?.title || 'تأكيد'" [message]="modalConfig()?.message || 'هل أنت متأكد؟'"
   [confirmText]="modalConfig()?.confirmText || 'تأكيد'" [cancelText]="modalConfig()?.cancelText || 'إلغاء'"
-  variant="danger" (confirm)="confirmAction()" (cancel)="closeModal()" />
+  icon="delete" variant="danger" (confirm)="confirmAction()" (cancel)="closeModal()" />
 }
