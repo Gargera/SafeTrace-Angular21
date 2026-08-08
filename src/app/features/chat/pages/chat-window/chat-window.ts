@@ -18,6 +18,7 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { validateImageFile} from '../../../../shared/validators/image-validation.validator';
 import { validateVideoFile } from '../../../../shared/validators/video-validation.validator';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 @Component({
   selector: 'app-chat-window',
   standalone: true,
@@ -83,7 +84,7 @@ export class ChatWindow implements OnInit {
       },
       error: (err) => {
         this.snackbarService.error(
-         err.error?.detail ?? 'تعذر تحميل بيانات المحادثة'
+         extractErrorMessage(err, 'تعذر تحميل بيانات المحادثة')
         );
         this.isLoading.set(false);
       },
@@ -253,7 +254,7 @@ private handleMessageDeletedForEveryone = (
     },
     error: (err) => {
       this.snackbarService.error(
-        err.error?.detail ?? err.error?.title ?? 'تعذر تحميل الرسائل'
+        extractErrorMessage(err, 'تعذر تحميل الرسائل')
       );
       this.isLoading.set(false);
     }
@@ -364,7 +365,7 @@ private handleMessageDeletedForEveryone = (
         error: (err) => {
 
           this.snackbarService.error(
-            err.error?.detail ?? err.error?.title ?? 'تعذر إرسال الرسالة، تحقق من الاتصال وحاول مرة أخرى');
+            extractErrorMessage(err, 'تعذر إرسال الرسالة، تحقق من الاتصال وحاول مرة أخرى'));
           this.sending.set(false);
         }
     });
@@ -403,7 +404,7 @@ private handleMessageDeletedForEveryone = (
 
     error: (err) => {
       this.snackbarService.error(
-        err.error?.detail ?? err.error?.title ?? 'تعذر حذف الرسالة، حاول مرة أخرى'
+        extractErrorMessage(err, 'تعذر حذف الرسالة، حاول مرة أخرى')
       );
     },
   });

@@ -142,7 +142,21 @@
         @if (!loading()) {
         <tr>
           <td colspan="6" class="py-xl">
-            <app-empty-state title="لا توجد حالات" message="لا توجد حالات تطابق معايير البحث." />
+            <app-empty-state
+              [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات مسجلة'"
+              [message]="hasActiveFilters() ? 'لم نتمكن من العثور على حالات تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم تسجيل أي حالات حتى الآن.'"
+            >
+              @if (hasActiveFilters()) {
+                <app-button
+                  emptyActions
+                  variant="outline"
+                  size="md"
+                  (click)="resetFilters()"
+                >
+                  إلغاء تصفية البحث
+                </app-button>
+              }
+            </app-empty-state>
           </td>
         </tr>
         }

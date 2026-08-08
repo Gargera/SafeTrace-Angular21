@@ -225,6 +225,6 @@
     [icon]="modalConfig().icon"
     [variant]="modalConfig().variant"
     (confirm)="onConfirmModal()"
-    (cancel)="showConfirmModal.set(false)"
+    (cancel)="onCancelModal()"
   ></app-confirmation-modal>
 }

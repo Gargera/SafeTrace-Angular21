@@ -191,9 +191,20 @@
             <tr>
               <td colspan="8" class="py-xl">
                 <app-empty-state
-                  title="لا توجد تبرعات"
-                  message="لم يتم العثور على أي تبرعات تطابق معايير البحث الحالية."
-                ></app-empty-state>
+                  [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد تبرعات'"
+                  [message]="hasActiveFilters() ? 'لم نتمكن من العثور على تبرعات تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم تقديم أي تبرعات حتى الآن.'"
+                >
+                  @if (hasActiveFilters()) {
+                    <app-button
+                      emptyActions
+                      variant="outline"
+                      size="md"
+                      (click)="resetFilters()"
+                    >
+                      إلغاء تصفية البحث
+                    </app-button>
+                  }
+                </app-empty-state>
               </td>
             </tr>
           }

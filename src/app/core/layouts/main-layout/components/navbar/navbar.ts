@@ -11,6 +11,8 @@ import { Permissions } from '../../../../constants/Permissions';
 import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
 import { CaseNotificationModalComponent } from '../../../../../shared/components/cases-components/case-notification-modal/case-notification-modal';
 
+import { CacheService } from '../../../../cache/cache.service';
+
 @Component({
   selector: 'app-navbar',
   standalone: true,
@@ -21,7 +23,12 @@ import { CaseNotificationModalComponent } from '../../../../../shared/components
 export class Navbar implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private cacheService = inject(CacheService);
   readonly notificationService = inject(NotificationService);
+
+  onNavClick(): void {
+    this.isMobileMenuOpen.set(false);
+  }
 
   isLoggedIn = this.authService.isLoggedIn;
   currentUser = this.authService.currentUser;

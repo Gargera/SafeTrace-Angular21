@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { GetUserDto } from '../../models/User/responses/GetUserDto';
 import { RoleDto } from '../../models/Role/responses/RoleDto';
@@ -29,6 +30,7 @@ import { HasPermissionDirective } from '../../../../shared/directives/has-permis
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 
 const UI_STATE_CACHE_KEY = 'UserList_UI_State';
 
@@ -82,6 +84,23 @@ export class UserList {
     isBlocked: undefined ,
   });
 
+  readonly hasActiveFilters = computed(() => {
+    const f = this.filter();
+    return !!(f.searchTerm || f.verificationStatus || f.roleId || f.isBlocked !== undefined);
+  });
+
+  resetFilters(): void {
+    this.filter.set({
+      pageNumber: 1,
+      pageSize: 10,
+      searchTerm: '',
+      verificationStatus: '' as any,
+      roleId: '' as any,
+      isBlocked: undefined,
+    });
+    this.loadUsers();
+  }
+
   private searchSubject = new Subject<string>();
   VerificationStatusEnum = VerificationStatus;
 
@@ -106,9 +125,11 @@ export class UserList {
     this.loadUsers();
     this.loadStatistics();
 
-    this.searchSubject.pipe(debounceTime(500), distinctUntilChanged()).subscribe((term) => {
-      this.updateFilter({ searchTerm: term, pageNumber: 1 });
-    });
+    this.searchSubject
+      .pipe(debounceTime(500), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe((term: string) => {
+        this.updateFilter({ searchTerm: term, pageNumber: 1 });
+      });
   }
 
   loadRoles() {
@@ -153,18 +174,6 @@ export class UserList {
     this.loadUsers();
   }
 
-  resetFilters() {
-    this.filter.set({
-      pageNumber: 1,
-      pageSize: 10,
-      searchTerm: '',
-      verificationStatus: '' as any,
-      roleId: '' as any,
-      isBlocked: undefined,
-    });
-    this.loadUsers();
-  }
-
   changePage(page: number) {
     if (page >= 1 && page <= this.totalPages()) {
       this.filter.update((f) => ({ ...f, pageNumber: page }));
@@ -188,7 +197,7 @@ export class UserList {
         this.loadingStats.set(false);
       },
       error: (err) => {
-        this.toast.error(err.error?.detail || 'تعذر الاتصال بالخادم لتحميل الإحصائيات');
+        this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتحميل الإحصائيات'));
         this.loadingStats.set(false);
       }
     });

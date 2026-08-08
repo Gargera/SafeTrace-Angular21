@@ -5,6 +5,7 @@ import { VerificationStatus } from '../../../../../../shared/enums/verification-
 import { GetUserInfoDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
 import { ButtonComponent } from '../../../../../../shared/components/button/button';
+import { extractErrorMessage } from '../../../../../../shared/helper/case-error.helper';
 
 @Component({
   selector: 'app-identification-image',
@@ -136,8 +137,7 @@ export class IdentificationImage {
         this.isSavingIdImage.set(false);
         const msg =
           err?.error?.message ||
-          err.error?.detail ||
-          'حدث خطأ أثناء رفع صور الهوية. يرجى المحاولة مرة أخرى.';
+          extractErrorMessage(err, 'حدث خطأ أثناء رفع صور الهوية. يرجى المحاولة مرة أخرى.');
         this.#snackbar.error(msg);
       },
     });

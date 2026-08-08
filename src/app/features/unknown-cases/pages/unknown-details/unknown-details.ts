@@ -16,6 +16,7 @@ import { AgeBadgeDirective } from '../../../../shared/directives/age-badge-direc
 import { AgeCategories } from '../../../../shared/enums/age-categories';
 import { FileType } from '../../../../shared/enums/file-type';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
+import { CacheService } from '../../../../core/cache/cache.service';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup';
 import { CasePhotoResponse, FoundPersonInfoRequest } from '../../../../core/models/cases.model';
@@ -58,6 +59,7 @@ export class UnknownDetails implements OnInit {
   private readonly router = inject(Router);
   private readonly UnknownCaseService = inject(UnknownCaseService);
   private readonly snackbar = inject(SnackbarService);
+  private readonly cacheService = inject(CacheService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly apiUrl = environment.baseUrl;
@@ -112,6 +114,26 @@ export class UnknownDetails implements OnInit {
   currentIndex = signal(0);
   isAdminPage = signal(false);
   isMyCasePage = signal(false);
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      const id = this.caseDetails()?.id;
+      if (id) {
+        this.cacheService.set(
+          `UnknownDetails_Modals_${id}`,
+          {
+            showDelete: this.showDeleteConfirmation(),
+            showFounded: this.showFoundedPopup(),
+            showApprove: this.showApproveConfirmation(),
+            showReject: this.showRejectConfirmation(),
+            showPermanentDelete: this.showPermanentDeleteConfirmation()
+          },
+          300000 // 5 minutes
+        );
+      }
+    });
+  }
+
   ngOnInit(): void {
     this.isAdminPage.set(this.route.snapshot.data['mode'] === 'dashboard');
     this.isMyCasePage.set(this.route.snapshot.data['mode'] === 'my-case');
@@ -147,6 +169,15 @@ export class UnknownDetails implements OnInit {
         next: (apiRes) => {
           if (apiRes.success && apiRes.data) {
             this.caseDetails.set(apiRes.data);
+
+            const cachedModals = this.cacheService.get<any>(`UnknownDetails_Modals_${apiRes.data.id}`);
+            if (cachedModals) {
+              this.showDeleteConfirmation.set(cachedModals.showDelete || false);
+              this.showFoundedPopup.set(cachedModals.showFounded || false);
+              this.showApproveConfirmation.set(cachedModals.showApprove || false);
+              this.showRejectConfirmation.set(cachedModals.showReject || false);
+              this.showPermanentDeleteConfirmation.set(cachedModals.showPermanentDelete || false);
+            }
 
             if (apiRes.data.photos?.length) {
               const primary =
@@ -248,6 +279,7 @@ export class UnknownDetails implements OnInit {
 
           if (res.success) {
             this.snackbar.success('تم تحديث الحالة إلى تم العثور عليه');
+            this.cacheService.remove(`FoundedPopup_Unknown_${id}`);
 
             this.caseDetails.update((current) => {
               if (!current) return current;
@@ -399,6 +431,7 @@ export class UnknownDetails implements OnInit {
           this.isRejecting.set(false);
           if (res.success) {
             this.showRejectConfirmation.set(false);
+            this.cacheService.remove(`RejectPopup_Unknown_${id}`);
             const successMessage = res.message || 'تم رفض الحالة بنجاح';
             this.snackbar.success(successMessage);
             this.refreshCaseDetails(id);

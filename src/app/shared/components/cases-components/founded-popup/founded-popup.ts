@@ -19,6 +19,7 @@ import { FormField } from '../../../../shared/components/form-field/form-field';
 import { FoundPersonInfoRequest } from '../../../../core/models/cases.model';
 import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
 import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
+import { CacheService } from '../../../../core/cache/cache.service';
 
 // Shared validators
 import { arabicText } from '../../../validators/arabic-text.validator';
@@ -34,12 +35,14 @@ import { pastDate } from '../../../validators/past-date.validator';
 })
 export class FoundedPopupComponent implements OnInit {
   caseId = input<number>();
+  contextKey = input<string>();
 
   cancel = output<void>();
   confirmed = output<FoundPersonInfoRequest>();
 
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly cacheService = inject(CacheService);
 
   readonly governorates = EGYPT_GOVERNORATES;
   readonly availableCities = signal<string[]>([]);
@@ -65,6 +68,16 @@ export class FoundedPopupComponent implements OnInit {
           this.form.get('city')?.setValue('');
         }
       });
+
+    if (this.contextKey()) {
+      const cached = this.cacheService.get<any>(this.contextKey()!);
+      if (cached) {
+        this.form.patchValue(cached);
+      }
+      this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(val => {
+        this.cacheService.set(this.contextKey()!, val, 300000); // 5 mins
+      });
+    }
   }
 
   getFieldError(field: string): string | null {
@@ -76,6 +89,7 @@ export class FoundedPopupComponent implements OnInit {
   }
 
   onSubmit(): void {
+    if (this.isSubmitting()) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

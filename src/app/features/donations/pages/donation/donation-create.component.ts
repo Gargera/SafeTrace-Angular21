@@ -8,6 +8,7 @@ import { CardComponent } from '../../../../shared/components/card/card';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { SnackbarService } from '../../../../shared/services/toast.service';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 
 const MIN_DONATION_AMOUNT = 10;
 const MAX_DONATION_AMOUNT = 100_000;
@@ -71,6 +72,7 @@ export class DonationCreateComponent {
   }
 
   donate(): void {
+    if (this.loading) return;
     if (!this.isAmountValid) {
       this.snackbar.warning(this.amountError || 'الرجاء التأكد من إدخال مبلغ تبرع صحيح');
       return;
@@ -99,9 +101,7 @@ export class DonationCreateComponent {
         error: (err) => {
           this.loading = false;
           const errorMsg =
-            err?.error?.detail ||
-            err?.error?.message ||
-            'حدث خطأ أثناء إنشاء عملية الدفع، يرجى المحاولة لاحقاً';
+            extractErrorMessage(err, 'حدث خطأ أثناء إنشاء عملية الدفع، يرجى المحاولة لاحقاً');
           this.snackbar.error(errorMsg);
         },
       });

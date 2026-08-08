@@ -3,6 +3,7 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, EMPTY, switchMap } from 'rxjs';
+import { CacheService } from '../../../../core/cache/cache.service';
 
 import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -58,6 +59,7 @@ export class UrgentDetails implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly apiUrl = environment.baseUrl;
+  private readonly cacheService = inject(CacheService);
   readonly FileType = FileType;
   readonly CaseStatus = CaseStatus;
   readonly Permissions = Permissions;
@@ -105,6 +107,24 @@ export class UrgentDetails implements OnInit {
   lightboxVisible = signal(false);
   currentIndex = signal(0);
 
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      const id = this.caseDetails()?.id;
+      if (id) {
+        this.cacheService.set(
+          `UrgentDetails_Modals_${id}`,
+          {
+            showDelete: this.showDeleteConfirmation(),
+            showFounded: this.showFoundedPopup(),
+            showLocation: this.showLocationModal(),
+            showPermanentDelete: this.showPermanentDeleteConfirmation()
+          },
+          300000
+        );
+      }
+    });
+  }
+
   ngOnInit(): void {
     this.isAdminPage.set(this.route.snapshot.data['mode'] === 'dashboard');
     this.isMyCasePage.set(this.route.snapshot.data['mode'] === 'my-case');
@@ -140,6 +160,14 @@ export class UrgentDetails implements OnInit {
         next: (apiRes) => {
           if (apiRes.success && apiRes.data) {
             this.caseDetails.set(apiRes.data);
+
+            const cachedModals = this.cacheService.get<any>(`UrgentDetails_Modals_${apiRes.data.id}`);
+            if (cachedModals) {
+              this.showDeleteConfirmation.set(cachedModals.showDelete || false);
+              this.showFoundedPopup.set(cachedModals.showFounded || false);
+              this.showLocationModal.set(cachedModals.showLocation || false);
+              this.showPermanentDeleteConfirmation.set(cachedModals.showPermanentDelete || false);
+            }
 
             if (apiRes.data.photos?.length) {
               const primary =
@@ -236,6 +264,7 @@ export class UrgentDetails implements OnInit {
 
           if (res.success) {
             this.snackbar.success('تم تحديث الحالة إلى تم العثور عليه');
+            this.cacheService.remove(`FoundedPopup_Urgent_${id}`);
             this.caseDetails.update((current) => {
               if (!current) return current;
               return {

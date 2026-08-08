@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -77,6 +78,10 @@ export class DonationAdminListComponent implements OnInit {
   totalCount = signal(0);
   totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize)));
 
+  readonly hasActiveFilters = computed(() => {
+    return !!(this.search() || this.selectedStatus());
+  });
+
   constructor() {
     this.destroyRef.onDestroy(() => {
       this.cacheService.set(
@@ -108,10 +113,12 @@ export class DonationAdminListComponent implements OnInit {
     this.loadStatistics();
     this.loadDonations();
 
-    this.searchSubject.pipe(debounceTime(400), distinctUntilChanged()).subscribe(() => {
-      this.pageNumber.set(1);
-      this.loadDonations();
-    });
+    this.searchSubject
+      .pipe(debounceTime(400), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.pageNumber.set(1);
+        this.loadDonations();
+      });
   }
 
   private loadStatistics(): void {

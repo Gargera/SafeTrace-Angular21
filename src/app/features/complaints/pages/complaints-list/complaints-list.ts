@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal, ChangeDetectionStrategy, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -24,6 +25,7 @@ import { PaginationComponent } from '../../../../shared/components/pagination/pa
 import { ReportService } from '../../../admin-dashboard/services/report.service';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
 
 const UI_STATE_CACHE_KEY = 'ComplaintsList_UI_State';
 
@@ -84,6 +86,22 @@ export class ComplaintsList implements OnInit {
     contactType: ''
   });
 
+  readonly hasActiveFilters = computed(() => {
+    const f = this.filter();
+    return !!(f.search || f.status || f.contactType);
+  });
+
+  resetFilters(): void {
+    this.filter.set({
+      pageNumber: 1,
+      pageSize: 10,
+      search: '',
+      status: '' as any,
+      contactType: ''
+    });
+    this.loadComplaints();
+  }
+
   contactTypeOptions = [
     'شكوى حالة',
     'بلاغ عن حالة احتيال أو ابتزاز',
@@ -100,7 +118,14 @@ export class ComplaintsList implements OnInit {
     this.destroyRef.onDestroy(() => {
       this.cacheService.set(
         UI_STATE_CACHE_KEY,
-        { filter: this.filter() },
+        { 
+          filter: this.filter(),
+          showDetailsModal: this.showDetailsModal(),
+          selectedComplaint: this.selectedComplaint(),
+          solutionMessage: this.solutionMessage(),
+          showDeleteModal: this.showDeleteModal(),
+          complaintToDelete: this.complaintToDelete()
+        },
         CACHE_TTL.UI_STATE,
         [CACHE_TAGS.UI_STATE]
       );
@@ -108,17 +133,28 @@ export class ComplaintsList implements OnInit {
   }
 
   ngOnInit() {
-    const cachedState = this.cacheService.get<{ filter: ComplaintFilterDto }>(UI_STATE_CACHE_KEY);
+    const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY);
     if (cachedState) {
-      this.filter.set(cachedState.filter);
+      if (cachedState.filter) this.filter.set(cachedState.filter);
+      
+      if (cachedState.showDetailsModal && cachedState.selectedComplaint) {
+        this.selectedComplaint.set(cachedState.selectedComplaint);
+        this.solutionMessage.set(cachedState.solutionMessage || '');
+        this.showDetailsModal.set(true);
+      } else if (cachedState.showDeleteModal && cachedState.complaintToDelete) {
+        this.complaintToDelete.set(cachedState.complaintToDelete);
+        this.showDeleteModal.set(true);
+      }
     }
 
     this.loadStatistics();
     this.loadComplaints();
 
-    this.searchSubject.pipe(debounceTime(500), distinctUntilChanged()).subscribe((term) => {
-      this.updateFilter({ search: term, pageNumber: 1 });
-    });
+    this.searchSubject
+      .pipe(debounceTime(500), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe((term: string) => {
+        this.updateFilter({ search: term, pageNumber: 1 });
+      });
   }
 
   loadStatistics() {
@@ -133,7 +169,7 @@ export class ComplaintsList implements OnInit {
         this.loadingStats.set(false);
       },
       error: (err) => {
-        this.toast.error(err.error?.detail || err.error?.title || 'تعذر الاتصال بالخادم لتحميل الإحصائيات');
+        this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتحميل الإحصائيات'));
         this.loadingStats.set(false);
       }
     });
@@ -151,7 +187,7 @@ export class ComplaintsList implements OnInit {
         this.isLoading.set(false);
       },
       error: (err) => {
-        this.toast.error(err.error?.detail || err.error?.title || 'تعذر الاتصال بالخادم لتحميل الشكاوى');
+        this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتحميل الشكاوى'));
         this.isLoading.set(false);
       }
     });
@@ -167,17 +203,6 @@ export class ComplaintsList implements OnInit {
       ...partialFilter,
       pageNumber: partialFilter.pageNumber ?? 1,
     }));
-    this.loadComplaints();
-  }
-
-  resetFilters() {
-    this.filter.set({
-      pageNumber: 1,
-      pageSize: 10,
-      search: '',
-      status: '' as any,
-      contactType: ''
-    });
     this.loadComplaints();
   }
 
@@ -213,6 +238,13 @@ export class ComplaintsList implements OnInit {
       next: (res) => {
         if (res.success) {
           this.toast.success('تم حل الشكوى وإشعار المستخدم بنجاح');
+          
+          const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
+          cachedState.showDetailsModal = false;
+          cachedState.solutionMessage = '';
+          cachedState.selectedComplaint = null;
+          this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+
           this.closeDetailsModal();
           this.loadComplaints();
           this.loadStatistics();
@@ -222,7 +254,7 @@ export class ComplaintsList implements OnInit {
         this.isResolving.set(false);
       },
       error: (err) => {
-        this.toast.error(err.error?.detail || err.error?.title || 'حدث خطأ أثناء حل الشكوى');
+        this.toast.error(extractErrorMessage(err, 'حدث خطأ أثناء حل الشكوى'));
         this.isResolving.set(false);
       }
     });
@@ -246,6 +278,12 @@ export class ComplaintsList implements OnInit {
       next: (res) => {
         if (res.success) {
           this.toast.success('تم حذف الشكوى بنجاح');
+
+          const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
+          cachedState.showDeleteModal = false;
+          cachedState.complaintToDelete = null;
+          this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+
           this.closeDeleteModal();
           this.loadComplaints();
           this.loadStatistics();
@@ -254,7 +292,7 @@ export class ComplaintsList implements OnInit {
         }
       },
       error: (err) => {
-        this.toast.error(err.error?.detail || err.error?.title || 'حدث خطأ أثناء الحذف');
+        this.toast.error(extractErrorMessage(err, 'حدث خطأ أثناء الحذف'));
       }
     });
   }
@@ -270,7 +308,7 @@ export class ComplaintsList implements OnInit {
         this.reportService.download(response);
       },
       error: (err) => {
-        const message = err?.error?.detail || err?.error?.title || 'حدث خطأ أثناء تنزيل التقرير';
+        const message = extractErrorMessage(err, 'حدث خطأ أثناء تنزيل التقرير');
         this.toast.error(message);
       }
     });

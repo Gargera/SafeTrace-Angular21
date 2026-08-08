@@ -357,8 +357,9 @@
     <app-reject-case-popup
       [isSubmitting]="isRejecting()"
       [apiError]="rejectApiError()"
-      (confirm)="confirmReject($event)"
-      (cancel)="cancelReject()">
+      [contextKey]="'RejectPopup_Unknown_' + caseDetails()?.id"
+      (cancel)="cancelReject()"
+      (confirm)="confirmReject($event)">
     </app-reject-case-popup>
   }
 

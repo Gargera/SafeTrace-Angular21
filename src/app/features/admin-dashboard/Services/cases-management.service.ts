@@ -135,8 +135,8 @@ export class CasesManagementService {
         page: number,
         pageSize: number,
     ): Observable<CasesPageResult> {
-        // Over-fetch so client-side pagination has enough items across all types.
-        const fetchSize = pageSize * 3;
+        // Over-fetch up to requested page depth so client-side pagination has enough items across all types.
+        const fetchSize = Math.max(pageSize * 3, page * pageSize);
         const baseFilter = { ...filter, page: 1, pageSize: fetchSize };
 
         const urgent$ = this.urgentService.adminGetAllCases({

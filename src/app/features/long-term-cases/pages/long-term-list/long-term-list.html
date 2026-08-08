@@ -35,9 +35,19 @@
       <!-- Empty State -->
       @if (!loading() && cases().length === 0) {
         <app-empty-state
-          title="لا توجد حالات طويلة الأمد"
-          message="لم يتم العثور على أي حالات تطابق معايير البحث الحالية."
+          [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات طويلة المدى'"
+          [message]="hasActiveFilters() ? 'لم نتمكن من العثور على حالات تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم إضافة أي حالات طويلة المدى حتى الآن.'"
         >
+          @if (hasActiveFilters()) {
+            <app-button
+              emptyActions
+              variant="outline"
+              size="md"
+              (click)="resetFilters()"
+            >
+              إلغاء تصفية البحث
+            </app-button>
+          }
         </app-empty-state>
       }
 

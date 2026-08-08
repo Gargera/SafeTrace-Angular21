@@ -16,6 +16,7 @@ import { ProfileService } from '../../../../service/profile.service';
 import { FormField } from '../../../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../../../shared/components/button/button';
 import { egyptianPhone } from '../../../../../../shared/validators/egyptian-phone.validator';
+import { extractErrorMessage } from '../../../../../../shared/helper/case-error.helper';
 
 @Component({
   selector: 'app-phone',
@@ -111,7 +112,7 @@ export class Phone implements OnChanges, OnDestroy {
         },
         error: (err) => {
           this.isSavingPhone.set(false);
-          const msg = err?.error?.message || err.error?.detail || 'حدث خطأ اثناء تغيير رقم الهاتف';
+          const msg = err?.error?.message || extractErrorMessage(err, 'حدث خطأ اثناء تغيير رقم الهاتف');
           this.#snackbar.error(msg);
         },
       });
