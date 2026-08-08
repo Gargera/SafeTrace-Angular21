@@ -197,7 +197,6 @@
               مسح الكل
             </app-button>
             <app-button variant="primary" 
-             [disabled]="hasDateErrors()"
              (onClick)="applyFilters()" extraClass="px-4 py-1.5 rounded-lg text-sm font-bold cursor-pointer">
               تطبيق
             </app-button>
@@ -208,10 +207,9 @@
   </div>
 </app-card>
 
-<!-- 4. Chats Table Container (الجدول الجديد) -->
+<!-- 4. Chats Table Container -->
 <section class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75">
   
-  <!-- مؤشر التحميل في حال توفره بالـ Component -->
   @if (isLoading()) {
     <app-loading-spinner
       title="جارِ تحميل المحادثات..."
@@ -297,7 +295,7 @@
               </div>
             </td>
             <td class="px-lg py-md text-on-surface-variant opacity-80">
-              {{ chat.createdAt | date:' d MMMM y':'':'ar-EG' }}
+                  {{ chat.createdAt | date:'d MMMM y - h:mm a':'':'ar-EG' }}          
             </td>
             <td class="px-lg py-md text-center">
                 <span class="inline-flex items-center justify-center min-w-8 h-8 px-2 rounded-lg bg-surface-container text-primary font-semibold text-xs shadow-sm">
@@ -355,8 +353,7 @@
     </table>
   </div>
 
-  <!-- 5. Pagination الموحد لصفحات الإدارة (في حال رغبتِ في تفعيله لاحقاً للمحادثات) -->
-  @if ( totalPages() > 1) {
+  @if (totalPages() > 1) {
     <div class="p-md md:p-lg bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-4">
       <span class="text-label-sm text-on-surface-variant font-medium">
         إجمالي عدد المحادثات: <span class="font-bold">{{ totalCount() }}</span>

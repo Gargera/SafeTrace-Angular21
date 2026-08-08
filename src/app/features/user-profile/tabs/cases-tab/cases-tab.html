@@ -3,20 +3,17 @@
 <app-loading-spinner title="جارٍ تحميل الحالات..." subtitle="يرجى الانتظار قليلاً" size="md"
   containerClass="flex min-h-[60vh] items-center justify-center" />
 } @else {
-<!-- Show header and filters only if there are any cases in the system -->
-@if (hasAnyCases()) {
-<!-- Header -->
+<!-- Header (Always Visible) -->
 <app-header title="حالاتي" subtitle="إدارة ومتابعة جميع الحالات التي قمت بإنشائها" [badge]="totalCases() + ' حالة'"
   [showBackButton]="false" [showPrimary]="false" [showSecondary]="false" />
 
-<!-- Filters Card (Fixed Top) -->
+<!-- Filters Card (Always Visible) -->
 <section class="overflow-hidden rounded-xl border border-outline-variant bg-surface shadow-sm my-6">
   <app-case-filters [showSearch]="true" [showCaseType]="true" [showCaseStatus]="true" [showGender]="false"
     [showAgeCategory]="false" [showGovernment]="false" [showCity]="false" [showFromDate]="false" [showToDate]="false"
     [showAgeSort]="false" [showDateSort]="false" (filterChange)="onFilterChange($event)"
     (reset)="onFilterReset()"></app-case-filters>
 </section>
-}
 
 <!-- Content Area -->
 <div class="relative min-h-[350px]">

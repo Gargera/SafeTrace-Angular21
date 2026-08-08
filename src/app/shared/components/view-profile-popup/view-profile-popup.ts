@@ -65,6 +65,7 @@ export class ViewProfilePopup {
   readonly profile = signal<VisitUserDTO | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+  readonly selectedZoomImage = signal<string | null>(null);
 
   readonly isOpen = computed(() => this.userId() !== null);
 
@@ -94,6 +95,7 @@ export class ViewProfilePopup {
         this.error.set(null);
         this.loading.set(false);
         this.resolvedAddress.set(null);
+        this.selectedZoomImage.set(null);
         return;
       }
 
@@ -162,7 +164,18 @@ export class ViewProfilePopup {
   }
 
   close(): void {
+    this.selectedZoomImage.set(null);
     this.closed.emit();
+  }
+
+  openImageZoom(imageUrl: string | null): void {
+    if (imageUrl) {
+      this.selectedZoomImage.set(imageUrl);
+    }
+  }
+
+  closeImageZoom(): void {
+    this.selectedZoomImage.set(null);
   }
 
   onBackdropClick(event: MouseEvent): void {
@@ -171,7 +184,11 @@ export class ViewProfilePopup {
   }
 
   onEscape(): void {
-    if (this.isOpen()) this.close();
+    if (this.selectedZoomImage()) {
+      this.closeImageZoom();
+    } else if (this.isOpen()) {
+      this.close();
+    }
   }
 
   onImageError(event: Event): void {

@@ -1,57 +1,44 @@
-import { Directive, ElementRef, effect, input, Renderer2 } from '@angular/core';
+import { Directive, ElementRef, effect, input } from '@angular/core';
 import { UserRole } from '../enums/user-role';
-import {
-  ROLE_TRANSLATIONS_AR,
-  getRoleTranslationAr,
-} from '../../core/constants/dictionaries/roles.dictionary';
+import { getRoleTranslationAr } from '../../core/constants/dictionaries/roles.dictionary';
+import { BadgeRenderService } from '../services/badge-render.service';
 
 @Directive({
   selector: '[appRoleBadgeDirective]',
+  standalone: true
 })
 export class RoleBadgeDirective {
   role = input.required<string>({ alias: 'appRoleBadgeDirective' });
+  private readonly baseClasses = ['inline-flex', 'items-center', 'justify-center', 'gap-1.5', 'px-3', 'py-1', 'rounded-lg', 'text-sm', 'font-bold', 'whitespace-nowrap'];
 
   constructor(
     private el: ElementRef,
-    private renderer: Renderer2,
+    private badgeRenderService: BadgeRenderService
   ) {
-    this.renderer.addClass(this.el.nativeElement, 'px-sm');
-    this.renderer.addClass(this.el.nativeElement, 'py-1');
-    this.renderer.addClass(this.el.nativeElement, 'rounded-lg');
-    this.renderer.addClass(this.el.nativeElement, 'text-[10px]');
-    this.renderer.addClass(this.el.nativeElement, 'font-bold');
-    this.renderer.addClass(this.el.nativeElement, 'whitespace-nowrap');
     effect(() => {
-      const el = this.el.nativeElement;
-      el.className = el.className.replace(/\bbg-\S+|text-\S+/g, '');
-
-      const roleValue = this.role() as UserRole;
-
-      if (roleValue === UserRole.SuperAdmin) {
-        this.renderer.addClass(el, 'bg-error');
-        this.renderer.addClass(el, 'text-white');
-      } else if (roleValue === UserRole.Admin) {
-        this.renderer.addClass(el, 'bg-primary');
-        this.renderer.addClass(el, 'text-on-primary');
-      } else if (roleValue === UserRole.Moderator) {
-        this.renderer.addClass(el, 'bg-secondary-container');
-        this.renderer.addClass(el, 'text-on-secondary-container');
-      } else if (roleValue === UserRole.VerifiedUser) {
-        this.renderer.addClass(el, 'bg-tertiary-fixed-dim');
-        this.renderer.addClass(el, 'text-tertiary');
-      } else if (roleValue === UserRole.User) {
-        this.renderer.addClass(el, 'bg-surface-variant');
-        this.renderer.addClass(el, 'text-on-surface-variant');
-      } else {
-        // Any new future role (e.g. Organization)
-        this.renderer.addClass(el, 'bg-indigo-600');
-        this.renderer.addClass(el, 'text-white');
-        this.renderer.addClass(el, 'border');
-        this.renderer.addClass(el, 'border-indigo-400');
-      }
-
-      const translatedRole = getRoleTranslationAr(roleValue);
-      el.innerText = translatedRole || this.role() || 'مستخدم غير موثق';
+      this.badgeRenderService.updateBadge(this.el.nativeElement, this.role() as UserRole, {
+        baseClasses: this.baseClasses,
+        getClasses: (val: UserRole) => {
+          if (val === UserRole.SuperAdmin) return { bg: 'bg-error', text: 'text-white' };
+          if (val === UserRole.Admin) return { bg: 'bg-primary', text: 'text-on-primary' };
+          if (val === UserRole.Moderator) return { bg: 'bg-secondary-container', text: 'text-on-secondary-container' };
+          if (val === UserRole.VerifiedUser) return { bg: 'bg-tertiary-fixed-dim', text: 'text-tertiary' };
+          if (val === UserRole.User) return { bg: 'bg-surface-variant', text: 'text-on-surface-variant' };
+          return { bg: 'bg-indigo-600 border border-indigo-400', text: 'text-white' };
+        },
+        getContent: (val: UserRole) => {
+          const translation = getRoleTranslationAr(val) || val || 'مستخدم غير معروف';
+          let icon = 'group';
+          if (val === UserRole.SuperAdmin) icon = 'shield_person';
+          else if (val === UserRole.Admin) icon = 'admin_panel_settings';
+          else if (val === UserRole.Moderator) icon = 'gavel';
+          else if (val === UserRole.VerifiedUser) icon = 'verified_user';
+          else if (val === UserRole.User) icon = 'person';
+          
+          return `<span class="material-symbols-outlined text-[16px] leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
+        },
+        useTextOnly: false
+      });
     });
   }
 }

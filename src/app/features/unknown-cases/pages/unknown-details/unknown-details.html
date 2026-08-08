@@ -99,6 +99,28 @@
               <span [appGenderBadgeDirective]="caseDetails()!.gender"></span>
             </div>
 
+            <!-- كارت الناشر -->
+            @if (caseDetails()?.user && !(isOwner() && isMyCasePage())) {
+            <div (click)="openPublisherProfile()"
+              class="flex items-center gap-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-low p-3.5 cursor-pointer transition-all hover:border-primary hover:bg-primary/5 group/pub">
+              @if (caseDetails()?.user?.profileImage) {
+              <img [src]="getImageUrl(caseDetails()?.user?.profileImage!)"
+                class="h-11 w-11 rounded-full object-cover border border-outline-variant group-hover/pub:border-primary" alt="صورة الناشر" />
+              } @else {
+              <div class="flex h-11 w-11 items-center justify-center rounded-full bg-primary/15 text-primary font-bold text-sm border border-primary/20 group-hover/pub:bg-primary group-hover/pub:text-on-primary">
+                {{ ((caseDetails()?.user?.fName?.[0] ?? '') + (caseDetails()?.user?.lName?.[0] ?? '')).toUpperCase() }}
+              </div>
+              }
+              <div class="flex flex-col min-w-0 flex-1">
+                <span class="text-xs text-on-surface-variant">ناشر الحالة (المُبلّغ)</span>
+                <h4 class="font-bold text-on-surface text-base flex items-center gap-1.5 group-hover/pub:text-primary">
+                  {{ isOwner() ? 'أنت (صاحب الحالة)' : (caseDetails()?.user?.fName + ' ' + caseDetails()?.user?.lName) }}
+                  <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover/pub:text-primary">open_in_new</span>
+                </h4>
+              </div>
+            </div>
+            }
+
             <div class="grid grid-cols-2 gap-4">
               <div class="rounded-lg border border-outline-variant p-4">
                 <p class="text-sm text-on-surface-variant">العمر</p>
@@ -275,7 +297,7 @@
 
       <!-- Lightbox -->
       @if(lightboxVisible()){
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
+        <div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
           <button class="absolute right-6 top-6 text-4xl text-white" (click)="closeLightbox()">✕</button>
           <button class="absolute left-5 text-5xl text-white" (click)="previousMedia()">❮</button>
 
@@ -323,6 +345,7 @@
       message="هل أنت متأكد أنك تريد قبول هذه الحالة وإظهارها للجميع؟" 
       confirmText="قبول"
       cancelText="إلغاء" 
+      icon="check_circle"
       variant="primary" 
       (confirm)="confirmApprove()" 
       (cancel)="cancelApprove()">
@@ -334,8 +357,9 @@
     <app-reject-case-popup
       [isSubmitting]="isRejecting()"
       [apiError]="rejectApiError()"
-      (confirm)="confirmReject($event)"
-      (cancel)="cancelReject()">
+      [contextKey]="'RejectPopup_Unknown_' + caseDetails()?.id"
+      (cancel)="cancelReject()"
+      (confirm)="confirmReject($event)">
     </app-reject-case-popup>
   }
 
@@ -345,6 +369,7 @@
       message="هل أنت متأكد أنك تريد حذف هذه الحالة نهائياً من النظام؟ هذا الإجراء لا يمكن التراجع عنه." 
       confirmText="حذف نهائي"
       cancelText="إلغاء" 
+      icon="delete_forever"
       variant="danger" 
       (confirm)="confirmPermanentDelete()" 
       (cancel)="cancelPermanentDelete()">
@@ -355,4 +380,9 @@
     <app-founded-popup (confirmed)="confirmFounded($event)" (cancel)="cancelFounded()">
     </app-founded-popup>
   }
+
+  <app-view-profile-popup
+    [userId]="selectedUserId()"
+    (closed)="selectedUserId.set(null)">
+  </app-view-profile-popup>
 </div>

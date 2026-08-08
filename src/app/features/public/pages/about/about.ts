@@ -1,7 +1,8 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ButtonComponent } from '../../../../shared/components/button/button';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-about',
@@ -10,4 +11,6 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
   styleUrl: './about.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class About {}
+export class About {
+  authService = inject(AuthService);
+}

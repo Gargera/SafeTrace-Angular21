@@ -8,6 +8,8 @@ import { SnackbarService } from '../../../../shared/services/toast.service';
 import { UserService } from '../../services/user.service';
 import { RoleService } from '../../services/role.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { DestroyRef } from '@angular/core';
 import { UserPermissionDto } from '../../models/User/responses/UserPermissionDto';
 import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
 import { GetUserByIdDto } from '../../models/User/responses/GetUserByIdDto';
@@ -25,6 +27,7 @@ import { ConfirmationModalComponent } from '../../../../shared/components/confir
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 interface PermissionGroup {
   groupName: string;
   groupTitle: string;
@@ -47,6 +50,8 @@ export class UserDetails implements OnInit {
   private route = inject(ActivatedRoute);
   private location = inject(Location);
   private snackbar = inject(SnackbarService);
+  private cacheService = inject(CacheService);
+  private destroyRef = inject(DestroyRef);
   Permissions = Permissions;
 
   userId = signal<string>('');
@@ -76,14 +81,37 @@ export class UserDetails implements OnInit {
     action: () => {}
   });
 
-  openConfirmModal(title: string, message: string, confirmText: string, action: () => void, icon = 'help_outline', variant: 'primary' | 'danger' = 'primary') {
+  currentOpenModal = signal<'ROLE' | 'APPROVE' | 'REJECT' | 'BLOCK' | 'SAVE' | null>(null);
+
+  openConfirmModal(title: string, message: string, confirmText: string, action: () => void, icon = 'help_outline', variant: 'primary' | 'danger' = 'primary', modalType: 'ROLE' | 'APPROVE' | 'REJECT' | 'BLOCK' | 'SAVE' | null = null) {
     this.modalConfig.set({ title, message, confirmText, icon, variant, action });
+    this.currentOpenModal.set(modalType);
     this.showConfirmModal.set(true);
   }
 
   onConfirmModal() {
     this.showConfirmModal.set(false);
+    this.currentOpenModal.set(null);
     this.modalConfig().action();
+  }
+
+  onCancelModal() {
+    this.showConfirmModal.set(false);
+    this.currentOpenModal.set(null);
+  }
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      const id = this.userId();
+      if (id) {
+        this.cacheService.set(`UserDetails_State_${id}`, {
+          openModal: this.showConfirmModal() ? this.currentOpenModal() : null,
+          rejectReason: this.rejectReason(),
+          blockReason: this.blockReason(),
+          selectedRole: this.selectedRole()
+        }, 300000);
+      }
+    });
   }
 
   verificationStatusEnum = VerificationStatus;
@@ -98,7 +126,20 @@ export class UserDetails implements OnInit {
   });
 
   canManageUser = computed(() => {
-    if (!this.user() || this.isCurrentUser()) return false;
+    const targetUser = this.user();
+    if (!targetUser || this.isCurrentUser()) return false;
+    
+    const myRole = this.authService.getUserRole();
+    const targetRole = targetUser.role;
+
+    if (targetRole === 'SuperAdmin') {
+      return false;
+    }
+
+    if (myRole === 'Admin' && targetRole === 'Admin') {
+      return false;
+    }
+
     return true;
   });
 
@@ -143,6 +184,9 @@ export class UserDetails implements OnInit {
   hasChanges = computed(() => Object.keys(this.dirtyGroups()).length > 0);
 
   ngOnInit() {
+    this.destroyRef.onDestroy(() => {
+      document.body.style.overflow = '';
+    });
     this.loadRoles();
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
@@ -187,13 +231,36 @@ export class UserDetails implements OnInit {
       next: (res) => {
         if (res.success) {
           this.user.set(res.data);
-          this.selectedRole.set(res.data?.role || '');
+          
+          const state = this.cacheService.get<any>(`UserDetails_State_${this.userId()}`);
+          if (state) {
+            if (state.selectedRole) this.selectedRole.set(state.selectedRole);
+            else this.selectedRole.set(res.data?.role || '');
+
+            this.rejectReason.set(state.rejectReason || '');
+            this.blockReason.set(state.blockReason || '');
+
+            const modal = state.openModal;
+            if (modal === 'ROLE') {
+              this.onChangeRole(this.selectedRole());
+            } else if (modal === 'APPROVE') {
+              this.onApprove();
+            } else if (modal === 'REJECT') {
+              this.onReject(true);
+            } else if (modal === 'BLOCK') {
+              this.onToggleBlock(true);
+            } else if (modal === 'SAVE') {
+              this.savePermissions();
+            }
+          } else {
+            this.selectedRole.set(res.data?.role || '');
+          }
         }
         this.isUserLoading.set(false);
       },
       error: (err) => {
         this.isUserLoading.set(false);
-        this.snackbar.error(err.error?.detail || 'فشل في تحميل بيانات المستخدم.');
+        this.snackbar.error(extractErrorMessage(err, 'فشل في تحميل بيانات المستخدم.'));
       }
     });
 
@@ -224,7 +291,8 @@ export class UserDetails implements OnInit {
         this.executeAction(this.userService.changeUserRole({ userId: this.userId(), newRole: newRole }), 'تم تغيير دور المستخدم بنجاح.', 'changeRole');
       },
       'manage_accounts',
-      'primary'
+      'primary',
+      'ROLE'
     );
   }
 
@@ -237,14 +305,17 @@ export class UserDetails implements OnInit {
         this.executeAction(this.userService.approveUser(this.userId()), 'تم توثيق حساب المستخدم بنجاح.', 'approve');
       },
       'verified_user',
-      'primary'
+      'primary',
+      'APPROVE'
     );
   }
 
   rejectReason = signal<string>('');
 
-  onReject() {
-    this.rejectReason.set('');
+  onReject(fromRestore: boolean = false) {
+    if (!fromRestore) {
+      this.rejectReason.set('');
+    }
     this.openConfirmModal(
       'تأكيد رفض الحساب',
       'يرجى كتابة سبب رفض توثيق هذا الحساب (اختياري):',
@@ -254,17 +325,18 @@ export class UserDetails implements OnInit {
         this.executeAction(this.userService.rejectUser(this.userId(), reason), 'تم رفض طلب التوثيق بنجاح وإرسال السبب.', 'reject');
       },
       'cancel',
-      'danger'
+      'danger',
+      'REJECT'
     );
   }
 
   blockReason = signal<string>('');
 
-  onToggleBlock() {
+  onToggleBlock(fromRestore: boolean = false) {
     const isBlocking = !this.user()?.isBlocked;
     const actionText = isBlocking ? 'حظر' : 'فك حظر';
     
-    if (isBlocking) {
+    if (isBlocking && !fromRestore) {
       this.blockReason.set('');
     }
 
@@ -277,7 +349,8 @@ export class UserDetails implements OnInit {
         this.executeAction(this.userService.toggleBlockStatus(this.userId(), reason), `تم ${actionText} المستخدم بنجاح.`, 'block');
       },
       isBlocking ? 'block' : 'lock_open',
-      isBlocking ? 'danger' : 'primary'
+      isBlocking ? 'danger' : 'primary',
+      'BLOCK'
     );
   }
 
@@ -287,12 +360,27 @@ export class UserDetails implements OnInit {
     observable.subscribe({
       next: () => {
         this.loadingAction.set(null);
+        this.showConfirmModal.set(false);
+        this.currentOpenModal.set(null);
+        this.rejectReason.set('');
+        this.blockReason.set('');
+
+        const id = this.userId();
+        if (id) {
+          this.cacheService.set(`UserDetails_State_${id}`, {
+            openModal: null,
+            rejectReason: '',
+            blockReason: '',
+            selectedRole: this.selectedRole()
+          }, 300000);
+        }
+
         this.snackbar.success(successMessage);
         this.loadUserData();
       },
       error: (err: any) => {
         this.loadingAction.set(null);
-        this.snackbar.error(err.error?.detail || err.error?.message || 'حدث خطأ غير متوقع. قد لا تملك الصلاحية الكافية.');
+        this.snackbar.error(extractErrorMessage(err, 'حدث خطأ غير متوقع. قد لا تملك الصلاحية الكافية.'));
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     });
@@ -317,13 +405,14 @@ export class UserDetails implements OnInit {
           },
           error: (err) => {
             this.isSavingPerms.set(false);
-            this.snackbar.error(err.error?.detail || 'فشل حفظ الصلاحيات. تأكد من امتلاكك الصلاحية اللازمة.');
+            this.snackbar.error(extractErrorMessage(err, 'فشل حفظ الصلاحيات. تأكد من امتلاكك الصلاحية اللازمة.'));
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }
         });
       },
       'admin_panel_settings',
-      'primary'
+      'primary',
+      'SAVE'
     );
   }
 

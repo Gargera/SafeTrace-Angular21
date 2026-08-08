@@ -4,13 +4,17 @@ import {
   inject,
   input,
   output,
+  OnInit,
+  DestroyRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ConfirmationModalComponent } from '../../confirmation-modal/confirmation-modal';
-import { rejectionReasonValidator } from '../../../validators/rejection-reason.validator';
+
 
 import { getFormFieldError, isFieldInvalid } from '../../../helper/form-validation.helper';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-reject-case-popup',
@@ -19,17 +23,22 @@ import { getFormFieldError, isFieldInvalid } from '../../../helper/form-validati
   templateUrl: './reject-case-popup.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RejectCasePopupComponent {
+export class RejectCasePopupComponent implements OnInit {
   isSubmitting = input(false);
   apiError = input<string | null>(null);
+  contextKey = input<string>();
 
   cancel = output<void>();
   confirm = output<string>();
 
   private readonly fb = inject(FormBuilder);
+  private readonly cacheService = inject(CacheService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly DEFAULT_REASON = 'لم تستوفِ الحالة متطلبات المراجعة. يرجى مراجعة البيانات وإعادة إرسال الطلب.';
 
   readonly form = this.fb.nonNullable.group({
-    rejectionReason: ['', [rejectionReasonValidator()]],
+    rejectionReason: [this.DEFAULT_REASON],
   });
 
   get reasonControl() {
@@ -44,13 +53,29 @@ export class RejectCasePopupComponent {
     return getFormFieldError(this.form, field);
   }
 
+  ngOnInit() {
+    if (this.contextKey()) {
+      const cached = this.cacheService.get<string>(this.contextKey()!);
+      if (cached) {
+        this.form.patchValue({ rejectionReason: cached });
+      }
+      this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(val => {
+        this.cacheService.set(this.contextKey()!, val.rejectionReason, 300000); // 5 mins
+      });
+    }
+  }
+
   onConfirm(): void {
+    if (this.isSubmitting()) return;
     if (this.form.invalid) {
       this.reasonControl.markAsTouched();
       return;
     }
 
-    const trimmedReason = this.reasonControl.value.trim();
+    let trimmedReason = this.reasonControl.value.trim();
+    if (!trimmedReason) {
+      trimmedReason = this.DEFAULT_REASON;
+    }
     this.confirm.emit(trimmedReason);
   }
 

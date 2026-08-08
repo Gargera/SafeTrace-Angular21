@@ -35,8 +35,13 @@ import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { AuthService } from '../../../../core/services/auth.service';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+
 
 const FILTER_DEBOUNCE_MS = 400;
+const UI_STATE_CACHE_KEY = 'Dashboard_UI_State';
 
 @Component({
   selector: 'app-cases-management',
@@ -63,7 +68,7 @@ const FILTER_DEBOUNCE_MS = 400;
 export class CasesManagement implements OnInit, OnDestroy {
   protected readonly CaseType = CaseType;
   protected readonly CaseStatus = CaseStatus;
-  
+
   Permissions = Permissions;
   caseActionPermissions = [
     Permissions.LongTermCases.GetById,
@@ -80,6 +85,7 @@ export class CasesManagement implements OnInit, OnDestroy {
   private readonly dashboardService = inject(DashboardService);
   private readonly toast = inject(SnackbarService);
   private readonly reportService = inject(ReportService);
+  private readonly cacheService = inject(CacheService);
 
   // Statistics
   statistics = signal<DashboardStatistics | null>(null);
@@ -112,6 +118,25 @@ export class CasesManagement implements OnInit, OnDestroy {
   hasResults = computed(() => this.cases().length > 0);
   hasNextPage = computed(() => this.currentPage() < this.totalPages());
   hasAnyCases = computed(() => this.totalCount() > 0);
+  hasActiveFilters = computed(() => {
+    const f = this.baseFilter();
+    return !!(
+      f.fullName ||
+      f.government ||
+      f.city ||
+      f.caseCode ||
+      f.gender ||
+      f.ageCategory ||
+      f.minAge ||
+      f.maxAge ||
+      f.fromDate ||
+      f.toDate ||
+      f.status ||
+      f.caseType ||
+      f.ageSort ||
+      f.dateSort
+    );
+  });
 
   // -------- UNIFIED FILTER --------
   public baseFilter = signal<CasesFilterRequest>(this.getDefaultFilter());
@@ -137,26 +162,54 @@ export class CasesManagement implements OnInit, OnDestroy {
     };
   }
 
+  private isInitialized = false;
+
   constructor() {
     effect(() => {
       this.baseFilter();
+
+      if (!this.isInitialized) {
+        return;
+      }
 
       if (this.searchDebounceTimer) {
         clearTimeout(this.searchDebounceTimer);
       }
 
       this.searchDebounceTimer = setTimeout(() => {
-        this.currentPage.set(1);
         this.loadCases();
       }, FILTER_DEBOUNCE_MS);
     });
   }
 
   ngOnInit(): void {
+    const cachedState = this.cacheService.get<{ filter: CasesFilterRequest, page: number, modalConfig: any }>(UI_STATE_CACHE_KEY);
+    if (cachedState) {
+      this.baseFilter.set(cachedState.filter);
+      this.currentPage.set(cachedState.page);
+      if (cachedState.modalConfig) {
+        this.modalConfig.set(cachedState.modalConfig);
+        this.showConfirmModal.set(true);
+      }
+    }
+
+    this.isInitialized = true;
     this.loadStatistics();
+    this.loadCases();
   }
 
   ngOnDestroy(): void {
+    this.cacheService.set(
+      UI_STATE_CACHE_KEY,
+      {
+        filter: this.baseFilter(),
+        page: this.currentPage(),
+        modalConfig: this.showConfirmModal() ? this.modalConfig() : null
+      },
+      CACHE_TTL.UI_STATE,
+      [CACHE_TAGS.UI_STATE]
+    );
+
     if (this.searchDebounceTimer) {
       clearTimeout(this.searchDebounceTimer);
     }
@@ -164,12 +217,15 @@ export class CasesManagement implements OnInit, OnDestroy {
 
   // ---------- Event handlers ----------
   onFilterChange(filter: CasesFilterRequest): void {
+    this.currentPage.set(1);
     this.baseFilter.set(filter);
   }
 
   resetFilters(): void {
+    this.cacheService.remove(UI_STATE_CACHE_KEY);
     this.baseFilter.set(this.getDefaultFilter());
     this.currentPage.set(1);
+    this.loadCases();
   }
 
   changePage(page: number): void {
@@ -204,7 +260,7 @@ export class CasesManagement implements OnInit, OnDestroy {
         this.loadingStats.set(false);
       },
       error: (err) => {
-        this.toast.error(err.error?.detail || 'تعذر الاتصال بالخادم لتحميل الإحصائيات');
+        this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتحميل الإحصائيات'));
         this.loadingStats.set(false);
       },
     });
@@ -222,7 +278,7 @@ export class CasesManagement implements OnInit, OnDestroy {
         this.loading.set(false);
       },
       error: (err) => {
-        this.toast.error(err.error?.detail || 'تعذر الاتصال بالخادم');
+        this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم'));
         this.cases.set([]);
         this.totalCount.set(0);
         this.totalPages.set(0);
@@ -251,13 +307,17 @@ export class CasesManagement implements OnInit, OnDestroy {
     this.showConfirmModal.set(true);
   }
 
+  isDeleting = signal(false);
+
   confirmAction(): void {
     const config = this.modalConfig();
-    if (!config || !config.caseId || !config.caseType) return;
+    if (!config || !config.caseId || !config.caseType || this.isDeleting()) return;
+    this.isDeleting.set(true);
     this.showConfirmModal.set(false);
 
     this.casesService.deleteCase(config.caseId, config.caseType).subscribe({
       next: () => {
+        this.isDeleting.set(false);
         this.cases.update((items) => items.filter((item) => item.id !== config.caseId));
         this.totalCount.update((c) => Math.max(0, c - 1));
         if (this.totalCount() === 0) this.totalPages.set(0);
@@ -265,7 +325,8 @@ export class CasesManagement implements OnInit, OnDestroy {
         this.modalConfig.set(null);
       },
       error: (err) => {
-        this.toast.error(err.error?.detail || 'فشل حذف الحالة');
+        this.isDeleting.set(false);
+        this.toast.error(extractErrorMessage(err, 'فشل حذف الحالة'));
         this.modalConfig.set(null);
       },
     });
@@ -275,6 +336,7 @@ export class CasesManagement implements OnInit, OnDestroy {
     this.showConfirmModal.set(false);
     this.modalConfig.set(null);
   }
+
   getDetailsRoute(caseItem: CaseListItemResponse) {
     switch (caseItem.caseType) {
       case CaseType.LongTerm:
@@ -309,13 +371,17 @@ export class CasesManagement implements OnInit, OnDestroy {
     }
   }
 
-downloadReport(): void {
-
-  this.reportService
-    .generateCasesPdfReport(this.baseFilter())
-    .subscribe(response => {
-      this.reportService.download(response);
-    });
-}
+  downloadReport(): void {
+    this.reportService
+      .generateCasesPdfReport(this.baseFilter())
+      .subscribe({
+        next: (response) => {
+          this.reportService.download(response);
+        },
+        error: (err) => {
+          this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتنزيل تقرير الحالات'));
+        }
+      });
+  }
 
 }

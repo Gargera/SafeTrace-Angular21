@@ -1,6 +1,6 @@
 import { Injectable, Renderer2, RendererFactory2 } from '@angular/core';
 
-interface BadgeConfig<T> {
+export interface BadgeConfig<T> {
   /** Base utility classes that are always applied */
   baseClasses: string[];
   /** Returns background and text classes for the given value */
@@ -42,8 +42,8 @@ export class BadgeRenderService {
 
     // Apply dynamic background and text classes.
     const { bg, text } = config.getClasses(value);
-    this.renderer.addClass(el, bg);
-    this.renderer.addClass(el, text);
+    bg.split(' ').filter(Boolean).forEach(c => this.renderer.addClass(el, c));
+    text.split(' ').filter(Boolean).forEach(c => this.renderer.addClass(el, c));
 
     // Insert the content.
     const content = config.getContent(value);

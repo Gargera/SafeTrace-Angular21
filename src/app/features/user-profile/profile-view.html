@@ -32,7 +32,7 @@
           />
 
           @if (selectedZoomImage()) {
-            <div
+            <div role="dialog" aria-modal="true" aria-label="نافذة منبثقة"
               class="fixed inset-0 z-999999 bg-black/70 flex items-center justify-center"
               (click)="selectedZoomImage.set(null)"
             >

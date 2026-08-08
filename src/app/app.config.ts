@@ -9,7 +9,7 @@ import {
   GoogleLoginProvider,
   SOCIAL_AUTH_CONFIG,
 } from '@abacritt/angularx-social-login';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { jwtInterceptor } from './core/interceptors/jwt.interceptor';
@@ -24,7 +24,13 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(withInterceptors([jwtInterceptor])),
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes),
+    provideRouter(
+      routes,
+      withInMemoryScrolling({
+        scrollPositionRestoration: 'enabled',
+        anchorScrolling: 'enabled',
+      }),
+    ),
 
     {
       provide: SOCIAL_AUTH_CONFIG,

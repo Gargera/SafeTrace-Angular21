@@ -1,4 +1,5 @@
-import { Component, computed, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -22,15 +23,19 @@ import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 import { ReportService } from '../../../admin-dashboard/services/report.service';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
+const UI_STATE_CACHE_KEY = 'ComplaintsList_UI_State';
 
 @Component({
   selector: 'app-complaints-list',
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
-    ComplaintStatusBadgeDirective, 
+    CommonModule,
+    FormsModule,
+    ComplaintStatusBadgeDirective,
     TruncatePipe,
     FormField,
     ButtonComponent,
@@ -48,6 +53,8 @@ import { ReportService } from '../../../admin-dashboard/services/report.service'
 })
 export class ComplaintsList implements OnInit {
   private svc = inject(ComplaintsService);
+  private readonly cacheService = inject(CacheService);
+  private readonly destroyRef = inject(DestroyRef);
   Permissions = Permissions;
   complaintActionPermissions = [
     Permissions.Complaints.GetById,
@@ -76,18 +83,78 @@ export class ComplaintsList implements OnInit {
     pageSize: 10,
     search: '',
     status: '' as any,
+    contactType: ''
   });
+
+  readonly hasActiveFilters = computed(() => {
+    const f = this.filter();
+    return !!(f.search || f.status || f.contactType);
+  });
+
+  resetFilters(): void {
+    this.filter.set({
+      pageNumber: 1,
+      pageSize: 10,
+      search: '',
+      status: '' as any,
+      contactType: ''
+    });
+    this.loadComplaints();
+  }
+
+  contactTypeOptions = [
+    'شكوى حالة',
+    'بلاغ عن حالة احتيال أو ابتزاز',
+    'محتوى غير لائق',
+    'مشكلة فنية',
+    'اقتراح لتحسين المنصة',
+    'أخرى'
+  ];
 
   ComplaintStatusEnum = ComplaintStatus;
   private searchSubject = new Subject<string>();
 
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set(
+        UI_STATE_CACHE_KEY,
+        {
+          filter: this.filter(),
+          showDetailsModal: this.showDetailsModal(),
+          selectedComplaint: this.selectedComplaint(),
+          solutionMessage: this.solutionMessage(),
+          showDeleteModal: this.showDeleteModal(),
+          complaintToDelete: this.complaintToDelete()
+        },
+        CACHE_TTL.UI_STATE,
+        [CACHE_TAGS.UI_STATE]
+      );
+    });
+  }
+
   ngOnInit() {
+    const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY);
+    if (cachedState) {
+      if (cachedState.filter) this.filter.set(cachedState.filter);
+
+      if (cachedState.showDetailsModal && cachedState.selectedComplaint) {
+        this.selectedComplaint.set(cachedState.selectedComplaint);
+        this.solutionMessage.set(cachedState.solutionMessage || '');
+        this.showDetailsModal.set(true);
+      } else if (cachedState.showDeleteModal && cachedState.complaintToDelete) {
+        this.complaintToDelete.set(cachedState.complaintToDelete);
+        this.showDeleteModal.set(true);
+      }
+    }
+
     this.loadStatistics();
     this.loadComplaints();
 
-    this.searchSubject.pipe(debounceTime(500), distinctUntilChanged()).subscribe((term) => {
-      this.updateFilter({ search: term, pageNumber: 1 });
-    });
+    this.searchSubject
+      .pipe(debounceTime(500), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe((term: string) => {
+        this.updateFilter({ search: term, pageNumber: 1 });
+      });
   }
 
   loadStatistics() {
@@ -102,7 +169,7 @@ export class ComplaintsList implements OnInit {
         this.loadingStats.set(false);
       },
       error: (err) => {
-        this.toast.error(err.error?.detail || err.error?.title || 'تعذر الاتصال بالخادم لتحميل الإحصائيات');
+        this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتحميل الإحصائيات'));
         this.loadingStats.set(false);
       }
     });
@@ -120,7 +187,7 @@ export class ComplaintsList implements OnInit {
         this.isLoading.set(false);
       },
       error: (err) => {
-        this.toast.error(err.error?.detail || err.error?.title || 'تعذر الاتصال بالخادم لتحميل الشكاوى');
+        this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتحميل الشكاوى'));
         this.isLoading.set(false);
       }
     });
@@ -136,16 +203,6 @@ export class ComplaintsList implements OnInit {
       ...partialFilter,
       pageNumber: partialFilter.pageNumber ?? 1,
     }));
-    this.loadComplaints();
-  }
-
-  resetFilters() {
-    this.filter.set({
-      pageNumber: 1,
-      pageSize: 10,
-      search: '',
-      status: '' as any,
-    });
     this.loadComplaints();
   }
 
@@ -174,23 +231,30 @@ export class ComplaintsList implements OnInit {
       this.toast.error('يرجى كتابة رسالة الحل');
       return;
     }
-    
+
     this.isResolving.set(true);
     const dto: ResolveComplaintDto = { solutionMessage: msg };
     this.svc.resolve(complaint.id, dto).subscribe({
       next: (res) => {
         if (res.success) {
           this.toast.success('تم حل الشكوى وإشعار المستخدم بنجاح');
+
+          const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
+          cachedState.showDetailsModal = false;
+          cachedState.solutionMessage = '';
+          cachedState.selectedComplaint = null;
+          this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+
           this.closeDetailsModal();
           this.loadComplaints();
           this.loadStatistics();
         } else {
-           this.toast.error(res.message || 'حدث خطأ أثناء حل الشكوى');
+          this.toast.error(res.message || 'حدث خطأ أثناء حل الشكوى');
         }
         this.isResolving.set(false);
       },
       error: (err) => {
-        this.toast.error(err.error?.detail || err.error?.title || 'حدث خطأ أثناء حل الشكوى');
+        this.toast.error(extractErrorMessage(err, 'حدث خطأ أثناء حل الشكوى'));
         this.isResolving.set(false);
       }
     });
@@ -206,42 +270,53 @@ export class ComplaintsList implements OnInit {
     this.complaintToDelete.set(null);
   }
 
+  isDeleting = signal<boolean>(false);
+
   confirmDelete() {
     const complaint = this.complaintToDelete();
-    if (!complaint) return;
-    
+    if (!complaint || this.isDeleting()) return;
+
+    this.isDeleting.set(true);
     this.svc.deleteComplaint(complaint.id).subscribe({
       next: (res) => {
+        this.isDeleting.set(false);
         if (res.success) {
           this.toast.success('تم حذف الشكوى بنجاح');
+
+          const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
+          cachedState.showDeleteModal = false;
+          cachedState.complaintToDelete = null;
+          this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+
           this.closeDeleteModal();
           this.loadComplaints();
           this.loadStatistics();
         } else {
-          this.toast.error(res.message || 'حدث خطأ أثناء החذف');
+          this.toast.error(res.message || 'حدث خطأ أثناء الحذف');
         }
       },
       error: (err) => {
-        this.toast.error(err.error?.detail || err.error?.title || 'حدث خطأ أثناء الحذف');
+        this.isDeleting.set(false);
+        this.toast.error(extractErrorMessage(err, 'حدث خطأ أثناء الحذف'));
       }
     });
   }
- downloadReport(): void {
-  const filter = {
-    ...this.filter(),
-    status: this.filter().status || null
-  };
-  this.reportService
-    .generateComplaintPdfReport(filter)
-    .subscribe({
-      next: (response) => {
-        this.reportService.download(response);
-      },
-      error: (err) => {
-        const message = err?.error?.detail || err?.error?.title || 'حدث خطأ أثناء تنزيل التقرير';
-        this.toast.error(message);
-      }
-    });
-}
+  downloadReport(): void {
+    const filter = {
+      ...this.filter(),
+      status: this.filter().status || null
+    };
+    this.reportService
+      .generateComplaintPdfReport(filter)
+      .subscribe({
+        next: (response) => {
+          this.reportService.download(response);
+        },
+        error: (err) => {
+          const message = extractErrorMessage(err, 'حدث خطأ أثناء تنزيل التقرير');
+          this.toast.error(message);
+        }
+      });
+  }
 
 }

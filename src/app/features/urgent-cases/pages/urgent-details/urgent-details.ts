@@ -3,6 +3,7 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, EMPTY, switchMap } from 'rxjs';
+import { CacheService } from '../../../../core/cache/cache.service';
 
 import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -26,7 +27,8 @@ import { UrgentCaseDetailResponse } from '../../models/response/UrgentCaseDetail
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { Permissions } from '../../../../core/constants/Permissions';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
 
 @Component({
   selector: 'urgent-details',
@@ -43,6 +45,7 @@ import { extractErrorMessage } from '../../../../shared/helper/case-error.helper
     MapLocationPickerComponent,
     HasPermissionDirective,
     ButtonComponent,
+    ViewProfilePopup,
   ],
   templateUrl: './urgent-details.html',
   styleUrls: ['./urgent-details.css'],
@@ -56,9 +59,19 @@ export class UrgentDetails implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly apiUrl = environment.baseUrl;
+  private readonly cacheService = inject(CacheService);
   readonly FileType = FileType;
   readonly CaseStatus = CaseStatus;
   readonly Permissions = Permissions;
+
+  readonly selectedUserId = signal<string | null>(null);
+
+  openPublisherProfile(): void {
+    const id = this.caseDetails()?.user?.id || (this.caseDetails() as any)?.userId;
+    if (id) {
+      this.selectedUserId.set(id);
+    }
+  }
 
   // Signals
   showDeleteConfirmation = signal(false);
@@ -72,9 +85,19 @@ export class UrgentDetails implements OnInit {
   loading = signal(true);
 
   readonly isOwner = computed(() => {
+    if (!this.authService.isLoggedIn()) return false;
+    const currentUserId = this.authService.getCurrentUserId();
     const currentUserEmail = this.authService.currentUser()?.email?.toLowerCase();
+    const caseOwnerId = this.caseDetails()?.user?.id || (this.caseDetails() as any)?.userId;
     const caseOwnerEmail = this.caseDetails()?.user?.email?.toLowerCase();
-    return !!currentUserEmail && currentUserEmail === caseOwnerEmail;
+
+    if (caseOwnerId && currentUserId) {
+      return caseOwnerId === currentUserId;
+    }
+    if (currentUserEmail && caseOwnerEmail) {
+      return currentUserEmail === caseOwnerEmail;
+    }
+    return false;
   });
 
   selectedMedia = signal<CasePhotoResponse | null>(null);
@@ -83,6 +106,24 @@ export class UrgentDetails implements OnInit {
   // Lightbox
   lightboxVisible = signal(false);
   currentIndex = signal(0);
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      const id = this.caseDetails()?.id;
+      if (id) {
+        this.cacheService.set(
+          `UrgentDetails_Modals_${id}`,
+          {
+            showDelete: this.showDeleteConfirmation(),
+            showFounded: this.showFoundedPopup(),
+            showLocation: this.showLocationModal(),
+            showPermanentDelete: this.showPermanentDeleteConfirmation()
+          },
+          300000
+        );
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.isAdminPage.set(this.route.snapshot.data['mode'] === 'dashboard');
@@ -119,6 +160,14 @@ export class UrgentDetails implements OnInit {
         next: (apiRes) => {
           if (apiRes.success && apiRes.data) {
             this.caseDetails.set(apiRes.data);
+
+            const cachedModals = this.cacheService.get<any>(`UrgentDetails_Modals_${apiRes.data.id}`);
+            if (cachedModals) {
+              this.showDeleteConfirmation.set(cachedModals.showDelete || false);
+              this.showFoundedPopup.set(cachedModals.showFounded || false);
+              this.showLocationModal.set(cachedModals.showLocation || false);
+              this.showPermanentDeleteConfirmation.set(cachedModals.showPermanentDelete || false);
+            }
 
             if (apiRes.data.photos?.length) {
               const primary =
@@ -215,6 +264,7 @@ export class UrgentDetails implements OnInit {
 
           if (res.success) {
             this.snackbar.success('تم تحديث الحالة إلى تم العثور عليه');
+            this.cacheService.remove(`FoundedPopup_Urgent_${id}`);
             this.caseDetails.update((current) => {
               if (!current) return current;
               return {
@@ -315,6 +365,10 @@ export class UrgentDetails implements OnInit {
   }
 
   startChat(id: number): void {
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
     this.router.navigate(['/chat/start', id]);
   }
   getAgeCategoryEnum(): AgeCategories {

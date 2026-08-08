@@ -19,7 +19,12 @@
     <section
       class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm"
     >
-      <app-case-filters [showRadius]="true" (filterChange)="onFilterChange($event)" (reset)="onFilterReset()"></app-case-filters>
+      <app-case-filters
+        [initialFilter]="filter()"
+        [showRadius]="true"
+        (filterChange)="onFilterChange($event)"
+        (reset)="onFilterReset()"
+      ></app-case-filters>
     </section>
 
     <!-- Main Content -->
@@ -32,9 +37,19 @@
       <!-- Empty State -->
       @if (!loading() && cases().length === 0) {
         <app-empty-state
-          title="لا توجد حالات عاجلة"
-          message="لم يتم العثور على أي حالات عاجلة تطابق معايير البحث الحالية."
+          [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات طارئة'"
+          [message]="hasActiveFilters() ? 'لم نتمكن من العثور على حالات تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم إضافة أي حالات طارئة حتى الآن.'"
         >
+          @if (hasActiveFilters()) {
+            <app-button
+              emptyActions
+              variant="outline"
+              size="md"
+              (click)="resetFilters()"
+            >
+              إلغاء تصفية البحث
+            </app-button>
+          }
         </app-empty-state>
       }
 

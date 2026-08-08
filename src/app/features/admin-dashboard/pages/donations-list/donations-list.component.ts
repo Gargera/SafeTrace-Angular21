@@ -1,10 +1,12 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
-import { DonationService } from '../../services/donations.service';
-import { DonationAdminListDto } from '../../models/responses/donation-admin-list.dto';
+import { DonationService } from '../../../donations/services/donations.service';
+import { DonationAdminListDto } from '../../../donations/models/responses/donation-admin-list.dto';
+import { AdminDonationStatisticsDto } from '../../../donations/models/responses/admin-donation-statistics.dto';
 import { PaymentStatus } from '../../../../shared/enums/payment-status.enum';
 import { TruncatePipe } from '../../../../shared/pipes/truncate-pipe';
 import { CardComponent } from '../../../../shared/components/card/card';
@@ -15,14 +17,17 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { PaymentStatusBadgeDirective } from '../../../../shared/directives/payment-status-badge.directive';
-import { AdminDonationStatisticsDto } from '../../models/responses/admin-donation-statistics.dto';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
-import { ReportService } from '../../../admin-dashboard/services/report.service';
+import { ReportService } from '../../services/report.service';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+
+const UI_STATE_CACHE_KEY = 'DonationsList_UI_State';
 
 @Component({
-  selector: 'app-donation-admin-list',
+  selector: 'app-donations-list',
   standalone: true,
   imports: [
     CommonModule,
@@ -38,12 +43,14 @@ import { ReportService } from '../../../admin-dashboard/services/report.service'
     HasPermissionDirective,
     PaginationComponent
   ],
-  templateUrl: './donation-admin-list.component.html',
+  templateUrl: './donations-list.component.html',
 })
-export class DonationAdminListComponent implements OnInit {
+export class DonationsListComponent implements OnInit {
   private readonly donationService = inject(DonationService);
   private readonly searchSubject = new Subject<string>();
   private readonly reportService = inject(ReportService);
+  private readonly cacheService = inject(CacheService);
+  private readonly destroyRef = inject(DestroyRef);
 
   Permissions = Permissions;
 
@@ -71,15 +78,47 @@ export class DonationAdminListComponent implements OnInit {
   totalCount = signal(0);
   totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize)));
 
+  readonly hasActiveFilters = computed(() => {
+    return !!(this.search() || this.selectedStatus());
+  });
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set(
+        UI_STATE_CACHE_KEY,
+        {
+          search: this.search(),
+          selectedStatus: this.selectedStatus(),
+          pageNumber: this.pageNumber()
+        },
+        CACHE_TTL.UI_STATE,
+        [CACHE_TAGS.UI_STATE]
+      );
+    });
+  }
 
   ngOnInit(): void {
+    const cachedState = this.cacheService.get<{
+      search: string;
+      selectedStatus: PaymentStatus | string;
+      pageNumber: number;
+    }>(UI_STATE_CACHE_KEY);
+
+    if (cachedState) {
+      this.search.set(cachedState.search);
+      this.selectedStatus.set(cachedState.selectedStatus);
+      this.pageNumber.set(cachedState.pageNumber);
+    }
+
     this.loadStatistics();
     this.loadDonations();
 
-    this.searchSubject.pipe(debounceTime(400), distinctUntilChanged()).subscribe(() => {
-      this.pageNumber.set(1);
-      this.loadDonations();
-    });
+    this.searchSubject
+      .pipe(debounceTime(400), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.pageNumber.set(1);
+        this.loadDonations();
+      });
   }
 
   private loadStatistics(): void {
@@ -161,15 +200,20 @@ export class DonationAdminListComponent implements OnInit {
   }
 
   downloadReport(): void {
-
-  this.reportService
-    .generateDonationPdfReport({pageNumber: this.pageNumber(),
-      pageSize: this.pageSize,
-      userEmail: this.search() || undefined,
-      paymentStatus: (this.selectedStatus() as PaymentStatus) || undefined,
-    })
-    .subscribe(response => {
-      this.reportService.download(response);
-    });
-}
+    this.reportService
+      .generateDonationPdfReport({
+        pageNumber: this.pageNumber(),
+        pageSize: this.pageSize,
+        userEmail: this.search() || undefined,
+        paymentStatus: (this.selectedStatus() as PaymentStatus) || undefined,
+      })
+      .subscribe({
+        next: (response) => {
+          this.reportService.download(response);
+        },
+        error: (err) => {
+          // toast handled via injected toast if available or silent fallback
+        }
+      });
+  }
 }

@@ -1,4 +1,5 @@
-import { Component, computed, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
@@ -15,6 +16,12 @@ import { LoadingSpinnerComponent } from '../../../../shared/components/loading-s
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { AuditOperationBadgeDirective } from '../../../../shared/directives/audit-operation-badge.directive';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+
+
+const UI_STATE_CACHE_KEY = 'AuditLogs_UI_State';
 
 @Component({
   selector: 'app-audit-logs',
@@ -38,6 +45,8 @@ import { PaginationComponent } from '../../../../shared/components/pagination/pa
 export class AuditLogsComponent implements OnInit {
   private dashboardService = inject(DashboardService);
   private toast = inject(SnackbarService);
+  private cacheService = inject(CacheService);
+  private destroyRef = inject(DestroyRef);
 
   logs = signal<AuditLogDto[]>([]);
   totalCount = signal<number>(0);
@@ -52,16 +61,50 @@ export class AuditLogsComponent implements OnInit {
     searchType: ''
   });
 
+  readonly hasActiveFilters = computed(() => {
+    const f = this.filter();
+    return !!(f.searchEmail || f.searchTable || f.searchType);
+  });
+
+  resetFilters(): void {
+    this.filter.set({
+      pageNumber: 1,
+      pageSize: 10,
+      searchEmail: '',
+      searchTable: '',
+      searchType: ''
+    });
+    this.loadLogs();
+  }
+
   selectedLog = signal<AuditLogDto | null>(null);
 
   private searchSubject = new Subject<string>();
 
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set(
+        UI_STATE_CACHE_KEY,
+        { filter: this.filter() },
+        CACHE_TTL.UI_STATE,
+        [CACHE_TAGS.UI_STATE]
+      );
+    });
+  }
+
   ngOnInit() {
+    const cachedState = this.cacheService.get<{ filter: AuditLogQueryDto }>(UI_STATE_CACHE_KEY);
+    if (cachedState) {
+      this.filter.set(cachedState.filter);
+    }
+
     this.loadLogs();
 
-    this.searchSubject.pipe(debounceTime(500), distinctUntilChanged()).subscribe((term) => {
-      this.updateFilter({ searchEmail: term, pageNumber: 1 });
-    });
+    this.searchSubject
+      .pipe(debounceTime(500), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe((term: string) => {
+        this.updateFilter({ searchEmail: term, pageNumber: 1 });
+      });
   }
 
   loadLogs() {
@@ -78,7 +121,7 @@ export class AuditLogsComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: (err) => {
-        this.toast.error(err.error?.detail || 'حدث خطأ أثناء الاتصال بالخادم.');
+        this.toast.error(extractErrorMessage(err, 'حدث خطأ أثناء الاتصال بالخادم.'));
         this.isLoading.set(false);
       },
     });
@@ -94,17 +137,6 @@ export class AuditLogsComponent implements OnInit {
       ...partialFilter,
       pageNumber: partialFilter.pageNumber ?? 1,
     }));
-    this.loadLogs();
-  }
-
-  resetFilters() {
-    this.filter.set({
-      pageNumber: 1,
-      pageSize: 10,
-      searchEmail: '',
-      searchTable: '',
-      searchType: ''
-    });
     this.loadLogs();
   }
 

@@ -1,12 +1,16 @@
-<div class="p-margin-mobile md:p-margin-desktop space-y-xl">
+<div class="mb-md lg:mb-xl">
+  <app-header 
+    title="لوحة الإحصائيات" 
+    subtitle="نظرة عامة على البيانات وتوزيع الحالات"
+    [showPrimary]="false" 
+    [showSecondary]="false">
+  </app-header>
+</div>
+
+<div class="flex flex-col gap-xl">
   @if (isLoading()) {
     <div class="flex items-center justify-center py-2xl">
-      <div class="flex flex-col items-center gap-md">
-        <div
-          class="w-10 h-10 border-4 border-secondary/20 border-t-secondary rounded-full animate-spin"
-        ></div>
-        <p class="text-body-sm text-on-surface-variant">جاري تحميل الإحصائيات...</p>
-      </div>
+      <app-loading-spinner title="جارِ تحميل الإحصائيات..."></app-loading-spinner>
     </div>
   }
 
@@ -16,12 +20,12 @@
     >
       <span class="material-symbols-outlined text-error text-4xl">error</span>
       <p class="text-body-md text-on-surface">{{ errorDetail() }}</p>
-      <button
-        class="px-lg py-sm rounded-full bg-secondary text-on-secondary text-label-md"
-        (click)="reload()"
+      <app-button
+        customClass="px-lg py-sm rounded-full bg-secondary text-on-secondary text-label-md"
+        (onClick)="reload()"
+        label="إعادة المحاولة"
       >
-        إعادة المحاولة
-      </button>
+      </app-button>
     </div>
   }
 
@@ -61,21 +65,17 @@
       }
     </div>
 
+    @defer (on viewport) {
     <!-- Charts Row: Case Status, Donations, and Complaints Donuts -->
     <div class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-lg">
       <!-- Case Status Donut -->
-      <div
-        class="relative glass-card p-xl rounded-2xl shadow-sm flex flex-col overflow-hidden"
-        style="
-          background: radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.08), transparent 55%);
-        "
+      <app-card
+        extraClass="relative glass-card p-xl rounded-2xl shadow-sm flex flex-col h-full"
       >
         <h3 class="text-headline-sm font-bold text-primary mb-lg">توزيع حالات الحالات</h3>
 
         @if (caseStatusDonut().length === 0) {
-          <p class="text-body-sm text-on-surface-variant py-lg text-center">
-            لا توجد بيانات لعرضها.
-          </p>
+          <app-empty-state title="لا توجد بيانات" message="لا توجد بيانات لعرضها." icon="insert_chart"></app-empty-state>
         } @else {
           <div class="flex flex-col sm:flex-row items-center gap-xl">
             <div class="relative w-45 h-45 shrink-0">
@@ -99,19 +99,32 @@
                     stroke-linecap="butt"
                     [attr.stroke-dasharray]="segment.dashArray"
                     [attr.stroke-dashoffset]="segment.dashOffset"
-                    class="drop-shadow-sm"
-                  />
+                    class="drop-shadow-sm transition-all duration-200 cursor-pointer origin-center"
+                    (mouseenter)="hoveredCaseStatus.set(segment.label)"
+                    (mouseleave)="hoveredCaseStatus.set(null)"
+                    [ngClass]="{
+                      'scale-105 stroke-[20px] drop-shadow-md': hoveredCaseStatus() === segment.label,
+                      'opacity-30': hoveredCaseStatus() !== null && hoveredCaseStatus() !== segment.label
+                    }"
+                  >
+                    <title>{{ segment.label }}: {{ segment.value }} ({{ segment.percent | number: '1.0-1' }}%)</title>
+                  </circle>
                 }
               </svg>
-              <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span class="text-headline-sm font-bold text-primary">{{ caseStatusTotal() }}</span>
-                <span class="text-label-sm text-on-surface-variant">إجمالي</span>
+                <span class="text-label-sm text-on-surface-variant">حالة</span>
               </div>
             </div>
 
             <ul class="flex flex-col gap-sm w-full">
               @for (segment of caseStatusDonut(); track segment.label) {
-                <li class="flex items-center justify-between gap-md text-body-sm">
+                <li 
+                  class="flex items-center justify-between gap-md text-body-sm transition-opacity duration-200 cursor-default"
+                  (mouseenter)="hoveredCaseStatus.set(segment.label)"
+                  (mouseleave)="hoveredCaseStatus.set(null)"
+                  [class.opacity-30]="hoveredCaseStatus() !== null && hoveredCaseStatus() !== segment.label"
+                >
                   <span class="flex items-center gap-sm">
                     <span
                       class="w-3 h-3 rounded-full shrink-0"
@@ -128,29 +141,24 @@
             </ul>
           </div>
         }
-      </div>
+      </app-card>
 
       <!-- Donations Donut -->
-      <div
-        class="relative glass-card p-xl rounded-2xl shadow-sm flex flex-col overflow-hidden"
-        style="
-          background: radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.08), transparent 55%);
-        "
+      <app-card
+        extraClass="relative glass-card p-xl rounded-2xl shadow-sm flex flex-col h-full"
       >
         <div class="flex items-center justify-between mb-lg">
           <h3 class="text-headline-sm font-bold text-primary">حالة التبرعات</h3>
           <div class="text-left">
-            <p class="text-label-sm text-on-surface-variant">إجمالي المبالغ</p>
-            <p class="text-title-md font-bold" [style.color]="statusColors.succeeded">
-              {{ formattedDonationsSum() }} ج.م
+            <p class="text-label-sm text-on-surface-variant">إجمالي التبرعات</p>
+            <p class="text-title-lg font-bold text-primary tabular-nums">
+              EGP {{ data.totalSumDonations | number: '1.2-2' }}
             </p>
           </div>
         </div>
 
         @if (donationsDonut().length === 0) {
-          <p class="text-body-sm text-on-surface-variant py-lg text-center">
-            لا توجد بيانات لعرضها.
-          </p>
+          <app-empty-state title="لا توجد بيانات" message="لا توجد بيانات لعرضها." icon="insert_chart"></app-empty-state>
         } @else {
           <div class="flex flex-col sm:flex-row items-center gap-xl">
             <div class="relative w-45 h-45 shrink-0">
@@ -174,11 +182,19 @@
                     stroke-linecap="butt"
                     [attr.stroke-dasharray]="segment.dashArray"
                     [attr.stroke-dashoffset]="segment.dashOffset"
-                    class="drop-shadow-sm"
-                  />
+                    class="drop-shadow-sm transition-all duration-200 cursor-pointer origin-center"
+                    (mouseenter)="hoveredDonations.set(segment.label)"
+                    (mouseleave)="hoveredDonations.set(null)"
+                    [ngClass]="{
+                      'scale-105 stroke-[20px] drop-shadow-md': hoveredDonations() === segment.label,
+                      'opacity-30': hoveredDonations() !== null && hoveredDonations() !== segment.label
+                    }"
+                  >
+                    <title>{{ segment.label }}: {{ segment.value }} ({{ segment.percent | number: '1.0-1' }}%)</title>
+                  </circle>
                 }
               </svg>
-              <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span class="text-headline-sm font-bold text-primary">{{
                   donationsCountTotal()
                 }}</span>
@@ -188,7 +204,12 @@
 
             <ul class="flex flex-col gap-sm w-full">
               @for (segment of donationsDonut(); track segment.label) {
-                <li class="flex items-center justify-between gap-md text-body-sm">
+                <li 
+                  class="flex items-center justify-between gap-md text-body-sm transition-opacity duration-200 cursor-default"
+                  (mouseenter)="hoveredDonations.set(segment.label)"
+                  (mouseleave)="hoveredDonations.set(null)"
+                  [class.opacity-30]="hoveredDonations() !== null && hoveredDonations() !== segment.label"
+                >
                   <span class="flex items-center gap-sm">
                     <span
                       class="w-3 h-3 rounded-full shrink-0"
@@ -205,21 +226,15 @@
             </ul>
           </div>
         }
-      </div>
-
-      <!-- Complaints Donut -->
-      <div
-        class="relative glass-card p-xl rounded-2xl shadow-sm flex flex-col overflow-hidden"
-        style="
-          background: radial-gradient(circle at 100% 0%, rgba(239, 68, 68, 0.06), transparent 55%);
-        "
-      >
+        </app-card>
+  
+        <app-card
+          extraClass="relative glass-card p-xl rounded-2xl shadow-sm flex flex-col h-full overflow-hidden"
+        >
         <h3 class="text-headline-sm font-bold text-primary mb-lg">حالة الشكاوى</h3>
 
         @if (complaintsDonut().length === 0) {
-          <p class="text-body-sm text-on-surface-variant py-lg text-center">
-            لا توجد بيانات لعرضها.
-          </p>
+          <app-empty-state title="لا توجد بيانات" message="لا توجد بيانات لعرضها." icon="insert_chart"></app-empty-state>
         } @else {
           <div class="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center gap-xl">
             <div class="relative w-45 h-45 shrink-0">
@@ -243,11 +258,19 @@
                     stroke-linecap="butt"
                     [attr.stroke-dasharray]="segment.dashArray"
                     [attr.stroke-dashoffset]="segment.dashOffset"
-                    class="drop-shadow-sm"
-                  />
+                    class="drop-shadow-sm transition-all duration-200 cursor-pointer origin-center"
+                    (mouseenter)="hoveredComplaints.set(segment.label)"
+                    (mouseleave)="hoveredComplaints.set(null)"
+                    [ngClass]="{
+                      'scale-105 stroke-[20px] drop-shadow-md': hoveredComplaints() === segment.label,
+                      'opacity-30': hoveredComplaints() !== null && hoveredComplaints() !== segment.label
+                    }"
+                  >
+                    <title>{{ segment.label }}: {{ segment.value }} ({{ segment.percent | number: '1.0-1' }}%)</title>
+                  </circle>
                 }
               </svg>
-              <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span class="text-headline-sm font-bold text-primary">{{
                   complaintsCountTotal()
                 }}</span>
@@ -257,7 +280,12 @@
 
             <ul class="flex flex-col gap-sm w-full">
               @for (segment of complaintsDonut(); track segment.label) {
-                <li class="flex items-center justify-between gap-md text-body-sm">
+                <li 
+                  class="flex items-center justify-between gap-md text-body-sm transition-opacity duration-200 cursor-default"
+                  (mouseenter)="hoveredComplaints.set(segment.label)"
+                  (mouseleave)="hoveredComplaints.set(null)"
+                  [class.opacity-30]="hoveredComplaints() !== null && hoveredComplaints() !== segment.label"
+                >
                   <span class="flex items-center gap-sm">
                     <span
                       class="w-3 h-3 rounded-full shrink-0"
@@ -274,17 +302,17 @@
             </ul>
           </div>
         }
-      </div>
+      </app-card>
     </div>
 
     <!-- Case Type Breakdown: Stacked Bars -->
-    <div class="glass-card p-xl rounded-2xl shadow-sm flex flex-col">
-      <div class="flex items-center justify-between mb-lg">
+    <app-card extraClass="glass-card p-xl rounded-2xl shadow-sm overflow-hidden mb-lg">
+      <div class="flex items-center justify-between mb-xl">
         <h3 class="text-headline-sm font-bold text-primary">توزيع أنواع الحالات</h3>
       </div>
 
       @if (caseTypeBars().length === 0) {
-        <p class="text-body-sm text-on-surface-variant py-lg text-center">لا توجد بيانات لعرضها.</p>
+        <app-empty-state title="لا توجد بيانات" message="لا توجد بيانات لعرضها." icon="insert_chart"></app-empty-state>
       } @else {
         <!-- Legend -->
         <div class="flex flex-wrap gap-md mb-lg text-label-sm">
@@ -341,7 +369,7 @@
               </div>
 
               <div
-                class="w-full h-6 rounded-full bg-surface-variant overflow-hidden flex"
+                class="w-full h-6 rounded-full bg-surface-variant overflow-hidden flex transition-transform hover:scale-[1.02] cursor-pointer"
                 [style.width.%]="bar.totalHeightPercent"
               >
                 @if (bar.activePercent > 0) {
@@ -397,33 +425,33 @@
           }
         </div>
       }
-    </div>
+    </app-card>
 
     <!-- Full Detail Table -->
-    <div class="glass-card p-xl rounded-2xl shadow-sm flex flex-col">
+    <app-card extraClass="glass-card p-xl rounded-2xl shadow-sm overflow-hidden">
       <h3 class="text-headline-sm font-bold text-primary mb-lg">تفاصيل أنواع الحالات</h3>
 
       @if (data.caseTypes.length === 0) {
-        <p class="text-body-sm text-on-surface-variant py-lg text-center">لا توجد بيانات لعرضها.</p>
+        <app-empty-state title="لا توجد بيانات" message="لا توجد بيانات لعرضها." icon="insert_chart"></app-empty-state>
       } @else {
-        <div class="overflow-x-auto">
-          <table class="w-full text-right text-body-sm">
+        <div class="overflow-x-auto pb-4">
+          <table class="w-full text-right text-body-sm whitespace-nowrap min-w-max">
             <thead class="text-label-sm text-on-surface-variant border-b border-outline-variant">
               <tr>
-                <th class="py-sm">نوع الحالة</th>
-                <th class="py-sm">الإجمالي</th>
-                <th class="py-sm">النشطة</th>
-                <th class="py-sm">تم العثور عليها</th>
-                <th class="py-sm">قيد الانتظار</th>
-                <th class="py-sm">مرفوضة</th>
-                <th class="py-sm">منتهية</th>
-                <th class="py-sm">محذوفة</th>
+                <th class="py-sm px-md text-center">نوع الحالة</th>
+                <th class="py-sm px-md text-center">الإجمالي</th>
+                <th class="py-sm px-md text-center">النشطة</th>
+                <th class="py-sm px-md text-center">تم العثور عليها</th>
+                <th class="py-sm px-md text-center">قيد الانتظار</th>
+                <th class="py-sm px-md text-center">مرفوضة</th>
+                <th class="py-sm px-md text-center">منتهية</th>
+                <th class="py-sm px-md text-center">محذوفة</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant/10">
               @for (row of data.caseTypes; track row.caseType) {
-                <tr class="hover:bg-surface-container-low transition-colors">
-                  <td class="py-md font-bold">{{ row.caseType }}</td>
+                <tr class="hover:bg-surface-container-low transition-colors text-center">
+                  <td class="py-md font-bold">{{ translateCaseType(row.caseType) }}</td>
                   <td class="py-md tabular-nums">{{ row.total }}</td>
                   <td class="py-md">
                     <span
@@ -455,6 +483,11 @@
           </table>
         </div>
       }
-    </div>
+    </app-card>
+    } @placeholder {
+      <div class="flex items-center justify-center py-2xl">
+        <app-loading-spinner title="جارِ تحميل الإحصائيات..."></app-loading-spinner>
+      </div>
+    }
   }
 </div>

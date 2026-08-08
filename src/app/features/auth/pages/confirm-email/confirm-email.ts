@@ -6,6 +6,7 @@ import { SnackbarService } from '../../../../shared/services/toast.service';
 import Swal from 'sweetalert2';
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 @Component({
   selector: 'app-confirm-email',
@@ -47,6 +48,7 @@ export class ConfirmEmail implements OnInit, OnDestroy {
   }
 
   onSubmit() {
+    if (this.isLoading()) return;
     this.apiErrorMessage.set('');
     if (this.confirmForm.invalid) {
       this.confirmForm.markAllAsTouched();
@@ -68,7 +70,7 @@ export class ConfirmEmail implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.apiErrorMessage.set(err.error?.detail || 'الرمز غير صحيح أو منتهي الصلاحية.');
+        this.apiErrorMessage.set(extractErrorMessage(err, 'الرمز غير صحيح أو منتهي الصلاحية.'));
       }
     });
   }
@@ -88,7 +90,7 @@ export class ConfirmEmail implements OnInit, OnDestroy {
           clearInterval(this.intervalId);
           this.intervalId = null;
         }
-        this.snackbar.error(err.error?.detail || 'حدث خطأ أثناء محاولة إرسال الرمز.');
+        this.snackbar.error(extractErrorMessage(err, 'حدث خطأ أثناء محاولة إرسال الرمز.'));
       }
     });
   }

@@ -13,6 +13,11 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { environment } from '../../../../../environments/environment';
+import { caseCodeValidator } from '../../../../shared/validators/case-code.validator';
+import { CaseStatus } from '../../../../shared/enums/case-status';
+import { Gender } from '../../../../shared/enums/gender';
+import { CaseListItemResponse } from '../../../../core/models/cases.model';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 @Component({
   selector: 'app-home',
@@ -41,18 +46,37 @@ export class Home implements OnInit {
   isSendingComplaint = signal(false);
 
   contactTypeOptions = [
-    'تحديث معلومة',
+    'بلاغ عن حالة احتيال أو ابتزاز',
+    'محتوى غير لائق',
     'مشكلة تقنية',
-    'استفسار عام',
-    'بلاغ عن خطأ',
+    'اقتراح لتحسين المنصة',
     'أخرى'
   ];
 
   ngOnInit() {
     this.complaintForm = this.fb.group({
+      complaintTargetType: ['', Validators.required],
       caseCode: [''],
       contactType: [''],
-      message: ['', [Validators.required]]
+      message: ['', [Validators.required, Validators.minLength(20), Validators.maxLength(2000)]]
+    });
+
+    this.complaintForm.get('complaintTargetType')?.valueChanges.subscribe(type => {
+      const caseCodeControl = this.complaintForm.get('caseCode');
+      const contactTypeControl = this.complaintForm.get('contactType');
+
+      if (type === 'case') {
+        caseCodeControl?.setValidators([Validators.required, caseCodeValidator()]);
+        contactTypeControl?.clearValidators();
+        contactTypeControl?.setValue('');
+      } else if (type === 'general') {
+        contactTypeControl?.setValidators([Validators.required]);
+        caseCodeControl?.clearValidators();
+        caseCodeControl?.setValue('');
+      }
+      
+      caseCodeControl?.updateValueAndValidity();
+      contactTypeControl?.updateValueAndValidity();
     });
 
     this.urgentSvc.getAllCases({ pageNumber: 1, pageSize: 4 } as any).subscribe({
@@ -91,12 +115,12 @@ export class Home implements OnInit {
     }
     this.isSendingComplaint.set(true);
     const formValue = this.complaintForm.value;
-    const message = formValue.contactType
+    const message = formValue.complaintTargetType === 'general' && formValue.contactType
       ? `[${formValue.contactType}] ${formValue.message}`
       : formValue.message;
 
     this.complaintSvc.createComplaint({
-      caseCode: formValue.caseCode || undefined,
+      caseCode: formValue.complaintTargetType === 'case' ? formValue.caseCode : undefined,
       message
     }).subscribe({
       next: (res: any) => {
@@ -107,7 +131,7 @@ export class Home implements OnInit {
         this.isSendingComplaint.set(false);
       },
       error: (err) => {
-        this.snackbar.error(err.error?.message || err.error?.detail || 'حدث خطأ أثناء إرسال الرسالة، يرجى المحاولة مرة أخرى');
+        this.snackbar.error(err.error?.message || extractErrorMessage(err, 'حدث خطأ أثناء إرسال الرسالة، يرجى المحاولة مرة أخرى'));
         this.isSendingComplaint.set(false);
       }
     });
@@ -117,6 +141,25 @@ export class Home implements OnInit {
     this.router.navigate([`/${type}`, caseId], {
       queryParams: { contact: true },
     });
+  }
+
+  mapToCaseItem(person: any): CaseListItemResponse {
+    return {
+      id: person.id,
+      caseCode: '',
+      caseType: person.caseType,
+      status: CaseStatus.Found,
+      fName: person.fullName,
+      sName: null,
+      tName: null,
+      lName: null,
+      gender: Gender.Male,
+      age: person.age,
+      city: '',
+      government: '',
+      createdAt: person.foundDate,
+      mainPhoto: person.mainImage,
+    };
   }
 
   getImageUrl(path: string | undefined): string {
