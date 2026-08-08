@@ -29,6 +29,8 @@ import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
 import { ImageService } from '../../../../shared/services/image.service';
 import { CaseFileResponse } from '../../../../core/models/cases.model';
+import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
+
 
 type Step = 1 | 2 | 3;
 
@@ -96,6 +98,7 @@ export class LongTermUpdate implements OnInit {
 
   existingVideoUrl = signal<string | null>(null);
   videoFile = signal<File | null>(null);
+  videoError = signal<string | null>(null);
 
   readonly genders = Gender;
   readonly relationOptions = RELATION_TYPE_OPTIONS;
@@ -424,9 +427,31 @@ export class LongTermUpdate implements OnInit {
     this.policeReportFile.set(file);
   }
 
-  onVideoSelected(event: Event): void {
-    this.videoFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
+
+onVideoSelected(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0] ?? null;
+
+  if (!file) {
+    return;
   }
+
+  const validation = validateVideoFile(file, 50);
+
+  if (!validation.valid) {
+    this.videoFile.set(null);
+    this.videoError.set(
+      validation.errorMessage ?? 'الفيديو غير صالح.'
+    );
+
+    input.value = '';
+    return;
+  }
+
+  this.videoError.set(null);
+  this.videoFile.set(file);
+}
+
 
   // ─────────────────────────────────────────────────────────────
   // Submit

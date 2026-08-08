@@ -5,7 +5,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
-
+import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
 import { LongTermCaseService } from '../../services/long-term-case.service';
 import { LongTermCaseCreateRequest } from '../../models/request/LongTermCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
@@ -96,6 +96,7 @@ export class LongTermCreate implements OnInit {
   policeReportError = signal<string | null>(null);
 
   videoFile = signal<File | null>(null);
+  videoError = signal<string | null>(null);
 
   showForceCreatePopup = signal(false);
   showDuplicateInfoDialog = signal(false);
@@ -305,9 +306,30 @@ export class LongTermCreate implements OnInit {
     this.policeReportFile.set(file);
   }
 
-  onVideoSelected(event: Event): void {
-    this.videoFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
+onVideoSelected(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0] ?? null;
+
+  if (!file) {
+    this.videoFile.set(null);
+    return;
   }
+
+  const validation = validateVideoFile(file, 50);
+
+  if (!validation.valid) {
+    this.videoFile.set(null);
+    this.videoError.set(validation.errorMessage ?? 'الملف غير صالح.');
+
+    // مهم عشان لو اختار نفس الملف تاني بعد الرفض
+    input.value = '';
+
+    return;
+  }
+
+  this.videoError.set(null);
+  this.videoFile.set(file);
+}
 
   // ─────────────────────────────────────────────────────────────
   // Submit
