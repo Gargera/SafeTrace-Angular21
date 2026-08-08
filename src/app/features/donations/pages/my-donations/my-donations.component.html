@@ -2,13 +2,8 @@
   class="rounded-2xl border border-outline-variant bg-white shadow-sm overflow-hidden relative min-h-75"
 >
   @if (loading()) {
-    <app-loading-spinner
-      title="جارِ تحميل التبرعات..."
-      [fullscreen]="false"
-      containerClass="absolute inset-0 bg-white/60 flex items-center justify-center z-10"
-    ></app-loading-spinner>
-  }
-
+    <app-table-skeleton [rows]="6"></app-table-skeleton>
+  } @else {
   <div
     class="overflow-x-auto w-full"
   >
@@ -86,6 +81,7 @@
       </tbody>
     </table>
   </div>
+  }
 
   @if (loadingMore()) {
     <div

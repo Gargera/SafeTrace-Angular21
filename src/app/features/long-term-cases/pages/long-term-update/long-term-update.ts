@@ -30,6 +30,7 @@ import { validEnum } from '../../../../shared/validators/enum.validator';
 import { ImageService } from '../../../../shared/services/image.service';
 import { CaseFileResponse } from '../../../../core/models/cases.model';
 import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
+import { UpdateFormSkeletonComponent } from '../../../../shared/components/skeletons/update-form-skeleton/update-form-skeleton.component';
 
 
 type Step = 1 | 2 | 3;
@@ -46,6 +47,7 @@ type Step = 1 | 2 | 3;
     CardComponent,
     HeaderComponent,
     ConfirmationModalComponent,
+    UpdateFormSkeletonComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./long-term-update.css'],

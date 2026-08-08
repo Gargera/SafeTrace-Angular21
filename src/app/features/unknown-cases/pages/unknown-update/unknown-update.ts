@@ -26,6 +26,7 @@ import { CommonModule } from '@angular/common';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
+import { UpdateFormSkeletonComponent } from '../../../../shared/components/skeletons/update-form-skeleton/update-form-skeleton.component';
 
 type Step = 1 | 2 | 3;
 
@@ -40,6 +41,7 @@ type Step = 1 | 2 | 3;
     CardComponent,
     HeaderComponent,
     ConfirmationModalComponent,
+    UpdateFormSkeletonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./unknown-update.css'],

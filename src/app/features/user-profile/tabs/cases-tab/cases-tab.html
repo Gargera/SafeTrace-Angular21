@@ -1,8 +1,3 @@
-@if (initialLoad()) {
-<!-- Loading Spinner -->
-<app-loading-spinner title="جارٍ تحميل الحالات..." subtitle="يرجى الانتظار قليلاً" size="md"
-  containerClass="flex min-h-[60vh] items-center justify-center" />
-} @else {
 <!-- Header (Always Visible) -->
 <app-header title="حالاتي" subtitle="إدارة ومتابعة جميع الحالات التي قمت بإنشائها" [badge]="totalCases() + ' حالة'"
   [showBackButton]="false" [showPrimary]="false" [showSecondary]="false" />
@@ -17,11 +12,10 @@
 
 <!-- Content Area -->
 <div class="relative min-h-[350px]">
-  @if (loading() && !initialLoad()) {
-  <app-loading-spinner title="جارٍ تحديث الحالات..." [fullscreen]="false"
-    containerClass="absolute inset-0 bg-white/70 flex items-center justify-center z-10 rounded-xl backdrop-blur-[2px]" />
-  }
-
+  @if (loading()) {
+    <!-- Skeleton always in content area only, header/filters stay visible -->
+    <app-card-skeleton [items]="4" layout="case-card-compact"></app-card-skeleton>
+  } @else {
   <!-- Content -->
   @if (hasResults()) {
   <!-- Scrollable Cases Container -->
@@ -68,8 +62,9 @@
         " containerClass="py-16">
   </app-empty-state>
   }
+  }
 </div>
-}
+
 
 
 <!-- Confirmation Modal -->

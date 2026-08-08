@@ -1,12 +1,7 @@
 @if(loading()){
-  <app-loading-spinner
-    [fullscreen]="false"
-    title="جاري تحميل المحادثات..."
-    subtitle="يرجى الانتظار قليلاً"
-    size="md"
-    containerClass="flex min-h-[60vh] items-center justify-center">
-  </app-loading-spinner>
-
+  <div class="max-w-3xl mx-auto py-lg px-md w-full mt-24">
+    <app-card-skeleton [items]="6" layout="chat-list"></app-card-skeleton>
+  </div>
 }
 @else {
 <div class="max-w-3xl mx-auto py-lg px-md h-125 md:h-150 flex flex-col">

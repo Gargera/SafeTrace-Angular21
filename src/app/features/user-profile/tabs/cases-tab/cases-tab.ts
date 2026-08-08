@@ -25,7 +25,7 @@ import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { FoundPersonInfoRequest, CasesFilterRequest } from '../../../../core/models/cases.model';
 
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { CardSkeletonComponent } from '../../../../shared/components/skeletons/card-skeleton/card-skeleton.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
@@ -46,7 +46,7 @@ const UI_STATE_CACHE_KEY = 'MyCasesTab_UI_State';
     CommonModule,
     FormsModule,
     RouterModule,
-    LoadingSpinnerComponent,
+    CardSkeletonComponent,
     CaseCardCompactComponent,
     EmptyStateComponent,
     ButtonComponent,

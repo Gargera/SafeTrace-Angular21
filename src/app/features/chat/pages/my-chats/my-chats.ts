@@ -6,7 +6,7 @@ import { ChatAlertsService } from '../../services/chat-alert.service';
 import { ChatSummaryDto } from '../../models/chat.model';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { CardSkeletonComponent } from '../../../../shared/components/skeletons/card-skeleton/card-skeleton.component';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
@@ -18,7 +18,7 @@ const UI_STATE_CACHE_KEY = 'MyChats_UI_State';
 
 @Component({
   selector: 'app-my-chats',
-  imports: [CommonModule, RouterModule, ButtonComponent, LoadingSpinnerComponent, ConfirmationModalComponent],
+  imports: [CommonModule, RouterModule, ButtonComponent, CardSkeletonComponent, ConfirmationModalComponent],
   templateUrl: './my-chats.html',
 })
 export class MyChats implements OnInit {

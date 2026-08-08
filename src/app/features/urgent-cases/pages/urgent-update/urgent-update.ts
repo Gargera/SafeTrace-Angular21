@@ -31,6 +31,7 @@ import { ConfirmationModalComponent } from '../../../../shared/components/confir
 import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 import { CaseFileResponse } from '../../../../core/models/cases.model';
 import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
+import { UpdateFormSkeletonComponent } from '../../../../shared/components/skeletons/update-form-skeleton/update-form-skeleton.component';
 
 
 type Step = 1 | 2 | 3;
@@ -46,7 +47,8 @@ type Step = 1 | 2 | 3;
     FormField,
     CardComponent,
     HeaderComponent,
-    ConfirmationModalComponent
+    ConfirmationModalComponent,
+    UpdateFormSkeletonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./urgent-update.css'],

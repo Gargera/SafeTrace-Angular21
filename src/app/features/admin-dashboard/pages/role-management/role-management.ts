@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } 
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { TableSkeletonComponent } from '../../../../shared/components/skeletons/table-skeleton/table-skeleton.component';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { Permissions } from '../../../../core/constants/Permissions';
@@ -37,7 +37,7 @@ interface PermissionGroup {
 @Component({
   selector: 'app-role-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective, HeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent, TableSkeletonComponent, ConfirmationModalComponent, HasPermissionDirective, HeaderComponent],
   templateUrl: './role-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

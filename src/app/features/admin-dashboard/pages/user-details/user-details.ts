@@ -23,7 +23,8 @@ import Swal from 'sweetalert2';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { FormField } from '../../../../shared/components/form-field/form-field';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { ProfileSkeletonComponent } from '../../../../shared/components/skeletons/profile-skeleton/profile-skeleton.component';
+import { TableSkeletonComponent } from '../../../../shared/components/skeletons/table-skeleton/table-skeleton.component';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
@@ -39,7 +40,7 @@ interface PermissionGroup {
 @Component({
   selector: 'app-user-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, FormField, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective, HeaderComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, FormField, ProfileSkeletonComponent, TableSkeletonComponent, ConfirmationModalComponent, HasPermissionDirective, HeaderComponent],
   templateUrl: './user-details.html',
   styleUrl: './user-details.css',
   changeDetection: ChangeDetectionStrategy.OnPush

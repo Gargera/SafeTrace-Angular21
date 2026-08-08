@@ -22,7 +22,7 @@ import { ConfirmationModalComponent } from '../../../../shared/components/confir
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
-import { TableSkeletonComponent } from '../../../../shared/components/table-skeleton/table-skeleton.component';
+import { TableSkeletonComponent } from '../../../../shared/components/skeletons/table-skeleton/table-skeleton.component';
 import { ReportService } from '../../../admin-dashboard/services/report.service';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';

@@ -25,11 +25,7 @@
 
     <!-- ── Loading ────────────────────────────────────────────────────────── -->
     @if (notificationService.isLoading()) {
-      <div class="flex justify-center py-xl">
-        <span class="material-symbols-outlined text-secondary animate-spin text-[32px]">
-          progress_activity
-        </span>
-      </div>
+      <app-notification-skeleton [items]="6"></app-notification-skeleton>
     }
 
     <!-- ── Empty ──────────────────────────────────────────────────────────── -->

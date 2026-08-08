@@ -10,11 +10,12 @@ import { SnackbarService } from '../../../../shared/services/toast.service';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+import { CaseDetailsSkeletonComponent } from '../../../../shared/components/skeletons/case-details-skeleton/case-details-skeleton.component';
 
 @Component({
   selector: 'app-founded-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, HeaderComponent, ButtonComponent],
+  imports: [CommonModule, RouterModule, HeaderComponent, ButtonComponent, CaseDetailsSkeletonComponent],
   templateUrl: './founded-detail.component.html',
 })
 export class FoundedDetailComponent implements OnInit {

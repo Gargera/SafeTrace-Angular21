@@ -7,7 +7,7 @@ import { DonationUserListDto } from '../../models/responses/donation-user-list.d
 import { TruncatePipe } from '../../../../shared/pipes/truncate-pipe';
 import { PaymentStatusBadgeDirective } from '../../../../shared/directives/payment-status-badge.directive';
 import { ButtonComponent } from '../../../../shared/components/button/button';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { TableSkeletonComponent } from '../../../../shared/components/skeletons/table-skeleton/table-skeleton.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 
 @Component({
@@ -18,7 +18,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
     TruncatePipe,
     PaymentStatusBadgeDirective,
     ButtonComponent,
-    LoadingSpinnerComponent,
+    TableSkeletonComponent,
     EmptyStateComponent
   ],
   templateUrl: './my-donations.component.html',
