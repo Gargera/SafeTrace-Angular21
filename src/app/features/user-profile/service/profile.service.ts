@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import {
   AddIdImageDTO,
@@ -16,14 +17,31 @@ import {
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
 
+import { CaseType } from '../../../shared/enums/case-type';
+import { UrgentCaseService } from '../../urgent-cases/services/urgent-case.service';
+import { LongTermCaseService } from '../../long-term-cases/services/long-term-case.service';
+import { UnknownCaseService } from '../../unknown-cases/services/unknown-case.service';
+import { CacheService } from '../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../core/cache/cache.constants';
+
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
   readonly #http = inject(HttpClient);
+  readonly #urgentCaseService = inject(UrgentCaseService);
+  readonly #longTermCaseService = inject(LongTermCaseService);
+  readonly #unknownCaseService = inject(UnknownCaseService);
+  readonly #cacheService = inject(CacheService);
   readonly #profileUrl = `${environment.apiBaseUrl}/UserProfile`;
   readonly #accountUrl = `${environment.apiBaseUrl}/Account`;
 
   getUserInfo(): Observable<ApiResponse<GetUserInfoDTO>> {
-    return this.#http.get<ApiResponse<GetUserInfoDTO>>(`${this.#profileUrl}/GetInfo`);
+    const key = `Profile_getUserInfo`;
+    return this.#cacheService.getOrSet(
+      key,
+      () => this.#http.get<ApiResponse<GetUserInfoDTO>>(`${this.#profileUrl}/GetInfo`),
+      CACHE_TTL.DETAILS,
+      [CACHE_TAGS.PROFILE]
+    );
   }
 
   /** PUT /UserProfile/UpdateName */
@@ -31,21 +49,28 @@ export class ProfileService {
     const formData = new FormData();
     formData.append('firstName', dto.firstName);
     formData.append('lastName', dto.lastName);
-    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateName`, formData);
+    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateName`, formData).pipe(
+      tap(() => this.#cacheService.invalidateByTags([CACHE_TAGS.PROFILE]))
+    );
   }
 
   /** PUT /UserProfile/UpdateProfileImage */
   updateProfileImage(dto: UpdateProfileImageDTO): Observable<ApiResponse<boolean>> {
     const formData = new FormData();
     formData.append('profileImage', dto.profileImage);
-    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateProfileImage`, formData);
+    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateProfileImage`, formData).pipe(
+      tap(() => this.#cacheService.invalidateByTags([CACHE_TAGS.PROFILE]))
+    );
   }
 
   /** PUT /UserProfile/AddIdImage */
   addIdImage(dto: AddIdImageDTO): Observable<ApiResponse<boolean>> {
     const formData = new FormData();
-    formData.append('identificationImage', dto.identificationImage);
-    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/AddIdImage`, formData);
+    formData.append('identificationImageFront', dto.identificationImageFront);
+    formData.append('identificationImageBack', dto.identificationImageBack);
+    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/AddIdImage`, formData).pipe(
+      tap(() => this.#cacheService.invalidateByTags([CACHE_TAGS.PROFILE]))
+    );
   }
 
   /** PUT /UserProfile/UpdateHomeLocation */
@@ -53,17 +78,24 @@ export class ProfileService {
     const formData = new FormData();
     formData.append('homeLatitude', dto.homeLatitude.toString());
     formData.append('homeLongitude', dto.homeLongitude.toString());
-    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateHomeLocation`, formData);
+    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateHomeLocation`, formData).pipe(
+      tap(() => this.#cacheService.invalidateByTags([CACHE_TAGS.PROFILE]))
+    );
   }
 
   removeProfileImage(): Observable<ApiResponse<boolean>> {
-    return this.#http.delete<ApiResponse<boolean>>(`${this.#profileUrl}/ProfileImage`);
+    return this.#http.delete<ApiResponse<boolean>>(`${this.#profileUrl}/ProfileImage`).pipe(
+      tap(() => this.#cacheService.invalidateByTags([CACHE_TAGS.PROFILE]))
+    );
   }
+  
   updatePhoneNumber(phoneNumber: string): Observable<ApiResponse<boolean>> {
     const formData = new FormData();
     formData.append('PhoneNumber', phoneNumber);
 
-    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdatePhoneNumber`, formData);
+    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdatePhoneNumber`, formData).pipe(
+      tap(() => this.#cacheService.invalidateByTags([CACHE_TAGS.PROFILE]))
+    );
   }
 
   getMyCases(
@@ -90,14 +122,41 @@ export class ProfileService {
     params = params.set('page', (filter.page ?? 1).toString());
     params = params.set('pageSize', (filter.pageSize ?? 6).toString());
 
-    return this.#http.get<ApiResponse<PaginationResponse<MyCaseListItemResponse>>>(
-      `${this.#profileUrl}/MyCases`,
-      { params },
+    const key = `Profile_getMyCases_${params.toString()}`;
+    return this.#cacheService.getOrSet(
+      key,
+      () => this.#http.get<ApiResponse<PaginationResponse<MyCaseListItemResponse>>>(
+        `${this.#profileUrl}/MyCases`,
+        { params },
+      ),
+      CACHE_TTL.LIST,
+      [CACHE_TAGS.PROFILE]
     );
   }
 
   //CurrentLocation
   updateCurrentLocation(data: UpdateCurrentLocationDTO) {
-    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateCurrentLocation`, data);
+    return this.#http.put<ApiResponse<boolean>>(`${this.#profileUrl}/UpdateCurrentLocation`, data).pipe(
+      tap(() => this.#cacheService.invalidateByTags([CACHE_TAGS.PROFILE]))
+    );
+  }
+
+  getMyCaseById(id: number, caseType?: CaseType): Observable<ApiResponse<any>> {
+    switch (caseType) {
+      case CaseType.Urgent:
+        return this.#urgentCaseService.getMyCaseById(id);
+      case CaseType.LongTerm:
+        return this.#longTermCaseService.getMyCaseById(id);
+      case CaseType.Unknown:
+        return this.#unknownCaseService.getMyCaseById(id);
+      default:
+        const key = `Profile_getMyCaseById_${id}`;
+        return this.#cacheService.getOrSet(
+          key,
+          () => this.#http.get<ApiResponse<any>>(`${environment.baseUrl}/api/UserProfile/MyCaseDetails/${id}`),
+          CACHE_TTL.DETAILS,
+          [CACHE_TAGS.PROFILE]
+        );
+    }
   }
 }

@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { SnackbarService } from '../../../core/services/toast.service';
+import { SnackbarService } from '../../../shared/services/toast.service';
 
 /**
  * Renders whatever message currently lives in SnackbarService, if any.

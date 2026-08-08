@@ -13,61 +13,30 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, finalize, of } from 'rxjs';
-import { environment } from '../../../../environments/environment.development';
+import { environment } from '../../../../environments/environment';
 import { UserRole } from '../../enums/user-role';
 import { ApiResponse } from '../../models/responses/api-response.model';
 import { GeocodingService } from '../../../core/services/geocoding/geocoding.service';
 import { ChatService } from '../../../features/chat/services/chat.service';
-
+import { ROLE_TRANSLATIONS_AR } from '../../../core/constants/dictionaries/roles.dictionary';
+import { RoleBadgeDirective } from '../../directives/role-badge-directive';
+import { VerificationBadgeDirective } from '../../directives/verification-badge-directive';
 
 export interface VisitUserDTO {
   fullName: string;
   profileImage: string | null;
   role: UserRole;
+  verificationStatus: string;
   phoneNumber: string;
   email: string;
   homeLatitude: number | null;
   homeLongitude: number | null;
 }
 
-const ROLE_LABELS: Record<UserRole, string> = {
-  SuperAdmin: 'مدير النظام',
-  Admin: 'مسؤول',
-  Moderator: 'مشرف',
-  VerifiedUser: 'حساب موثّق',
-  User: 'عضو',
-};
-
-// Tailwind's scanner only picks up class names it can see literally in
-// source, so this lookup must spell every class out in full — no
-// `bg-${role}` string-building.
-const ROLE_STYLES: Record<UserRole, { badge: string; dot: string }> = {
-  SuperAdmin: {
-    badge: 'bg-black text-white', 
-    dot: 'bg-gray-300',
-  },
-  Admin: {
-    badge: 'bg-secondary-container text-on-secondary',
-    dot: 'bg-secondary',
-  },
-  Moderator: {
-    badge: 'bg-primary-container text-secondary-fixed',
-    dot: 'bg-primary',
-  },
-  VerifiedUser: {
-    badge: 'bg-tertiary-container text-tertiary-fixed',
-    dot: 'bg-on-tertiary-container',
-  },
-  User: {
-    badge: 'bg-surface-container-high text-on-surface-variant',
-    dot: 'bg-outline',
-  },
-};
-
 @Component({
   selector: 'app-view-profile-popup',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RoleBadgeDirective],
   templateUrl: './view-profile-popup.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
@@ -96,6 +65,7 @@ export class ViewProfilePopup {
   readonly profile = signal<VisitUserDTO | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+  readonly selectedZoomImage = signal<string | null>(null);
 
   readonly isOpen = computed(() => this.userId() !== null);
 
@@ -104,21 +74,6 @@ export class ViewProfilePopup {
     if (!name) return '';
     const [first, second] = name.split(/\s+/).filter(Boolean);
     return ((first?.[0] ?? '') + (second?.[0] ?? '')).toUpperCase();
-  });
-
-  readonly roleLabel = computed(() => {
-    const role = this.profile()?.role;
-    return role ? ROLE_LABELS[role] : '';
-  });
-
-  readonly roleBadgeClass = computed(() => {
-    const role = this.profile()?.role;
-    return role ? ROLE_STYLES[role].badge : '';
-  });
-
-  readonly roleDotClass = computed(() => {
-    const role = this.profile()?.role;
-    return role ? ROLE_STYLES[role].dot : '';
   });
 
   private lastRequestedId: string | null = null;
@@ -130,6 +85,7 @@ export class ViewProfilePopup {
   readonly isResolvingAddress = signal(false);
   constructor() {
     // Refetch whenever a new userId flows in.
+
     effect(() => {
       const id = this.userId();
 
@@ -139,6 +95,7 @@ export class ViewProfilePopup {
         this.error.set(null);
         this.loading.set(false);
         this.resolvedAddress.set(null);
+        this.selectedZoomImage.set(null);
         return;
       }
 
@@ -180,7 +137,9 @@ export class ViewProfilePopup {
     this.profile.set(null);
 
     this.http
-      .get<ApiResponse<VisitUserDTO>>(`${environment.apiBaseUrl}/UserProfile/GetVisitedUserInfo/${id}`)
+      .get<ApiResponse<VisitUserDTO>>(
+        `${environment.apiBaseUrl}/UserProfile/GetVisitedUserInfo/${id}`,
+      )
       .pipe(
         catchError(() => {
           this.error.set('تعذر تحميل الملف الشخصي، حاول مرة أخرى');
@@ -205,7 +164,18 @@ export class ViewProfilePopup {
   }
 
   close(): void {
+    this.selectedZoomImage.set(null);
     this.closed.emit();
+  }
+
+  openImageZoom(imageUrl: string | null): void {
+    if (imageUrl) {
+      this.selectedZoomImage.set(imageUrl);
+    }
+  }
+
+  closeImageZoom(): void {
+    this.selectedZoomImage.set(null);
   }
 
   onBackdropClick(event: MouseEvent): void {
@@ -214,7 +184,11 @@ export class ViewProfilePopup {
   }
 
   onEscape(): void {
-    if (this.isOpen()) this.close();
+    if (this.selectedZoomImage()) {
+      this.closeImageZoom();
+    } else if (this.isOpen()) {
+      this.close();
+    }
   }
 
   onImageError(event: Event): void {

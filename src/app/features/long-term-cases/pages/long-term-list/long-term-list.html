@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-7xl space-y-6 px-4 py-6">
     <!-- Page Header -->
     <section class="space-y-3 pb-2">
-      <app-case-header
+      <app-header
         title="الحالات طويلة الأمد"
         subtitle="قائمة الحالات طويلة الأمد"
         [badge]="!loading() ? totalItems() + ' حالة' : ''"
@@ -11,7 +11,7 @@
         primaryActionIcon="add"
         (primaryAction)="navigateToCreate()"
       >
-      </app-case-header>
+      </app-header>
     </section>
 
     <!-- Filters Card -->
@@ -19,6 +19,7 @@
       class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm"
     >
       <app-case-filters
+        [initialFilter]="filter()"
         (filterChange)="onFilterChange($event)"
         (reset)="onFilterReset()"
       ></app-case-filters>
@@ -34,9 +35,19 @@
       <!-- Empty State -->
       @if (!loading() && cases().length === 0) {
         <app-empty-state
-          title="لا توجد حالات طويلة الأمد"
-          message="لم يتم العثور على أي حالات تطابق معايير البحث الحالية."
+          [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات طويلة المدى'"
+          [message]="hasActiveFilters() ? 'لم نتمكن من العثور على حالات تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم إضافة أي حالات طويلة المدى حتى الآن.'"
         >
+          @if (hasActiveFilters()) {
+            <app-button
+              emptyActions
+              variant="outline"
+              size="md"
+              (click)="resetFilters()"
+            >
+              إلغاء تصفية البحث
+            </app-button>
+          }
         </app-empty-state>
       }
 

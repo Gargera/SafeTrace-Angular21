@@ -1,17 +1,17 @@
-import { FormField } from '../../../../shared/components/form-field/form-field';
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import Swal from 'sweetalert2';
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 @Component({
   selector: 'app-confirm-email',
   standalone: true,
-  imports: [FormField, ReactiveFormsModule, RouterModule,  ButtonComponent],
+  imports: [ReactiveFormsModule, RouterModule,  ButtonComponent],
   templateUrl: './confirm-email.html'
 })
 export class ConfirmEmail implements OnInit, OnDestroy {
@@ -48,6 +48,7 @@ export class ConfirmEmail implements OnInit, OnDestroy {
   }
 
   onSubmit() {
+    if (this.isLoading()) return;
     this.apiErrorMessage.set('');
     if (this.confirmForm.invalid) {
       this.confirmForm.markAllAsTouched();
@@ -69,7 +70,7 @@ export class ConfirmEmail implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.apiErrorMessage.set(err.error?.detail || 'الرمز غير صحيح أو منتهي الصلاحية.');
+        this.apiErrorMessage.set(extractErrorMessage(err, 'الرمز غير صحيح أو منتهي الصلاحية.'));
       }
     });
   }
@@ -79,7 +80,7 @@ export class ConfirmEmail implements OnInit, OnDestroy {
     
     this.startCountdown();
 
-    this.authService.resendOtp(this.email(), 1).subscribe({
+    this.authService.resendOtp(this.email(), 0).subscribe({
       next: (res) => {
         this.snackbar.success(res.message || 'تم إرسال الرمز بنجاح.');
       },
@@ -89,7 +90,7 @@ export class ConfirmEmail implements OnInit, OnDestroy {
           clearInterval(this.intervalId);
           this.intervalId = null;
         }
-        this.snackbar.error(err.error?.detail || 'حدث خطأ أثناء محاولة إرسال الرمز.');
+        this.snackbar.error(extractErrorMessage(err, 'حدث خطأ أثناء محاولة إرسال الرمز.'));
       }
     });
   }

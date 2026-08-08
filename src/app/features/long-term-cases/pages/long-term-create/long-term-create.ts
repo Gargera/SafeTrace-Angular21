@@ -1,6 +1,8 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, DestroyRef, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 
@@ -8,23 +10,43 @@ import { LongTermCaseService } from '../../services/long-term-case.service';
 import { LongTermCaseCreateRequest } from '../../models/request/LongTermCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
-import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/relation.type.dictionary';
-import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { CaseType } from '../../../../shared/enums/case-type';
+import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/dictionaries/relation.type.dictionary';
+import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
+import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
-import { MatchedCaseDto, mapMatchedCaseResponseToDto } from '../../../../shared/models/responses/matched-case.model';
+import { MatchedCaseResponse } from '../../../../core/models/cases.model';
+import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
+import { DuplicateInfoDialogComponent } from '../../../../shared/components/cases-components/duplicate-info-dialog/duplicate-info-dialog.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 // Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
+import { ImageService } from '../../../../shared/services/image.service';
 
 type Step = 1 | 2 | 3;
+
+const DRAFT_CACHE_KEY = 'LongTermCreate_Draft';
+
+interface LongTermCreateDraft {
+  formValue: any;
+  currentStep: Step;
+  showForceCreatePopup: boolean;
+  showDuplicateInfoDialog: boolean;
+  currentDuplicateDecision: DuplicateDecision;
+  isBlockedDuplicate: boolean;
+  matchedCases: MatchedCaseResponse[];
+  existingCaseType: CaseType | null;
+}
 
 @Component({
   selector: 'app-long-term-create',
@@ -33,28 +55,32 @@ type Step = 1 | 2 | 3;
     CommonModule,
     ReactiveFormsModule,
     ForceCreatePopupComponent,
+    DuplicateInfoDialogComponent,
     ButtonComponent,
     FormField,
     ImageCropperComponent,
     CardComponent,
-    CaseHeaderComponent,
+    HeaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./long-term-create.css'],
   templateUrl: './long-term-create.html',
 })
-export class LongTermCreate {
+export class LongTermCreate implements OnInit {
   private fb = inject(FormBuilder);
+  private imageService = inject(ImageService);
   private service = inject(LongTermCaseService);
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
+  private destroyRef = inject(DestroyRef);
+  private cacheService = inject(CacheService);
 
   currentStep: Step = 1;
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
 
   // Cropper & primary photo
-  cropImageEvent = signal<any>(null);
+  cropImageEvent = signal<Event | null>(null);
   croppedPrimaryImagePreview = signal<string | null>(null);
   tempCroppedBlob = signal<Blob | null>(null);
   primaryPhotoFile = signal<File | null>(null);
@@ -65,19 +91,23 @@ export class LongTermCreate {
   additionalPhotoPreviews = signal<string[]>([]);
   additionalPhotosError = signal<string | null>(null);
 
-  // Police report (optional — JPEG/PNG/WebP, max 10 MB)
+  // Police report (optional — JPG/JPEG/PNG/WebP, max 10 MB)
   policeReportFile = signal<File | null>(null);
   policeReportError = signal<string | null>(null);
 
   videoFile = signal<File | null>(null);
 
   showForceCreatePopup = signal(false);
+  showDuplicateInfoDialog = signal(false);
+  currentDuplicateDecision = signal<DuplicateDecision>(DuplicateDecision.None);
   isBlockedDuplicate = signal(false);
-  matchedCases = signal<MatchedCaseDto[]>([]);
+  matchedCases = signal<MatchedCaseResponse[]>([]);
+  existingCaseType = signal<CaseType | null>(null);
   private pendingRequest: LongTermCaseCreateRequest | null = null;
 
   readonly genders = Gender;
   readonly relationOptions = RELATION_TYPE_OPTIONS;
+  readonly caseTypes = CaseType;
   readonly governorates = EGYPT_GOVERNORATES;
   readonly today = new Date().toISOString().split('T')[0];
 
@@ -114,25 +144,61 @@ export class LongTermCreate {
   // Error message helper
   // ─────────────────────────────────────────────────────────────
   getFieldError(field: string): string | null {
-    const control = this.form.get(field);
-    if (!control || !control.errors || !(control.touched || control.dirty)) return null;
-    const e = control.errors;
-    if (e['required']) return 'هذا الحقل مطلوب';
-    if (e['arabicText']) return 'يجب كتابة النص بالحروف العربية فقط';
-    if (e['minlength']) return `الحد الأدنى ${e['minlength'].requiredLength} أحرف`;
-    if (e['maxlength']) return `الحد الأقصى ${e['maxlength'].requiredLength} حرفاً`;
-    if (e['min']) return `يجب أن لا تقل القيمة عن ${e['min'].min}`;
-    if (e['max']) return `يجب أن لا تتجاوز القيمة ${e['max'].max}`;
-    if (e['egyptianPhone']) return 'أدخل رقم هاتف مصري صحيح (مثال: 01xxxxxxxxx)';
-    if (e['pastDate']) return 'لا يمكن أن يكون التاريخ في المستقبل';
-    if (e['description']) return 'لا يمكن أن يتجاوز الوصف 2000 حرف';
-    if (e['validEnum']) return 'اختر قيمة صحيحة';
-    return 'قيمة غير صحيحة';
+    return getFormFieldError(this.form, field);
   }
 
   isInvalid(field: string): boolean {
-    const c = this.form.get(field);
-    return !!(c?.invalid && (c?.touched || c?.dirty));
+    return isFieldInvalid(this.form, field);
+  }
+
+  availableCities = signal<string[]>([]);
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      // Only cache if we didn't just submit successfully
+      if (this.form.dirty || this.currentStep > 1 || this.matchedCases().length > 0) {
+        const draft: LongTermCreateDraft = {
+          formValue: this.form.getRawValue(),
+          currentStep: this.currentStep,
+          showForceCreatePopup: this.showForceCreatePopup(),
+          showDuplicateInfoDialog: this.showDuplicateInfoDialog(),
+          currentDuplicateDecision: this.currentDuplicateDecision(),
+          isBlockedDuplicate: this.isBlockedDuplicate(),
+          matchedCases: this.matchedCases(),
+          existingCaseType: this.existingCaseType()
+        };
+        this.cacheService.set(DRAFT_CACHE_KEY, draft, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+      }
+    });
+  }
+
+  ngOnInit(): void {
+    this.form.get('government')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((gov) => {
+        const cities = getCitiesForGovernorate(gov);
+        this.availableCities.set(cities);
+        const currentCity = this.form.get('city')?.value;
+        if (currentCity && !cities.includes(currentCity)) {
+          this.form.get('city')?.setValue('');
+        }
+      });
+
+    const draft = this.cacheService.get<LongTermCreateDraft>(DRAFT_CACHE_KEY);
+    if (draft) {
+      this.form.patchValue(draft.formValue);
+      this.currentStep = draft.currentStep;
+      this.showForceCreatePopup.set(draft.showForceCreatePopup);
+      this.showDuplicateInfoDialog.set(draft.showDuplicateInfoDialog);
+      this.currentDuplicateDecision.set(draft.currentDuplicateDecision);
+      this.isBlockedDuplicate.set(draft.isBlockedDuplicate);
+      this.matchedCases.set(draft.matchedCases);
+      this.existingCaseType.set(draft.existingCaseType);
+
+      if (draft.showForceCreatePopup || draft.showDuplicateInfoDialog) {
+        this.snackbar.info('تم استعادة بيانات النموذج. يرجى إعادة إرفاق الصور والمستندات للمتابعة.');
+      }
+    }
   }
 
   nextStep(): void {
@@ -152,12 +218,6 @@ export class LongTermCreate {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // File validation constants
-  // ─────────────────────────────────────────────────────────────
-  private readonly ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  private readonly MAX_PHOTO_BYTES = 5 * 1024 * 1024;       // 5 MB
-  private readonly MAX_POLICE_BYTES = 10 * 1024 * 1024;     // 10 MB
-
   // ─────────────────────────────────────────────────────────────
   // Primary photo with Cropper
   // ─────────────────────────────────────────────────────────────
@@ -165,14 +225,13 @@ export class LongTermCreate {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
-    if (!this.ALLOWED_TYPES.includes(file.type.toLowerCase())) {
-      this.primaryPhotoError.set('نوع الملف غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+
+    const validation = this.imageService.validate(file, 5);
+    if (!validation.valid) {
+      this.primaryPhotoError.set(validation.errorMessage ?? null);
       return;
     }
-    if (file.size > this.MAX_PHOTO_BYTES) {
-      this.primaryPhotoError.set('حجم الصورة يتجاوز الحد المسموح (5 MB)');
-      return;
-    }
+
     this.primaryPhotoError.set(null);
     this.cropImageEvent.set(event);
   }
@@ -204,19 +263,16 @@ export class LongTermCreate {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Additional photos — max 4, JPEG/PNG/WebP, max 5 MB each
+  // Additional photos — max 4, JPG/JPEG/PNG/WebP, max 5 MB each
   // ─────────────────────────────────────────────────────────────
   onAdditionalPhotosSelected(event: Event): void {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
-    const invalidType = files.find(f => !this.ALLOWED_TYPES.includes(f.type.toLowerCase()));
-    if (invalidType) {
-      this.additionalPhotosError.set('أحد الملفات من نوع غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
-      return;
-    }
-    const oversized = files.find(f => f.size > this.MAX_PHOTO_BYTES);
-    if (oversized) {
-      this.additionalPhotosError.set('أحد الملفات يتجاوز الحد المسموح (5 MB لكل صورة)');
-      return;
+    for (const f of files) {
+      const validation = this.imageService.validate(f, 5);
+      if (!validation.valid) {
+        this.additionalPhotosError.set(validation.errorMessage ?? null);
+        return;
+      }
     }
     this.additionalPhotosError.set(null);
     this.additionalPhotos.update((p) => [...p, ...files].slice(0, 4));
@@ -233,19 +289,18 @@ export class LongTermCreate {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Police report — optional, JPEG/PNG/WebP, max 10 MB
+  // Police report — optional, JPG/JPEG/PNG/WebP, max 10 MB
   // ─────────────────────────────────────────────────────────────
   onPoliceReportSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     if (!file) return;
-    if (!this.ALLOWED_TYPES.includes(file.type.toLowerCase())) {
-      this.policeReportError.set('نوع الملف غير مسموح. يُقبل فقط: JPEG, PNG, WebP');
+
+    const validation = this.imageService.validate(file, 10);
+    if (!validation.valid) {
+      this.policeReportError.set(validation.errorMessage ?? null);
       return;
     }
-    if (file.size > this.MAX_POLICE_BYTES) {
-      this.policeReportError.set('حجم الملف يتجاوز الحد المسموح (10 MB)');
-      return;
-    }
+
     this.policeReportError.set(null);
     this.policeReportFile.set(file);
   }
@@ -258,7 +313,15 @@ export class LongTermCreate {
   // Submit
   // ─────────────────────────────────────────────────────────────
   onSubmit(forceCreate = false): void {
+    if (this.isSubmitting()) return;
     const primaryImg = this.primaryPhotoFile();
+
+    if (forceCreate && !this.pendingRequest && !primaryImg) {
+      this.errorMsg.set('يرجى إعادة إرفاق الصورة الأساسية قبل المتابعة.');
+      this.showForceCreatePopup.set(false);
+      this.showDuplicateInfoDialog.set(false);
+      return;
+    }
 
     if (!forceCreate && (this.form.invalid || !primaryImg)) {
       this.form.markAllAsTouched();
@@ -299,37 +362,71 @@ export class LongTermCreate {
       this.pendingRequest = request;
     }
 
-    this.service.createCase(request, forceCreate).subscribe({
-      next: (res) => {
-        this.isSubmitting.set(false);
-        const data = res.data;
+    this.service
+      .createCase(request, forceCreate)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.isSubmitting.set(false);
+          const data = res.data;
 
-        if (data && (data.isCreated === false || data.isCreated === undefined)) {
-          if (data.matchedCases) {
-            this.matchedCases.set(data.matchedCases.map(mapMatchedCaseResponseToDto));
-          } else {
-            this.matchedCases.set([]);
+          if (data && !data.isCreated) {
+            this.currentDuplicateDecision.set(data.duplicateDecision);
+            this.isBlockedDuplicate.set(data.isBlocked);
+            this.matchedCases.set(data.matchedCases ?? []);
+            this.existingCaseType.set(data.existingCaseType ?? null);
+
+            if (data.duplicateDecision === DuplicateDecision.SameUserDuplicate || 
+                data.duplicateDecision === DuplicateDecision.PendingOwnerCase ||
+                data.duplicateDecision === DuplicateDecision.PendingUnknownCase) {
+              this.showDuplicateInfoDialog.set(true);
+            } else if (data.duplicateDecision === DuplicateDecision.ActiveOwnerCase ||
+                       data.duplicateDecision === DuplicateDecision.ActiveUnknownCase) {
+              this.showForceCreatePopup.set(true);
+            }
+            return;
           }
 
-          const rawData = data as any;
-          const isSameType = rawData.isSameTypeDuplicate ?? rawData.IsSameTypeDuplicate ?? false;
+          this.cacheService.remove(DRAFT_CACHE_KEY);
+          this.showForceCreatePopup.set(false);
+          this.showDuplicateInfoDialog.set(false);
+          this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
+          this.router.navigate(['/long-term']);
+        },
+        error: (err: unknown) => {
+          this.isSubmitting.set(false);
+          const msg = extractErrorMessage(err, 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.');
+          
+          if (err && typeof err === 'object' && 'status' in err && (err as any).status === 400) {
+            if (msg.includes('يجب أن تكون لنفس الشخص') || msg.includes('لا تبدو لنفس الشخص')) {
+               this.additionalPhotosError.set(msg);
+               return;
+            }
 
-          this.isBlockedDuplicate.set(Boolean(isSameType));
-          this.showForceCreatePopup.set(true);
-          return;
-        }
-
-        this.showForceCreatePopup.set(false);
-        this.snackbar.success('تم إرسال بلاغ الحالة بنجاح، هيتم مراجعته من الإدارة قريبًا.');
-        this.router.navigate(['/long-term']);
-      },
-      error: (err) => {
-        this.isSubmitting.set(false);
-        const msg = err?.error?.message ?? 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.';
-        this.errorMsg.set(msg);
-        this.snackbar.error(msg);
-      },
-    });
+            const errorObj = (err as any).error;
+            if (errorObj?.errors) {
+              let hasUnmappedErrors = false;
+              for (const key in errorObj.errors) {
+                const controlName = key.charAt(0).toLowerCase() + key.slice(1);
+                const control = this.form.get(controlName);
+                if (control) {
+                  control.setErrors({ serverError: errorObj.errors[key][0] });
+                } else {
+                  hasUnmappedErrors = true;
+                  this.errorMsg.set(errorObj.errors[key][0]);
+                }
+              }
+              if (!hasUnmappedErrors) {
+                this.errorMsg.set(null);
+              }
+            } else {
+              this.errorMsg.set(msg);
+            }
+          } else {
+            this.snackbar.error(msg);
+          }
+        },
+      });
   }
 
   onForceCreateCancel(): void {
@@ -341,6 +438,18 @@ export class LongTermCreate {
       return;
     }
     this.showForceCreatePopup.set(false);
+    this.onSubmit(true);
+  }
+
+  onPendingDialogClose(): void {
+    this.showDuplicateInfoDialog.set(false);
+  }
+
+  onPendingDialogContinueCreate(): void {
+    if (this.isBlockedDuplicate()) {
+      return;
+    }
+    this.showDuplicateInfoDialog.set(false);
     this.onSubmit(true);
   }
 

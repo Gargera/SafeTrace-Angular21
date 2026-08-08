@@ -9,20 +9,23 @@ import { ConfirmationModalComponent } from '../../../../shared/components/confir
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { AuthService } from '../../../../core/services/auth.service';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { DestroyRef } from '@angular/core';
 
 import {
   PERMISSION_GROUPS_AR,
   PERMISSION_ACTIONS_AR,
   ALL_SYSTEM_PERMISSIONS,
-} from '../../../../core/constants/permission.dictionary';
+} from '../../../../core/constants/dictionaries/permission.dictionary';
 import Swal from 'sweetalert2';
-import { SnackbarService } from '../../../../core/services/toast.service';
-import { RolePermissionDto } from '../../models/Role/RolePermissionDto';
+import { SnackbarService } from '../../../../shared/services/toast.service';
+import { RolePermissionDto } from '../../models/Role/responses/RolePermissionDto';
 import { RoleService } from '../../services/role.service';
-import { RoleDto } from '../../models/Role/RoleDto';
-import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
+import { RoleDto } from '../../models/Role/responses/RoleDto';
+import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
 import { UserRole } from '../../../../shared/enums/user-role';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 interface PermissionGroup {
   groupName: string;
@@ -34,7 +37,7 @@ interface PermissionGroup {
 @Component({
   selector: 'app-role-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective, CaseHeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective, HeaderComponent],
   templateUrl: './role-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -44,6 +47,8 @@ export class RoleManagement implements OnInit {
   private roleService = inject(RoleService);
   private fb = inject(FormBuilder);
   private snackbar = inject(SnackbarService);
+  private cacheService = inject(CacheService);
+  private destroyRef = inject(DestroyRef);
 
   roles = signal<RoleDto[]>([]);
   selectedRoleId = signal<string>('');
@@ -75,14 +80,32 @@ export class RoleManagement implements OnInit {
     action: () => {}
   });
 
-  openConfirmModal(title: string, message: string, confirmText: string, action: () => void, icon = 'help_outline', variant: 'primary' | 'danger' = 'primary') {
+  currentOpenModal = signal<'CREATE' | 'DELETE' | 'SAVE' | null>(null);
+
+  openConfirmModal(title: string, message: string, confirmText: string, action: () => void, icon = 'help_outline', variant: 'primary' | 'danger' = 'primary', modalType: 'CREATE' | 'DELETE' | 'SAVE' | null = null) {
     this.modalConfig.set({ title, message, confirmText, icon, variant, action });
+    this.currentOpenModal.set(modalType);
     this.showConfirmModal.set(true);
   }
 
   onConfirmModal() {
     this.showConfirmModal.set(false);
+    this.currentOpenModal.set(null);
     this.modalConfig().action();
+  }
+
+  onCancelModal() {
+    this.showConfirmModal.set(false);
+    this.currentOpenModal.set(null);
+  }
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set('RoleManagement_State', {
+         selectedRoleId: this.selectedRoleId(),
+         openModal: this.showConfirmModal() ? this.currentOpenModal() : null
+      }, 300000);
+    });
   }
 
   isReadOnly = computed(() => {
@@ -154,6 +177,12 @@ export class RoleManagement implements OnInit {
       next: (res) => {
         if (res.success && res.data) {
           this.roles.set(res.data);
+          
+          const state = this.cacheService.get<any>('RoleManagement_State');
+          if (state && state.selectedRoleId) {
+            this.selectedRoleId.set(state.selectedRoleId);
+            this.onRoleSelected(state.selectedRoleId, state.openModal);
+          }
         }
         this.isLoadingRoles.set(false);
       },
@@ -162,6 +191,7 @@ export class RoleManagement implements OnInit {
   }
 
   onCreateRole() {
+    if (this.isCreating()) return;
     this.createRoleForm.markAllAsTouched();
     if (this.createRoleForm.invalid) return;
 
@@ -182,17 +212,18 @@ export class RoleManagement implements OnInit {
           },
           error: (err) => {
             this.isCreating.set(false);
-            this.snackbar.error(err.error?.detail || err.error?.message || 'حدث خطأ أثناء الإنشاء.');
+            this.snackbar.error(extractErrorMessage(err, 'حدث خطأ أثناء الإنشاء.'));
           },
         });
       },
       'add_circle_outline',
-      'primary'
+      'primary',
+      'CREATE'
     );
   }
 
   onDeleteRole() {
-    if (!this.selectedRoleId()) return;
+    if (!this.selectedRoleId() || this.isDeleting()) return;
 
     this.openConfirmModal(
       'تأكيد الحذف',
@@ -212,16 +243,17 @@ export class RoleManagement implements OnInit {
           },
           error: (err) => {
             this.isDeleting.set(false);
-            this.snackbar.error(err.error?.detail || err.error?.message || 'فشل حذف الدور');
+            this.snackbar.error(extractErrorMessage(err, 'فشل حذف الدور'));
           },
         });
       },
       'delete',
-      'danger'
+      'danger',
+      'DELETE'
     );
   }
 
-  onRoleSelected(roleId: string) {
+  onRoleSelected(roleId: string, openModalType: 'CREATE' | 'DELETE' | 'SAVE' | null = null) {
     this.selectedRoleId.set(roleId);
 
     if (!roleId) {
@@ -241,6 +273,14 @@ export class RoleManagement implements OnInit {
           this.originalPermissionsList.set(res.data.permissions.map((p: any) => ({ ...p })));
           this.expandedGroups.set({});
           this.isRootExpanded.set(true);
+
+          if (openModalType === 'DELETE') {
+            this.onDeleteRole();
+          } else if (openModalType === 'SAVE') {
+            this.savePermissions();
+          } else if (openModalType === 'CREATE') {
+            this.onCreateRole();
+          }
         }
         this.isLoadingTree.set(false);
       },
@@ -249,7 +289,7 @@ export class RoleManagement implements OnInit {
   }
 
   savePermissions() {
-    if (!this.selectedRoleId() || !this.hasChanges()) return;
+    if (!this.selectedRoleId() || !this.hasChanges() || this.isSaving()) return;
 
     this.openConfirmModal(
       'حفظ الصلاحيات',
@@ -274,12 +314,13 @@ export class RoleManagement implements OnInit {
             },
             error: (err) => {
               this.isSaving.set(false);
-              this.snackbar.error(err.error?.detail || 'فشل حفظ الصلاحيات');
+              this.snackbar.error(extractErrorMessage(err, 'فشل حفظ الصلاحيات'));
             },
           });
       },
       'save',
-      'primary'
+      'primary',
+      'SAVE'
     );
   }
 

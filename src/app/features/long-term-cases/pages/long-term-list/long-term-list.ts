@@ -1,21 +1,31 @@
-import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal, computed } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Subject } from 'rxjs';
+import { catchError, EMPTY, Subject, switchMap, tap } from 'rxjs';
 
 import { LongTermCaseService } from '../../services/long-term-case.service';
-import { CasesFilterRequest, CaseType } from '../../../../core/models/Cases.model';
+import { CasesFilterRequest } from '../../../../core/models/cases.model';
 import { LongTermCaseListItemResponse } from '../../models/response/LongTermCaseListItemResponse';
 import { CaseCreationFlowService } from '../../../../core/services/case-creation-flow.service';
 
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { PaginationComponent } from '../../../../shared/components/cases-components/case-pagination/case-pagination.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
 import { CasesFilterState } from '../../../../shared/helper/cases-filter-state';
+import { SnackbarService } from '../../../../shared/services/toast.service';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+import { CaseType } from '../../../../shared/enums/case-type';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+
+const UI_STATE_CACHE_KEY = 'LongTermList_UI_State';
+
+import { ButtonComponent } from '../../../../shared/components/button/button';
 
 @Component({
   selector: 'app-long-term-list',
@@ -24,22 +34,27 @@ import { CasesFilterState } from '../../../../shared/helper/cases-filter-state';
     CommonModule,
     RouterModule,
     FormsModule,
-    CaseHeaderComponent,
+    HeaderComponent,
     CaseFiltersComponent,
     PaginationComponent,
     CaseSkeletonGridComponent,
     EmptyStateComponent,
     CaseCardComponent,
+    ButtonComponent,
   ],
   templateUrl: './long-term-list.html',
   styleUrls: ['./long-term-list.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LongTermList implements OnInit, OnDestroy {
+export class LongTermList implements OnInit {
   private readonly router = inject(Router);
   private readonly longTermCaseService = inject(LongTermCaseService);
   private readonly caseCreationFlowService = inject(CaseCreationFlowService);
-  private readonly destroy$ = new Subject<void>();
+  private readonly cacheService = inject(CacheService);
+  private readonly snackbar = inject(SnackbarService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  private readonly fetchTrigger$ = new Subject<void>();
 
   readonly filterState = new CasesFilterState(12);
 
@@ -54,13 +69,48 @@ export class LongTermList implements OnInit, OnDestroy {
 
   readonly filter = this.filterState.filter;
 
-  ngOnInit(): void {
-    this.fetchCases();
+  readonly hasActiveFilters = computed(() => {
+    const f = this.filter();
+    return !!(
+      f.fullName ||
+      f.government ||
+      f.city ||
+      f.caseCode ||
+      f.gender ||
+      f.ageCategory ||
+      f.minAge ||
+      f.maxAge ||
+      f.fromDate ||
+      f.toDate ||
+      f.status ||
+      f.ageSort ||
+      f.dateSort
+    );
+  });
+
+  resetFilters(): void {
+    this.onFilterReset();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set(
+        UI_STATE_CACHE_KEY,
+        { filter: this.filter() },
+        CACHE_TTL.UI_STATE,
+        [CACHE_TAGS.UI_STATE]
+      );
+    });
+  }
+
+  ngOnInit(): void {
+    const cachedState = this.cacheService.get<{ filter: CasesFilterRequest }>(UI_STATE_CACHE_KEY);
+    if (cachedState) {
+      this.filterState.restoreState(cachedState.filter);
+    }
+    
+    this.setupFetchPipeline();
+    this.fetchCases();
   }
 
   navigateToCreate(): void {
@@ -92,23 +142,43 @@ export class LongTermList implements OnInit, OnDestroy {
   }
 
   private fetchCases(): void {
-    this.loading.set(true);
+    this.fetchTrigger$.next();
+  }
 
-    this.longTermCaseService.getAllCases(this.filter()).subscribe({
-      next: (apiRes) => {
-        const res = apiRes.data;
+  private setupFetchPipeline(): void {
+    this.fetchTrigger$
+      .pipe(
+        tap(() => {
+          this.loading.set(true);
+          this.hasError.set(false);
+        }),
+        switchMap(() =>
+          this.longTermCaseService.getAllCases(this.filter()).pipe(
+            catchError((err: unknown) => {
+              this.loading.set(false);
+              this.hasError.set(true);
+              const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء تحميل البيانات');
+              this.snackbar.error(errorMessage);
+              return EMPTY;
+            }),
+          ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (apiRes) => {
+          const res = apiRes.data;
 
-        if (res) {
-          this.cases.set(res.items);
-          this.totalItems.set(res.totalCount);
-          this.totalPages.set(res.totalPages);
-          this.currentPage.set(res.pageNumber);
-          this.pageSize.set(res.pageSize);
-        }
+          if (res) {
+            this.cases.set(res.items);
+            this.totalItems.set(res.totalCount);
+            this.totalPages.set(res.totalPages);
+            this.currentPage.set(res.pageNumber);
+            this.pageSize.set(res.pageSize);
+          }
 
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
-    });
+          this.loading.set(false);
+        },
+      });
   }
 }

@@ -22,13 +22,13 @@
         placeholder="اكتب سبب رفض الحالة..."
         rows="4"
         class="w-full rounded-2xl border border-outline-variant/30 bg-surface-container-lowest p-3.5 text-sm text-on-surface placeholder:text-outline/70 focus:border-error focus:outline-none transition-all duration-200 resize-none shadow-inner"
-        [class.border-error]="showErrors"
+        [class.border-error]="isInvalid('rejectionReason')"
       ></textarea>
 
-      @if (errorMessage) {
+      @if (isInvalid('rejectionReason')) {
         <span class="text-xs text-error font-medium flex items-center gap-1 animate-fade-in">
           <span class="material-symbols-outlined text-sm">error</span>
-          {{ errorMessage }}
+          {{ getFieldError('rejectionReason') }}
         </span>
       }
     </div>

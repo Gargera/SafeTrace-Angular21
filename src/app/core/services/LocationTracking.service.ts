@@ -31,14 +31,15 @@ export class LocationTrackingService {
       return;
     }
 
+    this.isTracking.set(true);
+
     const permission = await this.currentLocationService.checkPermissionStatus();
 
     if (permission === 'denied' || permission === 'unsupported') {
       console.warn(`Location tracking skipped (${permission})`);
+      this.isTracking.set(false);
       return;
     }
-
-    this.isTracking.set(true);
 
     this.fetchAndUpdateLocation();
 

@@ -1,6 +1,7 @@
-import { Directive, ElementRef, effect, input, Renderer2 } from '@angular/core';
+import { Directive, ElementRef, effect, input } from '@angular/core';
 import { CaseStatus } from '../enums/case-status';
-import { getCaseStatusTranslationAr } from '../../core/constants/case.status.dictionary';
+import { getCaseStatusTranslationAr } from '../../core/constants/dictionaries/case.status.dictionary';
+import { BadgeRenderService } from '../services/badge-render.service';
 
 @Directive({
   selector: '[appCaseStatusBadgeDirective]',
@@ -8,47 +9,41 @@ import { getCaseStatusTranslationAr } from '../../core/constants/case.status.dic
 })
 export class CaseStatusBadgeDirective {
   status = input.required<CaseStatus>({ alias: 'appCaseStatusBadgeDirective' });
+  private readonly baseClasses = ['inline-flex', 'items-center', 'justify-center', 'gap-1.5', 'px-3', 'py-1', 'rounded-lg', 'text-sm', 'font-bold', 'whitespace-nowrap'];
 
   constructor(
     private el: ElementRef,
-    private renderer: Renderer2,
+    private badgeRenderService: BadgeRenderService
   ) {
-    this.renderer.addClass(this.el.nativeElement, 'px-sm');
-    this.renderer.addClass(this.el.nativeElement, 'py-1');
-    this.renderer.addClass(this.el.nativeElement, 'rounded-full');
-    this.renderer.addClass(this.el.nativeElement, 'font-bold');
-    this.renderer.addClass(this.el.nativeElement, 'text-[10px]');
     effect(() => {
-      const el = this.el.nativeElement;
-      el.className = el.className.replace(/\bbg-\S+|text-\S+/g, '');
-
-      switch (this.status()) {
-        case CaseStatus.Pending:
-          this.renderer.addClass(el, 'bg-secondary-container');
-          this.renderer.addClass(el, 'text-on-secondary-container');
-          break;
-        case CaseStatus.Active:
-          this.renderer.addClass(el, 'bg-tertiary-fixed');
-          this.renderer.addClass(el, 'text-on-tertiary-fixed');
-          break;
-        case CaseStatus.Found:
-          this.renderer.addClass(el, 'bg-tertiary-fixed-dim');
-          this.renderer.addClass(el, 'text-tertiary');
-          break;
-        case CaseStatus.Deleted:
-          this.renderer.addClass(el, 'bg-error-container');
-          this.renderer.addClass(el, 'text-error');
-          break;
-        case CaseStatus.Rejected:
-          this.renderer.addClass(el, 'bg-error');
-          this.renderer.addClass(el, 'text-white');
-          break;
-        case CaseStatus.Expired:
-          this.renderer.addClass(el, 'bg-surface-container-highest');
-          this.renderer.addClass(el, 'text-on-surface-variant');
-          break;
-      }
-      el.innerText = getCaseStatusTranslationAr(this.status());
+      this.badgeRenderService.updateBadge(this.el.nativeElement, this.status(), {
+        baseClasses: this.baseClasses,
+        getClasses: (val: CaseStatus) => {
+          switch (val) {
+            case CaseStatus.Pending: return { bg: 'bg-secondary-container', text: 'text-on-secondary-container' };
+            case CaseStatus.Active: return { bg: 'bg-tertiary-fixed', text: 'text-on-tertiary-fixed' };
+            case CaseStatus.Found: return { bg: 'bg-tertiary-fixed-dim', text: 'text-tertiary' };
+            case CaseStatus.Deleted: return { bg: 'bg-error-container', text: 'text-error' };
+            case CaseStatus.Rejected: return { bg: 'bg-error', text: 'text-white' };
+            case CaseStatus.Expired: return { bg: 'bg-surface-container-highest', text: 'text-on-surface-variant' };
+            default: return { bg: 'bg-surface-container-highest', text: 'text-on-surface-variant' };
+          }
+        },
+        getContent: (val: CaseStatus) => {
+          const translation = getCaseStatusTranslationAr(val);
+          let icon = 'help';
+          switch (val) {
+            case CaseStatus.Pending: icon = 'hourglass_empty'; break;
+            case CaseStatus.Active: icon = 'check_circle'; break;
+            case CaseStatus.Found: icon = 'how_to_reg'; break;
+            case CaseStatus.Deleted: icon = 'delete'; break;
+            case CaseStatus.Rejected: icon = 'cancel'; break;
+            case CaseStatus.Expired: icon = 'event_busy'; break;
+          }
+          return `<span class="material-symbols-outlined text-[16px] leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
+        },
+        useTextOnly: false
+      });
     });
   }
 }

@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-7xl space-y-6 px-4 py-6">
     <!-- Page Header -->
     <section class="space-y-3 pb-2">
-      <app-case-header
+      <app-header
         title="الحالات العاجلة"
         subtitle="إدارة وعرض جميع الحالات العاجلة"
         [badge]="!loading() ? totalItems() + ' حالة' : ''"
@@ -12,31 +12,19 @@
         primaryButtonClass="bg-error hover:opacity-90 text-on-error shadow-sm"
         (primaryAction)="navigateToCreate()"
       >
-      </app-case-header>
+      </app-header>
     </section>
 
     <!-- Filters Card -->
     <section
       class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm"
     >
-      <app-case-filters (filterChange)="onFilterChange($event)" (reset)="onFilterReset()">
-        <!-- Urgent-only extra filter -->
-        <div extendedFilters>
-          <label class="text-sm font-medium text-on-surface-variant block mb-1"
-            >نطاق البحث (متر)</label
-          >
-
-          <app-form-field
-            type="number"
-            min="100"
-            step="100"
-            [ngModel]="radiusInMeters()"
-            (ngModelChange)="radiusInMeters.set($event)"
-            [ngModelOptions]="{ standalone: true }"
-            placeholder="بدون حد أقصى"
-          ></app-form-field>
-        </div>
-      </app-case-filters>
+      <app-case-filters
+        [initialFilter]="filter()"
+        [showRadius]="true"
+        (filterChange)="onFilterChange($event)"
+        (reset)="onFilterReset()"
+      ></app-case-filters>
     </section>
 
     <!-- Main Content -->
@@ -49,9 +37,19 @@
       <!-- Empty State -->
       @if (!loading() && cases().length === 0) {
         <app-empty-state
-          title="لا توجد حالات عاجلة"
-          message="لم يتم العثور على أي حالات عاجلة تطابق معايير البحث الحالية."
+          [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات طارئة'"
+          [message]="hasActiveFilters() ? 'لم نتمكن من العثور على حالات تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم إضافة أي حالات طارئة حتى الآن.'"
         >
+          @if (hasActiveFilters()) {
+            <app-button
+              emptyActions
+              variant="outline"
+              size="md"
+              (click)="resetFilters()"
+            >
+              إلغاء تصفية البحث
+            </app-button>
+          }
         </app-empty-state>
       }
 

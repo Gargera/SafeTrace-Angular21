@@ -1,5 +1,5 @@
 <div class="mb-xl">
-  <app-case-header
+  <app-header
     title="إدارة المستخدمين"
     subtitle="متابعة حسابات المستخدمين، التحقق من التوثيق، وإدارة الصلاحيات."
     primaryActionLabel="إنشاء حساب جديد"
@@ -125,7 +125,16 @@
     </div>
   </div>
 
-  <div class="flex flex-wrap justify-end gap-3 pt-2">
+  <div class="flex flex-wrap justify-end gap-3 pt-4 border-t border-outline-variant/30 mt-4">
+    <app-button
+      *hasPermission="Permissions.Users.GenerateUsersPdfReport"
+      variant="outline"
+      (onClick)="downloadReport()"
+    >
+      <span class="material-symbols-outlined text-[18px]">download</span>
+      <span>تحميل التقرير</span>
+    </app-button>
+
     <app-button
       variant="text"
       (onClick)="resetFilters()"
@@ -139,6 +148,8 @@
     </app-button>
   </div>
 </app-card>
+
+
 
 <section
   class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75"
@@ -207,9 +218,20 @@
             <tr>
               <td colspan="8" class="py-xl">
                 <app-empty-state
-                  title="لا يوجد مستخدمين"
-                  message="لا يوجد مستخدمين يطابقون شروط البحث."
-                ></app-empty-state>
+                  [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا يوجد مستخدمين'"
+                  [message]="hasActiveFilters() ? 'لم نتمكن من العثور على مستخدمين يطابقون خيارات البحث الحالية.' : 'لم يتم تسجيل أي مستخدمين حتى الآن.'"
+                >
+                  @if (hasActiveFilters()) {
+                    <app-button
+                      emptyActions
+                      variant="outline"
+                      size="md"
+                      (click)="resetFilters()"
+                    >
+                      إلغاء تصفية البحث
+                    </app-button>
+                  }
+                </app-empty-state>
               </td>
             </tr>
           }

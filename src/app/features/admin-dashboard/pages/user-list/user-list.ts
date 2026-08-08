@@ -1,8 +1,9 @@
-import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
-import { GetUserDto } from '../../models/User/GetUserDto';
-import { RoleDto } from '../../models/Role/RoleDto';
-import { UserFilterDto } from '../../models/User/UserFilterDto';
+import { GetUserDto } from '../../models/User/responses/GetUserDto';
+import { RoleDto } from '../../models/Role/responses/RoleDto';
+import { UserFilterDto } from '../../models/User/requests/UserFilterDto';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';
 import { VerificationBadgeDirective } from '../../../../shared/directives/verification-badge-directive';
 import { RoleBadgeDirective } from '../../../../shared/directives/role-badge-directive';
@@ -11,7 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
-import { getRoleTranslationAr } from '../../../../core/constants/roles.dictionary';
+import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
 import { RoleService } from '../../services/role.service';
 import { UserService } from '../../services/user.service';
 import { FormField } from '../../../../shared/components/form-field/form-field';
@@ -19,13 +20,20 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
-import { UserStatisticsDto } from '../../models/User/UserStatisticsDto';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { UserStatisticsDto } from '../../models/User/responses/UserStatisticsDto';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
+import { SnackbarService } from '../../../../shared/services/toast.service';
+import { ReportService } from '../../services/report.service';
 
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+
+
+const UI_STATE_CACHE_KEY = 'UserList_UI_State';
 
 @Component({
   selector: 'app-user-list',
@@ -41,7 +49,7 @@ import { PaginationComponent } from '../../../../shared/components/pagination/pa
     CardComponent,
     EmptyStateComponent,
     LoadingSpinnerComponent,
-    CaseHeaderComponent,
+    HeaderComponent,
     HasPermissionDirective,
     PaginationComponent
   ],
@@ -56,6 +64,9 @@ export class UserList {
   private roleService = inject(RoleService);
   private readonly router = inject(Router);
   private toast = inject(SnackbarService);
+  private reportService = inject(ReportService);
+  private readonly cacheService = inject(CacheService);
+  private readonly destroyRef = inject(DestroyRef);
 
   users = signal<GetUserDto[]>([]);
   roles = signal<RoleDto[]>([]);
@@ -71,20 +82,55 @@ export class UserList {
     searchTerm: '',
     verificationStatus: '' as any,
     roleId: '' as any,
-    isBlocked: '' as any,
+    isBlocked: undefined,
   });
+
+  readonly hasActiveFilters = computed(() => {
+    const f = this.filter();
+    return !!(f.searchTerm || f.verificationStatus || f.roleId || f.isBlocked !== undefined);
+  });
+
+  resetFilters(): void {
+    this.filter.set({
+      pageNumber: 1,
+      pageSize: 10,
+      searchTerm: '',
+      verificationStatus: '' as any,
+      roleId: '' as any,
+      isBlocked: undefined,
+    });
+    this.loadUsers();
+  }
 
   private searchSubject = new Subject<string>();
   VerificationStatusEnum = VerificationStatus;
 
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set(
+        UI_STATE_CACHE_KEY,
+        { filter: this.filter() },
+        CACHE_TTL.UI_STATE,
+        [CACHE_TAGS.UI_STATE]
+      );
+    });
+  }
+
   ngOnInit() {
+    const cachedState = this.cacheService.get<{ filter: UserFilterDto }>(UI_STATE_CACHE_KEY);
+    if (cachedState) {
+      this.filter.set(cachedState.filter);
+    }
+
     this.loadRoles();
     this.loadUsers();
     this.loadStatistics();
 
-    this.searchSubject.pipe(debounceTime(500), distinctUntilChanged()).subscribe((term) => {
-      this.updateFilter({ searchTerm: term, pageNumber: 1 });
-    });
+    this.searchSubject
+      .pipe(debounceTime(500), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe((term: string) => {
+        this.updateFilter({ searchTerm: term, pageNumber: 1 });
+      });
   }
 
   loadRoles() {
@@ -94,6 +140,9 @@ export class UserList {
           this.roles.set(res.data);
         }
       },
+      error: (err) => {
+        this.toast.error(extractErrorMessage(err, 'تعذر تحميل الأدوار'));
+      }
     });
   }
 
@@ -108,7 +157,10 @@ export class UserList {
         }
         this.isLoading.set(false);
       },
-      error: () => this.isLoading.set(false),
+      error: (err) => {
+        this.isLoading.set(false);
+        this.toast.error(extractErrorMessage(err, 'تعذر تحميل قائمة المستخدمين'));
+      },
     });
   }
 
@@ -126,18 +178,6 @@ export class UserList {
       ...partialFilter,
       pageNumber: partialFilter.pageNumber ?? 1,
     }));
-    this.loadUsers();
-  }
-
-  resetFilters() {
-    this.filter.set({
-      pageNumber: 1,
-      pageSize: 10,
-      searchTerm: '',
-      verificationStatus: '' as any,
-      roleId: '' as any,
-      isBlocked: '' as any,
-    });
     this.loadUsers();
   }
 
@@ -163,8 +203,8 @@ export class UserList {
         }
         this.loadingStats.set(false);
       },
-      error: () => {
-        this.toast.error('تعذر الاتصال بالخادم لتحميل الإحصائيات');
+      error: (err) => {
+        this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتحميل الإحصائيات'));
         this.loadingStats.set(false);
       }
     });
@@ -172,5 +212,27 @@ export class UserList {
 
   navigateToRegister() {
     this.router.navigate(['/admin/users/registerByAdmin']);
+  }
+
+  downloadReport(): void {
+    const reportFilter = {
+      pageNumber: this.filter().pageNumber,
+      pageSize: this.filter().pageSize,
+      searchTerm: this.filter().searchTerm || undefined,
+      verificationStatus: this.filter().verificationStatus || undefined,
+      roleId: this.filter().roleId || undefined,
+      isBlocked: this.filter().isBlocked ?? null
+    };
+
+    this.reportService
+      .generateUsersPdfReport(reportFilter)
+      .subscribe({
+        next: (response) => {
+          this.reportService.download(response);
+        },
+        error: (err) => {
+          this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتنزيل تقرير المستخدمين'));
+        }
+      });
   }
 }

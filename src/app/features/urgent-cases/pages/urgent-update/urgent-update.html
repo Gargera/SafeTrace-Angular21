@@ -12,9 +12,9 @@
 
     <!-- 1. Header -->
     <div class="px-6 md:px-8 pt-6 md:pt-8">
-      <app-case-header title="تعديل بيانات البلاغ العاجل" [subtitle]="stepTitle" [showBackButton]="true"
+      <app-header title="تعديل بيانات البلاغ العاجل" [subtitle]="stepTitle" [showBackButton]="true"
         (backAction)="goBack()">
-      </app-case-header>
+      </app-header>
     </div>
 
     <!-- Body Container (Spacing & Padding) -->
@@ -137,20 +137,21 @@
           </div>
         </div>
 
-          <!-- Relation -->
-          <!-- FIX: [ngValue] instead of [value] — RelationType values must be
+        <!-- Relation -->
+        <!-- FIX: [ngValue] instead of [value] — RelationType values must be
                matched by reference/type, not coerced to string in the DOM
                (this is what caused it to look empty even when a value was set). -->
-          <div>
-            <app-form-field label="صلة القرابة بك (اختياري)" type="select" formControlName="relation"
-              [extraClass]="isInvalid('relation') ? 'border-error' : ''">
-              <option [ngValue]="null" disabled>اختر صلة القرابة بالشخص المفقود</option>
-              @for (opt of relationOptions; track opt.value) {
-              <option [ngValue]="opt.value">{{ opt.label }}</option>
-              }
-            </app-form-field>
-            @if (isInvalid('relation')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('relation') }}</p> }
-          </div>
+        <div>
+          <app-form-field label="صلة القرابة بك (اختياري)" type="select" formControlName="relation"
+            [extraClass]="isInvalid('relation') ? 'border-error' : ''">
+            <option [ngValue]="null" disabled>اختر صلة القرابة بالشخص المفقود</option>
+            @for (opt of relationOptions; track opt.value) {
+            <option [ngValue]="opt.value">{{ opt.label }}</option>
+            }
+          </app-form-field>
+          @if (isInvalid('relation')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
+            getFieldError('relation') }}</p> }
+        </div>
 
         <!-- Communication Phone -->
         <div>
@@ -206,9 +207,11 @@
               getFieldError('government') }}</p> }
           </div>
           <div>
-            <app-form-field label="المدينة / المركز *" formControlName="city" type="text"
-              placeholder="أدخل اسم المدينة أو المركز (مثال: مدينة نصر)"
-              [extraClass]="isInvalid('city') ? 'border-error' : ''"></app-form-field>
+            <app-form-field label="المدينة / المركز *" type="select" formControlName="city"
+              [extraClass]="isInvalid('city') ? 'border-error' : ''">
+              <option value="" disabled>اختر المدينة / المركز</option>
+              @for (c of availableCities(); track c) { <option [value]="c">{{ c }}</option> }
+            </app-form-field>
             @if (isInvalid('city')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
               getFieldError('city') }}</p> }
           </div>
@@ -225,7 +228,8 @@
 
         <!-- Event Date -->
         <div>
-          <app-form-field label="تاريخ ووقت الحادث *" formControlName="eventDate" type="date"
+          <app-form-field label="تاريخ ووقت الحادث *" formControlName="eventDate" type="datetime-local"
+            [min]="minEventDate()" [max]="maxEventDate()"
             [extraClass]="isInvalid('eventDate') ? 'border-error' : ''"></app-form-field>
           @if (isInvalid('eventDate')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
             getFieldError('eventDate') }}</p> }
@@ -306,7 +310,7 @@
                 اجعلها أساسية
               </button>
               }
-              <button type="button" (click)="removeExistingPhoto(photo)"
+              <button type="button" (click)="confirmRemoveExistingPhoto(photo)"
                 class="absolute bottom-1 left-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110">
                 <span class="material-symbols-outlined text-xs">close</span>
               </button>
@@ -453,6 +457,19 @@
 
 }
 </app-card>
+
+@if (showDeleteImageConfirm()) {
+  <app-confirmation-modal
+    title="تأكيد الحذف"
+    message="هل أنت متأكد من حذف هذه الصورة؟ سيتم إزالتها نهائياً عند حفظ التعديلات."
+    confirmText="حذف"
+    cancelText="تراجع"
+    icon="delete"
+    variant="danger"
+    (confirm)="executeRemoveExistingPhoto()"
+    (cancel)="showDeleteImageConfirm.set(false)">
+  </app-confirmation-modal>
+}
 
 <!-- Location Picker Map Modal -->
 <app-map-location-picker [isOpen]="isMapModalOpen()" [initialLat]="selectedLat()" [initialLng]="selectedLng()"

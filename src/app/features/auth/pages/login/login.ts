@@ -53,7 +53,12 @@ export class Login implements OnInit, OnDestroy {
       return;
     }
 
-    this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/home';
+    const rawReturnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (rawReturnUrl && !this.isAuthUrl(rawReturnUrl)) {
+      this.returnUrl = rawReturnUrl;
+    } else {
+      this.returnUrl = '/home';
+    }
 
     this.authSubscription = this.socialAuthService.authState.subscribe((user) => {
       if (user) {
@@ -64,13 +69,7 @@ export class Login implements OnInit, OnDestroy {
           this.authService.googleLogin({ providerToken: user.idToken! }).subscribe({
             next: () => {
               this.isLoading.set(false);
-              if (this.returnUrl !== '/home') {
-                this.router.navigateByUrl(this.returnUrl, { replaceUrl: true });
-              } else if (window.history.length > 1 && document.referrer.includes(window.location.host)) {
-                this.location.back();
-              } else {
-                this.router.navigate(['/home'], { replaceUrl: true });
-              }
+              this.navigateAfterLogin();
             },
             error: (err) => {
               this.isLoading.set(false);
@@ -91,6 +90,8 @@ export class Login implements OnInit, OnDestroy {
   }
 
   onSubmit() {
+    if (this.isLoading()) return;
+
     this.loginForm.markAllAsTouched();
     this.apiErrorMessage.set('');
 
@@ -101,19 +102,39 @@ export class Login implements OnInit, OnDestroy {
     this.authService.login(this.loginForm.value).subscribe({
       next: () => {
         this.isLoading.set(false);
-        if (this.returnUrl !== '/home') {
-          this.router.navigateByUrl(this.returnUrl, { replaceUrl: true });
-        } else if (window.history.length > 1 && document.referrer.includes(window.location.host)) {
-          this.location.back();
-        } else {
-          this.router.navigate(['/home'], { replaceUrl: true });
-        }
+        this.navigateAfterLogin();
       },
       error: (err) => {
         this.isLoading.set(false);
         this.handleAuthError(err);
       },
     });
+  }
+
+  private navigateAfterLogin() {
+    const rawReturn = this.route.snapshot.queryParamMap.get('returnUrl');
+    let target = this.returnUrl;
+
+    if (rawReturn && !this.isAuthUrl(rawReturn)) {
+      target = rawReturn;
+    }
+
+    if (this.isAuthUrl(target)) {
+      target = '/home';
+    }
+
+    this.router.navigateByUrl(target, { replaceUrl: true });
+  }
+
+  private isAuthUrl(url: string): boolean {
+    const lower = url.toLowerCase();
+    return (
+      lower.includes('/auth') ||
+      lower.includes('confirm-email') ||
+      lower.includes('forgot-password') ||
+      lower.includes('login') ||
+      lower.includes('register')
+    );
   }
 
   private handleAuthError(err: any) {
@@ -127,7 +148,7 @@ export class Login implements OnInit, OnDestroy {
     ) {
       Swal.fire({
         title: 'حسابك غير مفعل!',
-        text: 'يجب تأكيد بريدك الإلكتروني لتتمكن من استخدام المنصة.',
+        text: errorMessage || 'يجب تأكيد بريدك الإلكتروني لتتمكن من استخدام المنصة.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#0058be',

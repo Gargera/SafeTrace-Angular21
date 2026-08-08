@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-7xl space-y-6 px-4 py-6">
 
     <section class="space-y-3 pb-2">
-      <app-case-header title="تفاصيل الحالة"></app-case-header>
+      <app-header title="تفاصيل الحالة"></app-header>
     </section>
 
     @if (loading()) {
@@ -73,46 +73,71 @@
 
           <!-- ================= أزرار صاحب الحالة (User Owner Buttons) ================= -->
           @if (
-  isOwner() &&
-  !isAdminPage() &&
-  caseDetails()?.status !== CaseStatus.Found &&
-  caseDetails()?.status !== CaseStatus.Expired
-) {
-  <div class="flex flex-wrap items-center gap-3 mt-6 pt-4 border-t border-outline-variant">
+          isOwner() &&
+          !isAdminPage() &&
+          caseDetails()?.status !== CaseStatus.Found &&
+          caseDetails()?.status !== CaseStatus.Expired
+        ) {
+          <div class="flex flex-wrap items-center gap-3 mt-6 pt-4 border-t border-outline-variant">
 
-    <app-button
-      *hasPermission="Permissions.UrgentCases.MarkAsFounded"
-      (onClick)="openFoundedPopup()"
-      variant="primary"
-      extraClass="flex items-center gap-2 rounded-2xl !bg-[#009688] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#00796b]">
-      <span class="material-symbols-outlined text-[20px]">beenhere</span>
-      <span>تم العثور</span>
-    </app-button>
+            <app-button
+              *hasPermission="Permissions.UrgentCases.MarkAsFounded"
+              (onClick)="openFoundedPopup()"
+              variant="primary"
+              extraClass="flex items-center gap-2 rounded-2xl !bg-[#009688] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#00796b]">
+              <span class="material-symbols-outlined text-[20px]">beenhere</span>
+              <span>تم العثور</span>
+            </app-button>
 
-    <app-button
-      (onClick)="editCase()"
-      variant="primary"
-      extraClass="flex items-center gap-2 rounded-2xl !bg-[#0265DC] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#0252b5]">
-      <span class="material-symbols-outlined text-[20px]">edit</span>
-      <span>تعديل</span>
-    </app-button>
+            <app-button
+              (onClick)="editCase()"
+              variant="primary"
+              extraClass="flex items-center gap-2 rounded-2xl !bg-[#0265DC] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#0252b5]">
+              <span class="material-symbols-outlined text-[20px]">edit</span>
+              <span>تعديل</span>
+            </app-button>
 
-    <app-button
-      (onClick)="deleteCase()"
-      variant="primary"
-      extraClass="flex items-center gap-2 rounded-2xl !bg-[#C61A1A] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
-      <span class="material-symbols-outlined text-[20px]">delete</span>
-      <span>حذف</span>
-    </app-button>
+            <app-button
+              (onClick)="deleteCase()"
+              variant="primary"
+              extraClass="flex items-center gap-2 rounded-2xl !bg-[#C61A1A] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
+              <span class="material-symbols-outlined text-[20px]">delete</span>
+              <span>حذف</span>
+            </app-button>
 
-  </div>
-}
+          </div>
+        }
+
+        @if (
+          !isAdminPage() &&
+          !isOwner() &&
+          caseDetails()?.status !== CaseStatus.Found &&
+          caseDetails()?.status !== CaseStatus.Expired
+        ) {
+          <app-button
+            variant="secondary"
+            (onClick)="startChat(caseDetails()?.id!)"
+            extraClass="w-full justify-center gap-2 hover:border-primary hover:bg-primary/5 hover:text-primary">
+            <span class="material-symbols-outlined material-icon-sm">chat</span>
+            تواصل مع المُبلّغ
+          </app-button>
+        }
+
         <!-- ================= أزرار الأدمن والـ Moderator (Admin Buttons) ================= -->
         @let status = caseDetails()?.status;
 
           @if (isAdminPage()) {
             <div class="flex flex-wrap items-center gap-3 mt-6 pt-4 border-t border-outline-variant">
-              
+              @if(!isOwner()){
+                <app-button
+                variant="secondary"
+                (onClick)="startChat(caseDetails()?.id!)"
+                extraClass="flex items-center gap-2">
+                <span class="material-symbols-outlined material-icon-sm">chat</span>
+                <span>تواصل مع المُبلّغ</span>
+              </app-button>
+            }
+
               @if (status === CaseStatus.Pending || status === CaseStatus.Active) {
                 <app-button 
                   *hasPermission="Permissions.UrgentCases.MarkAsFounded"
@@ -158,6 +183,28 @@
             <span [appCaseTypeBadgeDirective]="caseDetails()!.caseType"></span>
             <span [appGenderBadgeDirective]="caseDetails()!.gender"></span>
           </div>
+
+          <!-- كارت الناشر -->
+          @if (caseDetails()?.user && !(isOwner() && isMyCasePage())) {
+          <div (click)="openPublisherProfile()"
+            class="flex items-center gap-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-low p-3.5 cursor-pointer transition-all hover:border-primary hover:bg-primary/5 group/pub">
+            @if (caseDetails()?.user?.profileImage) {
+            <img [src]="getImageUrl(caseDetails()?.user?.profileImage!)"
+              class="h-11 w-11 rounded-full object-cover border border-outline-variant group-hover/pub:border-primary" alt="صورة الناشر" />
+            } @else {
+            <div class="flex h-11 w-11 items-center justify-center rounded-full bg-primary/15 text-primary font-bold text-sm border border-primary/20 group-hover/pub:bg-primary group-hover/pub:text-on-primary">
+              {{ ((caseDetails()?.user?.fName?.[0] ?? '') + (caseDetails()?.user?.lName?.[0] ?? '')).toUpperCase() }}
+            </div>
+            }
+            <div class="flex flex-col min-w-0 flex-1">
+              <span class="text-xs text-on-surface-variant">ناشر الحالة (المُبلّغ)</span>
+              <h4 class="font-bold text-on-surface text-base flex items-center gap-1.5 group-hover/pub:text-primary">
+                {{ isOwner() ? 'أنت (صاحب الحالة)' : (caseDetails()?.user?.fName + ' ' + caseDetails()?.user?.lName) }}
+                <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover/pub:text-primary">open_in_new</span>
+              </h4>
+            </div>
+          </div>
+          }
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="rounded-lg border border-outline-variant p-4">
@@ -231,14 +278,18 @@
   @if(showPermanentDeleteConfirmation()){
   <app-confirmation-modal title="حذف نهائي"
     message="هل أنت متأكد أنك تريد حذف هذه الحالة نهائياً من النظام؟ هذا الإجراء لا يمكن التراجع عنه."
-    confirmText="حذف نهائي" cancelText="إلغاء" variant="danger" (confirm)="confirmPermanentDelete()"
+    confirmText="حذف نهائي" cancelText="إلغاء" variant="danger" icon="delete_forever" (confirm)="confirmPermanentDelete()"
     (cancel)="cancelPermanentDelete()">
   </app-confirmation-modal>
   }
 
   <!-- موديول بوب أب تم العثور عليه -->
   @if(showFoundedPopup()){
-  <app-founded-popup (confirmed)="confirmFounded($event)" (cancel)="cancelFounded()">
+  <app-founded-popup
+    [caseId]="caseDetails()?.id"
+    [contextKey]="'FoundedPopup_Urgent_' + caseDetails()?.id"
+    (confirmed)="confirmFounded($event)"
+    (cancel)="cancelFounded()">
   </app-founded-popup>
   }
 
@@ -251,7 +302,7 @@
 
   <!-- موديول الـ Lightbox لتكبير الصور -->
   @if(lightboxVisible()){
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
+  <div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
     <button class="absolute right-6 top-6 text-4xl text-white" (click)="closeLightbox()">✕</button>
     <button class="absolute left-5 text-5xl text-white" (click)="previousMedia()">❮</button>
 
@@ -266,5 +317,10 @@
     <button class="absolute right-5 text-5xl text-white" (click)="nextMedia()">❯</button>
   </div>
   }
+
+  <app-view-profile-popup
+    [userId]="selectedUserId()"
+    (closed)="selectedUserId.set(null)">
+  </app-view-profile-popup>
 
 </div>

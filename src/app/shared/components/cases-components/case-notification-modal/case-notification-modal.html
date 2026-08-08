@@ -1,5 +1,5 @@
 @if (activeNotification; as n) {
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-md p-4 animate-fade-in"
+<div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-md p-4 animate-fade-in"
   dir="rtl" (click)="closeModal()">
   <div
     class="w-full max-w-3xl rounded-3xl border border-outline-variant/30 bg-surface shadow-2xl animate-scale-in flex flex-col overflow-hidden text-on-surface"

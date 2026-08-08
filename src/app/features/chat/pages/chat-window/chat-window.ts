@@ -5,7 +5,7 @@ import { DatePipe,CommonModule } from '@angular/common';
 import { ChatService } from '../../services/chat.service';
 import { MessageService } from '../../services/message.service';
 import { ChatAlertsService } from '../../services/chat-alert.service';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ChatHubService, MessagesReadEvent, MessageDeletedEvent} from '../../services/chat-hub.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import {ChatDetailsDto} from '../../models/chat.model';
@@ -16,7 +16,9 @@ import { Location } from '@angular/common';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
-
+import { validateImageFile} from '../../../../shared/validators/image-validation.validator';
+import { validateVideoFile } from '../../../../shared/validators/video-validation.validator';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 @Component({
   selector: 'app-chat-window',
   standalone: true,
@@ -53,6 +55,7 @@ export class ChatWindow implements OnInit {
 
   draft = signal<string>('');
   selectedFile = signal<File | null>(null);
+  fileError = signal<string | null>(null);
   sending = signal<boolean>(false);
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
@@ -63,22 +66,25 @@ export class ChatWindow implements OnInit {
       this.isAdmin = data['mode'] === 'admin';
     });
 
-    console.log("CURRENT USER ID:", this.currentUserId);
-
     this.chatId = Number(this.route.snapshot.paramMap.get('chatId'));
     if(!this.chatId) {
       return;
     }
 
     this.isLoading.set(true);
-    this.chatService.getChatDetails(this.chatId).subscribe({
+
+    const chatDetailsRequest = this.isAdmin
+      ? this.chatService.getChatDetailsForAdmin(this.chatId)
+      : this.chatService.getChatDetails(this.chatId);
+
+    chatDetailsRequest.subscribe({
       next: (res) => {
         this.chat.set(res.data);
         this.checkLoadingStatus();
       },
       error: (err) => {
         this.snackbarService.error(
-         err.error?.message ?? 'تعذر تحميل بيانات المحادثة'
+         extractErrorMessage(err, 'تعذر تحميل بيانات المحادثة')
         );
         this.isLoading.set(false);
       },
@@ -138,7 +144,6 @@ export class ChatWindow implements OnInit {
   };
 
   private handleMessagesRead = (event: MessagesReadEvent) : void => {
-      console.log("MESSAGES READ EVENT RECEIVED", event);
 
     if(event.chatId !== this.chatId || event.userId === this.currentUserId) {
       return;
@@ -148,10 +153,6 @@ export class ChatWindow implements OnInit {
 
       if(message.senderId === this.currentUserId)
       {
-        console.log(
-          "MARKING READ:",
-          message.id
-        );
         return {
           ...message,
           isRead:true
@@ -203,6 +204,8 @@ private handleMessageDeletedForEveryone = (
         content: this.isAdmin 
           ? msg.content 
           : "تم حذف هذه الرسالة",
+          filePath: undefined,
+          fileType: undefined,
         forEveryoneDeletedAt:event.deletedAt
       }
       :
@@ -212,51 +215,50 @@ private handleMessageDeletedForEveryone = (
 
 };
   loadMessages(): void {
-    this.chatService.getMessages(this.chatId).subscribe({
-      next: (res) => {
+    const messagesRequest = this.isAdmin
+  ? this.chatService.getMessagesForAdmin(this.chatId)
+  : this.chatService.getMessages(this.chatId);
+
+  messagesRequest.subscribe({
+    next: (res) => {
       const incomingMessages = res.data!.map((m) =>
         this.normalizeMessage(m)
       );
-      console.log(
-      "API MESSAGES",
-      res.data?.map(m=>({
-        id:m.id,
-        isRead:m.isRead
-      }))
-      );
-      this.messages.update(current => {
 
+      this.messages.update(current => {
         const currentMap = new Map(
           current.map(m => [m.id, m])
         );
 
         return incomingMessages.map(message => {
-
           const oldMessage = currentMap.get(message.id);
 
           return {
             ...message,
             isRead: oldMessage?.isRead ?? message.isRead
           };
-
         });
+      });
 
-      });     
-        this.hasMoreMessages.set(false);
-        this.messagesLoaded.set(true);
-        this.checkLoadingStatus();
+      this.hasMoreMessages.set(false);
+      this.messagesLoaded.set(true);
+      this.checkLoadingStatus();
+
+      if (!this.isAdmin) {
         this.markAsRead();
-        setTimeout(() => {
+      }
+
+      setTimeout(() => {
         this.scrollToBottom();
-        });
-      },
-      error: (err) => {
+      });
+    },
+    error: (err) => {
       this.snackbarService.error(
-      err.error?.message ?? 'تعذر تحميل الرسائل'
+        extractErrorMessage(err, 'تعذر تحميل الرسائل')
       );
       this.isLoading.set(false);
     }
-    });
+  });
   }
 
   attachmentUrl(message: MessageDto): string | null {
@@ -295,15 +297,44 @@ private handleMessageDeletedForEveryone = (
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.selectedFile.set(input.files?.[0] ?? null);
+
+    const file = input.files?.[0] ?? null;
+    if(!file) {
+      this.fileError.set(null);
+      return;
+    }
+    
+    let validation;
+
+    if (file.type.startsWith('image/')) {
+      validation = validateImageFile(file);
+    } else if (file.type.startsWith('video/')) {
+      validation = validateVideoFile(file);
+    } else {
+      this.fileError.set('نوع الملف غير مدعوم.');
+      this.selectedFile.set(null);
+      input.value = '';
+      return;
+    }   
+
+    if (!validation.valid) {
+      this.fileError.set(validation.errorMessage!);
+      this.selectedFile.set(null);
+      input.value = ''; // Reset the input so the same file can be selected again
+      return;
+    }
+    this.fileError.set(null);
+    this.selectedFile.set(file);
   }
 
   clearSelectedFile(): void {
     this.selectedFile.set(null);
+    this.fileError.set(null);
     this.fileInput.nativeElement.value = '';
   }
 
   onSend() : void {
+   
     if (this.sending()) {
       return; // a send is already in flight - ignore extra Enter/click triggers
     }
@@ -319,7 +350,6 @@ private handleMessageDeletedForEveryone = (
     this.messageService.sendMessage({chatId: this.chatId, content: text || undefined, file: file || undefined})
     .subscribe({
       next: (res) => {
-      console.log("API MESSAGE in on send", res.data);
     
         const message = res.data;
 
@@ -332,7 +362,10 @@ private handleMessageDeletedForEveryone = (
         this.sending.set(false);
         //this.loadMessages();
       },
-        error: () => {this.snackbarService.error('تعذر إرسال الرسالة، تحقق من الاتصال وحاول مرة أخرى');
+        error: (err) => {
+
+          this.snackbarService.error(
+            extractErrorMessage(err, 'تعذر إرسال الرسالة، تحقق من الاتصال وحاول مرة أخرى'));
           this.sending.set(false);
         }
     });
@@ -369,9 +402,9 @@ private handleMessageDeletedForEveryone = (
     this.snackbarService.success(res.message);
     },
 
-    error: () => {
+    error: (err) => {
       this.snackbarService.error(
-        'تعذر حذف الرسالة، حاول مرة أخرى'
+        extractErrorMessage(err, 'تعذر حذف الرسالة، حاول مرة أخرى')
       );
     },
   });

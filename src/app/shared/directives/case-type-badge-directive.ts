@@ -1,6 +1,7 @@
-import { Directive, ElementRef, effect, input, Renderer2 } from '@angular/core';
+import { Directive, ElementRef, effect, input } from '@angular/core';
 import { CaseType } from '../enums/case-type';
-import { getCaseTypeTranslationAr } from '../../core/constants/case.type.dictionary';
+import { getCaseTypeTranslationAr } from '../../core/constants/dictionaries/case.type.dictionary';
+import { BadgeRenderService } from '../services/badge-render.service';
 
 @Directive({
   selector: '[appCaseTypeBadgeDirective]',
@@ -8,29 +9,29 @@ import { getCaseTypeTranslationAr } from '../../core/constants/case.type.diction
 })
 export class CaseTypeBadgeDirective {
   caseType = input.required<CaseType>({ alias: 'appCaseTypeBadgeDirective' });
+  private readonly baseClasses = ['inline-flex', 'items-center', 'justify-center', 'gap-1.5', 'px-3', 'py-1', 'rounded-lg', 'text-sm', 'font-bold', 'whitespace-nowrap'];
 
-  constructor(private el: ElementRef, private renderer: Renderer2) {
-    this.renderer.addClass(this.el.nativeElement, 'px-sm');
-    this.renderer.addClass(this.el.nativeElement, 'py-1');
-    this.renderer.addClass(this.el.nativeElement, 'rounded-lg');
-    this.renderer.addClass(this.el.nativeElement, 'text-[10px]');
-    this.renderer.addClass(this.el.nativeElement, 'font-bold');
+  constructor(
+    private el: ElementRef,
+    private badgeRenderService: BadgeRenderService
+  ) {
     effect(() => {
-      const el = this.el.nativeElement;
-      el.className = el.className.replace(/\bbg-\S+|text-\S+/g, '');
-      
-      if (this.caseType() === CaseType.Urgent) {
-        this.renderer.addClass(el, 'bg-red-100');
-        this.renderer.addClass(el, 'text-red-800');
-      } else if (this.caseType() === CaseType.LongTerm) {
-        this.renderer.addClass(el, 'bg-indigo-100');
-        this.renderer.addClass(el, 'text-indigo-800');
-      } else {
-        this.renderer.addClass(el, 'bg-gray-100');
-        this.renderer.addClass(el, 'text-gray-800');
-      }
-      
-      el.innerText = getCaseTypeTranslationAr(this.caseType());
+      this.badgeRenderService.updateBadge(this.el.nativeElement, this.caseType(), {
+        baseClasses: this.baseClasses,
+        getClasses: (val: CaseType) => {
+          if (val === CaseType.Urgent) return { bg: 'bg-red-100', text: 'text-red-800' };
+          if (val === CaseType.LongTerm) return { bg: 'bg-indigo-100', text: 'text-indigo-800' };
+          return { bg: 'bg-gray-100', text: 'text-gray-800' };
+        },
+        getContent: (val: CaseType) => {
+          const translation = getCaseTypeTranslationAr(val);
+          let icon = 'info';
+          if (val === CaseType.Urgent) icon = 'warning';
+          if (val === CaseType.LongTerm) icon = 'update';
+          return `<span class="material-symbols-outlined text-[16px] leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
+        },
+        useTextOnly: false
+      });
     });
   }
 }

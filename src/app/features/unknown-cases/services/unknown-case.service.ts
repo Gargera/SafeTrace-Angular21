@@ -1,22 +1,26 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { ApiService } from '../../../shared/services/api.service';
 import { UnknownCaseFilterRequest } from '../models/request/UnknownCaseFilterRequest';
 import { UnknownCaseListItemResponse } from '../models/response/UnknownCaseListItemResponse';
 import { UnknownCaseDetailResponse } from '../models/response/UnknownCaseDetailResponse';
+import { UnknownCreateCaseResponse } from '../models/response/UnknownCreateCaseResponse';
 import { UnknownCaseUpdateRequest } from '../models/request/UnknownCaseUpdateRequest';
 import { UnknownCaseCreateRequest } from '../models/request/UnknownCaseCreateRequest';
-import { FoundPersonInfoRequest } from '../../../core/models/Cases.model';
+import { FoundPersonInfoRequest } from '../../../core/models/cases.model';
+import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
-import { CreateCaseResponse } from '../../../shared/models/responses/create-case-response.model';
-import { environment } from '../../../../environments/environment';
+import { CacheService } from '../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../core/cache/cache.constants';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UnknownCaseService extends ApiService {
   private readonly baseUrl = `${environment.baseUrl}/api/UnknownCase`;
+  private readonly cacheService = inject(CacheService);
 
   /**
    * Get all unknown cases with filters (public)
@@ -25,9 +29,15 @@ export class UnknownCaseService extends ApiService {
   getAllCases(
     filter: UnknownCaseFilterRequest,
   ): Observable<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>> {
-    return this.get<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>>(
-      `${this.baseUrl}/GetCases`,
-      filter as Record<string, any>,
+    const key = `UnknownCase_getAllCases_${JSON.stringify(filter)}`;
+    return this.cacheService.getOrSet(
+      key,
+      () => this.get<ApiResponse<PaginationResponse<UnknownCaseListItemResponse>>>(
+        `${this.baseUrl}/GetCases`,
+        filter,
+      ),
+      CACHE_TTL.LIST,
+      [CACHE_TAGS.UNKNOWN_CASES]
     );
   }
 
@@ -38,9 +48,15 @@ export class UnknownCaseService extends ApiService {
   adminGetAllCases(
     filter: UnknownCaseFilterRequest,
   ): Observable<ApiResponse<PaginationResponse<UnknownCaseDetailResponse>>> {
-    return this.get<ApiResponse<PaginationResponse<UnknownCaseDetailResponse>>>(
-      `${this.baseUrl}/Admin/GetCases`,
-      filter as Record<string, any>,
+    const key = `UnknownCase_adminGetAllCases_${JSON.stringify(filter)}`;
+    return this.cacheService.getOrSet(
+      key,
+      () => this.get<ApiResponse<PaginationResponse<UnknownCaseDetailResponse>>>(
+        `${this.baseUrl}/Admin/GetCases`,
+        filter,
+      ),
+      CACHE_TTL.LIST,
+      [CACHE_TAGS.UNKNOWN_CASES]
     );
   }
 
@@ -49,7 +65,13 @@ export class UnknownCaseService extends ApiService {
    * GET: /api/UnknownCase/GetCaseDetails/{id}
    */
   getCaseById(id: number): Observable<ApiResponse<UnknownCaseDetailResponse>> {
-    return this.get<ApiResponse<UnknownCaseDetailResponse>>(`${this.baseUrl}/GetCaseDetails/${id}`);
+    const key = `UnknownCase_getCaseById_${id}`;
+    return this.cacheService.getOrSet(
+      key,
+      () => this.get<ApiResponse<UnknownCaseDetailResponse>>(`${this.baseUrl}/GetCaseDetails/${id}`),
+      CACHE_TTL.DETAILS,
+      [CACHE_TAGS.UNKNOWN_CASES]
+    );
   }
 
   /**
@@ -57,8 +79,14 @@ export class UnknownCaseService extends ApiService {
    * GET: /api/UnknownCase/Admin/GetCaseDetails/{id}
    */
   adminGetCaseById(id: number): Observable<ApiResponse<UnknownCaseDetailResponse>> {
-    return this.get<ApiResponse<UnknownCaseDetailResponse>>(
-      `${this.baseUrl}/Admin/GetCaseDetails/${id}`,
+    const key = `UnknownCase_adminGetCaseById_${id}`;
+    return this.cacheService.getOrSet(
+      key,
+      () => this.get<ApiResponse<UnknownCaseDetailResponse>>(
+        `${this.baseUrl}/Admin/GetCaseDetails/${id}`,
+      ),
+      CACHE_TTL.DETAILS,
+      [CACHE_TAGS.UNKNOWN_CASES]
     );
   }
 
@@ -66,22 +94,18 @@ export class UnknownCaseService extends ApiService {
    * Create a new unknown case
    * POST: /api/UnknownCase/CreateCase?forceCreate=false
    * Content-Type: multipart/form-data
-   *
-   * Backend controller for Unknown doesn't implement the duplicate-check yet
-   * (per project notes), but the frontend already sends forceCreate and reads
-   * isCreated/matchedCases so nothing else needs to change here once it's added.
    */
   createCase(
     request: UnknownCaseCreateRequest,
     forceCreate = false,
-  ): Observable<ApiResponse<CreateCaseResponse>> {
+  ): Observable<ApiResponse<UnknownCreateCaseResponse>> {
     const formData = this.buildFormData(request);
-    return this.postFormData<ApiResponse<CreateCaseResponse>>(
+    return this.postFormData<ApiResponse<UnknownCreateCaseResponse>>(
       `${this.baseUrl}/CreateCase`,
       formData,
-      {
-        forceCreate,
-      },
+      { forceCreate },
+    ).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.UNKNOWN_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
     );
   }
 
@@ -92,7 +116,9 @@ export class UnknownCaseService extends ApiService {
    */
   updateCase(id: number, request: UnknownCaseUpdateRequest): Observable<ApiResponse<string>> {
     const formData = this.buildFormData(request);
-    return this.putFormData<ApiResponse<string>>(`${this.baseUrl}/UpdateCase/${id}`, formData);
+    return this.putFormData<ApiResponse<string>>(`${this.baseUrl}/UpdateCase/${id}`, formData).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.UNKNOWN_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
+    );
   }
 
   /**
@@ -100,7 +126,9 @@ export class UnknownCaseService extends ApiService {
    * PUT: /api/UnknownCase/Approve/{id}
    */
   approveCase(id: number): Observable<ApiResponse<string>> {
-    return this.put<ApiResponse<string>>(`${this.baseUrl}/Approve/${id}`, {});
+    return this.put<ApiResponse<string>>(`${this.baseUrl}/Approve/${id}`, {}).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.UNKNOWN_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
+    );
   }
 
   /**
@@ -112,6 +140,8 @@ export class UnknownCaseService extends ApiService {
       `${this.baseUrl}/Reject/${id}`,
       JSON.stringify(rejectionReason),
       { headers: { 'Content-Type': 'application/json' } },
+    ).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.UNKNOWN_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
     );
   }
 
@@ -120,7 +150,9 @@ export class UnknownCaseService extends ApiService {
    * DELETE: /api/UnknownCase/Delete/{id}
    */
   deleteCase(id: number): Observable<ApiResponse<string>> {
-    return this.delete<ApiResponse<string>>(`${this.baseUrl}/Delete/${id}`);
+    return this.delete<ApiResponse<string>>(`${this.baseUrl}/Delete/${id}`).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.UNKNOWN_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
+    );
   }
 
   /**
@@ -128,7 +160,9 @@ export class UnknownCaseService extends ApiService {
    * PUT: /api/UnknownCase/MarkAsFound/{id}
    */
   markAsFound(id: number, request: FoundPersonInfoRequest): Observable<ApiResponse<string>> {
-    return this.put<ApiResponse<string>>(`${this.baseUrl}/MarkAsFound/${id}`, request);
+    return this.put<ApiResponse<string>>(`${this.baseUrl}/MarkAsFound/${id}`, request).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.UNKNOWN_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
+    );
   }
 
   /**
@@ -136,11 +170,20 @@ export class UnknownCaseService extends ApiService {
    * DELETE: /api/UnknownCase/PermanentDeletion/{id}
    */
   permanentDelete(id: number): Observable<ApiResponse<string>> {
-    return this.delete<ApiResponse<string>>(`${this.baseUrl}/PermanentDeletion/${id}`);
+    return this.delete<ApiResponse<string>>(`${this.baseUrl}/PermanentDeletion/${id}`).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.UNKNOWN_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
+    );
   }
+
   getMyCaseById(id: number) {
-    return this.http.get<ApiResponse<UnknownCaseDetailResponse>>(
-      `${environment.baseUrl}/api/UnknownCase/MyCaseDetails/${id}`
+    const key = `UnknownCase_getMyCaseById_${id}`;
+    return this.cacheService.getOrSet(
+      key,
+      () => this.http.get<ApiResponse<UnknownCaseDetailResponse>>(
+        `${environment.baseUrl}/api/UnknownCase/MyCaseDetails/${id}`
+      ),
+      CACHE_TTL.DETAILS,
+      [CACHE_TAGS.UNKNOWN_CASES]
     );
   }
 }

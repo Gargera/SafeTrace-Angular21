@@ -13,19 +13,31 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, AbstractControl, ValidationErrors, Validators } from '@angular/forms';
 import { NgModel } from '@angular/forms';
 import { Subscription, debounceTime, distinctUntilChanged, map, merge } from 'rxjs';
 import { NgTemplateOutlet } from '@angular/common';
-import { CasesFilterRequest } from '../../../../core/models/Cases.model';
+import { CasesFilterRequest } from '../../../../core/models/cases.model';
 import { AgeCategories } from '../../../enums/age-categories';
-import { getAgeCategoryTranslationAr } from '../../../../core/constants/age.categories.dictionary';
+import { getAgeCategoryTranslationAr } from '../../../../core/constants/dictionaries/age.categories.dictionary';
 import { CardComponent } from '../../card/card';
 import { ButtonComponent } from '../../button/button';
 import { FormField } from '../../form-field/form-field';
 import { getAgeRange } from '../../../helper/age-category.helper';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
+
+import { Gender } from '../../../../shared/enums/gender';
+import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
+import { searchRadiusValidator } from '../../../../shared/validators/search-radius.validator';
+import { dateRangeValidator } from '../../../../shared/validators/date-range.validator';
+import { pastDate } from '../../../../shared/validators/past-date.validator';
+import { validEnum } from '../../../../shared/validators/enum.validator';
+import { arabicText } from '../../../../shared/validators/arabic-text.validator';
+import { fullNameOrCaseCodeValidator } from '../../../../shared/validators/full-name-or-case-code.validator';
+import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
+import { AgeSort } from '../../../enums/age-sort';
+import { DateSort } from '../../../enums/date-sort';
 
 @Component({
   selector: 'app-case-filters',
@@ -35,10 +47,14 @@ import { CaseStatus } from '../../../../shared/enums/case-status';
   styleUrls: ['./case-filters.component.css'],
 })
 export class CaseFiltersComponent implements OnInit, AfterContentInit {
+  // ---------- Search mode input ----------
+  searchMode = input<'auto' | 'name-only'>('auto');
+  initialFilter = input<Partial<CasesFilterRequest> | null>(null);
+
   // ---------- Required signal inputs (used in template) ----------
-  genders = input<number[]>([0, 1]);
-  ageSorts = input<number[]>([0, 1]);
-  dateSorts = input<number[]>([0, 1]);
+  genders = input<Gender[]>([Gender.Male, Gender.Female]);
+  ageSorts = input<AgeSort[]>([AgeSort.Ascending, AgeSort.Descending]);
+  dateSorts = input<DateSort[]>([DateSort.Ascending, DateSort.Descending]);
 
   // ---------- Visibility inputs ----------
   showSearch = input(true);
@@ -52,6 +68,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   showToDate = input(true);
   showAgeSort = input(true);
   showDateSort = input(true);
+  showRadius = input(false);
 
   // ---------- Placement inputs ----------
   searchInAdvanced = input(false);
@@ -65,6 +82,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   toDateInAdvanced = input(true);
   ageSortInAdvanced = input(true);
   dateSortInAdvanced = input(false);
+  radiusInAdvanced = input(true);
 
   // ---------- Layout inputs ----------
   gridTemplate = input<string | null>(null);
@@ -74,6 +92,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   reset = output<void>();
 
   // ---------- Public fields ----------
+  readonly governorateOptions = EGYPT_GOVERNORATES;
   readonly ageCategories = Object.values(AgeCategories);
   readonly caseTypeOptions = [CaseType.Urgent, CaseType.LongTerm, CaseType.Unknown];
   readonly statusOptions = Object.values(CaseStatus) as CaseStatus[];
@@ -154,24 +173,45 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   private lastEmittedString: string | null = null;
   private hasEmittedInitialRequest = false;
 
+  availableCities = signal<string[]>([]);
+
   // ---------- Lifecycle ----------
   ngOnInit(): void {
+    const searchValidator =
+      this.searchMode() === 'name-only'
+        ? [arabicText(), Validators.maxLength(243)]
+        : [fullNameOrCaseCodeValidator()];
+
+    const initial = this.initialFilter() || {};
+
     this.filterForm = this.fb.group(
       {
-        fullName: [''],
-        gender: [''],
-        ageCategory: [''],
-        government: [''],
-        city: [''],
-        fromDate: [''],
-        toDate: [''],
-        ageSort: [''],
-        dateSort: [''],
-        caseType: [''],
-        status: [''],
+        fullName: [initial.fullName || initial.caseCode || '', searchValidator],
+        gender: [initial.gender || '', [validEnum(Gender)]],
+        ageCategory: [initial.ageCategory || '', [validEnum(AgeCategories)]],
+        government: [initial.government || '', [arabicText(), Validators.maxLength(100)]],
+        city: [initial.city || '', [arabicText(), Validators.maxLength(100)]],
+        fromDate: [initial.fromDate || '', [pastDate()]],
+        toDate: [initial.toDate || '', [pastDate()]],
+        ageSort: [initial.ageSort || '', [validEnum(AgeSort)]],
+        dateSort: [initial.dateSort || '', [validEnum(DateSort)]],
+        caseType: [initial.caseType || '', [validEnum(CaseType)]],
+        status: [initial.status || '', [validEnum(CaseStatus)]],
+        radiusInKm: ['', [searchRadiusValidator(1, 1000)]],
       },
-      { validators: this.dateRangeValidator },
+      { validators: dateRangeValidator('fromDate', 'toDate') },
     );
+
+    this.filterForm.get('government')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((gov) => {
+        const cities = getCitiesForGovernorate(gov);
+        this.availableCities.set(cities);
+        const currentCity = this.filterForm.get('city')?.value;
+        if (currentCity && !cities.includes(currentCity)) {
+          this.filterForm.get('city')?.setValue('', { emitEvent: true });
+        }
+      });
 
     // Unified reactive flow
     this.filterForm.valueChanges
@@ -184,6 +224,8 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
       .subscribe(() => {
         if (this.filterForm.valid) {
           this.emitFilterChange();
+        } else {
+          this.filterForm.markAllAsTouched();
         }
       });
   }
@@ -193,11 +235,6 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     this.projectedModels.changes.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.bindProjectedModelChanges();
     });
-
-    // Emit initial value safely
-    if (this.filterForm.valid) {
-      this.emitFilterChange(true);
-    }
   }
 
   // ---------- Projected models binding ----------
@@ -211,6 +248,8 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
         .subscribe(() => {
           if (this.filterForm.valid) {
             this.emitFilterChange();
+          } else {
+            this.filterForm.markAllAsTouched();
           }
         });
 
@@ -220,22 +259,30 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     });
   }
 
-  // ---------- Validators ----------
-  private dateRangeValidator(group: AbstractControl): ValidationErrors | null {
-    const from = group.get('fromDate')?.value;
-    const to = group.get('toDate')?.value;
-    if (from && to) {
-      const fromDate = new Date(from);
-      const toDate = new Date(to);
-      if (fromDate > toDate) {
-        return { dateRangeInvalid: true };
-      }
-    }
-    return null;
+  // ---------- Validators & Error Helpers ----------
+  getFieldError(field: string): string | null {
+    return getFormFieldError(this.filterForm, field);
+  }
+
+  isInvalid(field: string): boolean {
+    return isFieldInvalid(this.filterForm, field);
   }
 
   // ---------- Emit helpers ----------
+  onSubmit(event?: Event): void {
+    if (event) event.preventDefault();
+    if (this.filterForm.invalid) {
+      this.filterForm.markAllAsTouched();
+      return;
+    }
+    this.emitFilterChange();
+  }
+
   private emitFilterChange(isInitial = false): void {
+    if (this.filterForm.invalid) {
+      this.filterForm.markAllAsTouched();
+      return;
+    }
     if (isInitial && this.hasEmittedInitialRequest) {
       return;
     }
@@ -271,6 +318,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     if (this.toDateInAdvanced()) advancedKeys.push('toDate');
     if (this.ageSortInAdvanced()) advancedKeys.push('ageSort');
     if (this.dateSortInAdvanced()) advancedKeys.push('dateSort');
+    if (this.radiusInAdvanced()) advancedKeys.push('radiusInKm');
 
     return advancedKeys.filter(
       (key) => raw[key] !== null && raw[key] !== undefined && raw[key] !== '',
@@ -282,6 +330,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   }
 
   resetFilters(): void {
+    this.availableCities.set([]);
     this.filterForm.reset(
       {
         fullName: '',
@@ -295,6 +344,7 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
         dateSort: '',
         caseType: '',
         status: '',
+        radiusInKm: '',
       },
       { emitEvent: true } // This will trigger the valueChanges pipeline
     );
@@ -312,13 +362,17 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     let caseCode = null;
 
     if (searchValue) {
-      // If the search value contains only english letters, numbers, and hyphens,
-      // AND contains at least one digit, treat it as a case code.
-      const isCaseCode = /^[a-zA-Z0-9-]+$/.test(searchValue) && /\d/.test(searchValue);
-      if (isCaseCode) {
-        caseCode = searchValue;
-      } else {
+      if (this.searchMode() === 'name-only') {
         fullName = searchValue;
+      } else {
+        // If the search value contains only english letters, numbers, and hyphens,
+        // AND contains at least one digit, treat it as a case code.
+        const isCaseCode = /^(URG|LNG|UNK)-\d+$/.test(searchValue.toUpperCase());
+        if (isCaseCode) {
+          caseCode = searchValue;
+        } else {
+          fullName = searchValue;
+        }
       }
     }
 
@@ -337,13 +391,14 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
       ageSort: raw.ageSort,
       dateSort: raw.dateSort,
       caseType: raw.caseType,
+      radiusInKm: this.toNumberOrNull(raw.radiusInKm),
       page: 1,
       pageSize: 12,
     });
   }
 
   // ---------- Normalization ----------
-  private normalizeFilterRequest(request: CasesFilterRequest): CasesFilterRequest {
+  private normalizeFilterRequest(request: CasesFilterRequest & { radiusInKm?: number | null }): CasesFilterRequest {
     return {
       ...request,
       status: this.toEnumOrNull(request.status),
@@ -360,9 +415,10 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
       toDate: this.toStringOrNull(request.toDate),
       ageSort: this.toNumberOrNull(request.ageSort),
       dateSort: this.toNumberOrNull(request.dateSort),
+      radiusInKm: this.toNumberOrNull(request.radiusInKm),
       page: request.page ?? 1,
       pageSize: request.pageSize ?? 12,
-    };
+    } as CasesFilterRequest;
   }
 
   // ---------- Type helpers ----------
@@ -402,8 +458,8 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
   }
 
   // ---------- Label methods ----------
-  getGenderLabel(gender: number): string {
-    const labels: Record<number, string> = { 0: 'ذكر', 1: 'أنثى' };
+  getGenderLabel(gender: Gender): string {
+    const labels: Record<Gender, string> = { [Gender.Male]: 'ذكر', [Gender.Female]: 'أنثى' };
     return labels[gender] ?? String(gender);
   }
 
@@ -411,13 +467,13 @@ export class CaseFiltersComponent implements OnInit, AfterContentInit {
     return getAgeCategoryTranslationAr(ageCategory ?? null) || 'الكل';
   }
 
-  getAgeSortLabel(sort: number): string {
-    const labels: Record<number, string> = { 0: 'الأكبر أولاً', 1: ' الأصغر أولاً' };
+  getAgeSortLabel(sort: AgeSort): string {
+    const labels: Record<AgeSort, string> = { [AgeSort.Ascending]: 'الأكبر أولاً', [AgeSort.Descending]: ' الأصغر أولاً' };
     return labels[sort] ?? String(sort);
   }
 
-  getDateSortLabel(sort: number): string {
-    const labels: Record<number, string> = { 0: 'الأحدث أولاً', 1: 'الأقدم أولاً' };
+  getDateSortLabel(sort: DateSort): string {
+    const labels: Record<DateSort, string> = { [DateSort.Ascending]: 'الأحدث أولاً', [DateSort.Descending]: 'الأقدم أولاً' };
     return labels[sort] ?? String(sort);
   }
 

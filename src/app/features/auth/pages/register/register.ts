@@ -5,8 +5,10 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import Swal from 'sweetalert2';
 import { mustMatch } from '../../../../shared/validators/must-match.validator';
+import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 @Component({
   selector: 'app-register',
@@ -27,10 +29,10 @@ export class Register {
   isConfirmPasswordVisible = signal<boolean>(false);
 
     registerForm: FormGroup = this.fb.group({
-    fName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+$')]],
-    lName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), Validators.pattern('^[a-zA-Z\u0600-\u06FF]+( [a-zA-Z\u0600-\u06FF]+)*$')]],
+    fName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), Validators.pattern(/^[\u0600-\u06FF]+(\s+)?$/)]],
+    lName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100), Validators.pattern(/^[\u0600-\u06FF]+(\s[\u0600-\u06FF]+)*(\s+)?$/)]],
     email: ['', [Validators.required, Validators.email, Validators.pattern('^\\S+$')]],
-    phoneNumber: ['', [Validators.pattern('^01[0125][0-9]{8}$')]],
+    phoneNumber: ['', [egyptianPhone()]],
     password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(50), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_])\\S+$')]],
     confirmPassword: ['', [Validators.required]]
   }, { validators: mustMatch('password', 'confirmPassword') });
@@ -44,6 +46,8 @@ export class Register {
   }
 
   onSubmit() {
+    if (this.isLoading()) return;
+
     this.registerForm.markAllAsTouched();
     this.apiErrorMessage.set('');
 
@@ -86,7 +90,7 @@ export class Register {
             }
           }
         } else {
-          this.apiErrorMessage.set(err.error?.detail || err.error?.message || 'حدث خطأ أثناء التسجيل.');
+          this.apiErrorMessage.set(extractErrorMessage(err, 'حدث خطأ أثناء التسجيل.'));
         }
       }
     });

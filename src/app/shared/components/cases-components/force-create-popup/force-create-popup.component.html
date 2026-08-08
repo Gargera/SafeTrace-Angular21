@@ -1,0 +1,90 @@
+<div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 z-[1100] bg-[#091426]/70 backdrop-blur-md flex items-center justify-center p-4"
+  (click)="onBackdropClick($event)">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-[720px] max-h-[90vh] overflow-y-auto flex flex-col dir-rtl"
+    (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="px-8 pt-7 pb-5 border-b border-slate-200 sticky top-0 bg-white z-10">
+      <div class="flex items-center gap-3 mb-2.5">
+        <span class="material-symbols-outlined text-[32px] fill-1" [class]="popupIconClass()">
+          {{ popupIcon() }}
+        </span>
+        <h2 class="text-2xl font-extrabold text-[#0b1c30] m-0">
+          {{ popupTitle() }}
+        </h2>
+      </div>
+      <p class="text-sm text-[#56585e] leading-relaxed m-0">
+        {{ popupDescription() }}
+      </p>
+    </div>
+
+    <!-- Matched Cases Body -->
+    <div class="p-6 md:p-8 flex flex-col gap-5 flex-1">
+      @for (m of matches(); track m.caseCode) {
+      <app-card
+        extraClass="flex flex-col sm:flex-row gap-5 border-[1.5px] border-slate-200 rounded-[18px] p-4 bg-white hover:border-[#0058be] hover:shadow-[0_10px_20px_rgba(0,88,190,0.08)] hover:bg-[#fafcff] transition-all duration-300 overflow-hidden group">
+
+        <!-- Photo -->
+        <div
+          class="relative w-full sm:w-[180px] h-[180px] rounded-xl overflow-hidden shrink-0 bg-[#f4f7fa] border border-slate-200">
+          <img [src]="m.mainPhoto ? (baseUrl + '/' + m.mainPhoto) : placeholderImg"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            [alt]="'صورة ' + getFullName(m)" />
+          @if (formatSimilarity(m) > 0) {
+          <div
+            class="absolute bottom-0 inset-x-0 bg-[rgba(0,200,81,0.9)] text-white text-center text-xs font-bold py-1.5 backdrop-blur-[2px]">
+            {{ formatSimilarity(m) }}% تطابق
+          </div>
+          }
+        </div>
+
+        <!-- Details -->
+        <div class="flex-1 flex flex-col justify-between gap-3">
+          <div class="flex justify-between items-start gap-2.5">
+            <div class="text-lg font-extrabold text-[#0b1c30] leading-snug">{{ getFullName(m) }}</div>
+            <span [appCaseTypeBadgeDirective]="m.caseType"></span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-[#56585e]">
+            <div class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[18px] text-slate-400">location_on</span>
+              {{ m.government }}
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[18px] text-slate-400">calendar_today</span>
+              العمر: {{ m.age }} سنوات
+            </div>
+            <div
+              class="col-span-2 flex items-center gap-1.5 text-[#0058be] font-semibold bg-[#f4f7fa] px-2 py-1 rounded-md w-fit">
+              <span class="material-symbols-outlined text-[18px] text-[#0058be]">qr_code</span>
+              كود: {{ m.caseCode }}
+            </div>
+          </div>
+
+          <app-button variant="secondary"
+            extraClass="mt-auto w-full cursor-pointer shadow-sm hover:shadow-md transition-all"
+            (onClick)="onContact(m)">
+            <span class="material-symbols-outlined text-[20px]">chat</span>
+            تواصل مع المُبلّغ عن هذه الحالة
+          </app-button>
+        </div>
+      </app-card>
+      }`
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end gap-3 p-5 md:px-8 border-t border-slate-200 sticky bottom-0 bg-white z-10">
+      <app-button variant="outline" (onClick)="cancel.emit()">
+        {{ cancelLabel() }}
+      </app-button>
+
+      @if (canForceCreate()) {
+      <app-button variant="primary" (onClick)="forceCreate.emit()">
+        <span class="material-symbols-outlined text-[20px]">add_circle</span>
+        تجاهل وإنشاء البلاغ
+      </app-button>
+      }
+    </div>
+
+  </div>
+</div>

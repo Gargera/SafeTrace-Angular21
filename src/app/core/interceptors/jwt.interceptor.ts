@@ -2,7 +2,7 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, switchMap, throwError, BehaviorSubject, filter, take } from 'rxjs';
 import { AuthService } from '../services/auth.service';
-import { SnackbarService } from '../services/toast.service';
+import { SnackbarService } from '../../shared/services/toast.service';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 
@@ -101,23 +101,25 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
               }
               return throwError(() => new Error('Refresh failed'));
             }),
-            catchError((refreshErr) => {
+            catchError((refreshErr: HttpErrorResponse) => {
               isRefreshing = false;
 
-              Swal.fire({
-                title: 'انتهت الجلسة',
-                text: 'تم تسجيل الخروج لانتهاء الجلسة أو كإجراء أمني، يرجى تسجيل الدخول من جديد.',
-                icon: 'warning',
-                confirmButtonText: 'تسجيل الدخول',
-                confirmButtonColor: '#091426',
-                allowOutsideClick: false,
-                customClass: {
-                  popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl'
-                }
-              }).then(() => {
-                authService.clearSession();
-                router.navigate(['/auth']);
-              });
+              if (refreshErr.status === 401) {
+                Swal.fire({
+                  title: 'انتهت الجلسة',
+                  text: 'تم تسجيل الخروج لانتهاء الجلسة أو كإجراء أمني، يرجى تسجيل الدخول من جديد.',
+                  icon: 'warning',
+                  confirmButtonText: 'تسجيل الدخول',
+                  confirmButtonColor: '#091426',
+                  allowOutsideClick: false,
+                  customClass: {
+                    popup: 'rounded-xl font-body-md border border-outline-variant shadow-xl'
+                  }
+                }).then(() => {
+                  authService.clearSession();
+                  router.navigate(['/auth']);
+                });
+              }
 
               return throwError(() => refreshErr);
             }),

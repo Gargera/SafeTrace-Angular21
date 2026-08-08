@@ -2,7 +2,7 @@
   
   <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-xl">
     <section class="space-y-3 pb-2">
-        <app-case-header title="ملف المستخدم"></app-case-header>
+        <app-header title="ملف المستخدم"></app-header>
         <p class="text-body-md text-on-surface-variant mt-1">عرض وإدارة بيانات، وحالة، وصلاحيات المستخدم في النظام.</p>
     </section>
     <app-button (onClick)="goBack()" variant="primary" extraClass="gap-sm px-8 h-12 rounded-full font-bold shadow-md hover:bg-secondary-container transition-all duration-200">
@@ -67,7 +67,7 @@
                     }
                     <span prefix><span class="material-symbols-outlined text-on-surface-variant">chevron</span></span>
                   </app-form-field>
-                  <app-button (onClick)="onChangeRole(selectedRole())" [disabled]="loadingAction() !== null || selectedRole() === user()?.role" [loading]="loadingAction() === 'changeRole'" variant="primary" extraClass="w-full py-2.5 rounded-lg text-label-md font-bold justify-center">
+                  <app-button (onClick)="onChangeRole(selectedRole())" [disabled]="loadingAction() !== null" [loading]="loadingAction() === 'changeRole'" variant="primary" extraClass="w-full py-2.5 rounded-lg text-label-md font-bold justify-center">
                     تغيير
                   </app-button>
                 </div>
@@ -101,12 +101,20 @@
           <div class="flex flex-col gap-6">
             
             <div>
-              <span class="block mb-3 text-label-md font-bold text-on-surface-variant">صورة إثبات الهوية</span>
-              @if (user()?.identificationImage) {
-                <div class="relative aspect-[1.6/1] bg-surface-container rounded-xl border-2 border-dashed border-outline-variant overflow-hidden hover:border-secondary transition-colors group cursor-zoom-in" (click)="openImageZoom(user()?.identificationImage)">
-                  <img [src]="getImageUrl(user()!.identificationImage!)" class="w-full h-full object-cover">
-                  <div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <span class="material-symbols-outlined text-white text-[32px]">zoom_in</span>
+              <span class="block mb-3 text-label-md font-bold text-on-surface-variant">صور إثبات الهوية (أمام وخلف)</span>
+              @if (user()?.identificationImageFront && user()?.identificationImageBack) {
+                <div class="flex flex-col md:flex-row gap-4">
+                  <div class="relative w-full aspect-[1.6/1] bg-surface-container rounded-xl border-2 border-dashed border-outline-variant overflow-hidden hover:border-secondary transition-colors group cursor-zoom-in" (click)="openImageZoom(user()?.identificationImageFront)">
+                    <img [src]="getImageUrl(user()!.identificationImageFront!)" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <span class="material-symbols-outlined text-white text-[32px]">zoom_in</span>
+                    </div>
+                  </div>
+                  <div class="relative w-full aspect-[1.6/1] bg-surface-container rounded-xl border-2 border-dashed border-outline-variant overflow-hidden hover:border-secondary transition-colors group cursor-zoom-in" (click)="openImageZoom(user()?.identificationImageBack)">
+                    <img [src]="getImageUrl(user()!.identificationImageBack!)" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <span class="material-symbols-outlined text-white text-[32px]">zoom_in</span>
+                    </div>
                   </div>
                 </div>
               } @else if (isInternalRole()) {
@@ -138,12 +146,12 @@
               @if (canManageUser()) {
                 <div class="flex flex-wrap gap-3 mt-6 pt-6 border-t border-outline-variant/50">
                   @if (!isInternalRole()) {
-                    <app-button *hasPermission="Permissions.Users.Approve" (onClick)="onApprove()" [disabled]="loadingAction() !== null || user()?.verificationStatus === verificationStatusEnum.Verified || !user()?.identificationImage" [loading]="loadingAction() === 'approve'" variant="primary" extraClass="flex-1 px-4 py-2.5 rounded-xl text-label-md font-bold !bg-[#006b5f] !text-white hover:!bg-[#008f81] border-none justify-center gap-2 transition-all">
+                    <app-button *hasPermission="Permissions.Users.Approve" (onClick)="onApprove()" [disabled]="loadingAction() !== null" [loading]="loadingAction() === 'approve'" variant="primary" extraClass="flex-1 px-4 py-2.5 rounded-xl text-label-md font-bold !bg-[#006b5f] !text-white hover:!bg-[#008f81] border-none justify-center gap-2 transition-all">
                       <span class="material-symbols-outlined text-[20px]">check_circle</span>
                       قبول
                     </app-button>
                     
-                    <app-button *hasPermission="Permissions.Users.Reject" (onClick)="onReject()" [disabled]="loadingAction() !== null || user()?.verificationStatus === verificationStatusEnum.Verified || !user()?.identificationImage" [loading]="loadingAction() === 'reject'" variant="primary" extraClass="flex-1 px-4 py-2.5 rounded-xl text-label-md font-bold !bg-error !text-white hover:!bg-error/90 border-none justify-center gap-2 transition-all">
+                    <app-button *hasPermission="Permissions.Users.Reject" (onClick)="onReject()" [disabled]="loadingAction() !== null" [loading]="loadingAction() === 'reject'" variant="primary" extraClass="flex-1 px-4 py-2.5 rounded-xl text-label-md font-bold !bg-error !text-white hover:!bg-error/90 border-none justify-center gap-2 transition-all">
                       <span class="material-symbols-outlined text-[20px]">cancel</span>
                       رفض
                     </app-button>
@@ -162,6 +170,13 @@
                     هذا هو حسابك الشخصي النشط حالياً.
                   </span>
                 </div>
+              } @else {
+                <div class="mt-6 pt-6 border-t border-outline-variant/50 text-center">
+                  <span class="text-label-sm text-error font-medium flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-[18px]">shield_lock</span>
+                    نظام محمي: لا يمكنك التعديل على هذا الحساب نظراً لصلاحياته الإدارية.
+                  </span>
+                </div>
               }
 
             </div>
@@ -171,8 +186,9 @@
       </div>
     </div>
 
-      <ng-container *hasPermission="Permissions.Users.GetPermissions">
-        <section class="mt-xl space-y-md">
+      @if (isCurrentUser() || canManageUser()) {
+        <ng-container *hasPermission="Permissions.Users.GetPermissions">
+          <section class="mt-xl space-y-md">
       <div class="flex justify-between items-end flex-wrap gap-4">
         <div class="flex flex-col gap-2">
           <h2 class="text-headline-sm font-bold text-primary flex items-center gap-sm">
@@ -300,20 +316,30 @@
           </div>
         </ng-container>
       }
-        </section>
-      </ng-container>
+          </section>
+        </ng-container>
+      }
 
+  } @else {
+    <div class="rounded-2xl border border-outline-variant bg-white p-12 text-center shadow-sm flex flex-col items-center">
+      <span class="material-symbols-outlined text-[64px] text-outline mb-4">person_off</span>
+      <h2 class="mb-2 text-xl font-bold text-on-surface">المستخدم غير موجود</h2>
+      <p class="text-on-surface-variant">لم يتم العثور على بيانات هذا المستخدم، قد يكون تم حذفه أو أن الرابط غير صحيح.</p>
+    </div>
   }
 </main>
 
 @if (selectedZoomImage()) {
-  <div class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" (click)="selectedZoomImage.set(null)">
-    <div class="relative max-w-4xl max-h-[90vh] w-full rounded-2xl overflow-hidden shadow-2xl animate-scale-in" (click)="$event.stopPropagation()">
-      <img [src]="selectedZoomImage()" alt="صورة مكبرة" class="w-full h-full object-contain bg-surface-container-low" />
-      <button (click)="selectedZoomImage.set(null)" class="absolute top-4 right-4 bg-black/50 hover:bg-error text-white w-10 h-10 rounded-full flex items-center justify-center transition-colors backdrop-blur-md">
-        <span class="material-symbols-outlined">close</span>
-      </button>
+  <div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 bg-black/80 z-100 flex items-center justify-center p-0 sm:p-6 backdrop-blur-sm animate-fade-in" (click)="selectedZoomImage.set(null)">
+    
+    <button (click)="selectedZoomImage.set(null)" class="absolute top-4 right-4 sm:top-6 sm:right-6 z-110 bg-white/10 hover:bg-error text-white w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all backdrop-blur-md border border-white/20 shadow-lg">
+      <span class="material-symbols-outlined text-[20px] sm:text-[24px]">close</span>
+    </button>
+
+    <div class="max-w-[100vw] max-h-screen sm:max-w-[95vw] sm:max-h-[95vh] w-full sm:w-auto h-full sm:h-auto overflow-auto sm:rounded-2xl shadow-2xl animate-scale-in flex sm:block items-center justify-center bg-surface-container-low sm:bg-transparent" (click)="$event.stopPropagation()">
+      <img [src]="selectedZoomImage()" alt="صورة مكبرة" class="block max-w-none m-auto" />
     </div>
+
   </div>
 }
 
@@ -325,6 +351,30 @@
     [icon]="modalConfig().icon"
     [variant]="modalConfig().variant"
     (confirm)="onConfirmModal()"
-    (cancel)="showConfirmModal.set(false)"
-  ></app-confirmation-modal>
+    (cancel)="onCancelModal()"
+  >
+    @if (modalConfig().title === 'تأكيد رفض الحساب') {
+      <div class="mt-4 w-full text-right px-2">
+        <app-form-field
+          label="سبب الرفض (اختياري)"
+          placeholder="اكتب سبب رفض توثيق الحساب هنا (إن وجد)..."
+          type="textarea"
+          [rows]="4"
+          [ngModel]="rejectReason()"
+          (ngModelChange)="rejectReason.set($event)"
+        ></app-form-field>
+      </div>
+    } @else if (modalConfig().title === 'تأكيد حظر المستخدم') {
+      <div class="mt-4 w-full text-right px-2">
+        <app-form-field
+          label="سبب الحظر (اختياري)"
+          placeholder="اكتب سبب حظر الحساب هنا (إن وجد)..."
+          type="textarea"
+          [rows]="4"
+          [ngModel]="blockReason()"
+          (ngModelChange)="blockReason.set($event)"
+        ></app-form-field>
+      </div>
+    }
+  </app-confirmation-modal>
 }

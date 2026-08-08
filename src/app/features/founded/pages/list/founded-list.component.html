@@ -1,0 +1,80 @@
+<div class="min-h-screen bg-background">
+  <div class="mx-auto max-w-7xl space-y-6 px-4 py-6">
+
+    <!-- Page Header -->
+    <section class="space-y-3 pb-2">
+      <app-header title="تم العثور عليهم"
+        subtitle="نحن نحتفل بكل لقاء جديد. هنا تجد قائمة بالأشخاص الذين تم العثور عليهم."
+        [badge]="!isLoading() && !hasError() ? totalCount() + ' نتيجة' : ''" [loading]="isLoading()"
+        [showPrimary]="false" [showSecondary]="false">
+      </app-header>
+    </section>
+
+    <!-- Filters Card -->
+    <section class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+      <app-case-filters [initialFilter]="filter()" [searchMode]="'name-only'" [showCaseType]="true" [showGovernment]="false" [showCity]="false" [showFromDate]="false"
+        [showToDate]="false" [showAgeSort]="false" [showDateSort]="false" (filterChange)="onFilterChange($event)"
+        (reset)="onFilterReset()">
+      </app-case-filters>
+    </section>
+
+    <!-- Main Content -->
+    <div class="space-y-4">
+
+      <!-- Loading Skeleton -->
+      @if (isLoading()) {
+      <app-case-skeleton-grid></app-case-skeleton-grid>
+      }
+
+      <!-- Error State -->
+      @if (hasError() && !isLoading()) {
+      <div class="flex flex-col items-center justify-center py-24 text-center">
+        <span class="material-symbols-outlined text-6xl text-outline mb-4">wifi_off</span>
+        <h3 class="text-xl font-bold text-on-surface mb-2">تعذر تحميل البيانات</h3>
+        <p class="text-on-surface-variant mb-6">تحقق من اتصالك بالإنترنت وحاول مرة أخرى</p>
+        <button (click)="retry()"
+          class="inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold bg-secondary text-on-secondary shadow-sm hover:opacity-90 hover:shadow transition-all duration-200 active:scale-95">
+          <span class="material-symbols-outlined text-[20px]">refresh</span>
+          <span>إعادة المحاولة</span>
+        </button>
+      </div>
+      }
+
+      <!-- Empty State -->
+      @if (!isLoading() && !hasError() && items().length === 0) {
+        <app-empty-state
+          [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات معثور عليها'"
+          [message]="hasActiveFilters() ? 'لم نتمكن من العثور على حالات تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم تسجيل أي حالات معثور عليها حتى الآن.'"
+        >
+          @if (hasActiveFilters()) {
+            <app-button
+              emptyActions
+              variant="outline"
+              size="md"
+              (click)="resetFilters()"
+            >
+              إلغاء تصفية البحث
+            </app-button>
+          }
+        </app-empty-state>
+      }
+
+      @if (!isLoading() && !hasError() && items().length > 0) {
+      <!-- Cards Grid -->
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        @for (person of items(); track person.id) {
+        <app-case-card [caseItem]="mapToCaseItem(person)" [showCaseType]="false" [showGender]="false" [showAge]="false"
+          createdAtLabel="تاريخ العثور" [showCaseType]="true" [detailRoute]="['/founded', person.id]" [showContactButton]="false">
+        </app-case-card>
+        }
+      </div>
+
+      <!-- Pagination -->
+      <app-pagination [currentPage]="currentPage()" [totalPages]="totalPages()" [totalItems]="totalCount()"
+        [pageSize]="pageSize()" (pageChange)="onPageChange($event)">
+      </app-pagination>
+      }
+
+    </div>
+  </div>
+</div>

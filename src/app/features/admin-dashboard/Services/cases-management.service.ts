@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable, forkJoin, map } from 'rxjs';
 
-import { CaseListItemResponse, CasesFilterRequest } from '../../../core/models/Cases.model';
+import { CaseListItemResponse, CasesFilterRequest } from '../../../core/models/cases.model';
 import { CaseType } from '../../../shared/enums/case-type';
 import { AgeSort } from '../../../shared/enums/age-sort';
 import { DateSort } from '../../../shared/enums/date-sort';
@@ -58,7 +58,7 @@ export class CasesManagementService {
      * Delete a case, automatically routing to the correct API based on caseType.
      */
     deleteCase(caseId: number, caseType: CaseType): Observable<ApiResponse<string>> {
-        return this.getCaseService(caseType).deleteCase(caseId);
+        return this.getCaseService(caseType).permanentDelete(caseId);
     }
 
     /**
@@ -98,7 +98,7 @@ export class CasesManagementService {
         if (type === CaseType.Urgent) {
             request.latitude = request.latitude ?? null;
             request.longitude = request.longitude ?? null;
-            request.radiusInMeters = request.radiusInMeters ?? null;
+            request.radiusInKm = request.radiusInKm ?? null;
         }
 
         return (
@@ -135,15 +135,15 @@ export class CasesManagementService {
         page: number,
         pageSize: number,
     ): Observable<CasesPageResult> {
-        // Over-fetch so client-side pagination has enough items across all types.
-        const fetchSize = pageSize * 3;
+        // Over-fetch up to requested page depth so client-side pagination has enough items across all types.
+        const fetchSize = Math.max(pageSize * 3, page * pageSize);
         const baseFilter = { ...filter, page: 1, pageSize: fetchSize };
 
         const urgent$ = this.urgentService.adminGetAllCases({
             ...baseFilter,
             latitude: null,
             longitude: null,
-            radiusInMeters: null,
+            radiusInKm: null,
         });
         const longTerm$ = this.longTermService.adminGetAllCases(baseFilter);
         const unknown$ = this.unknownService.adminGetAllCases(baseFilter);
@@ -200,13 +200,13 @@ export class CasesManagementService {
      */
     private sortItems(items: CaseListItemResponse[], filter: CasesFilterRequest): void {
         if (filter.ageSort !== null && filter.ageSort !== undefined) {
-            const direction = filter.ageSort === AgeSort.Ascending ? 1 : -1;
+            const direction = filter.ageSort === AgeSort.Ascending ? -1 : 1;
             items.sort((a, b) => (a.age - b.age) * direction);
             return;
         }
 
         if (filter.dateSort !== null && filter.dateSort !== undefined) {
-            const direction = filter.dateSort === DateSort.Ascending ? 1 : -1;
+            const direction = filter.dateSort === DateSort.Ascending ? -1 : 1;
             items.sort(
                 (a, b) =>
                     (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * direction,

@@ -1,8 +1,9 @@
-import { FormField } from '../../../../shared/components/form-field/form-field';
-import { CardComponent } from '../../../../shared/components/card/card';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { catchError, EMPTY, switchMap } from 'rxjs';
+import { CacheService } from '../../../../core/cache/cache.service';
 
 import { environment } from '../../../../../environments/environment';
 
@@ -11,7 +12,7 @@ import { LongTermCaseService } from '../../services/long-term-case.service';
 
 import { LongTermCaseDetailResponse } from '../../models/response/LongTermCaseDetailResponse';
 
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 
 import { GenderBadgeDirective } from '../../../../shared/directives/gender-badge-directive';
 import { CaseStatusBadgeDirective } from '../../../../shared/directives/case-status-badge-directive';
@@ -21,9 +22,9 @@ import { AgeBadgeDirective } from '../../../../shared/directives/age-badge-direc
 import { AgeCategories } from '../../../../shared/enums/age-categories';
 import { FileType } from '../../../../shared/enums/file-type';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup';
-import { FoundPersonInfoRequest } from '../../../../core/models/Cases.model';
+import { CasePhotoResponse, FoundPersonInfoRequest } from '../../../../core/models/cases.model';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
@@ -31,13 +32,15 @@ import { Permissions } from '../../../../core/constants/Permissions';
 
 import { RejectCasePopupComponent } from '../../../../shared/components/cases-components/reject-case-popup/reject-case-popup';
 import { RejectionReasonCardComponent } from '../../../../shared/components/cases-components/rejection-reason-card/rejection-reason-card';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
 
 @Component({
   selector: 'app-long-term-details',
   standalone: true,
   imports: [
     CommonModule,
-    CaseHeaderComponent,
+    HeaderComponent,
     GenderBadgeDirective,
     CaseStatusBadgeDirective,
     CaseTypeBadgeDirective,
@@ -48,6 +51,7 @@ import { RejectionReasonCardComponent } from '../../../../shared/components/case
     ButtonComponent,
     RejectCasePopupComponent,
     RejectionReasonCardComponent,
+    ViewProfilePopup,
   ],
   templateUrl: './long-term-details.html',
   styleUrls: ['./long-term-details.css'],
@@ -58,11 +62,22 @@ export class LongTermDetails implements OnInit {
   private readonly router = inject(Router);
   private readonly longTermCaseService = inject(LongTermCaseService);
   private readonly snackbar = inject(SnackbarService);
+  private readonly cacheService = inject(CacheService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly apiUrl = environment.baseUrl;
   readonly FileType = FileType;
   readonly CaseStatus = CaseStatus;
   readonly Permissions = Permissions;
+
+  readonly selectedUserId = signal<string | null>(null);
+
+  openPublisherProfile(): void {
+    const id = this.caseDetails()?.user?.id || (this.caseDetails() as any)?.userId;
+    if (id) {
+      this.selectedUserId.set(id);
+    }
+  }
 
   // Signals للـ Modals والحالات
   showDeleteConfirmation = signal(false);
@@ -79,9 +94,23 @@ export class LongTermDetails implements OnInit {
   caseDetails = signal<LongTermCaseDetailResponse | null>(null);
 
   loading = signal(true);
-  isOwner = signal(false);
 
-  selectedMedia = signal<any | null>(null);
+  readonly isOwner = computed(() => {
+    if (!this.authService.isLoggedIn()) return false;
+    const currentUserId = this.authService.getCurrentUserId();
+    const currentUserEmail = this.authService.currentUser()?.email?.toLowerCase();
+    const caseOwnerId = this.caseDetails()?.user?.id || (this.caseDetails() as any)?.userId;
+    const caseOwnerEmail = this.caseDetails()?.user?.email?.toLowerCase();
+    if (caseOwnerId && currentUserId) {
+      return caseOwnerId === currentUserId;
+    }
+    if (currentUserEmail && caseOwnerEmail) {
+      return currentUserEmail === caseOwnerEmail;
+    }
+    return false;
+  });
+
+  selectedMedia = signal<CasePhotoResponse | null>(null);
 
   // Lightbox
   lightboxVisible = signal(false);
@@ -89,72 +118,83 @@ export class LongTermDetails implements OnInit {
   isAdminPage = signal(false);
   isMyCasePage = signal(false);
 
-  ngOnInit(): void {
-    this.route.data.subscribe(data => {
-      this.isAdminPage.set(data['mode'] === 'dashboard');
-      this.isMyCasePage.set(data['mode'] === 'my-case');
-    });
-
-    this.route.paramMap.subscribe((params) => {
-      const id = Number(params.get('id'));
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      const id = this.caseDetails()?.id;
       if (id) {
-        this.fetchCase(id);
-      } else {
-        this.loading.set(false);
+        this.cacheService.set(
+          `LongTermDetails_Modals_${id}`,
+          {
+            showDelete: this.showDeleteConfirmation(),
+            showFounded: this.showFoundedPopup(),
+            showApprove: this.showApproveConfirmation(),
+            showReject: this.showRejectConfirmation(),
+            showPermanentDelete: this.showPermanentDeleteConfirmation()
+          },
+          300000 // 5 minutes
+        );
       }
     });
   }
 
-  private fetchCase(id: number): void {
-    this.loading.set(true);
+  ngOnInit(): void {
+    this.isAdminPage.set(this.route.snapshot.data['mode'] === 'dashboard');
+    this.isMyCasePage.set(this.route.snapshot.data['mode'] === 'my-case');
 
-    // const request = this.isAdminPage()
-    //   ? this.longTermCaseService.adminGetCaseById(id)
-    //   : this.longTermCaseService.getCaseById(id);
-
- let request;
-
-if (this.isAdminPage()) {
-  request = this.longTermCaseService.adminGetCaseById(id);
-} else if (this.isMyCasePage()) {
-  request = this.longTermCaseService.getMyCaseById(id);
-} else {
-  request = this.longTermCaseService.getCaseById(id);
-}
-
-    request.subscribe({
-      next: (apiRes) => {
-        if (apiRes.success && apiRes.data) {
-          this.caseDetails.set(apiRes.data);
-
-          const currentUserEmail = this.authService.currentUser()?.email?.toLowerCase();
-          const caseOwnerEmail = apiRes.data.user?.email?.toLowerCase();
-
-          this.isOwner.set(
-            !!currentUserEmail && currentUserEmail === caseOwnerEmail
-          );
-
-          if (apiRes.data.photos?.length) {
-            const primary =
-              apiRes.data.photos.find((x) => x.isPrimary) ?? apiRes.data.photos[0];
-
-            this.selectedMedia.set(primary);
-            this.selectedMedia.set(primary);
-
-            this.currentIndex.set(
-              apiRes.data.photos.findIndex((x) => x.id === primary.id)
-            );
+    this.route.paramMap
+      .pipe(
+        switchMap((params) => {
+          const id = Number(params.get('id'));
+          if (!id) {
+            this.loading.set(false);
+            return EMPTY;
           }
-        }
-        this.loading.set(false);
-      },
-      error: (err) => {
-        console.error(err);
-        this.loading.set(false);
-        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء تحميل البيانات';
-        this.snackbar.error(errorMessage);
-      },
-    });
+
+          this.loading.set(true);
+          const req$ = this.isAdminPage()
+            ? this.longTermCaseService.adminGetCaseById(id)
+            : this.isMyCasePage()
+              ? this.longTermCaseService.getMyCaseById(id)
+              : this.longTermCaseService.getCaseById(id);
+
+          return req$.pipe(
+            catchError((err: unknown) => {
+              this.loading.set(false);
+              const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء تحميل البيانات');
+              this.snackbar.error(errorMessage);
+              return EMPTY;
+            }),
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (apiRes) => {
+          if (apiRes.success && apiRes.data) {
+            this.caseDetails.set(apiRes.data);
+
+            const cachedModals = this.cacheService.get<any>(`LongTermDetails_Modals_${apiRes.data.id}`);
+            if (cachedModals) {
+              this.showDeleteConfirmation.set(cachedModals.showDelete || false);
+              this.showFoundedPopup.set(cachedModals.showFounded || false);
+              this.showApproveConfirmation.set(cachedModals.showApprove || false);
+              this.showRejectConfirmation.set(cachedModals.showReject || false);
+              this.showPermanentDeleteConfirmation.set(cachedModals.showPermanentDelete || false);
+            }
+
+            if (apiRes.data.photos?.length) {
+              const primary =
+                apiRes.data.photos.find((x) => x.isPrimary) ?? apiRes.data.photos[0];
+
+              this.selectedMedia.set(primary);
+              this.currentIndex.set(
+                apiRes.data.photos.findIndex((x) => x.id === primary.id),
+              );
+            }
+          }
+          this.loading.set(false);
+        },
+      });
   }
 
   getImageUrl(path?: string): string {
@@ -167,7 +207,7 @@ if (this.isAdminPage()) {
     return `${this.apiUrl}${path}`;
   }
 
-  changeMedia(media: any): void {
+  changeMedia(media: CasePhotoResponse): void {
     this.selectedMedia.set(media);
     const index =
       this.caseDetails()?.photos.findIndex((x) => x.id === media.id) ?? 0;
@@ -224,35 +264,39 @@ if (this.isAdminPage()) {
   }
 
   confirmFounded(data: FoundPersonInfoRequest): void {
+    if (this.isFounding()) return;
     const id = this.caseDetails()?.id;
     if (!id) return;
 
     this.isFounding.set(true);
-    this.isFounding.set(true);
 
-    this.longTermCaseService.markAsFound(id, data).subscribe({
-      next: (res) => {
-        this.isFounding.set(false);
-        this.showFoundedPopup.set(false);
+    this.longTermCaseService
+      .markAsFound(id, data)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.isFounding.set(false);
+          this.showFoundedPopup.set(false);
 
-        if (res.success) {
-          this.snackbar.success('تم تحديث الحالة إلى تم العثور عليه');
-          this.caseDetails.update((current) => {
-            if (!current) return current;
-            return {
-              ...current,
-              status: CaseStatus.Found,
-            };
-          });
-        }
-      },
-      error: (err) => {
-        this.isFounding.set(false);
-        this.showFoundedPopup.set(false);
-        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء تحديث الحالة';
-        this.snackbar.error(errorMessage);
-      },
-    });
+          if (res.success) {
+            this.snackbar.success('تم تحديث الحالة إلى تم العثور عليه');
+            this.cacheService.remove(`FoundedPopup_LongTerm_${id}`);
+            this.caseDetails.update((current) => {
+              if (!current) return current;
+              return {
+                ...current,
+                status: CaseStatus.Found,
+              };
+            });
+          }
+        },
+        error: (err: unknown) => {
+          this.isFounding.set(false);
+          this.showFoundedPopup.set(false);
+          const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء تحديث الحالة');
+          this.snackbar.error(errorMessage);
+        },
+      });
   }
 
   editCase(): void {
@@ -270,29 +314,32 @@ if (this.isAdminPage()) {
   }
 
   confirmDelete(): void {
+    if (this.deleting()) return;
     const id = this.caseDetails()?.id;
     if (!id) return;
 
     this.deleting.set(true);
-    this.deleting.set(true);
 
-    this.longTermCaseService.deleteCase(id).subscribe({
-      next: (res) => {
-        this.deleting.set(false);
-        this.showDeleteConfirmation.set(false);
+    this.longTermCaseService
+      .deleteCase(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.deleting.set(false);
+          this.showDeleteConfirmation.set(false);
 
-        if (res.success) {
-          this.snackbar.success('تم حذف الحالة بنجاح');
-          this.router.navigate(['/long-term']);
-        }
-      },
-      error: (err) => {
-        this.deleting.set(false);
-        this.showDeleteConfirmation.set(false);
-        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء حذف الحالة';
-        this.snackbar.error(errorMessage);
-      },
-    });
+          if (res.success) {
+            this.snackbar.success('تم حذف الحالة بنجاح');
+            this.router.navigate(['/long-term']);
+          }
+        },
+        error: (err: unknown) => {
+          this.deleting.set(false);
+          this.showDeleteConfirmation.set(false);
+          const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء حذف الحالة');
+          this.snackbar.error(errorMessage);
+        },
+      });
   }
 
   getAgeCategoryEnum(): AgeCategories {
@@ -307,8 +354,6 @@ if (this.isAdminPage()) {
         return AgeCategories.Young;
       case 'Adult':
         return AgeCategories.Adult;
-      // case 'Mid Adult':
-      //   return AgeCategories.MidAdult;
       case 'Late Adult':
         return AgeCategories.LateAdult;
       default:
@@ -329,20 +374,23 @@ if (this.isAdminPage()) {
     const id = this.caseDetails()?.id;
     if (!id) return;
 
-    this.longTermCaseService.approveCase(id).subscribe({
-      next: (res) => {
-        this.showApproveConfirmation.set(false);
-        if (res.success) {
-          this.snackbar.success('تم قبول الحالة بنجاح');
-          this.fetchCase(id);
-        }
-      },
-      error: (err) => {
-        this.showApproveConfirmation.set(false);
-        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء قبول الحالة';
-        this.snackbar.error(errorMessage);
-      },
-    });
+    this.longTermCaseService
+      .approveCase(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.showApproveConfirmation.set(false);
+          if (res.success) {
+            this.snackbar.success('تم قبول الحالة بنجاح');
+            this.refreshCaseDetails(id);
+          }
+        },
+        error: (err: unknown) => {
+          this.showApproveConfirmation.set(false);
+          const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء قبول الحالة');
+          this.snackbar.error(errorMessage);
+        },
+      });
   }
 
   openRejectConfirmation(): void {
@@ -356,47 +404,35 @@ if (this.isAdminPage()) {
   }
 
   confirmReject(reason: string): void {
+    if (this.isRejecting()) return;
     const id = this.caseDetails()?.id;
     if (!id) return;
 
     this.isRejecting.set(true);
     this.rejectApiError.set(null);
 
-    this.longTermCaseService.rejectCase(id, reason).subscribe({
-      next: (res) => {
-        this.isRejecting.set(false);
-        if (res.success) {
-          this.showRejectConfirmation.set(false);
-          const successMessage = res.message || 'تم رفض الحالة بنجاح';
-          this.snackbar.success(successMessage);
-          this.fetchCase(id);
-        } else {
-          this.rejectApiError.set(res.message || 'حدث خطأ أثناء رفض الحالة');
-        }
-      },
-      error: (err) => {
-        this.isRejecting.set(false);
-        const errorMessage = this.extractErrorMessage(err, 'حدث خطأ أثناء رفض الحالة');
-        this.rejectApiError.set(errorMessage);
-      },
-    });
-  }
-
-  private extractErrorMessage(err: any, fallback: string): string {
-    if (err?.error?.errors && typeof err.error.errors === 'object') {
-      const messages: string[] = [];
-      Object.values(err.error.errors).forEach((val: any) => {
-        if (Array.isArray(val)) {
-          messages.push(...val);
-        } else if (typeof val === 'string') {
-          messages.push(val);
-        }
+    this.longTermCaseService
+      .rejectCase(id, reason)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.isRejecting.set(false);
+          if (res.success) {
+            this.showRejectConfirmation.set(false);
+            this.cacheService.remove(`RejectPopup_LongTerm_${id}`);
+            const successMessage = res.message || 'تم رفض الحالة بنجاح';
+            this.snackbar.success(successMessage);
+            this.refreshCaseDetails(id);
+          } else {
+            this.rejectApiError.set(res.message || 'حدث خطأ أثناء رفض الحالة');
+          }
+        },
+        error: (err: unknown) => {
+          this.isRejecting.set(false);
+          const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء رفض الحالة');
+          this.rejectApiError.set(errorMessage);
+        },
       });
-      if (messages.length > 0) {
-        return messages.join(' - ');
-      }
-    }
-    return err?.error?.detail || err?.error?.message || (typeof err?.error === 'string' ? err.error : null) || fallback;
   }
 
   openPermanentDeleteConfirmation(): void {
@@ -411,19 +447,44 @@ if (this.isAdminPage()) {
     const id = this.caseDetails()?.id;
     if (!id) return;
 
-    this.longTermCaseService.permanentDelete(id).subscribe({
-      next: (res) => {
-        this.showPermanentDeleteConfirmation.set(false);
-        if (res.success) {
-          this.snackbar.success('تم حذف الحالة نهائياً');
-          this.router.navigate(['/admin/cases-management']);
+    this.longTermCaseService
+      .permanentDelete(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.showPermanentDeleteConfirmation.set(false);
+          if (res.success) {
+            this.snackbar.success('تم حذف الحالة نهائياً');
+            this.router.navigate(['/admin/cases-management']);
+          }
+        },
+        error: (err: unknown) => {
+          this.showPermanentDeleteConfirmation.set(false);
+          const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء الحذف النهائي');
+          this.snackbar.error(errorMessage);
+        },
+      });
+  }
+
+  private refreshCaseDetails(id: number): void {
+    const req$ = this.isAdminPage()
+      ? this.longTermCaseService.adminGetCaseById(id)
+      : this.longTermCaseService.getCaseById(id);
+
+    req$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (apiRes) => {
+        if (apiRes.success && apiRes.data) {
+          this.caseDetails.set(apiRes.data);
         }
       },
-      error: (err) => {
-        this.showPermanentDeleteConfirmation.set(false);
-        const errorMessage = err.error?.detail || err.error?.message || 'حدث خطأ أثناء الحذف النهائي';
-        this.snackbar.error(errorMessage);
-      },
     });
+  }
+
+  startChat(id: number): void {
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
+    this.router.navigate(['/chat/start', id]);
   }
 }

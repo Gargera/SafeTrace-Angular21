@@ -1,5 +1,5 @@
 <div class="mb-xl">
-  <app-case-header
+  <app-header
     title="إدارة الشكاوى"
     subtitle="متابعة ومعالجة شكاوى ومقترحات المستخدمين المتعلقة بالخدمات أو العمليات داخل النظام."
     primaryActionLabel=""
@@ -47,7 +47,7 @@
 </ng-container>
 
 <app-card extraClass="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg">
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-md items-end">
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-md items-end">
     <div class="flex flex-col gap-xs md:col-span-2">
       <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">بحث</label>
       <app-form-field
@@ -56,6 +56,20 @@
         (ngModelChange)="onSearchChange($event)"
         placeholder="ابحث بالبريد الإلكتروني أو كود الحالة..."
       >
+      </app-form-field>
+    </div>
+
+    <div class="flex flex-col gap-xs">
+      <app-form-field
+        type="select"
+        [ngModel]="filter().contactType"
+        (ngModelChange)="updateFilter({ contactType: $event })"
+        label="موضوع الشكوى"
+      >
+        <option value="">الكل</option>
+        @for (opt of contactTypeOptions; track opt) {
+          <option [value]="opt">{{ opt }}</option>
+        }
       </app-form-field>
     </div>
 
@@ -73,7 +87,16 @@
     </div>
   </div>
 
-  <div class="flex flex-wrap justify-end gap-3 pt-2">
+  <div class="flex flex-wrap justify-end gap-3 pt-4 border-t border-outline-variant/30 mt-4">
+    <app-button
+      *hasPermission="Permissions.Complaints.GenerateComplaintsPdfReport"
+      variant="outline"
+      (onClick)="downloadReport()"
+    >
+      <span class="material-symbols-outlined text-[18px]">download</span>
+      <span>تحميل التقرير</span>
+    </app-button>
+
     <app-button
       variant="text"
       (onClick)="resetFilters()"
@@ -87,6 +110,8 @@
     </app-button>
   </div>
 </app-card>
+
+
 
 <section
   class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75"
@@ -161,9 +186,20 @@
             <tr>
               <td colspan="6" class="py-xl">
                 <app-empty-state
-                  title="لا يوجد شكاوى"
-                  message="لا توجد شكاوى تطابق شروط البحث."
-                ></app-empty-state>
+                  [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد شكاوى'"
+                  [message]="hasActiveFilters() ? 'لم نتمكن من العثور على شكاوى تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم تقديم أي شكاوى حتى الآن.'"
+                >
+                  @if (hasActiveFilters()) {
+                    <app-button
+                      emptyActions
+                      variant="outline"
+                      size="md"
+                      (click)="resetFilters()"
+                    >
+                      إلغاء تصفية البحث
+                    </app-button>
+                  }
+                </app-empty-state>
               </td>
             </tr>
           }
@@ -191,7 +227,7 @@
 
 <!-- Details Modal -->
 @if (showDetailsModal() && selectedComplaint()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" (click)="closeDetailsModal()">
+  <div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" (click)="closeDetailsModal()">
     <app-card extraClass="w-full max-w-6xl max-h-[90vh] overflow-y-auto bg-surface-container-lowest shadow-2xl rounded-2xl mx-4" dir="rtl" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between border-b border-outline-variant px-6 py-4">
         <span class="font-bold text-lg text-primary">تفاصيل الشكوى</span>

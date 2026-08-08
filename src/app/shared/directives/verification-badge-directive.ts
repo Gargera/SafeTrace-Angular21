@@ -1,45 +1,56 @@
-import { Directive, ElementRef, effect, input, Renderer2 } from '@angular/core';
+import { Directive, ElementRef, effect, input } from '@angular/core';
 import { VerificationStatus } from '../enums/verification-status';
-import { getVerificationStatusTranslationAr } from '../../core/constants/verification.status.dictionary';
+import { getVerificationStatusTranslationAr } from '../../core/constants/dictionaries/verification.status.dictionary';
+import { BadgeRenderService } from '../services/badge-render.service';
 
 @Directive({
-  selector: '[appVerificationBadgeDirective]'
+  selector: '[appVerificationBadgeDirective]',
+  standalone: true
 })
 export class VerificationBadgeDirective {
   status = input.required<VerificationStatus>({ alias: 'appVerificationBadgeDirective' });
 
-  constructor(private el: ElementRef, private renderer: Renderer2) {
-    this.renderer.addClass(this.el.nativeElement, 'inline-flex');
-    this.renderer.addClass(this.el.nativeElement, 'items-center');
-    this.renderer.addClass(this.el.nativeElement, 'gap-xs');
-    this.renderer.addClass(this.el.nativeElement, 'px-sm');
-    this.renderer.addClass(this.el.nativeElement, 'py-1');
-    this.renderer.addClass(this.el.nativeElement, 'rounded-lg');
-    this.renderer.addClass(this.el.nativeElement, 'text-[10px]');
-    this.renderer.addClass(this.el.nativeElement, 'font-bold');
-    this.renderer.addClass(this.el.nativeElement, 'whitespace-nowrap');
+  private readonly baseClasses = [
+    'inline-flex',
+    'items-center',
+    'justify-center',
+    'gap-1.5',
+    'px-3',
+    'py-1',
+    'rounded-lg',
+    'text-sm',
+    'font-bold',
+    'whitespace-nowrap'
+  ];
+
+  constructor(private el: ElementRef, private badgeService: BadgeRenderService) {
     effect(() => {
-      const el = this.el.nativeElement;
-      el.className = el.className.replace(/\bbg-\S+|text-\S+/g, '');
-
-      if (this.status() === VerificationStatus.Verified) {
-        this.renderer.addClass(el, 'bg-tertiary-fixed');
-        this.renderer.addClass(el, 'text-on-tertiary-fixed');
-      } else if (this.status() === VerificationStatus.Pending) {
-        this.renderer.addClass(el, 'bg-secondary-container');
-        this.renderer.addClass(el, 'text-white');
-      } else {
-        this.renderer.addClass(el, 'bg-error-container');
-        this.renderer.addClass(el, 'text-on-error-container');
-      }
-
-      const translation = getVerificationStatusTranslationAr(this.status()) || 'غير موثق';
-      el.innerHTML = `<span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1">${this.getIcon()}</span> ${translation}`;
+      const statusValue = this.status();
+      const config = {
+        baseClasses: this.baseClasses,
+        getClasses: (value: VerificationStatus) => {
+          switch (value) {
+            case VerificationStatus.Verified:
+              return { bg: 'bg-tertiary-fixed', text: 'text-on-tertiary-fixed' };
+            case VerificationStatus.Pending:
+              return { bg: 'bg-secondary-container', text: 'text-white' };
+            default:
+              return { bg: 'bg-error-container', text: 'text-on-error-container' };
+          }
+        },
+        getContent: (value: VerificationStatus) => {
+          const translation = getVerificationStatusTranslationAr(value) || 'غير موثق';
+          const icon = this.getIcon(value);
+          return `<span class="material-symbols-outlined text-[16px] leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
+        },
+        useTextOnly: false
+      };
+      this.badgeService.updateBadge(this.el.nativeElement, statusValue, config);
     });
   }
 
-  private getIcon(): string {
-    switch (this.status()) {
+  private getIcon(status: VerificationStatus): string {
+    switch (status) {
       case VerificationStatus.Verified:
         return 'verified';
       case VerificationStatus.Pending:

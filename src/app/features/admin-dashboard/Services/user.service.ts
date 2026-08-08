@@ -1,61 +1,99 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { GetUserDto } from '../models/User/GetUserDto';
+import { tap } from 'rxjs/operators';
+import { GetUserDto } from '../models/User/responses/GetUserDto';
 import { environment } from '../../../../environments/environment';
-import { UserFilterDto } from '../models/User/UserFilterDto';
+import { UserFilterDto } from '../models/User/requests/UserFilterDto';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
-import { GetUserByIdDto } from '../models/User/GetUserByIdDto';
-import { ChangeUserRoleDto } from '../models/User/ChangeUserRoleDto';
-import { UserPermissionsResponseDto } from '../models/User/UserPermissionsResponseDto';
-import { AssignUserPermissionsDto } from '../models/User/AssignUserPermissionsDto';
-import { RegisterByAdminDto } from '../models/User/RegisterByAdminDto';
-import { UserStatisticsDto } from '../models/User/UserStatisticsDto';
+import { GetUserByIdDto } from '../models/User/responses/GetUserByIdDto';
+import { ChangeUserRoleDto } from '../models/User/requests/ChangeUserRoleDto';
+import { UserPermissionsResponseDto } from '../models/User/responses/UserPermissionsResponseDto';
+import { AssignUserPermissionsDto } from '../models/User/requests/AssignUserPermissionsDto';
+import { RegisterByAdminDto } from '../models/User/requests/RegisterByAdminDto';
+import { UserStatisticsDto } from '../models/User/responses/UserStatisticsDto';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { ApiService } from '../../../shared/services/api.service';
+import { CacheService } from '../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../core/cache/cache.constants';
 
 @Injectable({ providedIn: 'root' })
 export class UserService extends ApiService {
   private readonly baseUrl = `${environment.baseUrl}/api/Users`;
+  private readonly cacheService = inject(CacheService);
 
   getAllUsers(filter: UserFilterDto): Observable<ApiResponse<PaginationResponse<GetUserDto>>> {
-    return this.get<ApiResponse<PaginationResponse<GetUserDto>>>(this.baseUrl, filter as Record<string, any>);
+    const key = `Users_getAllUsers_${JSON.stringify(filter)}`;
+    return this.cacheService.getOrSet(
+      key,
+      () => this.get<ApiResponse<PaginationResponse<GetUserDto>>>(this.baseUrl, filter as Record<string, any>),
+      CACHE_TTL.LIST,
+      [CACHE_TAGS.USERS]
+    );
   }
 
   getUserById(userId: string): Observable<ApiResponse<GetUserByIdDto>> {
-    return this.getById<ApiResponse<GetUserByIdDto>>(this.baseUrl, userId);
+    const key = `Users_getUserById_${userId}`;
+    return this.cacheService.getOrSet(
+      key,
+      () => this.getById<ApiResponse<GetUserByIdDto>>(this.baseUrl, userId),
+      CACHE_TTL.DETAILS,
+      [CACHE_TAGS.USERS]
+    );
   }
 
   registerByAdmin(dto: RegisterByAdminDto): Observable<ApiResponse<string>> {
-    return this.post<ApiResponse<string>>(`${this.baseUrl}/register-by-admin`, dto);
+    return this.post<ApiResponse<string>>(`${this.baseUrl}/register-by-admin`, dto).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS]))
+    );
   }
 
   changeUserRole(dto: ChangeUserRoleDto): Observable<ApiResponse<string>> {
-    return this.post<ApiResponse<string>>(`${this.baseUrl}/ChangeRole`, dto);
+    return this.post<ApiResponse<string>>(`${this.baseUrl}/ChangeRole`, dto).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS]))
+    );
   }
 
   approveUser(userId: string): Observable<ApiResponse<string>> {
-    return this.post<ApiResponse<string>>(`${this.baseUrl}/approve/${userId}`, {});
+    return this.post<ApiResponse<string>>(`${this.baseUrl}/approve/${userId}`, {}).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS]))
+    );
   }
 
-  rejectUser(userId: string): Observable<ApiResponse<string>> {
-    return this.post<ApiResponse<string>>(`${this.baseUrl}/reject/${userId}`, {});
+  rejectUser(userId: string, reason: string): Observable<ApiResponse<string>> {
+    return this.post<ApiResponse<string>>(`${this.baseUrl}/reject/${userId}`, { reason }).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS]))
+    );
   }
 
-  toggleBlockStatus(userId: string): Observable<ApiResponse<string>> {
-    return this.post<ApiResponse<string>>(`${this.baseUrl}/toggle-block/${userId}`, {});
+  toggleBlockStatus(userId: string, reason?: string): Observable<ApiResponse<string>> {
+    return this.post<ApiResponse<string>>(`${this.baseUrl}/toggle-block/${userId}`, { reason: reason || null }).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS]))
+    );
   }
 
   getUserPermissions(userId: string): Observable<ApiResponse<UserPermissionsResponseDto>> {
-    return this.get<ApiResponse<UserPermissionsResponseDto>>(
-      `${this.baseUrl}/GetPermissions/${userId}`
+    const key = `Users_getUserPermissions_${userId}`;
+    return this.cacheService.getOrSet(
+      key,
+      () => this.get<ApiResponse<UserPermissionsResponseDto>>(`${this.baseUrl}/GetPermissions/${userId}`),
+      CACHE_TTL.DETAILS,
+      [CACHE_TAGS.USERS]
     );
   }
 
   assignUserPermissions(dto: AssignUserPermissionsDto): Observable<ApiResponse<string>> {
-    return this.post<ApiResponse<string>>(`${this.baseUrl}/AssignPermissions`, dto);
+    return this.post<ApiResponse<string>>(`${this.baseUrl}/AssignPermissions`, dto).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS]))
+    );
   }
 
   getUsersStatistics(): Observable<ApiResponse<UserStatisticsDto>> {
-    return this.get<ApiResponse<UserStatisticsDto>>(`${this.baseUrl}/statistics`);
+    const key = `Users_getUsersStatistics`;
+    return this.cacheService.getOrSet(
+      key,
+      () => this.get<ApiResponse<UserStatisticsDto>>(`${this.baseUrl}/statistics`),
+      CACHE_TTL.LIST,
+      [CACHE_TAGS.USERS]
+    );
   }
 }

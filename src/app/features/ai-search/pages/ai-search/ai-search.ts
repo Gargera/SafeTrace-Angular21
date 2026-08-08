@@ -2,23 +2,26 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AiMatchingService, AiMatchedCase } from '../../services/ai-search.service';
 
-import { SnackbarService } from '../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
-import { CaseHeaderComponent } from '../../../../shared/components/cases-components/case-header/case-header.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Router } from '@angular/router';
 import { Permissions } from '../../../../core/constants/Permissions';
 
+import { ImageService } from '../../../../shared/services/image.service';
+
 @Component({
   selector: 'app-ai-search',
   standalone: true,
-  imports: [CommonModule, CaseCardComponent, LoadingSpinnerComponent, CaseHeaderComponent],
+  imports: [CommonModule, CaseCardComponent, LoadingSpinnerComponent, HeaderComponent],
   templateUrl: './ai-search.html',
   styleUrl: './ai-search.css',
 })
 export class AiSearch implements OnInit {
   private aiMatchingService = inject(AiMatchingService);
+  private imageService = inject(ImageService);
   private toast = inject(SnackbarService);
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -73,22 +76,16 @@ export class AiSearch implements OnInit {
 
   handleFile(file: File) {
     if (!this.authService.isLoggedIn()) {
-      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/ai-search' } });
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/aisearch' } });
       return;
     }
 
-    const validExtensions = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    const maxSizeBytes = 5 * 1024 * 1024; // 5MB
-
-    if (!validExtensions.includes(file.type)) {
-      this.toast.error('يرجى رفع صورة بصيغة JPG, JPEG أو PNG فقط.');
+    const validation = this.imageService.validate(file, 5);
+    if (!validation.valid) {
+      this.toast.error(validation.errorMessage ?? 'صيغة غير مدعومة.');
       return;
     }
 
-    if (file.size > maxSizeBytes) {
-      this.toast.error('يجب ألا يتعدى حجم الصورة 5 ميجابايت.');
-      return;
-    }
     this.selectedImage.set(file);
     this.aiMatchingService.cachedImageFile.set(file);
 

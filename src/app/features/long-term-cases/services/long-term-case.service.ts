@@ -1,22 +1,26 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { ApiService } from '../../../shared/services/api.service';
 import { LongTermCaseListItemResponse } from '../models/response/LongTermCaseListItemResponse';
 import { LongTermCaseDetailResponse } from '../models/response/LongTermCaseDetailResponse';
+import { LongTermCreateCaseResponse } from '../models/response/LongTermCreateCaseResponse';
 import { LongTermCaseCreateRequest } from '../models/request/LongTermCaseCreateRequest';
 import { LongTermCaseUpdateRequest } from '../models/request/LongTermCaseUpdateRequest';
-import { FoundPersonInfoRequest } from '../../../core/models/Cases.model';
-import { ApiResponse } from '../../../shared/models/responses/api-response.model';
-import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
-import { CreateCaseResponse } from '../../../shared/models/responses/create-case-response.model';
+import { FoundPersonInfoRequest } from '../../../core/models/cases.model';
 import { environment } from '../../../../environments/environment';
 import { LongTermCaseFilterRequest } from '../models/request/LongTermCaseFilterRequest';
+import { ApiResponse } from '../../../shared/models/responses/api-response.model';
+import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
+import { CacheService } from '../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../core/cache/cache.constants';
 
 @Injectable({
   providedIn: 'root',
 })
 export class LongTermCaseService extends ApiService {
   private readonly baseUrl = `${environment.baseUrl}/api/LongTermCase`;
+  private readonly cacheService = inject(CacheService);
 
   /**
    * Get all long-term cases with filters (public)
@@ -25,9 +29,15 @@ export class LongTermCaseService extends ApiService {
   getAllCases(
     filter: LongTermCaseFilterRequest,
   ): Observable<ApiResponse<PaginationResponse<LongTermCaseListItemResponse>>> {
-    return this.get<ApiResponse<PaginationResponse<LongTermCaseListItemResponse>>>(
-      `${this.baseUrl}/GetCases`,
-      filter as Record<string, any>,
+    const key = `LongTermCase_getAllCases_${JSON.stringify(filter)}`;
+    return this.cacheService.getOrSet(
+      key,
+      () => this.get<ApiResponse<PaginationResponse<LongTermCaseListItemResponse>>>(
+        `${this.baseUrl}/GetCases`,
+        filter,
+      ),
+      CACHE_TTL.LIST,
+      [CACHE_TAGS.LONG_TERM_CASES]
     );
   }
 
@@ -38,9 +48,15 @@ export class LongTermCaseService extends ApiService {
   adminGetAllCases(
     filter: LongTermCaseFilterRequest,
   ): Observable<ApiResponse<PaginationResponse<LongTermCaseDetailResponse>>> {
-    return this.get<ApiResponse<PaginationResponse<LongTermCaseDetailResponse>>>(
-      `${this.baseUrl}/Admin/GetCases`,
-      filter as Record<string, any>,
+    const key = `LongTermCase_adminGetAllCases_${JSON.stringify(filter)}`;
+    return this.cacheService.getOrSet(
+      key,
+      () => this.get<ApiResponse<PaginationResponse<LongTermCaseDetailResponse>>>(
+        `${this.baseUrl}/Admin/GetCases`,
+        filter,
+      ),
+      CACHE_TTL.LIST,
+      [CACHE_TAGS.LONG_TERM_CASES]
     );
   }
 
@@ -49,8 +65,14 @@ export class LongTermCaseService extends ApiService {
    * GET: /api/LongTermCase/GetCaseDetails/{id}
    */
   getCaseById(id: number): Observable<ApiResponse<LongTermCaseDetailResponse>> {
-    return this.get<ApiResponse<LongTermCaseDetailResponse>>(
-      `${this.baseUrl}/GetCaseDetails/${id}`,
+    const key = `LongTermCase_getCaseById_${id}`;
+    return this.cacheService.getOrSet(
+      key,
+      () => this.get<ApiResponse<LongTermCaseDetailResponse>>(
+        `${this.baseUrl}/GetCaseDetails/${id}`,
+      ),
+      CACHE_TTL.DETAILS,
+      [CACHE_TAGS.LONG_TERM_CASES]
     );
   }
 
@@ -59,8 +81,14 @@ export class LongTermCaseService extends ApiService {
    * GET: /api/LongTermCase/Admin/GetCaseDetails/{id}
    */
   adminGetCaseById(id: number): Observable<ApiResponse<LongTermCaseDetailResponse>> {
-    return this.get<ApiResponse<LongTermCaseDetailResponse>>(
-      `${this.baseUrl}/Admin/GetCaseDetails/${id}`,
+    const key = `LongTermCase_adminGetCaseById_${id}`;
+    return this.cacheService.getOrSet(
+      key,
+      () => this.get<ApiResponse<LongTermCaseDetailResponse>>(
+        `${this.baseUrl}/Admin/GetCaseDetails/${id}`,
+      ),
+      CACHE_TTL.DETAILS,
+      [CACHE_TAGS.LONG_TERM_CASES]
     );
   }
 
@@ -68,22 +96,18 @@ export class LongTermCaseService extends ApiService {
    * Create a new long-term case
    * POST: /api/LongTermCase/CreateCase?forceCreate=false
    * Content-Type: multipart/form-data
-   *
-   * If a cross-type duplicate is found, returns 200 with isCreated=false and
-   * matchedCases populated (nothing created). Call again with forceCreate=true
-   * to create anyway.
    */
   createCase(
     request: LongTermCaseCreateRequest,
     forceCreate = false,
-  ): Observable<ApiResponse<CreateCaseResponse>> {
+  ): Observable<ApiResponse<LongTermCreateCaseResponse>> {
     const formData = this.buildFormData(request);
-    return this.postFormData<ApiResponse<CreateCaseResponse>>(
+    return this.postFormData<ApiResponse<LongTermCreateCaseResponse>>(
       `${this.baseUrl}/CreateCase`,
       formData,
-      {
-        forceCreate,
-      },
+      { forceCreate },
+    ).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.LONG_TERM_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
     );
   }
 
@@ -94,7 +118,9 @@ export class LongTermCaseService extends ApiService {
    */
   updateCase(id: number, request: LongTermCaseUpdateRequest): Observable<ApiResponse<string>> {
     const formData = this.buildFormData(request);
-    return this.putFormData<ApiResponse<string>>(`${this.baseUrl}/UpdateCase/${id}`, formData);
+    return this.putFormData<ApiResponse<string>>(`${this.baseUrl}/UpdateCase/${id}`, formData).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.LONG_TERM_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
+    );
   }
 
   /**
@@ -102,7 +128,9 @@ export class LongTermCaseService extends ApiService {
    * PUT: /api/LongTermCase/Approve/{id}
    */
   approveCase(id: number): Observable<ApiResponse<string>> {
-    return this.put<ApiResponse<string>>(`${this.baseUrl}/Approve/${id}`, {});
+    return this.put<ApiResponse<string>>(`${this.baseUrl}/Approve/${id}`, {}).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.LONG_TERM_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
+    );
   }
 
   /**
@@ -114,6 +142,8 @@ export class LongTermCaseService extends ApiService {
       `${this.baseUrl}/Reject/${id}`,
       JSON.stringify(rejectionReason),
       { headers: { 'Content-Type': 'application/json' } },
+    ).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.LONG_TERM_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
     );
   }
 
@@ -122,7 +152,9 @@ export class LongTermCaseService extends ApiService {
    * DELETE: /api/LongTermCase/Delete/{id}
    */
   deleteCase(id: number): Observable<ApiResponse<string>> {
-    return this.delete<ApiResponse<string>>(`${this.baseUrl}/Delete/${id}`);
+    return this.delete<ApiResponse<string>>(`${this.baseUrl}/Delete/${id}`).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.LONG_TERM_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
+    );
   }
 
   /**
@@ -130,7 +162,9 @@ export class LongTermCaseService extends ApiService {
    * PUT: /api/LongTermCase/MarkAsFound/{id}
    */
   markAsFound(id: number, request: FoundPersonInfoRequest): Observable<ApiResponse<string>> {
-    return this.put<ApiResponse<string>>(`${this.baseUrl}/MarkAsFound/${id}`, request);
+    return this.put<ApiResponse<string>>(`${this.baseUrl}/MarkAsFound/${id}`, request).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.LONG_TERM_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
+    );
   }
 
   /**
@@ -138,20 +172,20 @@ export class LongTermCaseService extends ApiService {
    * DELETE: /api/LongTermCase/PermanentDeletion/{id}
    */
   permanentDelete(id: number): Observable<ApiResponse<string>> {
-    return this.delete<ApiResponse<string>>(`${this.baseUrl}/PermanentDeletion/${id}`);
+    return this.delete<ApiResponse<string>>(`${this.baseUrl}/PermanentDeletion/${id}`).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.LONG_TERM_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
+    );
   }
-  // في ملف الـ Service الخاص بك (مثلاً: case.service.ts)
-// تأكد أن الميثود تُرجع الـ ApiResponse مغلفاً للكود الداخلي
-createLongTermCase(data: FormData): Observable<ApiResponse<CreateCaseResponse>> {
-  return this.postFormData<ApiResponse<CreateCaseResponse>>(
-    `${this.baseUrl}/CreateCase`, // المسار الصحيح المعتمد في الخدمة
-    data
-  );
-}
-getMyCaseById(id: number) {
-  return this.http.get<ApiResponse<LongTermCaseDetailResponse>>(
-    `${environment.baseUrl}/api/LongTermCase/MyCaseDetails/${id}`
-  );
-}
 
+  getMyCaseById(id: number) {
+    const key = `LongTermCase_getMyCaseById_${id}`;
+    return this.cacheService.getOrSet(
+      key,
+      () => this.http.get<ApiResponse<LongTermCaseDetailResponse>>(
+        `${environment.baseUrl}/api/LongTermCase/MyCaseDetails/${id}`
+      ),
+      CACHE_TTL.DETAILS,
+      [CACHE_TAGS.LONG_TERM_CASES]
+    );
+  }
 }

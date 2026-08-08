@@ -1,5 +1,5 @@
 import { signal, WritableSignal } from '@angular/core';
-import { CasesFilterRequest } from '../../core/models/Cases.model';
+import { CasesFilterRequest } from '../../core/models/cases.model';
 export interface SearchValueMapping {
     fullName: string | null;
     caseCode: string | null;
@@ -115,6 +115,15 @@ export class CasesFilterState<T extends CasesFilterRequest = CasesFilterRequest>
         this.currentPage.set(1);
         if (onFetch) {
             onFetch();
+        }
+    }
+    restoreState(cachedFilter: T): void {
+        this.filter.set(cachedFilter);
+        if (cachedFilter.page) {
+            this.currentPage.set(cachedFilter.page);
+        }
+        if (cachedFilter.pageSize) {
+            this.pageSize.set(cachedFilter.pageSize);
         }
     }
     onPageChange(page: number, onFetch?: () => void): void {

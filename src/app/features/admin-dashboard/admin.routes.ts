@@ -7,7 +7,7 @@ export const ADMIN_ROUTES: Routes = [
     path: '',
     canActivate: [permissionGuard],
     data: { requiredPermission: Permissions.Cases.GetAll },
-    loadComponent: () => import('./pages/overview/overview').then((c) => c.Overview),
+    loadComponent: () => import('../../core/layouts/admin-layout/admin-layout').then((c) => c.AdminLayoutComponent),
     children: [
       {
         path: '',
@@ -65,8 +65,8 @@ export const ADMIN_ROUTES: Routes = [
         data: { requiredPermission: Permissions.Donations.GetDonations },
         title: 'إدارة التبرعات | لقاء',
         loadComponent: () =>
-          import('./pages/donations/pages/donation-list/donation-admin-list.component').then(
-            (m) => m.DonationAdminListComponent,
+          import('./pages/donations-list/donations-list.component').then(
+            (m) => m.DonationsListComponent,
           ),
       },
       {
@@ -75,7 +75,7 @@ export const ADMIN_ROUTES: Routes = [
         data: { requiredPermission: Permissions.Chat.GetAll },
         title: 'إدارة المحادثات | لقاء',
         loadComponent: () =>
-          import('../chat/pages/admin-chats/admin-chats').then((m) => m.AdminChats),
+          import('./pages/chats/chats').then((m) => m.AdminChats),
       },
       {
         path: 'chats/:chatId',

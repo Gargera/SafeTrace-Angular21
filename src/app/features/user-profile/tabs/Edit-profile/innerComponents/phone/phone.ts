@@ -10,14 +10,18 @@ import {
 } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import { SnackbarService } from '../../../../../../core/services/toast.service';
+import { SnackbarService } from '../../../../../../shared/services/toast.service';
 import { GetUserInfoDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
+import { FormField } from '../../../../../../shared/components/form-field/form-field';
+import { ButtonComponent } from '../../../../../../shared/components/button/button';
+import { egyptianPhone } from '../../../../../../shared/validators/egyptian-phone.validator';
+import { extractErrorMessage } from '../../../../../../shared/helper/error.helper';
 
 @Component({
   selector: 'app-phone',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, FormField, ButtonComponent],
   templateUrl: './phone.html',
 })
 export class Phone implements OnChanges, OnDestroy {
@@ -36,7 +40,7 @@ export class Phone implements OnChanges, OnDestroy {
   readonly isSavingPhone = signal(false);
 
   readonly phoneForm: FormGroup = this.#fb.group({
-    phoneNumber: ['', [Validators.required, Validators.pattern(/^01[0125][0-9]{8}$/)]],
+    phoneNumber: ['', [Validators.required, egyptianPhone()]],
   });
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -108,7 +112,7 @@ export class Phone implements OnChanges, OnDestroy {
         },
         error: (err) => {
           this.isSavingPhone.set(false);
-          const msg = err?.error?.message ?? 'حدث خطأ اثناء تغيير رقم الهاتف';
+          const msg = err?.error?.message || extractErrorMessage(err, 'حدث خطأ اثناء تغيير رقم الهاتف');
           this.#snackbar.error(msg);
         },
       });
