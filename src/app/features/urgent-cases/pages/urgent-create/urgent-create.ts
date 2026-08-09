@@ -1,6 +1,6 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, DestroyRef, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -22,19 +22,42 @@ import { DuplicateInfoDialogComponent } from '../../../../shared/components/case
 import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
-// Shared validators
+
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
-import { pastDate } from '../../../../shared/validators/past-date.validator';
-import { urgentEventDate, toDatetimeLocalString } from '../../../../shared/validators/urgent-event-date.validator';
+import { urgentEventDate, toDatetimeLocalString, URGENT_EVENT_MAX_AGE_HOURS } from '../../../../shared/validators/urgent-event-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
+import { validCity } from '../../../../shared/validators/city.validator';
+import { validGovernorate } from '../../../../shared/validators/governorate.validator';
 import { ImageService } from '../../../../shared/services/image.service';
-
+import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 
 type Step = 1 | 2 | 3;
+
+const DRAFT_CACHE_KEY = 'UrgentCreate_Draft';
+
+interface UrgentCreateDraft {
+  formValue: any;
+  currentStep: Step;
+  showForceCreatePopup: boolean;
+  showDuplicateInfoDialog: boolean;
+  currentDuplicateDecision: DuplicateDecision;
+  isBlockedDuplicate: boolean;
+  matchedCases: MatchedCaseResponse[];
+  existingCaseType: CaseType | null;
+  selectedLat: number | null;
+  selectedLng: number | null;
+  selectedAddress: string;
+  isMapModalOpen: boolean;
+  primaryFile?: File | null;
+  additionalPhotos?: File[];
+  videoFile?: File | null;
+}
 
 @Component({
   selector: 'app-urgent-create',
@@ -55,16 +78,17 @@ type Step = 1 | 2 | 3;
   styleUrls: ['./urgent-create.css'],
   templateUrl: './urgent-create.html',
 })
-export class UrgentCreate {
+export class UrgentCreate implements OnInit {
   private fb = inject(FormBuilder);
   private imageService = inject(ImageService);
   private destroyRef = inject(DestroyRef);
+  private cacheService = inject(CacheService);
 
-  // Allowed datetime range for urgent cases (last 6 hours)
+  // Allowed datetime range for urgent cases (last 24 hours)
   readonly minEventDate = computed(() => {
     const now = new Date();
-    const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
-    return toDatetimeLocalString(sixHoursAgo);
+    const limitAgo = new Date(now.getTime() - URGENT_EVENT_MAX_AGE_HOURS * 60 * 60 * 1000);
+    return toDatetimeLocalString(limitAgo);
   });
 
   readonly maxEventDate = computed(() => {
@@ -92,6 +116,7 @@ export class UrgentCreate {
   additionalPhotoPreviews = signal<string[]>([]);
   additionalPhotosError = signal<string | null>(null);
   videoFile = signal<File | null>(null);
+  videoError = signal<string | null>(null);
 
   selectedLat = signal<number | null>(null);
   selectedLng = signal<number | null>(null);
@@ -136,8 +161,8 @@ export class UrgentCreate {
     sName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
     tName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
     lName: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
-    // Age — required, 0-120
-    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(120)]],
+    // Age — required, 1-120 (0 is not a valid age)
+    age: [null as number | null, [Validators.required, Validators.min(1), Validators.max(120)]],
     // Gender — required, valid enum
     gender: ['' as Gender | '', [Validators.required, validEnum(Gender)]],
     // Relation — required, valid enum (Urgent Create only)
@@ -146,12 +171,12 @@ export class UrgentCreate {
     communicationPhone: ['', [egyptianPhone(), Validators.maxLength(15)]],
     // Description — optional, max 2000
     description: ['', [Validators.maxLength(2000)]],
-    // Location — required, Arabic only, 2-100 chars
-    government: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
-    city: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
+    // Location — required, valid governorate, 2-100 chars
+    government: ['', [Validators.required, validGovernorate(), Validators.minLength(2), Validators.maxLength(100)]],
+    city: ['', [Validators.required]],
     // Street — required, NOT Arabic-only, max 200
     street: ['', [Validators.required, Validators.maxLength(200)]],
-    // EventDate — required, recent (within 6 hours)
+    // EventDate — required, within last 24 hours
     eventDate: ['', [Validators.required, urgentEventDate()]],
   });
 
@@ -175,7 +200,37 @@ export class UrgentCreate {
 
   availableCities = signal<string[]>([]);
 
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      // Only cache if we didn't just submit successfully
+      if (this.form.dirty || this.currentStep > 1 || this.matchedCases().length > 0 || this.primaryFile()) {
+        const draft: UrgentCreateDraft = {
+          formValue: this.form.getRawValue(),
+          currentStep: this.currentStep,
+          showForceCreatePopup: this.showForceCreatePopup(),
+          showDuplicateInfoDialog: this.showDuplicateInfoDialog(),
+          currentDuplicateDecision: this.currentDuplicateDecision(),
+          isBlockedDuplicate: this.isBlockedDuplicate(),
+          matchedCases: this.matchedCases(),
+          existingCaseType: this.existingCaseType(),
+          selectedLat: this.selectedLat(),
+          selectedLng: this.selectedLng(),
+          selectedAddress: this.selectedAddress(),
+          isMapModalOpen: this.isMapModalOpen(),
+          primaryFile: this.primaryFile(),
+          additionalPhotos: this.additionalPhotos(),
+          videoFile: this.videoFile()
+        };
+        this.cacheService.set(DRAFT_CACHE_KEY, draft, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+      }
+    });
+  }
+
   ngOnInit(): void {
+    // Set city validator here (after form is initialized) to avoid circular reference
+    this.form.get('city')?.setValidators([Validators.required, validCity(() => this.form.get('government')?.value ?? null)]);
+    this.form.get('city')?.updateValueAndValidity();
+
     this.form.get('government')?.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((gov) => {
@@ -185,7 +240,44 @@ export class UrgentCreate {
         if (currentCity && !cities.includes(currentCity)) {
           this.form.get('city')?.setValue('');
         }
+        // Revalidate city whenever governorate changes
+        this.form.get('city')?.updateValueAndValidity();
       });
+
+    const draft = this.cacheService.get<UrgentCreateDraft>(DRAFT_CACHE_KEY);
+    if (draft) {
+      this.form.patchValue(draft.formValue);
+      this.currentStep = draft.currentStep;
+      this.showForceCreatePopup.set(draft.showForceCreatePopup);
+      this.showDuplicateInfoDialog.set(draft.showDuplicateInfoDialog);
+      this.currentDuplicateDecision.set(draft.currentDuplicateDecision);
+      this.isBlockedDuplicate.set(draft.isBlockedDuplicate);
+      this.matchedCases.set(draft.matchedCases);
+      this.existingCaseType.set(draft.existingCaseType);
+      
+      this.selectedLat.set(draft.selectedLat);
+      this.selectedLng.set(draft.selectedLng);
+      this.selectedAddress.set(draft.selectedAddress);
+
+      if (draft.selectedLat !== null && draft.selectedLng !== null) {
+          this.externalLocation.set({ lat: draft.selectedLat, lng: draft.selectedLng });
+      }
+
+      this.isMapModalOpen.set(draft.isMapModalOpen || false);
+
+      if (draft.primaryFile) {
+        this.primaryFile.set(draft.primaryFile);
+        this.croppedPrimaryImagePreview.set(URL.createObjectURL(draft.primaryFile));
+      }
+      if (draft.additionalPhotos && draft.additionalPhotos.length > 0) {
+        this.additionalPhotos.set(draft.additionalPhotos);
+        this.additionalPhotoPreviews.set(draft.additionalPhotos.map(f => URL.createObjectURL(f)));
+      }
+      if (draft.videoFile) {
+        this.videoFile.set(draft.videoFile);
+      }
+
+    }
   }
 
   openMapModal(): void {
@@ -342,9 +434,30 @@ export class UrgentCreate {
     this.additionalPhotoPreviews.update((p) => p.filter((_, i) => i !== index));
   }
 
-  onVideoSelected(event: Event): void {
-    this.videoFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
+ onVideoSelected(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0] ?? null;
+
+  if (!file) {
+    this.videoFile.set(null);
+    return;
   }
+
+  const validation = validateVideoFile(file, 50);
+
+  if (!validation.valid) {
+    this.videoFile.set(null);
+    this.videoError.set(validation.errorMessage ?? 'الملف غير صالح.');
+
+    // مهم عشان لو اختار نفس الملف تاني بعد الرفض
+    input.value = '';
+
+    return;
+  }
+
+  this.videoError.set(null);
+  this.videoFile.set(file);
+}
 
   // ─────────────────────────────────────────────────────────────
   // Submit
@@ -353,13 +466,20 @@ export class UrgentCreate {
     if (this.isSubmitting()) return;
     const primary = this.primaryFile();
 
+    if (forceCreate && !this.pendingRequest && !primary) {
+      this.errorMsg.set('يرجى إعادة إرفاق الصورة الأساسية قبل المتابعة.');
+      this.showForceCreatePopup.set(false);
+      this.showDuplicateInfoDialog.set(false);
+      return;
+    }
+
     if (
       !forceCreate &&
       (this.form.invalid || !primary || this.selectedLat() === null)
     ) {
       this.form.markAllAsTouched();
       if (!primary) {
-        this.errorMsg.set('برجاء إضافة وتأطير الصورة الأساسية للشخص.');
+        this.errorMsg.set('برجاء إضافة الصورة الأساسية للشخص وتحديد الوجه.');
       } else if (this.selectedLat() === null) {
         this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
       }
@@ -425,9 +545,10 @@ export class UrgentCreate {
             return;
           }
 
+          this.cacheService.remove(DRAFT_CACHE_KEY);
           this.showForceCreatePopup.set(false);
           this.showDuplicateInfoDialog.set(false);
-          this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
+          this.snackbar.success('تم إنشاء الحالة بنجاح.');
           this.router.navigate(['/urgent']);
         },
         error: (err: unknown) => {

@@ -134,8 +134,12 @@
   </div>
 
   @if (isLoading()) {
-    <div class="mt-2xl flex flex-col items-center justify-center">
-      <app-loading-spinner title="جارٍ جلب النتائج..."></app-loading-spinner>
+    <div class="mt-2xl">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <app-case-card-skeleton></app-case-card-skeleton>
+        }
+      </div>
     </div>
   }
 

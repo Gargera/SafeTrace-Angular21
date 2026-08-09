@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
@@ -11,15 +12,20 @@ import { DonationAdminListDto } from '../models/responses/donation-admin-list.dt
 import { DonationUserListDto } from '../models/responses/donation-user-list.dto';
 import { AdminDonationStatisticsDto } from '../models/responses/admin-donation-statistics.dto';
 import { CreateDonationResponseDto } from '../models/responses/create-donation-responseDto';
+import { CacheService } from '../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../core/cache/cache.constants';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DonationService extends ApiService {
   private readonly api = `${environment.apiBaseUrl}/Payment`;
+  private readonly cacheService = inject(CacheService);
 
   createDonation(body: CreateDonationDto): Observable<ApiResponse<CreateDonationResponseDto>> {
-    return this.post<ApiResponse<CreateDonationResponseDto>>(`${this.api}/create-donation`, body);
+    return this.post<ApiResponse<CreateDonationResponseDto>>(`${this.api}/create-donation`, body).pipe(
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.DONATIONS]))
+    );
   }
 
   getMyDonations(
@@ -27,7 +33,13 @@ export class DonationService extends ApiService {
     pageSize: number = 10,
   ): Observable<PaginationResponse<DonationUserListDto>> {
     const params = { Page: pageNumber, PageSize: pageSize };
-    return this.get<PaginationResponse<DonationUserListDto>>(`${this.api}/get-my-donations`, params);
+    const key = `Donations_getMyDonations_${pageNumber}_${pageSize}`;
+    return this.cacheService.getOrSet(
+      key,
+      () => this.get<PaginationResponse<DonationUserListDto>>(`${this.api}/get-my-donations`, params),
+      CACHE_TTL.LIST,
+      [CACHE_TAGS.DONATIONS]
+    );
   }
 
   getDonations(
@@ -46,10 +58,22 @@ export class DonationService extends ApiService {
       params.Status = filter.paymentStatus;
     }
 
-    return this.get<PaginationResponse<DonationAdminListDto>>(`${this.api}/get-donations`, params);
+    const key = `Donations_getDonations_${JSON.stringify(params)}`;
+    return this.cacheService.getOrSet(
+      key,
+      () => this.get<PaginationResponse<DonationAdminListDto>>(`${this.api}/get-donations`, params),
+      CACHE_TTL.LIST,
+      [CACHE_TAGS.DONATIONS]
+    );
   }
 
   getDonationStatistics(): Observable<ApiResponse<AdminDonationStatisticsDto>> {
-    return this.get<ApiResponse<AdminDonationStatisticsDto>>(`${this.api}/admin/statistics`);
+    const key = `Donations_getDonationStatistics`;
+    return this.cacheService.getOrSet(
+      key,
+      () => this.get<ApiResponse<AdminDonationStatisticsDto>>(`${this.api}/admin/statistics`),
+      CACHE_TTL.LIST,
+      [CACHE_TAGS.DONATIONS]
+    );
   }
 }

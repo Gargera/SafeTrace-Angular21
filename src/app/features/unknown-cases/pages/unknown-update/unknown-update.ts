@@ -1,6 +1,6 @@
 import { Component, inject, signal, ChangeDetectionStrategy, OnInit, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
@@ -20,11 +20,15 @@ import { arabicText } from '../../../../shared/validators/arabic-text.validator'
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
+import { validCity } from '../../../../shared/validators/city.validator';
+import { validGovernorate } from '../../../../shared/validators/governorate.validator';
 import { ImageService } from '../../../../shared/services/image.service';
 
 import { CommonModule } from '@angular/common';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
+import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
+import { UpdateFormSkeletonComponent } from '../../../../shared/components/skeletons/update-form-skeleton/update-form-skeleton.component';
 
 type Step = 1 | 2 | 3;
 
@@ -39,6 +43,7 @@ type Step = 1 | 2 | 3;
     CardComponent,
     HeaderComponent,
     ConfirmationModalComponent,
+    UpdateFormSkeletonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./unknown-update.css'],
@@ -75,6 +80,7 @@ export class UnknownUpdate implements OnInit {
 
   existingVideoUrl = signal<string | null>(null);
   videoFile = signal<File | null>(null);
+  videoError = signal<string | null>(null);
 
   readonly genders = Gender;
   readonly governorates = EGYPT_GOVERNORATES;
@@ -100,7 +106,7 @@ export class UnknownUpdate implements OnInit {
     tName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
     lName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
     // Age — required, 0-120
-    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(120)]],
+    age: [null as number | null, [Validators.required, Validators.min(1), Validators.max(120)]],
     // Gender — required, valid enum
     gender: ['' as Gender | '', [Validators.required, validEnum(Gender)]],
     // Phone — optional, Egyptian format, max 15
@@ -108,8 +114,8 @@ export class UnknownUpdate implements OnInit {
     // Description — optional, max 2000
     description: ['', [Validators.maxLength(2000)]],
     // Location — required, Arabic only, 2-100
-    government: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
-    city: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
+    government: ['', [Validators.required, validGovernorate(), Validators.minLength(2), Validators.maxLength(100)]],
+    city: ['', [Validators.required]],
     // Street — required, NOT Arabic-only, max 200
     street: ['', [Validators.required, Validators.maxLength(200)]],
     // EventDate — required, cannot be future
@@ -132,6 +138,9 @@ export class UnknownUpdate implements OnInit {
   ngOnInit(): void {
     this.caseId = Number(this.route.snapshot.paramMap.get('id'));
 
+    this.form.get('city')?.setValidators([Validators.required, validCity(() => this.form.get('government')?.value ?? null)]);
+    this.form.get('city')?.updateValueAndValidity();
+
     this.form.get('government')?.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((gov) => {
@@ -141,6 +150,7 @@ export class UnknownUpdate implements OnInit {
         if (currentCity && !cities.includes(currentCity)) {
           this.form.get('city')?.setValue('');
         }
+        this.form.get('city')?.updateValueAndValidity();
       });
 
     this.loadCase();
@@ -298,9 +308,31 @@ export class UnknownUpdate implements OnInit {
     this.newPhotoPreviews.update((p) => p.filter((_, i) => i !== index));
   }
 
-  onVideoSelected(event: Event): void {
-    this.videoFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
+  
+onVideoSelected(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0] ?? null;
+
+  if (!file) {
+    return;
   }
+
+  const validation = validateVideoFile(file, 50);
+
+  if (!validation.valid) {
+    this.videoFile.set(null);
+    this.videoError.set(
+      validation.errorMessage ?? 'الفيديو غير صالح.'
+    );
+
+    input.value = '';
+    return;
+  }
+
+  this.videoError.set(null);
+  this.videoFile.set(file);
+}
+
 
   onSubmit(): void {
     if (this.isSubmitting()) return;

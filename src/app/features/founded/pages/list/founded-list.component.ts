@@ -8,7 +8,7 @@ import { CaseType } from '../../../../shared/enums/case-type';
 import { Gender } from '../../../../shared/enums/gender';
 import { environment } from '../../../../../environments/environment';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
-import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
+import { CaseSkeletonGridComponent } from '../../../../shared/components/skeletons/case-skeleton-grid/case-skeleton-grid.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { PaginationComponent } from '../../../../shared/components/cases-components/case-pagination/case-pagination.component';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
@@ -19,7 +19,13 @@ import { FoundedHeaderQueryDTO } from '../../models/requests/founded-header-quer
 import { FoundPersonListItemDto } from '../../models/responses/found-person-list-item-dto';
 import { FoundedFilterState } from '../../../../shared/helper/cases-filter-state';
 import { SnackbarService } from '../../../../shared/services/toast.service';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+
+import { ButtonComponent } from '../../../../shared/components/button/button';
+
+const UI_STATE_CACHE_KEY = 'FoundedList_UI_State';
 
 @Component({
   selector: 'app-founded-list',
@@ -39,6 +45,7 @@ import { extractErrorMessage } from '../../../../shared/helper/case-error.helper
 export class FoundedListComponent implements OnInit {
   private readonly foundedService = inject(FoundedService);
   private readonly router = inject(Router);
+  private readonly cacheService = inject(CacheService);
   private readonly snackbar = inject(SnackbarService);
   private readonly destroyRef = inject(DestroyRef);
   public readonly environment = environment;
@@ -54,10 +61,42 @@ export class FoundedListComponent implements OnInit {
   pageSize = this.filterState.pageSize;
   isLoading = this.filterState.loading;
   hasError = this.filterState.hasError;
+  readonly filter = this.filterState.filter;
 
   totalPages = computed(() => Math.ceil(this.totalCount() / this.pageSize()));
 
+  readonly hasActiveFilters = computed(() => {
+    const f = this.filter();
+    return !!(
+      f.fullName ||
+      f.gender ||
+      f.minAge ||
+      f.maxAge ||
+      f.caseType
+    );
+  });
+
+  resetFilters(): void {
+    this.onFilterReset();
+  }
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set(
+        UI_STATE_CACHE_KEY,
+        { filter: this.filterState.filter() },
+        CACHE_TTL.UI_STATE,
+        [CACHE_TAGS.UI_STATE]
+      );
+    });
+  }
+
   ngOnInit(): void {
+    const cachedState = this.cacheService.get<{ filter: CasesFilterRequest }>(UI_STATE_CACHE_KEY);
+    if (cachedState) {
+      this.filterState.restoreState(cachedState.filter);
+    }
+
     this.setupLoadPipeline();
     this.load();
   }
@@ -93,7 +132,7 @@ export class FoundedListComponent implements OnInit {
     return {
       id: person.id,
       caseCode: '',
-      caseType: CaseType.Unknown,
+      caseType: person.caseType,
       status: CaseStatus.Found,
       fName: person.fullName,
       sName: null,

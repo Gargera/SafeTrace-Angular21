@@ -4,10 +4,7 @@
   <app-card extraClass="overflow-hidden rounded-2xl border border-outline-variant/30 bg-white shadow-sm">
 
     @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center p-12 text-on-surface-variant">
-      <span class="material-symbols-outlined animate-spin text-4xl text-secondary">progress_activity</span>
-      <p class="mt-3 text-sm">جاري تحميل بيانات البلاغ...</p>
-    </div>
+      <app-update-form-skeleton></app-update-form-skeleton>
     } @else {
 
     <!-- 1. Header -->
@@ -226,14 +223,7 @@
             getFieldError('street') }}</p> }
         </div>
 
-        <!-- Event Date -->
-        <div>
-          <app-form-field label="تاريخ ووقت الحادث *" formControlName="eventDate" type="datetime-local"
-            [min]="minEventDate()" [max]="maxEventDate()"
-            [extraClass]="isInvalid('eventDate') ? 'border-error' : ''"></app-form-field>
-          @if (isInvalid('eventDate')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
-            getFieldError('eventDate') }}</p> }
-        </div>
+
 
         <!-- Map Location Picker Section -->
         <div class="flex flex-col gap-3 rounded-2xl border border-outline-variant/40 bg-surface-bright p-5 shadow-2xs">
@@ -325,6 +315,9 @@
           <label class="mb-2 block text-sm font-medium text-on-surface-variant">
             استبدال الصورة الأساسية <span class="font-normal text-on-surface-variant/70">(اختياري)</span>
           </label>
+
+          <!-- 1. Upload Dropzone -->
+          @if (!cropImageEvent() && !croppedPrimaryImagePreview()) {
           <div
             class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
             [class.border-secondary]="!!newPrimaryImage()" [class.bg-surface-container-low]="!!newPrimaryImage()"
@@ -336,17 +329,42 @@
               <span class="material-symbols-outlined text-3xl"
                 [ngClass]="newPrimaryImage() ? 'text-secondary' : 'text-outline'">add_photo_alternate</span>
             </div>
-            <p class="text-sm font-bold text-on-surface">{{ newPrimaryImage() ? 'تم اختيار صورة أساسية جديدة' : 'اضغط
-              لاختيار صورة أساسية جديدة' }}</p>
+            <p class="text-sm font-bold text-on-surface">{{ newPrimaryImage() ? 'تم اختيار صورة أساسية جديدة' : 'اضغط لاختيار صورة أساسية جديدة' }}</p>
+            <p class="mt-1 text-xs text-on-surface-variant/70">JPG / JPEG / PNG / WebP — حتى 5 MB</p>
           </div>
-          @if (newPrimaryPreview()) {
-          <div
-            class="relative mt-3 h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
-            <img [src]="newPrimaryPreview()" alt="صورة أساسية جديدة" class="h-full w-full object-cover" />
-            <button type="button" (click)="clearNewPrimary()"
-              class="absolute top-1 right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110">
-              <span class="material-symbols-outlined text-xs">close</span>
-            </button>
+          @if (newPrimaryError()) { <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ newPrimaryError() }}</p> }
+          }
+
+          <!-- 2. Image Cropper -->
+          @if (cropImageEvent()) {
+          <div class="rounded-2xl bg-inverse-surface p-5 text-center text-inverse-on-surface shadow-md">
+            <p class="mb-3 text-sm font-medium">حرك المربع لتحديد الوجه بالكامل داخل الإطار:</p>
+            <image-cropper [imageChangedEvent]="cropImageEvent()" [maintainAspectRatio]="true" [aspectRatio]="4 / 3"
+              format="jpeg" (imageCropped)="onImageCropped($event)">
+            </image-cropper>
+            <div class="mt-4 flex justify-center gap-3">
+              <app-button type="button" variant="primary" (onClick)="confirmCrop()" extraClass="px-5 py-2 text-sm">
+                <span class="material-symbols-outlined text-base">check</span> اعتماد الصورة
+              </app-button>
+              <app-button type="button" variant="secondary" (onClick)="cancelCrop()" extraClass="px-5 py-2 text-sm">
+                إلغاء
+              </app-button>
+            </div>
+          </div>
+          }
+
+          <!-- 3. Cropped Preview -->
+          @if (croppedPrimaryImagePreview() && !cropImageEvent()) {
+          <div class="flex items-center gap-4 rounded-2xl border border-outline-variant/50 bg-surface-container-low p-4 shadow-xs">
+            <img [src]="croppedPrimaryImagePreview()"
+              class="h-20 w-26.25 rounded-xl border border-outline-variant/60 object-cover shadow-xs transition-transform duration-200 hover:scale-105" />
+            <div class="flex-1">
+              <p class="mb-1 text-sm font-semibold text-on-tertiary-container">✓ تم تحديد الصورة وتأطيرها بنجاح</p>
+              <button type="button" (click)="reCropPhoto()"
+                class="p-0 text-xs text-secondary font-medium underline hover:opacity-80 transition">
+                إعادة ضبط وتعديل المربع
+              </button>
+            </div>
           </div>
           }
         </div>
@@ -385,30 +403,84 @@
         </div>
 
         <!-- Video -->
-        <div>
-          <label class="mb-2 block text-sm font-medium text-on-surface-variant">
-            فيديو <span class="font-normal text-on-surface-variant/70">(اختياري)</span>
-          </label>
-          @if (existingVideoUrl() && !videoFile()) {
+          <div>
+        <label class="mb-2 block text-sm font-medium text-on-surface-variant">
+          فيديو <span class="font-normal text-on-surface-variant/70">(اختياري)</span>
+        </label>
+
+        @if (existingVideoUrl() && !videoFile()) {
           <div
-            class="mb-3 flex items-center gap-2 rounded-2xl border border-secondary/20 bg-surface-container-low p-4 text-xs font-medium text-on-secondary-fixed-variant shadow-2xs">
-            <span class="material-symbols-outlined text-secondary">videocam</span>
-            <span>يوجد فيديو مرفوع بالفعل. اختر ملف جديد لاستبداله.</span>
-          </div>
-          }
-          <div
-            class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
-            [class.border-secondary]="!!videoFile()" [class.bg-surface-container-low]="!!videoFile()"
-            (click)="videoInput.click()">
-            <input #videoInput type="file" accept="video/*" class="hidden" (change)="onVideoSelected($event)" />
-            <div
-              class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
-              <span class="material-symbols-outlined text-3xl"
-                [ngClass]="videoFile() ? 'text-secondary' : 'text-outline'">videocam</span>
+            class="mb-3 flex items-center justify-between gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-low p-3.5">
+
+            <div class="flex min-w-0 items-center gap-2">
+              <span class="material-symbols-outlined shrink-0 text-lg text-secondary">
+                videocam
+              </span>
+
+              <span class="truncate text-xs font-medium text-on-surface">
+                يوجد فيديو حالي مرفوع
+              </span>
             </div>
-            <p class="text-sm font-bold text-on-surface">{{ videoFile()?.name ?? 'رفع فيديو' }}</p>
+
+            <a
+              [href]="existingVideoUrl()"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="shrink-0 text-xs font-semibold text-secondary underline underline-offset-2 transition-opacity hover:opacity-80">
+              مشاهدة الفيديو
+            </a>
           </div>
+        }
+
+        <div
+          class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60
+                bg-surface-bright p-6 text-center shadow-2xs
+                transition-all duration-200
+                hover:-translate-y-0.5 hover:border-secondary
+                hover:bg-surface-container-low hover:shadow-xs"
+          [class.border-secondary]="!!videoFile()"
+          [class.bg-surface-container-low]="!!videoFile()"
+          (click)="videoInput.click()">
+
+          <input
+            #videoInput
+            type="file"
+            accept=".mp4,.mov,.webm,video/mp4,video/quicktime,video/webm"
+            class="hidden"
+            (change)="onVideoSelected($event)"
+          />
+
+          <div
+            class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center
+                  rounded-2xl bg-secondary/10 text-secondary
+                  transition-transform duration-200 group-hover:scale-110">
+
+            <span
+              class="material-symbols-outlined text-3xl"
+              [ngClass]="videoFile() ? 'text-secondary' : 'text-outline'">
+              videocam
+            </span>
+          </div>
+
+          <p class="text-sm font-bold text-on-surface">
+            {{ videoFile()?.name ?? 'استبدال / رفع فيديو' }}
+          </p>
+
+          <p class="mt-1 text-xs text-on-surface-variant/70">
+            MP4 / MOV / WebM — حتى 50 MB
+          </p>
         </div>
+
+        @if (videoError()) {
+          <p class="mt-1.5 flex items-center gap-1 text-xs text-error">
+            <span class="material-symbols-outlined text-sm">
+              error
+            </span>
+
+            {{ videoError() }}
+          </p>
+        }
+          </div>
       </div>
       }
 

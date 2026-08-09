@@ -117,15 +117,11 @@
 
 <!-- Table -->
 <section class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75">
-  @if (loading()) {
-  <app-loading-spinner
-    title="جارِ تحميل التبرعات..."
-    [fullscreen]="false"
-    containerClass="absolute inset-0 bg-white/60 flex items-center justify-center z-10"
-  ></app-loading-spinner>
-  }
+  @if (loading() && donations().length === 0) {
+    <app-table-skeleton [rows]="10"></app-table-skeleton>
+  } @else {
 
-  <div class="overflow-x-auto">
+  <div class="w-full max-w-full overflow-x-auto" [class.opacity-50]="loading()" [class.pointer-events-none]="loading()">
     <table class="w-full text-right border-collapse whitespace-nowrap">
       <thead>
         <tr class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant">
@@ -191,9 +187,10 @@
             <tr>
               <td colspan="8" class="py-xl">
                 <app-empty-state
-                  title="لا توجد تبرعات"
-                  message="لم يتم العثور على أي تبرعات تطابق معايير البحث الحالية."
-                ></app-empty-state>
+                  [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد تبرعات'"
+                  [message]="hasActiveFilters() ? 'لم نتمكن من العثور على تبرعات تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم تقديم أي تبرعات حتى الآن.'"
+                >
+                </app-empty-state>
               </td>
             </tr>
           }
@@ -201,6 +198,7 @@
       </tbody>
     </table>
   </div>
+  }
 
   <!-- Pagination -->
   @if (totalPages() > 1) {
@@ -220,7 +218,7 @@
 
 <!-- Message Modal -->
 @if (selectedMessage(); as msg) {
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" (click)="closeMessage()">
+<div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" (click)="closeMessage()">
   <div class="w-full max-w-120 rounded-3xl border border-outline-variant/20 bg-surface shadow-2xl animate-scale-in flex flex-col overflow-hidden" (click)="$event.stopPropagation()">
     
     <div class="px-6 pt-10 pb-8 flex flex-col items-center text-center">

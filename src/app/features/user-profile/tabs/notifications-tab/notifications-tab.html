@@ -1,37 +1,29 @@
-<div class="scroll-wrapper">
-  <div
-    #scrollContainer
-    class="scrollable p-lg h-125 md:h-175 overflow-y-auto space-y-md"
-    dir="rtl"
-    (scroll)="onScroll($event)"
-  >
-    <!-- ── Header ─────────────────────────────────────────────────────────── -->
-    <div class="flex justify-between items-center">
-      <div class="flex items-center gap-sm">
-        <h3 class="text-label-md font-bold text-on-surface">الإشعارات</h3>
-        @if (notificationService.totalCount() > 0) {
-          <span class="text-label-sm text-on-surface-variant">
-            ({{ notificationService.totalCount() }})
-          </span>
-        }
-      </div>
-      @if (notificationService.hasUnread()) {
-        <button
-          (click)="notificationService.markAllAsRead()"
-          class="text-label-sm text-secondary hover:underline transition-colors"
-        >
-          تحديد الكل كمقروء
-        </button>
+<div class="p-lg space-y-md" dir="rtl">
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="flex justify-between items-center pb-2">
+    <div class="flex items-center gap-sm">
+      <h3 class="text-label-md font-bold text-on-surface">الإشعارات</h3>
+      @if (notificationService.totalCount() > 0) {
+        <span class="text-label-sm text-on-surface-variant">
+          ({{ notificationService.totalCount() }})
+        </span>
       }
     </div>
+    @if (notificationService.hasUnread()) {
+      <button
+        (click)="notificationService.markAllAsRead()"
+        class="text-label-sm text-secondary hover:underline transition-colors"
+      >
+        تحديد الكل كمقروء
+      </button>
+    }
+  </div>
+
+  <div class="notifications-scroll-container" (scroll)="onScroll($event)">
 
     <!-- ── Loading ────────────────────────────────────────────────────────── -->
-    @if (notificationService.isLoading()) {
-      <div class="flex justify-center py-xl">
-        <span class="material-symbols-outlined text-secondary animate-spin text-[32px]">
-          progress_activity
-        </span>
-      </div>
+    @if (notificationService.isLoading() && notificationService.notifications().length === 0) {
+      <app-notification-skeleton [items]="6"></app-notification-skeleton>
     }
 
     <!-- ── Empty ──────────────────────────────────────────────────────────── -->
@@ -117,6 +109,11 @@
         }
       </div>
       <!-- ── Load More ───────────────────────────────────────────────────── -->
+      @if (notificationService.isLoadingMore()) {
+        <div class="my-4">
+          <app-notification-skeleton [items]="2"></app-notification-skeleton>
+        </div>
+      }
 
       <p class="text-center text-label-sm text-on-surface-variant mt-sm">
         تم عرض {{ notificationService.notifications().length }}
@@ -127,7 +124,7 @@
     }
 
     @if (!notificationService.hasNextPage() && notificationService.notifications().length > 0) {
-      <p class="text-center text-label-sm text-on-surface-variant pt-lg">تم عرض جميع الإشعارات</p>
+      <p class="text-center text-label-sm text-on-surface-variant pt-lg pb-4">تم عرض جميع الإشعارات</p>
     }
   </div>
 </div>

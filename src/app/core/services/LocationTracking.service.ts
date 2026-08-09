@@ -1,5 +1,4 @@
-import { Injectable, DestroyRef, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Injectable, OnDestroy, inject, signal } from '@angular/core';
 import { EMPTY, Subscription, interval } from 'rxjs';
 import { catchError, finalize, switchMap } from 'rxjs/operators';
 
@@ -13,10 +12,9 @@ const LOCATION_CHANGE_THRESHOLD = 0.0001;
 @Injectable({
   providedIn: 'root',
 })
-export class LocationTrackingService {
+export class LocationTrackingService implements OnDestroy {
   private readonly profileService = inject(ProfileService);
   private readonly currentLocationService = inject(CurrentLocationService);
-  private readonly destroyRef = inject(DestroyRef);
 
   readonly latestLocation = signal<UpdateCurrentLocationDTO | null>(null);
   readonly isTracking = signal(false);
@@ -31,19 +29,19 @@ export class LocationTrackingService {
       return;
     }
 
+    this.isTracking.set(true);
+
     const permission = await this.currentLocationService.checkPermissionStatus();
 
     if (permission === 'denied' || permission === 'unsupported') {
       console.warn(`Location tracking skipped (${permission})`);
+      this.isTracking.set(false);
       return;
     }
-
-    this.isTracking.set(true);
 
     this.fetchAndUpdateLocation();
 
     this.timerSubscription = interval(TRACKING_INTERVAL_MS)
-      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.fetchAndUpdateLocation());
   }
 
@@ -87,7 +85,6 @@ export class LocationTrackingService {
             })
           );
         }),
-        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           this.locationSubscription = undefined;
         })
@@ -114,5 +111,9 @@ export class LocationTrackingService {
         this.lastSentLocation.currentLocationLongitude
       ) > LOCATION_CHANGE_THRESHOLD
     );
+  }
+
+  ngOnDestroy(): void {
+    this.stopTrackingLocation();
   }
 }

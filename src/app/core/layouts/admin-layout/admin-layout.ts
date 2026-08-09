@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, HostListener, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, inject, OnInit, signal, ViewChild, ElementRef, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, NavigationEnd, Event as RouterEvent } from '@angular/router';
+import { filter } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { SystemConstants } from '../../constants/system.constants';
 import Swal from 'sweetalert2';
@@ -10,6 +12,8 @@ import { Permissions } from '../../constants/Permissions';
 import { getRoleTranslationAr } from '../../constants/dictionaries/roles.dictionary';
 import { HasPermissionDirective } from '../../../shared/directives/has-permission.directive';
 
+import { AfterViewInit } from '@angular/core';
+
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
@@ -18,13 +22,19 @@ import { HasPermissionDirective } from '../../../shared/directives/has-permissio
   styleUrl: './admin-layout.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AdminLayoutComponent implements OnInit {
+export class AdminLayoutComponent implements OnInit, AfterViewInit {
   public authService = inject(AuthService);
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
   currentUser = this.authService.currentUser;
   
   isSidebarExpanded = signal<boolean>(true);
   Permissions = Permissions;
+
+  isMobileMenuOpen = signal<boolean>(false);
+
+  ngAfterViewInit(): void {
+  }
 
   isSuperAdmin(): boolean {
     return this.currentUser()?.email === SystemConstants.RootAdminEmail;

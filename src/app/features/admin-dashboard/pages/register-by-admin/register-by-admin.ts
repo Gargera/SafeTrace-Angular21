@@ -1,5 +1,5 @@
 import { FormField } from '../../../../shared/components/form-field/form-field';
-import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, OnInit, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -9,11 +9,14 @@ import { RoleService } from '../../services/role.service';
 import { RoleDto } from '../../models/Role/responses/RoleDto';
 import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 @Component({
   selector: 'app-register-by-admin',
   imports: [FormField, ReactiveFormsModule, RouterModule, CommonModule, ButtonComponent, CardComponent, ConfirmationModalComponent],
@@ -26,6 +29,8 @@ export class RegisterByAdmin implements OnInit {
   private roleService = inject(RoleService);
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
+  private cacheService = inject(CacheService);
+  private destroyRef = inject(DestroyRef);
 
   isLoading = signal<boolean>(false);
   apiErrorMessage = signal<string>('');
@@ -51,6 +56,18 @@ export class RegisterByAdmin implements OnInit {
     this.modalConfig().action();
   }
 
+  onCancelModal() {
+    this.showConfirmModal.set(false);
+  }
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set('RegisterByAdmin_State', {
+        formValue: this.registerForm.value
+      }, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+    });
+  }
+
   roles = signal<RoleDto[]>([]);
 
   registerForm: FormGroup = this.fb.group({
@@ -63,6 +80,11 @@ export class RegisterByAdmin implements OnInit {
 
   ngOnInit() {
     this.fetchRoles();
+
+    const state = this.cacheService.get<any>('RegisterByAdmin_State');
+    if (state && state.formValue) {
+      this.registerForm.patchValue(state.formValue);
+    }
   }
 
   fetchRoles() {
@@ -73,11 +95,15 @@ export class RegisterByAdmin implements OnInit {
           this.roles.set(filteredRoles);
         }
       },
+      error: (err) => {
+        this.snackbar.error(extractErrorMessage(err, 'تعذر تحميل الأدوار'));
+      }
     });
   }
 
 
   onSubmit() {
+    if (this.isLoading()) return;
     this.registerForm.markAllAsTouched();
     this.apiErrorMessage.set('');
 
@@ -100,6 +126,7 @@ export class RegisterByAdmin implements OnInit {
         this.userService.registerByAdmin(formData).subscribe({
           next: (res) => {
             this.isLoading.set(false);
+            this.cacheService.remove('RegisterByAdmin_State');
             this.snackbar.success('تمت إضافة المستخدم وتعيين الصلاحيات الخاصة به في النظام.');
             this.router.navigate(['/admin/users']);
           },
@@ -118,7 +145,7 @@ export class RegisterByAdmin implements OnInit {
               }
             } else {
               this.apiErrorMessage.set(
-                err.error?.detail || err.error?.message || 'حدث خطأ أثناء إنشاء الحساب.',
+                extractErrorMessage(err, 'حدث خطأ أثناء إنشاء الحساب.'),
               );
             }
           },

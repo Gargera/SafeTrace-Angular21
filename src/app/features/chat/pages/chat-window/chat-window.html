@@ -11,12 +11,10 @@
       ? 'max-w-full md:rounded-xl md:border md:border-outline-variant md:shadow-lg'
       : 'md:max-w-200 md:rounded-xl md:border md:border-outline-variant md:shadow-lg'
   ">
-    <!-- ===== 1. مؤشر التحميل (Spinner) ===== -->
+    <!-- ===== 1. مؤشر التحميل (Skeleton) ===== -->
     @if (isLoading()) {
-    <div class="absolute inset-0 z-50 flex items-center justify-center bg-surface/80 backdrop-blur-sm">
-      <app-loading-spinner [fullscreen]="false" title="جاري تحميل المحادثة..." subtitle="يرجى الانتظار قليلاً"
-        size="md">
-      </app-loading-spinner>
+    <div class="absolute inset-0 z-50 bg-surface">
+      <app-chat-skeleton [items]="8"></app-chat-skeleton>
     </div>
     }
 
@@ -82,16 +80,31 @@
           <img [src]="chatService.getImageUrl(c.otherUserImage)" alt="User Image"
             class="w-7 h-7 sm:w-9 sm:h-9 rounded-full object-cover shrink-0 cursor-pointer" (click)="openProfile()" />
         } @else {
-          <span (click)="openProfile()"
-            class="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-secondary text-on-secondary-container flex items-center justify-center shrink-0 cursor-pointer">
+          <button type="button" (click)="openProfile()" aria-label="عرض الملف الشخصي"
+            class="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-secondary text-on-secondary-container flex items-center justify-center shrink-0 cursor-pointer border-none p-0">
             <span class="m-auto font-medium text-sm">{{ c.otherUserName?.charAt(0) }}</span>
-          </span>
+          </button>
         }
 
         <p class="font-medium text-on-surface whitespace-nowrap cursor-pointer text-[clamp(11px,3.2vw,16px)]"
           (click)="openProfile()" dir="auto">
           {{ displayName }}
         </p>
+      }
+
+      @if(c.caseStatus){
+        <span
+      class="px-2 py-1 rounded-full text-xs font-medium"
+      [ngClass]="{
+      'bg-green-100 text-green-700': c.caseStatus === CaseStatus.Active,
+      'bg-red-100 text-red-700': c.caseStatus === CaseStatus.Deleted ,
+      'bg-blue-100 text-blue-700': c.caseStatus === CaseStatus.Found,
+      'bg-gray-100 text-gray-700': c.caseStatus === CaseStatus.Expired
+    }">
+
+      {{ getCaseStatusTranslationAr(c?.caseStatus) }}
+
+    </span>
       }
 
     </div>
@@ -102,12 +115,12 @@
         <img [src]="chatService.getImageUrl(c.caseImage)" (click)="goToCaseDetails(c.caseId, c.caseType)"
           alt="Case Image" class="w-5 h-5 sm:w-6 sm:h-6 rounded object-cover shrink-0 cursor-pointer" />
       } @else {
-        <span (click)="goToCaseDetails(c.caseId, c.caseType)"
-          class="w-5 h-5 sm:w-6 sm:h-6 rounded flex items-center justify-center bg-primary text-on-primary shrink-0 cursor-pointer">
+        <button type="button" (click)="goToCaseDetails(c.caseId, c.caseType)" aria-label="عرض تفاصيل الحالة"
+          class="w-5 h-5 sm:w-6 sm:h-6 rounded flex items-center justify-center bg-primary text-on-primary shrink-0 cursor-pointer border-none p-0">
           <svg viewBox="0 0 24 24" class="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 7a1 1 0 0 1 1-1h4l2 2h10a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7Z" />
           </svg>
-        </span>
+        </button>
       }
       <div class="text-[10px] sm:text-xs leading-tight min-w-0 cursor-pointer flex items-center gap-1.5" (click)="goToCaseDetails(c.caseId, c.caseType)">
         <span class="text-on-surface-variant font-medium">شأن الحالة:</span>
@@ -239,12 +252,23 @@
             }
 
             @if (message.isMine) {
-            <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5">
+            <svg
+              viewBox="0 0 24 24"
+              class="w-3.5 h-3.5"
+              [ngClass]="message.isRead ? 'text-blue-500' : 'text-on-surface-variant'"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <!-- الصح الأولى -->
               <path d="M4 12l4 4 8-9" />
+
+              <!-- الصح الثانية تظهر فقط بعد القراءة -->
               @if (message.isRead) {
-              <path d="M9 12l4 4 8-9" /> }
+                <path d="M9 12l4 4 8-9" />
+              }
             </svg>
-            }
+          }
 
             <span dir="rtl">{{ message.sendAt | date:'shortTime':'':'ar-EG' }}</span>
           </div>
@@ -275,9 +299,10 @@
     </div>
     @if(!isAdmin){
     <!-- ===== 4. Message input ===== -->
+    @if(canSendMessage()){
     <div
       class="flex flex-col bg-surface-container-low border-t border-outline-variant shrink-0 pb-[env(safe-area-inset-bottom)]"
-      dir="rtl">
+      dir="rtl">      
       @if (selectedFile(); as file) {
       <div
         class="flex items-center justify-between px-sm sm:px-md py-xs text-xs text-on-surface-variant bg-surface-container-high">
@@ -308,14 +333,31 @@
           </button>
         </div>
 
-        <button type="button"
-          class="w-9 h-9 rounded-full bg-secondary text-on-secondary flex items-center justify-center shrink-0 disabled:opacity-50 cursor-pointer"
-          [disabled]="(!draft().trim() && !selectedFile()) || sending()" (click)="onSend()" aria-label="إرسال">
-          <svg viewBox="0 0 24 24" class="w-4 h-4 scale-x-[-1]" fill="none" stroke="currentColor" stroke-width="1.5"
-            stroke-linecap="round" stroke-linejoin="round">
+        
+      <button type="button"
+        class="w-9 h-9 rounded-full bg-secondary text-on-secondary flex items-center justify-center shrink-0 disabled:opacity-50 cursor-pointer"
+        [disabled]="(!draft().trim() && !selectedFile()) || sending()"
+        (click)="onSend()"
+        aria-label="إرسال">
+
+        @if (sending()) {
+          <span
+            class="w-4 h-4 border-2 border-on-secondary border-t-transparent rounded-full animate-spin">
+          </span>
+        } @else {
+          <svg
+            viewBox="0 0 24 24"
+            class="w-4 h-4 scale-x-[-1]"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round">
             <path d="M3 12 21 3l-5 9 5 9L3 12Zm0 0h9" />
           </svg>
-        </button>
+        }
+      </button>
+
       </div>
       @if (fileError()) {
             <span class="text-sm text-error px-md pb-2" dir="rtl">
@@ -323,7 +365,28 @@
             </span>
           }
     </div>
-  }@else {
+  }
+    @else if (isReadOnly()) {
+     <div class="border-t border-outline-variant bg-surface-container px-6 py-5">
+      <div class="flex items-center justify-between">
+      <div>
+        <p class="font-semibold text-on-surface">
+          هذه المحادثة للقراءة فقط
+        </p>
+
+        <p class="text-sm text-on-surface-variant mt-1">
+          لا يمكن إرسال رسائل لأن الحالة تم حذفها.
+        </p>
+      </div>
+
+      <span class="px-2 py-0.5 text-[10px] sm:px-3 sm:py-1 sm:text-xs rounded-full bg-primary-container text-on-primary-container font-medium whitespace-nowrap">
+      عرض فقط
+    </span>
+      </div>
+    </div>
+    }
+  }
+  @else {
   <div class="border-t border-outline-variant bg-surface-container px-6 py-5">
     <div class="flex items-center justify-between">
 
@@ -337,7 +400,7 @@
         </p>
       </div>
 
-      <span class="px-3 py-1 rounded-full bg-primary-container text-on-primary-container text-xs font-medium">
+      <span class="px-2 py-0.5 text-[10px] sm:px-3 sm:py-1 sm:text-xs rounded-full bg-primary-container text-on-primary-container font-medium whitespace-nowrap">
         عرض فقط
       </span>
 

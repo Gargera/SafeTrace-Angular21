@@ -1,4 +1,4 @@
-import { Component,ElementRef,ViewChild, inject , OnInit, signal, AfterViewInit } from '@angular/core';
+import { Component,ElementRef,ViewChild, inject , OnInit, signal, AfterViewInit, computed } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe,CommonModule } from '@angular/common';
@@ -14,14 +14,20 @@ import { FileType } from '../../../../shared/enums/file-type';
 import { environment } from '../../../../../environments/environment';
 import { Location } from '@angular/common';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { ChatSkeletonComponent } from '../../../../shared/components/skeletons/chat-skeleton/chat-skeleton.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { validateImageFile} from '../../../../shared/validators/image-validation.validator';
 import { validateVideoFile } from '../../../../shared/validators/video-validation.validator';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+import { CaseStatus } from '../../../../shared/enums/case-status';
+import {getCaseStatusTranslationAr} from '../../../../core/constants/dictionaries/case.status.dictionary';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+import { DestroyRef } from '@angular/core';
 @Component({
   selector: 'app-chat-window',
   standalone: true,
-  imports: [FormsModule, DatePipe, ViewProfilePopup,LoadingSpinnerComponent,
+  imports: [FormsModule, DatePipe, ViewProfilePopup, ChatSkeletonComponent,
     CommonModule
   ],
   templateUrl: './chat-window.html',
@@ -36,6 +42,8 @@ export class ChatWindow implements OnInit {
   private snackbarService = inject(SnackbarService);
   private chatHubService = inject(ChatHubService);
   private authService = inject(AuthService);
+  private cacheService = inject(CacheService);
+  private destroyRef = inject(DestroyRef);
 
   readonly selectedUserId = signal<string | null>(null);
 
@@ -43,6 +51,7 @@ export class ChatWindow implements OnInit {
   readonly FileType = FileType;
 
   isAdmin = false;
+  CaseStatus = CaseStatus;
 
   isLoading = signal<boolean>(true);
   messagesLoaded = signal(false);
@@ -59,6 +68,20 @@ export class ChatWindow implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
 
+  canSendMessage = computed(() => {
+    const status = this.chat()?.caseStatus;
+    return(
+      status === CaseStatus.Active ||
+      status === CaseStatus.Found ||
+      status === CaseStatus.Expired
+    );
+  });
+
+  isReadOnly = computed(() => {
+    return this.chat()?.caseStatus === CaseStatus.Deleted;
+  });
+
+getCaseStatusTranslationAr = getCaseStatusTranslationAr;
 
   async ngOnInit(): Promise<void> {
     this.route.data.subscribe(data => {
@@ -83,7 +106,7 @@ export class ChatWindow implements OnInit {
       },
       error: (err) => {
         this.snackbarService.error(
-         err.error?.detail ?? 'تعذر تحميل بيانات المحادثة'
+         extractErrorMessage(err, 'تعذر تحميل بيانات المحادثة')
         );
         this.isLoading.set(false);
       },
@@ -95,6 +118,25 @@ export class ChatWindow implements OnInit {
     this.chatHubService.onReceiveMessage(this.handleReceivedMessage);
     this.chatHubService.onMessagesRead(this.handleMessagesRead);
     this.chatHubService.onMessageDeletedForEveryone(this.handleMessageDeletedForEveryone);
+
+    // Restore draft
+    const draftKey = `CHAT_DRAFT_${this.chatId}`;
+    const savedDraft = this.cacheService.get<{ draft: string; file: File | null }>(draftKey);
+    if (savedDraft) {
+      this.draft.set(savedDraft.draft);
+      if (savedDraft.file) {
+        this.selectedFile.set(savedDraft.file);
+      }
+    }
+
+    // Save draft on destroy
+    this.destroyRef.onDestroy(() => {
+      if (this.draft() || this.selectedFile()) {
+        this.cacheService.set(draftKey, { draft: this.draft(), file: this.selectedFile() }, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+      } else {
+        this.cacheService.remove(draftKey);
+      }
+    });
 
     this.loadMessages();
   }
@@ -253,7 +295,7 @@ private handleMessageDeletedForEveryone = (
     },
     error: (err) => {
       this.snackbarService.error(
-        err.error?.detail ?? err.error?.title ?? 'تعذر تحميل الرسائل'
+        extractErrorMessage(err, 'تعذر تحميل الرسائل')
       );
       this.isLoading.set(false);
     }
@@ -364,13 +406,15 @@ private handleMessageDeletedForEveryone = (
         error: (err) => {
 
           this.snackbarService.error(
-            err.error?.detail ?? err.error?.title ?? 'تعذر إرسال الرسالة، تحقق من الاتصال وحاول مرة أخرى');
+            extractErrorMessage(err, 'تعذر إرسال الرسالة، تحقق من الاتصال وحاول مرة أخرى'));
           this.sending.set(false);
         }
     });
 
     this.draft.set('');
     this.clearSelectedFile();
+    const draftKey = `CHAT_DRAFT_${this.chatId}`;
+    this.cacheService.remove(draftKey);
   }
 
  async onDeleteMessage(message: MessageDto): Promise<void> {
@@ -403,7 +447,7 @@ private handleMessageDeletedForEveryone = (
 
     error: (err) => {
       this.snackbarService.error(
-        err.error?.detail ?? err.error?.title ?? 'تعذر حذف الرسالة، حاول مرة أخرى'
+        extractErrorMessage(err, 'تعذر حذف الرسالة، حاول مرة أخرى')
       );
     },
   });
@@ -499,7 +543,11 @@ openProfile(userId?: string): void {
 }
 
 goToCaseDetails(caseId: number, caseType: string): void {
+
+  const chat = this.chat();
+
   if(this.isAdmin){
+    
     switch(caseType) {
 
     case 'Urgent':
@@ -516,6 +564,17 @@ goToCaseDetails(caseId: number, caseType: string): void {
     }
   }
   else{
+     const status = this.chat()?.caseStatus;
+
+    if (status === CaseStatus.Deleted) {
+      this.snackbarService.show("هذه الحالة تم حذفها");
+      return;
+    }
+
+    if(status === CaseStatus.Found){
+      this.router.navigate(['/founded',chat?.foundCaseId]);
+      return;
+    }
 
   switch(caseType) {
 

@@ -65,7 +65,7 @@
 
 <!-- Filters Card (styled exactly like user-list) -->
 <section class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm mb-lg">
-  <app-case-filters [showCaseType]="true" [showCaseStatus]="true" [genderInAdvanced]="true"
+  <app-case-filters [initialFilter]="baseFilter()" [showCaseType]="true" [showCaseStatus]="true" [genderInAdvanced]="true"
     [ageCategoryInAdvanced]="true" (filterChange)="onFilterChange($event)">
     
     <app-button
@@ -85,11 +85,10 @@
 <!-- Cases Table -->
 <section class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75">
   @if (loading()) {
-  <app-loading-spinner title="جارِ تحميل الحالات..." [fullscreen]="false"
-    containerClass="absolute inset-0 bg-white/60 flex items-center justify-center z-10" />
-  }
+    <app-table-skeleton [rows]="12"></app-table-skeleton>
+  } @else {
 
-  <div class="overflow-x-auto">
+  <div class="w-full max-w-full overflow-x-auto">
     <table class="w-full text-right border-collapse whitespace-nowrap">
       <thead>
         <tr class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant">
@@ -107,7 +106,7 @@
         @for (caseItem of cases(); track caseItem.id) {
         <tr class="hover:bg-surface-container-low transition-colors group">
           <td class="px-lg py-md font-mono text-on-surface-variant/70">
-            {{ (currentPage() - 1) * pageSize + $index + 1 }}
+            {{ (currentPage() - 1) * pageSize() + $index + 1 }}
           </td>
           <td class="px-lg py-md font-semibold text-primary">
             {{ getFullName(caseItem) }}
@@ -142,7 +141,11 @@
         @if (!loading()) {
         <tr>
           <td colspan="6" class="py-xl">
-            <app-empty-state title="لا توجد حالات" message="لا توجد حالات تطابق معايير البحث." />
+            <app-empty-state
+              [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات مسجلة'"
+              [message]="hasActiveFilters() ? 'لم نتمكن من العثور على حالات تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم تسجيل أي حالات حتى الآن.'"
+            >
+            </app-empty-state>
           </td>
         </tr>
         }
@@ -150,6 +153,7 @@
       </tbody>
     </table>
   </div>
+  }
 
   <!-- Pagination (matching user-list) -->
   @if (totalPages() > 1) {
@@ -171,5 +175,5 @@
 @if (showConfirmModal()) {
 <app-confirmation-modal [title]="modalConfig()?.title || 'تأكيد'" [message]="modalConfig()?.message || 'هل أنت متأكد؟'"
   [confirmText]="modalConfig()?.confirmText || 'تأكيد'" [cancelText]="modalConfig()?.cancelText || 'إلغاء'"
-  variant="danger" (confirm)="confirmAction()" (cancel)="closeModal()" />
+  icon="delete" variant="danger" (confirm)="confirmAction()" (cancel)="closeModal()" />
 }

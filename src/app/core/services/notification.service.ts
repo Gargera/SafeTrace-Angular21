@@ -1,4 +1,4 @@
-import { Injectable, inject, signal, computed, OnDestroy } from '@angular/core';
+import { Injectable, inject, signal, computed, OnDestroy, DestroyRef } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import * as signalR from '@microsoft/signalr';
 import {
@@ -10,8 +10,9 @@ import { NotificationType } from '../../shared/enums/Notification-Type';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 import { ApiResponse } from '../../shared/models/responses/api-response.model';
-import { Router } from '@angular/router';
-
+import { Router, NavigationStart } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 const DEFAULT_PAGE_SIZE = 10;
 
 @Injectable({ providedIn: 'root' })
@@ -20,6 +21,9 @@ export class NotificationService implements OnDestroy {
   readonly #apiUrl = `${environment.apiBaseUrl}/Notification`;
   readonly #defaultLink = '/profile?tab=notifications';
   readonly #authService = inject(AuthService);
+  readonly #router = inject(Router);
+  readonly #destroyRef = inject(DestroyRef);
+  
   // ─── Private state signals ────────────────────────────────────────────────
   readonly #notifications = signal<GetUserNotificationsDTO[]>([]);
   readonly #unreadCount = signal<number>(0);
@@ -52,6 +56,19 @@ export class NotificationService implements OnDestroy {
   #hubConnection: signalR.HubConnection | null = null;
 
   // ─── SignalR Connection ───────────────────────────────────────────────────
+
+  constructor() {
+    this.#router.events
+      .pipe(
+        filter((event) => event instanceof NavigationStart),
+        takeUntilDestroyed(this.#destroyRef)
+      )
+      .subscribe(() => {
+        if (this.#activeCaseNotification()) {
+          this.closeCaseNotificationModal();
+        }
+      });
+  }
 
   startConnection(): void {
     if (this.#hubConnection) return;

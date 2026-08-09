@@ -14,7 +14,7 @@ export class ConfirmationModalComponent {
   message = input('هل أنت متأكد؟');
   confirmText = input('تأكيد');
   cancelText = input('إلغاء');
-  icon = input('h elp_outline');
+  icon = input('help_outline');
   variant = input<'primary' | 'danger'>('primary');
   confirmDisabled = input(false);
   confirmLoading = input(false);

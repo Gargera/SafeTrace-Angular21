@@ -3,10 +3,11 @@ import { Router } from '@angular/router';
 import { GetUserNotificationsDTO } from '../../../../core/models/notification.model';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { NotificationType } from '../../../../shared/enums/Notification-Type';
+import { NotificationSkeletonComponent } from '../../../../shared/components/skeletons/notification-skeleton/notification-skeleton.component';
 
 @Component({
   selector: 'app-notifications-tab',
-  imports: [],
+  imports: [NotificationSkeletonComponent],
   standalone: true,
   templateUrl: './notifications-tab.html',
   styleUrl: './notifications-tab.css',
@@ -63,12 +64,9 @@ export class NotificationsTab implements OnInit {
   }
 
   onScroll(event: Event): void {
-    const element = event.target as HTMLElement;
-
-    const threshold = 100; // قبل آخر 100px يبدأ يحمل
-
-    const reachedBottom =
-      element.scrollHeight - element.scrollTop - element.clientHeight <= threshold;
+    const target = event.target as HTMLElement;
+    const threshold = 100;
+    const reachedBottom = target.scrollHeight - target.scrollTop - target.clientHeight <= threshold;
 
     if (
       reachedBottom &&

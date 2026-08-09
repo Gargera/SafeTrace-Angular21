@@ -2,8 +2,53 @@
   <main class="flex-1 max-w-max-width mx-auto w-full px-margin-mobile md:px-margin-desktop py-lg">
     <!-- Loading State -->
     @if (isLoading()) {
-      <div class="flex justify-center items-center py-xl">
-        <span class="material-symbols-outlined text-secondary text-[48px] animate-spin"> </span>
+      <div class="grid grid-cols-1 md:grid-cols-14 gap-gutter animate-pulse">
+
+        <!-- Sidebar skeleton (col-4) -->
+        <div class="md:col-span-4">
+          <div class="rounded-xl p-lg flex flex-col items-center text-center space-y-4">
+            <!-- Avatar -->
+            <div class="w-24 h-24 rounded-full bg-surface-container-high border-4 border-surface-container shadow-sm"></div>
+            <!-- Name -->
+            <div class="h-5 bg-surface-container-high rounded w-32"></div>
+            <!-- Verification badge -->
+            <div class="h-6 bg-surface-container-high rounded-full w-24"></div>
+            <!-- Role badge -->
+            <div class="h-6 bg-surface-container-high rounded-full w-20"></div>
+            <!-- Divider + contact info -->
+            <div class="w-full border-t border-outline-variant/30 pt-4 space-y-3">
+              <div class="flex items-center gap-2"><div class="w-5 h-5 bg-surface-container-high rounded shrink-0"></div><div class="h-3 bg-surface-container-high rounded flex-1"></div></div>
+              <div class="flex items-center gap-2"><div class="w-5 h-5 bg-surface-container-high rounded shrink-0"></div><div class="h-3 bg-surface-container-high rounded w-3/4"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main tabs area skeleton (col-10) -->
+        <div class="md:col-span-10">
+          <div class="bg-surface-container-lowest rounded-xl shadow-sm mb-gutter overflow-hidden">
+            <!-- Tabs nav bar -->
+            <div class="border-b border-outline-variant px-4 pt-3 flex gap-2">
+              @for (i of [1,2,3,4,5]; track i) {
+                <div class="h-9 bg-surface-container-high rounded-t-lg flex-1 min-w-[60px]"></div>
+              }
+            </div>
+            <!-- Tab content area -->
+            <div class="p-6 space-y-4">
+              <div class="h-5 bg-surface-container-high rounded w-40"></div>
+              <div class="h-10 bg-surface-container-high rounded-xl w-full"></div>
+              @for (i of [1,2,3]; track i) {
+                <div class="flex flex-col lg:flex-row overflow-hidden rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-sm">
+                  <div class="w-full lg:w-44 aspect-[4/3] lg:aspect-auto bg-surface-container-high shrink-0"></div>
+                  <div class="flex-1 p-4 flex flex-col gap-3 justify-between">
+                    <div class="h-4 bg-surface-container-high rounded w-2/3"></div>
+                    <div class="grid grid-cols-4 gap-2"><div class="h-3 bg-surface-container-high rounded"></div><div class="h-3 bg-surface-container-high rounded"></div><div class="h-3 bg-surface-container-high rounded"></div><div class="h-3 bg-surface-container-high rounded"></div></div>
+                    <div class="flex justify-end gap-2 pt-2 border-t border-outline-variant/20"><div class="h-8 w-8 bg-surface-container-high rounded-full"></div><div class="h-8 bg-surface-container-high rounded-lg w-20"></div></div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
       </div>
     }
 
@@ -32,7 +77,7 @@
           />
 
           @if (selectedZoomImage()) {
-            <div
+            <div role="dialog" aria-modal="true" aria-label="نافذة منبثقة"
               class="fixed inset-0 z-999999 bg-black/70 flex items-center justify-center"
               (click)="selectedZoomImage.set(null)"
             >

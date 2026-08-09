@@ -1,8 +1,8 @@
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
-import { Component, inject, signal, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, DestroyRef, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
@@ -17,19 +17,41 @@ import { ForceCreatePopupComponent } from '../../../../shared/components/cases-c
 import { MatchedCaseResponse } from '../../../../core/models/cases.model';
 import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
 import { DuplicateInfoDialogComponent } from '../../../../shared/components/cases-components/duplicate-info-dialog/duplicate-info-dialog.component';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 // Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
+import { validCity } from '../../../../shared/validators/city.validator';
+import { validGovernorate } from '../../../../shared/validators/governorate.validator';
 import { ImageService } from '../../../../shared/services/image.service';
+import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
+
 
 type Step = 1 | 2 | 3;
 
 import { CommonModule } from '@angular/common';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
+
+const DRAFT_CACHE_KEY = 'UnknownCreate_Draft';
+
+interface UnknownCreateDraft {
+  formValue: any;
+  currentStep: Step;
+  showForceCreatePopup: boolean;
+  showDuplicateInfoDialog: boolean;
+  currentDuplicateDecision: DuplicateDecision;
+  isBlockedDuplicate: boolean;
+  matchedCases: MatchedCaseResponse[];
+  existingCaseType: CaseType | null;
+  primaryFile?: File | null;
+  additionalPhotos?: File[];
+  videoFile?: File | null;
+}
 
 @Component({
   selector: 'app-unknown-create',
@@ -49,13 +71,14 @@ import { HeaderComponent } from '../../../../shared/components/header/header.com
   styleUrls: ['./unknown-create.css'],
   templateUrl: './unknown-create.html',
 })
-export class UnknownCreate {
+export class UnknownCreate implements OnInit {
   private fb = inject(FormBuilder);
   private imageService = inject(ImageService);
   private service = inject(UnknownCaseService);
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
   private destroyRef = inject(DestroyRef);
+  private cacheService = inject(CacheService);
 
   currentStep: Step = 1;
   isSubmitting = signal(false);
@@ -74,6 +97,7 @@ export class UnknownCreate {
   additionalPhotosError = signal<string | null>(null);
 
   videoFile = signal<File | null>(null);
+  videoError = signal<string | null>(null);
 
   showForceCreatePopup = signal(false);
   showDuplicateInfoDialog = signal(false);
@@ -108,16 +132,16 @@ export class UnknownCreate {
     tName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
     lName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
     // Age — required, 0-120
-    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(120)]],
+    age: [null as number | null, [Validators.required, Validators.min(1), Validators.max(120)]],
     // Gender — required, valid enum
     gender: ['' as Gender | '', [Validators.required, validEnum(Gender)]],
     // Phone — optional, Egyptian format, max 15
     communicationPhone: ['', [egyptianPhone(), Validators.maxLength(15)]],
-    // Description — optional, max 2000
+    // Description
     description: ['', [Validators.maxLength(2000)]],
-    // Location — required, Arabic only, 2-100
-    government: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
-    city: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
+    // Location
+    government: ['', [Validators.required, validGovernorate(), Validators.minLength(2), Validators.maxLength(100)]],
+    city: ['', [Validators.required]],
     // Street — required, NOT Arabic-only, max 200
     street: ['', [Validators.required, Validators.maxLength(200)]],
     // EventDate — required, cannot be future
@@ -137,7 +161,32 @@ export class UnknownCreate {
 
   availableCities = signal<string[]>([]);
 
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      // Only cache if we didn't just submit successfully (we clear it on success)
+      if (this.form.dirty || this.currentStep > 1 || this.matchedCases().length > 0 || this.primaryFile()) {
+        const draft: UnknownCreateDraft = {
+          formValue: this.form.getRawValue(),
+          currentStep: this.currentStep,
+          showForceCreatePopup: this.showForceCreatePopup(),
+          showDuplicateInfoDialog: this.showDuplicateInfoDialog(),
+          currentDuplicateDecision: this.currentDuplicateDecision(),
+          isBlockedDuplicate: this.isBlockedDuplicate(),
+          matchedCases: this.matchedCases(),
+          existingCaseType: this.existingCaseType(),
+          primaryFile: this.primaryFile(),
+          additionalPhotos: this.additionalPhotos(),
+          videoFile: this.videoFile()
+        };
+        this.cacheService.set(DRAFT_CACHE_KEY, draft, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+      }
+    });
+  }
+
   ngOnInit(): void {
+    this.form.get('city')?.setValidators([Validators.required, validCity(() => this.form.get('government')?.value ?? null)]);
+    this.form.get('city')?.updateValueAndValidity();
+
     this.form.get('government')?.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((gov) => {
@@ -147,7 +196,33 @@ export class UnknownCreate {
         if (currentCity && !cities.includes(currentCity)) {
           this.form.get('city')?.setValue('');
         }
+        this.form.get('city')?.updateValueAndValidity();
       });
+
+    const draft = this.cacheService.get<UnknownCreateDraft>(DRAFT_CACHE_KEY);
+    if (draft) {
+      this.form.patchValue(draft.formValue);
+      this.currentStep = draft.currentStep;
+      this.showForceCreatePopup.set(draft.showForceCreatePopup);
+      this.showDuplicateInfoDialog.set(draft.showDuplicateInfoDialog);
+      this.currentDuplicateDecision.set(draft.currentDuplicateDecision);
+      this.isBlockedDuplicate.set(draft.isBlockedDuplicate);
+      this.matchedCases.set(draft.matchedCases);
+      this.existingCaseType.set(draft.existingCaseType);
+
+      if (draft.primaryFile) {
+        this.primaryFile.set(draft.primaryFile);
+        this.croppedPrimaryImagePreview.set(URL.createObjectURL(draft.primaryFile));
+      }
+      if (draft.additionalPhotos && draft.additionalPhotos.length > 0) {
+        this.additionalPhotos.set(draft.additionalPhotos);
+        this.additionalPhotoPreviews.set(draft.additionalPhotos.map(f => URL.createObjectURL(f)));
+      }
+      if (draft.videoFile) {
+        this.videoFile.set(draft.videoFile);
+      }
+
+    }
   }
 
   nextStep(): void {
@@ -229,13 +304,41 @@ export class UnknownCreate {
   }
 
   onVideoSelected(event: Event): void {
-    this.videoFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0] ?? null;
+
+  if (!file) {
+    this.videoFile.set(null);
+    return;
   }
+
+  const validation = validateVideoFile(file, 50);
+
+  if (!validation.valid) {
+    this.videoFile.set(null);
+    this.videoError.set(validation.errorMessage ?? 'الملف غير صالح.');
+
+    // مهم عشان لو اختار نفس الملف تاني بعد الرفض
+    input.value = '';
+
+    return;
+  }
+
+  this.videoError.set(null);
+  this.videoFile.set(file);
+}
 
   // --- إرسال النموذج ---
   onSubmit(forceCreate = false): void {
     if (this.isSubmitting()) return;
     const primary = this.primaryFile();
+
+    if (forceCreate && !this.pendingRequest && !primary) {
+      this.errorMsg.set('يرجى إعادة إرفاق الصورة الأساسية قبل المتابعة.');
+      this.showForceCreatePopup.set(false);
+      this.showDuplicateInfoDialog.set(false);
+      return;
+    }
 
     if (!forceCreate && (this.form.invalid || !primary)) {
       this.form.markAllAsTouched();
@@ -299,6 +402,7 @@ export class UnknownCreate {
             return;
           }
 
+          this.cacheService.remove(DRAFT_CACHE_KEY);
           this.showForceCreatePopup.set(false);
           this.showDuplicateInfoDialog.set(false);
           this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');

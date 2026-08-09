@@ -6,7 +6,6 @@ import { RouterModule, Router } from '@angular/router';
 import { CaseListItemResponse } from '../../../../core/models/cases.model';
 import { getAgeCategory } from '../../../helper/age-category.helper';
 
-import { GenderBadgeDirective } from '../../../directives/gender-badge-directive';
 import { AgeBadgeDirective } from '../../../directives/age-badge-directive';
 import { CaseTypeBadgeDirective } from '../../../directives/case-type-badge-directive';
 import { CardComponent } from '../../card/card';
@@ -14,6 +13,8 @@ import { ButtonComponent } from '../../button/button';
 
 import { environment } from '../../../../../environments/environment';
 import { CaseType } from '../../../enums/case-type';
+import { AuthService } from '../../../../core/services/auth.service';
+import { ViewProfilePopup } from '../../view-profile-popup/view-profile-popup';
 
 @Component({
   selector: 'app-case-card',
@@ -22,17 +23,22 @@ import { CaseType } from '../../../enums/case-type';
     DatePipe,
     DecimalPipe,
     RouterModule,
-    GenderBadgeDirective,
     AgeBadgeDirective,
     CaseTypeBadgeDirective,
     CardComponent,
     ButtonComponent,
+    ViewProfilePopup,
   ],
   templateUrl: './case-card.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CaseCardComponent {
   router = inject(Router);
+  private readonly authService = inject(AuthService);
+
+  readonly selectedUserId = signal<string | null>(null);
+  private publisherImageError = signal(false);
+
   // Inputs and outputs
   readonly caseItem = input.required<CaseListItemResponse>();
   readonly showUrgentTag = input(false);
@@ -54,6 +60,29 @@ export class CaseCardComponent {
 
   // Reactive state
   private imageError = signal(false);
+
+  readonly isOwner = computed(() => {
+    if (!this.authService.isLoggedIn()) return false;
+    const currentUserId = this.authService.getCurrentUserId();
+    const currentUserEmail = this.authService.currentUser()?.email?.toLowerCase();
+    const item = this.caseItem();
+
+    const caseUserId = item.user?.id || item.userId;
+    if (caseUserId && currentUserId) {
+      return caseUserId === currentUserId;
+    }
+    if ((item as any).userEmail && currentUserEmail) {
+      return (item as any).userEmail.toLowerCase() === currentUserEmail;
+    }
+    if (item.user?.email && currentUserEmail) {
+      return item.user.email.toLowerCase() === currentUserEmail;
+    }
+    return false;
+  });
+
+  readonly shouldShowContactButton = computed(() => {
+    return this.showContactButton();
+  });
 
   // Computed signals
   readonly imageSrc = computed(() => {
@@ -108,12 +137,56 @@ export class CaseCardComponent {
     }
   });
 
+  readonly publisherName = computed(() => {
+    if (this.isOwner()) {
+      return 'أنت (صاحب الحالة)';
+    }
+    const u = this.caseItem().user;
+    if (u && (u.fName || u.lName)) {
+      return `${u.fName ?? ''} ${u.lName ?? ''}`.trim();
+    }
+    return null;
+  });
+
+  readonly publisherInitials = computed(() => {
+    const u = this.caseItem().user;
+    if (!u) return '';
+    const f = u.fName?.[0] ?? '';
+    const l = u.lName?.[0] ?? '';
+    return (f + l).toUpperCase();
+  });
+
+  readonly publisherImageSrc = computed(() => {
+    const u = this.caseItem().user;
+    if (u?.profileImage && !this.publisherImageError()) {
+      return `${this.baseUrl}${u.profileImage}`;
+    }
+    return null;
+  });
+
+  onPublisherImageError(): void {
+    this.publisherImageError.set(true);
+  }
+
+  openPublisherProfile(event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    const id = this.caseItem().user?.id || this.caseItem().userId;
+    if (id) {
+      this.selectedUserId.set(id);
+    }
+  }
+
   // Event handler
   onImageError(): void {
     this.imageError.set(true);
   }
 
   startChat(id: number): void {
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
     this.router.navigate(['/chat/start', id]);
   }
 }

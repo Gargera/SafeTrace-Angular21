@@ -1,5 +1,6 @@
-import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Component, computed, inject, signal, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, tap, catchError, EMPTY } from 'rxjs';
 import { GetUserDto } from '../../models/User/responses/GetUserDto';
 import { RoleDto } from '../../models/Role/responses/RoleDto';
 import { UserFilterDto } from '../../models/User/requests/UserFilterDto';
@@ -18,7 +19,7 @@ import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+
 import { UserStatisticsDto } from '../../models/User/responses/UserStatisticsDto';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { SnackbarService } from '../../../../shared/services/toast.service';
@@ -27,6 +28,13 @@ import { ReportService } from '../../services/report.service';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+import { TableSkeletonComponent } from '../../../../shared/components/skeletons/table-skeleton/table-skeleton.component';
+
+
+const UI_STATE_CACHE_KEY = 'UserList_UI_State';
 
 @Component({
   selector: 'app-user-list',
@@ -41,10 +49,11 @@ import { PaginationComponent } from '../../../../shared/components/pagination/pa
     ButtonComponent,
     CardComponent,
     EmptyStateComponent,
-    LoadingSpinnerComponent,
+
     HeaderComponent,
     HasPermissionDirective,
-    PaginationComponent
+    PaginationComponent,
+    TableSkeletonComponent
   ],
   templateUrl: './user-list.html',
   styleUrl: './user-list.css',
@@ -58,6 +67,8 @@ export class UserList {
   private readonly router = inject(Router);
   private toast = inject(SnackbarService);
   private reportService = inject(ReportService);
+  private readonly cacheService = inject(CacheService);
+  private readonly destroyRef = inject(DestroyRef);
 
   users = signal<GetUserDto[]>([]);
   roles = signal<RoleDto[]>([]);
@@ -73,20 +84,60 @@ export class UserList {
     searchTerm: '',
     verificationStatus: '' as any,
     roleId: '' as any,
-    isBlocked: '' as any,
+    isBlocked: undefined,
   });
 
+  readonly hasActiveFilters = computed(() => {
+    const f = this.filter();
+    return !!(f.searchTerm || f.verificationStatus || f.roleId || f.isBlocked !== undefined);
+  });
+
+  resetFilters(): void {
+    this.cacheService.remove(UI_STATE_CACHE_KEY);
+    this.filter.set({
+      pageNumber: 1,
+      pageSize: 10,
+      searchTerm: '',
+      verificationStatus: '' as any,
+      roleId: '' as any,
+      isBlocked: undefined,
+    });
+    this.loadUsers();
+  }
+
   private searchSubject = new Subject<string>();
+  private readonly fetchTrigger$ = new Subject<void>();
   VerificationStatusEnum = VerificationStatus;
 
-  ngOnInit() {
-    this.loadRoles();
-    this.loadUsers();
-    this.loadStatistics();
-
-    this.searchSubject.pipe(debounceTime(500), distinctUntilChanged()).subscribe((term) => {
-      this.updateFilter({ searchTerm: term, pageNumber: 1 });
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set(
+        UI_STATE_CACHE_KEY,
+        { filter: this.filter() },
+        CACHE_TTL.UI_STATE,
+        [CACHE_TAGS.UI_STATE]
+      );
     });
+  }
+
+  ngOnInit() {
+    const cachedState = this.cacheService.get<{ filter: UserFilterDto }>(UI_STATE_CACHE_KEY);
+    if (cachedState) {
+      this.filter.set(cachedState.filter);
+    }
+
+    this.loadRoles();
+    this.setupFetchPipeline();
+    this.loadStatistics();
+    
+    // Initial fetch
+    this.loadUsers();
+
+    this.searchSubject
+      .pipe(debounceTime(500), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe((term: string) => {
+        this.updateFilter({ searchTerm: term, pageNumber: 1 });
+      });
   }
 
   loadRoles() {
@@ -96,22 +147,39 @@ export class UserList {
           this.roles.set(res.data);
         }
       },
+      error: (err) => {
+        this.toast.error(extractErrorMessage(err, 'تعذر تحميل الأدوار'));
+      }
     });
   }
 
   loadUsers() {
-    this.isLoading.set(true);
-    this.userService.getAllUsers(this.filter()).subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
+    this.fetchTrigger$.next();
+  }
+
+  private setupFetchPipeline() {
+    this.fetchTrigger$
+      .pipe(
+        tap(() => this.isLoading.set(true)),
+        switchMap(() =>
+          this.userService.getAllUsers(this.filter()).pipe(
+            catchError((err) => {
+              this.isLoading.set(false);
+              this.toast.error(extractErrorMessage(err, 'تعذر تحميل قائمة المستخدمين'));
+              return EMPTY;
+            })
+          )
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((res) => {
+        if (res && res.success && res.data) {
           this.users.set(res.data.items);
           this.totalCount.set(res.data.totalCount);
           this.totalPages.set(res.data.totalPages);
         }
         this.isLoading.set(false);
-      },
-      error: () => this.isLoading.set(false),
-    });
+      });
   }
 
   navigateToCreateUser(): void {
@@ -128,18 +196,6 @@ export class UserList {
       ...partialFilter,
       pageNumber: partialFilter.pageNumber ?? 1,
     }));
-    this.loadUsers();
-  }
-
-  resetFilters() {
-    this.filter.set({
-      pageNumber: 1,
-      pageSize: 10,
-      searchTerm: '',
-      verificationStatus: '' as any,
-      roleId: '' as any,
-      isBlocked: '' as any,
-    });
     this.loadUsers();
   }
 
@@ -166,7 +222,7 @@ export class UserList {
         this.loadingStats.set(false);
       },
       error: (err) => {
-        this.toast.error(err.error?.detail || 'تعذر الاتصال بالخادم لتحميل الإحصائيات');
+        this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتحميل الإحصائيات'));
         this.loadingStats.set(false);
       }
     });
@@ -176,21 +232,25 @@ export class UserList {
     this.router.navigate(['/admin/users/registerByAdmin']);
   }
 
- downloadReport(): void {
+  downloadReport(): void {
+    const reportFilter = {
+      pageNumber: this.filter().pageNumber,
+      pageSize: this.filter().pageSize,
+      searchTerm: this.filter().searchTerm || undefined,
+      verificationStatus: this.filter().verificationStatus || undefined,
+      roleId: this.filter().roleId || undefined,
+      isBlocked: this.filter().isBlocked ?? null
+    };
 
-  const reportFilter = {
-  pageNumber: this.filter().pageNumber,
-  pageSize: this.filter().pageSize,
-  searchTerm: this.filter().searchTerm || undefined,
-  verificationStatus: this.filter().verificationStatus || undefined,
-  roleId: this.filter().roleId || undefined,
-  isBlocked: this.filter().isBlocked ?? undefined
-};
-  console.log(reportFilter);
-  this.reportService
-    .generateUsersPdfReport(reportFilter)
-    .subscribe(response => {
-      this.reportService.download(response);
-    });
-}
+    this.reportService
+      .generateUsersPdfReport(reportFilter)
+      .subscribe({
+        next: (response) => {
+          this.reportService.download(response);
+        },
+        error: (err) => {
+          this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتنزيل تقرير المستخدمين'));
+        }
+      });
+  }
 }
