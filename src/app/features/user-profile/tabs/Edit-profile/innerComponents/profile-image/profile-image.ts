@@ -8,6 +8,8 @@ import { CardComponent } from '../../../../../../shared/components/card/card';
 import { SnackbarService } from '../../../../../../shared/services/toast.service';
 import { ConfirmationModalComponent } from '../../../../../../shared/components/confirmation-modal/confirmation-modal';
 import { extractErrorMessage } from '../../../../../../shared/helper/error.helper';
+import { CacheService } from '../../../../../../core/cache/cache.service';
+import { PROFILE_CACHE_KEYS, CACHE_TTL, CACHE_TAGS } from '../../../../../../core/cache/cache.constants';
 
 @Component({
   selector: 'app-profile-image',
@@ -29,6 +31,7 @@ export class ProfileImage implements OnInit {
   readonly #profileService = inject(ProfileService);
   readonly #imageService = inject(ImageService);
   readonly #snackbar = inject(SnackbarService);
+  readonly #cacheService = inject(CacheService);
 
   readonly #destroyRef = inject(DestroyRef);
 
@@ -73,9 +76,23 @@ export class ProfileImage implements OnInit {
         });
       }
     });
+
+    this.#destroyRef.onDestroy(() => {
+      if (this.#selectedProfileImage) {
+        this.#cacheService.set(PROFILE_CACHE_KEYS.DRAFT_PROFILE_IMAGE, { file: this.#selectedProfileImage }, CACHE_TTL.UI_STATE, [CACHE_TAGS.PROFILE, CACHE_TAGS.UI_STATE]);
+      } else {
+        this.#cacheService.remove(PROFILE_CACHE_KEYS.DRAFT_PROFILE_IMAGE);
+      }
+    });
   }
 
   ngOnInit(): void {
+    const draft = this.#cacheService.get<{ file: File }>(PROFILE_CACHE_KEYS.DRAFT_PROFILE_IMAGE);
+    if (draft && draft.file) {
+      this.#selectedProfileImage = draft.file;
+      this.profileImagePreview.set(URL.createObjectURL(draft.file));
+      this.toggleProfileImageEdit(true);
+    }
   }
 
   // ── Profile photo: select → validate → crop → upload ─────────────────────

@@ -48,6 +48,9 @@ interface UnknownCreateDraft {
   isBlockedDuplicate: boolean;
   matchedCases: MatchedCaseResponse[];
   existingCaseType: CaseType | null;
+  primaryFile?: File | null;
+  additionalPhotos?: File[];
+  videoFile?: File | null;
 }
 
 @Component({
@@ -161,7 +164,7 @@ export class UnknownCreate implements OnInit {
   constructor() {
     this.destroyRef.onDestroy(() => {
       // Only cache if we didn't just submit successfully (we clear it on success)
-      if (this.form.dirty || this.currentStep > 1 || this.matchedCases().length > 0) {
+      if (this.form.dirty || this.currentStep > 1 || this.matchedCases().length > 0 || this.primaryFile()) {
         const draft: UnknownCreateDraft = {
           formValue: this.form.getRawValue(),
           currentStep: this.currentStep,
@@ -170,7 +173,10 @@ export class UnknownCreate implements OnInit {
           currentDuplicateDecision: this.currentDuplicateDecision(),
           isBlockedDuplicate: this.isBlockedDuplicate(),
           matchedCases: this.matchedCases(),
-          existingCaseType: this.existingCaseType()
+          existingCaseType: this.existingCaseType(),
+          primaryFile: this.primaryFile(),
+          additionalPhotos: this.additionalPhotos(),
+          videoFile: this.videoFile()
         };
         this.cacheService.set(DRAFT_CACHE_KEY, draft, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
       }
@@ -204,9 +210,18 @@ export class UnknownCreate implements OnInit {
       this.matchedCases.set(draft.matchedCases);
       this.existingCaseType.set(draft.existingCaseType);
 
-      if (draft.showForceCreatePopup || draft.showDuplicateInfoDialog) {
-        this.snackbar.info('تم استعادة بيانات النموذج. يرجى إعادة إرفاق الصور للمتابعة.');
+      if (draft.primaryFile) {
+        this.primaryFile.set(draft.primaryFile);
+        this.croppedPrimaryImagePreview.set(URL.createObjectURL(draft.primaryFile));
       }
+      if (draft.additionalPhotos && draft.additionalPhotos.length > 0) {
+        this.additionalPhotos.set(draft.additionalPhotos);
+        this.additionalPhotoPreviews.set(draft.additionalPhotos.map(f => URL.createObjectURL(f)));
+      }
+      if (draft.videoFile) {
+        this.videoFile.set(draft.videoFile);
+      }
+
     }
   }
 
