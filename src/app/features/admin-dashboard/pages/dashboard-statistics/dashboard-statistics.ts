@@ -11,7 +11,8 @@ import { DashboardDto } from '../../models/Dashboard/responses/DashboardDto';
 import { getCaseTypeTranslationAr } from '../../../../core/constants/dictionaries/case.type.dictionary';
 import { DashboardService } from '../../services/dashboard.service';
 import { SnackbarService } from '../../../../shared/services/toast.service';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { DashboardStatisticsSkeletonComponent } from '../../../../shared/components/skeletons/dashboard-statistics-skeleton/dashboard-statistics-skeleton.component';
+import { TableSkeletonComponent } from '../../../../shared/components/skeletons/table-skeleton/table-skeleton.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { CardComponent } from '../../../../shared/components/card/card';
@@ -84,7 +85,7 @@ const STATUS_COLORS = {
 
 @Component({
   selector: 'app-dashboard-statistics',
-  imports: [CommonModule, LoadingSpinnerComponent, EmptyStateComponent, HeaderComponent, CardComponent, ButtonComponent],
+  imports: [CommonModule, DashboardStatisticsSkeletonComponent, TableSkeletonComponent, EmptyStateComponent, HeaderComponent, CardComponent, ButtonComponent],
   templateUrl: './dashboard-statistics.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

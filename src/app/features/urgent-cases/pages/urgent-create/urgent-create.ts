@@ -52,6 +52,7 @@ interface UrgentCreateDraft {
   selectedLat: number | null;
   selectedLng: number | null;
   selectedAddress: string;
+  isMapModalOpen: boolean;
 }
 
 @Component({
@@ -210,7 +211,8 @@ export class UrgentCreate implements OnInit {
           existingCaseType: this.existingCaseType(),
           selectedLat: this.selectedLat(),
           selectedLng: this.selectedLng(),
-          selectedAddress: this.selectedAddress()
+          selectedAddress: this.selectedAddress(),
+          isMapModalOpen: this.isMapModalOpen()
         };
         this.cacheService.set(DRAFT_CACHE_KEY, draft, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
       }
@@ -248,6 +250,7 @@ export class UrgentCreate implements OnInit {
           this.externalLocation.set({ lat: draft.selectedLat, lng: draft.selectedLng });
       }
 
+      this.isMapModalOpen.set(draft.isMapModalOpen || false);
       if (draft.showForceCreatePopup || draft.showDuplicateInfoDialog) {
         this.snackbar.info('تم استعادة بيانات النموذج. يرجى إعادة إرفاق الصور للمتابعة.');
       }

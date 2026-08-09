@@ -1,11 +1,5 @@
 @if (loading()) {
-  <app-loading-spinner
-       [fullscreen]="false"
-      title="جاري تحميل ..."
-      subtitle="يرجى الانتظار قليلاً"
-      size="md"
-      containerClass="flex min-h-[80vh] items-center justify-center">
-  </app-loading-spinner>
+  <app-start-chat-skeleton></app-start-chat-skeleton>
 } @else if (chat(); as c) {
 <div class="mx-auto w-full max-w-6xl py-lg px-md flex flex-col gap-lg" dir="rtl">
       <!-- Case summary card -->

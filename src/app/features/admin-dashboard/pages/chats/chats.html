@@ -210,15 +210,13 @@
 <!-- 4. Chats Table Container -->
 <section class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75">
   
-  @if (isLoading()) {
-    <app-loading-spinner
-      title="جارِ تحميل المحادثات..."
-      [fullscreen]="false"
-      containerClass="absolute inset-0 bg-white/60 flex items-center justify-center z-10"
-    />
-  }
+  @if (isLoading() && chats().length === 0) {
+    <app-table-skeleton
+      [rows]="10"
+    ></app-table-skeleton>
+  } @else {
 
-  <div class="overflow-x-auto">
+  <div class="w-full max-w-full overflow-x-auto" [class.opacity-50]="isLoading()" [class.pointer-events-none]="isLoading()">
     <table class="w-full text-right border-collapse whitespace-nowrap">
       <thead>
         <tr class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant">
@@ -342,8 +340,8 @@
             <tr>
               <td colspan="9" class="py-xl">
                 <app-empty-state
-                  title="لا توجد محادثات"
-                  message="لا توجد محادثات مسجلة تطابق البحث حالياً."
+                  [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد محادثات'"
+                  [message]="hasActiveFilters() ? 'لم نتمكن من العثور على محادثات تطابق خيارات التصفية أو البحث الحالية.' : 'لا توجد محادثات مسجلة حالياً.'"
                 />
               </td>
             </tr>
@@ -352,6 +350,7 @@
       </tbody>
     </table>
   </div>
+  }
 
   @if (totalPages() > 1) {
     <div class="p-md md:p-lg bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-4">

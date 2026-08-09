@@ -14,7 +14,7 @@ import { FileType } from '../../../../shared/enums/file-type';
 import { environment } from '../../../../../environments/environment';
 import { Location } from '@angular/common';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { ChatSkeletonComponent } from '../../../../shared/components/skeletons/chat-skeleton/chat-skeleton.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { validateImageFile} from '../../../../shared/validators/image-validation.validator';
 import { validateVideoFile } from '../../../../shared/validators/video-validation.validator';
@@ -22,7 +22,7 @@ import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 @Component({
   selector: 'app-chat-window',
   standalone: true,
-  imports: [FormsModule, DatePipe, ViewProfilePopup,LoadingSpinnerComponent,
+  imports: [FormsModule, DatePipe, ViewProfilePopup, ChatSkeletonComponent,
     CommonModule
   ],
   templateUrl: './chat-window.html',

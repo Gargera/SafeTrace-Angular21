@@ -18,14 +18,14 @@ import { LongTermCaseService } from '../../../long-term-cases/services/long-term
 import { UnknownCaseService } from '../../../unknown-cases/services/unknown-case.service';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { CacheService } from '../../../../core/cache/cache.service';
-import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+import { CACHE_TAGS, CACHE_TTL, PROFILE_CACHE_KEYS } from '../../../../core/cache/cache.constants';
 
 import { MyCaseListItemResponse, MyCasesFilterRequest } from '../../model/profile.model';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { FoundPersonInfoRequest, CasesFilterRequest } from '../../../../core/models/cases.model';
 
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { CardSkeletonComponent } from '../../../../shared/components/skeletons/card-skeleton/card-skeleton.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
@@ -37,7 +37,7 @@ import { FoundedPopupComponent } from '../../../../shared/components/cases-compo
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 const CASE_TYPE_ORDER: CaseType[] = [CaseType.Urgent, CaseType.LongTerm, CaseType.Unknown];
-const UI_STATE_CACHE_KEY = 'MyCasesTab_UI_State';
+const UI_STATE_CACHE_KEY = PROFILE_CACHE_KEYS.UI_MY_CASES;
 
 @Component({
   selector: 'app-my-cases-tab',
@@ -46,7 +46,7 @@ const UI_STATE_CACHE_KEY = 'MyCasesTab_UI_State';
     CommonModule,
     FormsModule,
     RouterModule,
-    LoadingSpinnerComponent,
+    CardSkeletonComponent,
     CaseCardCompactComponent,
     EmptyStateComponent,
     ButtonComponent,
@@ -63,6 +63,7 @@ const UI_STATE_CACHE_KEY = 'MyCasesTab_UI_State';
 export class MyCasesTab implements OnInit, OnDestroy {
   protected readonly CaseType = CaseType;
   protected readonly CaseStatus = CaseStatus;
+  protected readonly PROFILE_CACHE_KEYS = PROFILE_CACHE_KEYS;
 
   private profileService = inject(ProfileService);
   private urgentService = inject(UrgentCaseService);
@@ -77,7 +78,6 @@ export class MyCasesTab implements OnInit, OnDestroy {
   currentPage = signal(1);
   totalPages = signal(0);
   totalCount = signal(0); // total number of cases matching current filters
-  overallTotalCount = signal(0); // total number of cases in the system (without any filter)
   readonly pageSize = 10;
 
   // Data – this is the filtered result from the backend
@@ -110,8 +110,10 @@ export class MyCasesTab implements OnInit, OnDestroy {
   // No local filtering – all filtering is done by the backend.
   filteredCases = computed(() => this.allCases());
 
-  // Whether there are any cases at all (from overall total)
-  hasAnyCases = computed(() => this.overallTotalCount() > 0);
+  hasActiveFilters = computed(() => {
+    const req = this.filterRequest();
+    return !!req && !!(req.fullName || req.caseCode || req.caseType !== undefined || req.status !== undefined);
+  });
 
   // Whether the current filtered list has results
   hasResults = computed(() => this.allCases().length > 0);
@@ -149,16 +151,22 @@ export class MyCasesTab implements OnInit, OnDestroy {
 
   constructor() {
     this.destroyRef.onDestroy(() => {
+      const state: any = {
+        filterRequest: this.filterRequest(),
+        currentPage: this.currentPage(),
+      };
+      
+      if (this.showMarkAsFoundModal() && this.markAsFoundCaseId()) {
+        const hasDraft = this.cacheService.has(`${PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND}_${this.markAsFoundCaseId()}`);
+        if (hasDraft) {
+          state.markAsFoundCaseId = this.markAsFoundCaseId();
+          state.markAsFoundCaseType = this.markAsFoundCaseType();
+        }
+      }
+
       this.cacheService.set(
         UI_STATE_CACHE_KEY,
-        {
-          filterRequest: this.filterRequest(),
-          currentPage: this.currentPage(),
-          modalConfig: this.showConfirmModal() ? this.modalConfig() : null,
-          showMarkAsFoundModal: this.showMarkAsFoundModal(),
-          markAsFoundCaseId: this.markAsFoundCaseId(),
-          markAsFoundCaseType: this.markAsFoundCaseType()
-        },
+        state,
         CACHE_TTL.UI_STATE,
         [CACHE_TAGS.UI_STATE]
       );
@@ -171,14 +179,12 @@ export class MyCasesTab implements OnInit, OnDestroy {
       if (cachedState.filterRequest) this.filterRequest.set(cachedState.filterRequest);
       if (cachedState.currentPage) this.currentPage.set(cachedState.currentPage);
       
-      if (cachedState.modalConfig) {
-        this.modalConfig.set(cachedState.modalConfig);
-        this.showConfirmModal.set(true);
-      }
-      if (cachedState.showMarkAsFoundModal) {
-        this.markAsFoundCaseId.set(cachedState.markAsFoundCaseId);
-        this.markAsFoundCaseType.set(cachedState.markAsFoundCaseType);
-        this.showMarkAsFoundModal.set(true);
+      if (cachedState.markAsFoundCaseId && cachedState.markAsFoundCaseType) {
+        if (this.cacheService.has(`${PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND}_${cachedState.markAsFoundCaseId}`)) {
+          this.markAsFoundCaseId.set(cachedState.markAsFoundCaseId);
+          this.markAsFoundCaseType.set(cachedState.markAsFoundCaseType);
+          this.showMarkAsFoundModal.set(true);
+        }
       }
     }
 
@@ -239,16 +245,6 @@ export class MyCasesTab implements OnInit, OnDestroy {
           this.allCases.set(pagination.items ?? []);
           this.totalPages.set(pagination.totalPages);
           this.totalCount.set(pagination.totalCount ?? 0);
-
-          // Update overall total only when no filters are applied
-          const hasActiveFilter = !!req && (
-            (req.fullName && req.fullName.trim() !== '') ||
-            (req.caseCode && req.caseCode.trim() !== '') ||
-            req.caseType !== undefined || req.status !== undefined
-          );
-          if (!hasActiveFilter) {
-            this.overallTotalCount.set(pagination.totalCount ?? 0);
-          }
         } else {
           this.allCases.set([]);
           this.totalPages.set(0);
@@ -374,12 +370,7 @@ export class MyCasesTab implements OnInit, OnDestroy {
         );
         this.toast.success('تم تحديث الحالة بنجاح');
         
-        const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
-        cachedState.showMarkAsFoundModal = false;
-        cachedState.markAsFoundCaseId = null;
-        cachedState.markAsFoundCaseType = null;
-        this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
-        
+        this.cacheService.remove(`FoundedPopup_Profile_${id}`);
         this.showMarkAsFoundModal.set(false);
         this.markAsFoundCaseId.set(null);
         this.markAsFoundCaseType.set(null);
@@ -392,6 +383,9 @@ export class MyCasesTab implements OnInit, OnDestroy {
   }
 
   closeMarkAsFoundModal(): void {
+    if (this.markAsFoundCaseId()) {
+      this.cacheService.remove(`${PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND}_${this.markAsFoundCaseId()}`);
+    }
     this.showMarkAsFoundModal.set(false);
     this.markAsFoundCaseId.set(null);
     this.markAsFoundCaseType.set(null);
@@ -436,18 +430,11 @@ export class MyCasesTab implements OnInit, OnDestroy {
         this.isSubmitting.set(false);
         this.allCases.update((items) => items.filter((item) => item.id !== caseId));
         this.totalCount.update((c) => Math.max(0, c - 1));
-        this.overallTotalCount.update((c) => Math.max(0, c - 1));
-
         if (this.totalCount() === 0) {
           this.totalPages.set(0);
         }
 
         this.toast.success('تم حذف الحالة بنجاح');
-        
-        const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
-        cachedState.modalConfig = null;
-        this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
-
         this.modalConfig.set(null);
       },
       error: (err) => {

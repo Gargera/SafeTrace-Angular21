@@ -29,6 +29,7 @@ import { HasPermissionDirective } from '../../../../shared/directives/has-permis
 import { Permissions } from '../../../../core/constants/Permissions';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
+import { CaseDetailsSkeletonComponent } from '../../../../shared/components/skeletons/case-details-skeleton/case-details-skeleton.component';
 
 @Component({
   selector: 'urgent-details',
@@ -46,6 +47,7 @@ import { ViewProfilePopup } from '../../../../shared/components/view-profile-pop
     HasPermissionDirective,
     ButtonComponent,
     ViewProfilePopup,
+    CaseDetailsSkeletonComponent,
   ],
   templateUrl: './urgent-details.html',
   styleUrls: ['./urgent-details.css'],
@@ -108,21 +110,7 @@ export class UrgentDetails implements OnInit {
   currentIndex = signal(0);
 
   constructor() {
-    this.destroyRef.onDestroy(() => {
-      const id = this.caseDetails()?.id;
-      if (id) {
-        this.cacheService.set(
-          `UrgentDetails_Modals_${id}`,
-          {
-            showDelete: this.showDeleteConfirmation(),
-            showFounded: this.showFoundedPopup(),
-            showLocation: this.showLocationModal(),
-            showPermanentDelete: this.showPermanentDeleteConfirmation()
-          },
-          300000
-        );
-      }
-    });
+    // Modal states should not be cached across navigation
   }
 
   ngOnInit(): void {
@@ -161,13 +149,8 @@ export class UrgentDetails implements OnInit {
           if (apiRes.success && apiRes.data) {
             this.caseDetails.set(apiRes.data);
 
-            const cachedModals = this.cacheService.get<any>(`UrgentDetails_Modals_${apiRes.data.id}`);
-            if (cachedModals) {
-              this.showDeleteConfirmation.set(cachedModals.showDelete || false);
-              this.showFoundedPopup.set(cachedModals.showFounded || false);
-              this.showLocationModal.set(cachedModals.showLocation || false);
-              this.showPermanentDeleteConfirmation.set(cachedModals.showPermanentDelete || false);
-            }
+            const hasFounded = this.cacheService.has(`FoundedPopup_Urgent_${apiRes.data.id}`);
+            if (hasFounded) this.showFoundedPopup.set(true);
 
             if (apiRes.data.photos?.length) {
               const primary =

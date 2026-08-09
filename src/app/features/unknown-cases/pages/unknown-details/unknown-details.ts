@@ -31,6 +31,7 @@ import { RejectCasePopupComponent } from '../../../../shared/components/cases-co
 import { RejectionReasonCardComponent } from '../../../../shared/components/cases-components/rejection-reason-card/rejection-reason-card';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
+import { CaseDetailsSkeletonComponent } from '../../../../shared/components/skeletons/case-details-skeleton/case-details-skeleton.component';
 
 /**
  * The backend DTO includes a `video` field (a plain path string) that is
@@ -55,6 +56,7 @@ const VIDEO_MEDIA_ID = -1;
     AgeBadgeDirective,
     ConfirmationModalComponent,
     FoundedPopupComponent,
+    CaseDetailsSkeletonComponent,
     HasPermissionDirective,
     ButtonComponent,
     RejectCasePopupComponent,
@@ -156,22 +158,6 @@ export class UnknownDetails implements OnInit {
   isMyCasePage = signal(false);
 
   constructor() {
-    this.destroyRef.onDestroy(() => {
-      const id = this.caseDetails()?.id;
-      if (id) {
-        this.cacheService.set(
-          `UnknownDetails_Modals_${id}`,
-          {
-            showDelete: this.showDeleteConfirmation(),
-            showFounded: this.showFoundedPopup(),
-            showApprove: this.showApproveConfirmation(),
-            showReject: this.showRejectConfirmation(),
-            showPermanentDelete: this.showPermanentDeleteConfirmation()
-          },
-          300000 // 5 minutes
-        );
-      }
-    });
   }
 
   ngOnInit(): void {
@@ -210,14 +196,11 @@ export class UnknownDetails implements OnInit {
           if (apiRes.success && apiRes.data) {
             this.caseDetails.set(apiRes.data);
 
-            const cachedModals = this.cacheService.get<any>(`UnknownDetails_Modals_${apiRes.data.id}`);
-            if (cachedModals) {
-              this.showDeleteConfirmation.set(cachedModals.showDelete || false);
-              this.showFoundedPopup.set(cachedModals.showFounded || false);
-              this.showApproveConfirmation.set(cachedModals.showApprove || false);
-              this.showRejectConfirmation.set(cachedModals.showReject || false);
-              this.showPermanentDeleteConfirmation.set(cachedModals.showPermanentDelete || false);
-            }
+            const hasReject = this.cacheService.has(`RejectPopup_Unknown_${apiRes.data.id}`);
+            const hasFounded = this.cacheService.has(`FoundedPopup_Unknown_${apiRes.data.id}`);
+            
+            if (hasReject) this.showRejectConfirmation.set(true);
+            if (hasFounded) this.showFoundedPopup.set(true);
 
             const media = this.mediaList();
             if (media.length) {

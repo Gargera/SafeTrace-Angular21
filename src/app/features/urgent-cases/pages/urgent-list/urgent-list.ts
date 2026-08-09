@@ -7,7 +7,7 @@ import { HeaderComponent } from '../../../../shared/components/header/header.com
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { PaginationComponent } from '../../../../shared/components/cases-components/case-pagination/case-pagination.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
-import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
+import { CaseSkeletonGridComponent } from '../../../../shared/components/skeletons/case-skeleton-grid/case-skeleton-grid.component';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
 
 import { UrgentCaseService } from '../../services/urgent-case.service';
@@ -39,7 +39,6 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
     CaseSkeletonGridComponent,
     EmptyStateComponent,
     CaseCardComponent,
-    ButtonComponent,
   ],
   templateUrl: './urgent-list.html',
   styleUrls: ['./urgent-list.css'],
@@ -111,7 +110,7 @@ export class UrgentListComponent implements OnInit {
     if (cachedState) {
       this.filterState.restoreState(cachedState.filter);
     }
-    
+
     this.setupFetchPipeline();
     this.fetchCases();
   }

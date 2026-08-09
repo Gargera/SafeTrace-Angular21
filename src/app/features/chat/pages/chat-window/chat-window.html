@@ -11,12 +11,10 @@
       ? 'max-w-full md:rounded-xl md:border md:border-outline-variant md:shadow-lg'
       : 'md:max-w-200 md:rounded-xl md:border md:border-outline-variant md:shadow-lg'
   ">
-    <!-- ===== 1. مؤشر التحميل (Spinner) ===== -->
+    <!-- ===== 1. مؤشر التحميل (Skeleton) ===== -->
     @if (isLoading()) {
-    <div class="absolute inset-0 z-50 flex items-center justify-center bg-surface/80 backdrop-blur-sm">
-      <app-loading-spinner [fullscreen]="false" title="جاري تحميل المحادثة..." subtitle="يرجى الانتظار قليلاً"
-        size="md">
-      </app-loading-spinner>
+    <div class="absolute inset-0 z-50 bg-surface">
+      <app-chat-skeleton [items]="8"></app-chat-skeleton>
     </div>
     }
 

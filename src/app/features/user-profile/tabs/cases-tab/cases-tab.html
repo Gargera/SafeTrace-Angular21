@@ -1,15 +1,10 @@
-@if (initialLoad()) {
-<!-- Loading Spinner -->
-<app-loading-spinner title="جارٍ تحميل الحالات..." subtitle="يرجى الانتظار قليلاً" size="md"
-  containerClass="flex min-h-[60vh] items-center justify-center" />
-} @else {
 <!-- Header (Always Visible) -->
 <app-header title="حالاتي" subtitle="إدارة ومتابعة جميع الحالات التي قمت بإنشائها" [badge]="totalCases() + ' حالة'"
   [showBackButton]="false" [showPrimary]="false" [showSecondary]="false" />
 
 <!-- Filters Card (Always Visible) -->
 <section class="overflow-hidden rounded-xl border border-outline-variant bg-surface shadow-sm my-6">
-  <app-case-filters [showSearch]="true" [showCaseType]="true" [showCaseStatus]="true" [showGender]="false"
+  <app-case-filters [initialFilter]="filterRequest()" [showSearch]="true" [showCaseType]="true" [showCaseStatus]="true" [showGender]="false"
     [showAgeCategory]="false" [showGovernment]="false" [showCity]="false" [showFromDate]="false" [showToDate]="false"
     [showAgeSort]="false" [showDateSort]="false" (filterChange)="onFilterChange($event)"
     (reset)="onFilterReset()"></app-case-filters>
@@ -17,11 +12,10 @@
 
 <!-- Content Area -->
 <div class="relative min-h-[350px]">
-  @if (loading() && !initialLoad()) {
-  <app-loading-spinner title="جارٍ تحديث الحالات..." [fullscreen]="false"
-    containerClass="absolute inset-0 bg-white/70 flex items-center justify-center z-10 rounded-xl backdrop-blur-[2px]" />
-  }
-
+  @if (loading()) {
+    <!-- Skeleton always in content area only, header/filters stay visible -->
+    <app-card-skeleton [items]="4" layout="case-card-compact"></app-card-skeleton>
+  } @else {
   <!-- Content -->
   @if (hasResults()) {
   <!-- Scrollable Cases Container -->
@@ -61,15 +55,16 @@
   </div>
   } @else {
   <!-- Empty State: either no cases at all OR no results for the applied filters -->
-  <app-empty-state icon="images/empty.png" [title]="hasAnyCases() ? 'لا توجد نتائج' : 'لا توجد حالات'" [message]="
-          hasAnyCases()
-            ? 'لم يتم العثور على حالات تطابق معايير البحث.'
+  <app-empty-state icon="images/empty.png" [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات'" [message]="
+          hasActiveFilters()
+            ? 'لم نتمكن من العثور على حالات تطابق خيارات التصفية أو البحث الحالية.'
             : 'لم تقم بإنشاء أي حالات حتى الآن.'
         " containerClass="py-16">
   </app-empty-state>
   }
+  }
 </div>
-}
+
 
 
 <!-- Confirmation Modal -->
@@ -81,6 +76,7 @@
 
 <!-- Mark as Found Modal -->
 @if (showMarkAsFoundModal()) {
-<app-founded-popup [caseId]="markAsFoundCaseId()!" (confirmed)="handleMarkAsFoundConfirm($event)"
+<app-founded-popup [caseId]="markAsFoundCaseId()!" [contextKey]="PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND + '_' + markAsFoundCaseId()"
+  (confirmed)="handleMarkAsFoundConfirm($event)"
   (cancel)="closeMarkAsFoundModal()" />
 }

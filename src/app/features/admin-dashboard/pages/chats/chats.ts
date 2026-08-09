@@ -2,12 +2,13 @@ import { Component, inject, OnInit, signal, computed, DestroyRef } from '@angula
 import { DatePipe, CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, tap, catchError, EMPTY } from 'rxjs';
 import { ChatService } from '../../../chat/services/chat.service';
 import { ChatAlertsService } from '../../../chat/services/chat-alert.service';
 import { AdminChatsDto, ChatFilterDto } from '../../../chat/models/chat.model';
 import { AdminChatStatisticsDto } from '../../../chat/models/admin-chat-statistics-dto';
 import { CardComponent } from '../../../../shared/components/card/card';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
@@ -19,6 +20,7 @@ import { SnackbarService } from '../../../../shared/services/toast.service';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
+import { TableSkeletonComponent } from '../../../../shared/components/skeletons/table-skeleton/table-skeleton.component';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
@@ -34,7 +36,6 @@ const UI_STATE_CACHE_KEY = 'AdminChats_UI_State';
     CommonModule,
     FormsModule,
     CardComponent,
-    LoadingSpinnerComponent,
     EmptyStateComponent,
     FormField,
     ButtonComponent,
@@ -43,7 +44,8 @@ const UI_STATE_CACHE_KEY = 'AdminChats_UI_State';
     CaseTypeBadgeDirective,
     TruncatePipe,
     HasPermissionDirective,
-    PaginationComponent
+    PaginationComponent,
+    TableSkeletonComponent
   ],
   templateUrl: './chats.html',
 })
@@ -81,6 +83,7 @@ export class AdminChats implements OnInit {
   showFilterDialog = signal(false);
 
   hasActiveFilters = computed(() =>
+    !!this.searchTerm() ||
     !!this.fromDate() ||
     !!this.toDate() ||
     this.isDeletedBySender() !== undefined ||
@@ -114,6 +117,9 @@ export class AdminChats implements OnInit {
     !!this.fromDateError() || !!this.toDateError()
   );
 
+  private searchSubject = new Subject<string>();
+  private readonly fetchTrigger$ = new Subject<void>();
+
   constructor() {
     this.destroyRef.onDestroy(() => {
       this.cacheService.set(
@@ -124,9 +130,7 @@ export class AdminChats implements OnInit {
           toDate: this.toDate(),
           isDeletedBySender: this.isDeletedBySender(),
           isDeletedByReceiver: this.isDeletedByReceiver(),
-          currentPage: this.currentPage(),
-          showDeleteModal: this.showDeleteModal(),
-          selectedChatToDelete: this.selectedChatToDelete()
+          currentPage: this.currentPage()
         },
         CACHE_TTL.UI_STATE,
         [CACHE_TAGS.UI_STATE]
@@ -144,15 +148,21 @@ export class AdminChats implements OnInit {
       this.isDeletedBySender.set(cachedState.isDeletedBySender);
       this.isDeletedByReceiver.set(cachedState.isDeletedByReceiver);
       this.currentPage.set(cachedState.currentPage || 1);
-
-      if (cachedState.showDeleteModal && cachedState.selectedChatToDelete) {
-        this.selectedChatToDelete.set(cachedState.selectedChatToDelete);
-        this.showDeleteModal.set(true);
-      }
     }
 
+    this.setupFetchPipeline();
     this.loadStatistics();
+    
+    // Initial fetch
     this.loadChats();
+
+    this.searchSubject
+      .pipe(debounceTime(400), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe((term: string) => {
+        this.searchTerm.set(term);
+        this.currentPage.set(1);
+        this.loadChats();
+      });
   }
 
   private loadStatistics(): void {
@@ -170,34 +180,45 @@ export class AdminChats implements OnInit {
   }
 
   private loadChats(): void {
-    this.isLoading.set(true);
-    const filter: ChatFilterDto = {
-      search: this.searchTerm() || undefined,
-      fromDate: this.fromDate() || undefined,
-      toDate: this.toDate() || undefined,
-      isDeletedBySender: this.isDeletedBySender(),
-      isDeletedByReceiver: this.isDeletedByReceiver(),
-    };
+    this.fetchTrigger$.next();
+  }
 
-    this.chatService.getAllChatsForAdmin(this.currentPage(), PAGE_SIZE, filter).subscribe({
-      next: (response) => {
-        this.chats.set(response.data?.items || []);
-        this.totalCount.set(response.data?.totalCount || 0);
+  private setupFetchPipeline(): void {
+    this.fetchTrigger$
+      .pipe(
+        tap(() => this.isLoading.set(true)),
+        switchMap(() => {
+          const filter: ChatFilterDto = {
+            search: this.searchTerm() || undefined,
+            fromDate: this.fromDate() || undefined,
+            toDate: this.toDate() || undefined,
+            isDeletedBySender: this.isDeletedBySender(),
+            isDeletedByReceiver: this.isDeletedByReceiver(),
+          };
+
+          return this.chatService.getAllChatsForAdmin(this.currentPage(), PAGE_SIZE, filter).pipe(
+            catchError((err) => {
+              this.snackbarService.error(extractErrorMessage(err, 'تعذر تحميل المحادثات'));
+              this.chats.set([]);
+              this.totalCount.set(0);
+              this.isLoading.set(false);
+              return EMPTY;
+            })
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((response) => {
+        if (response && response.data) {
+          this.chats.set(response.data.items || []);
+          this.totalCount.set(response.data.totalCount || 0);
+        }
         this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.snackbarService.error(extractErrorMessage(err, 'تعذر تحميل المحادثات'));
-        this.chats.set([]);
-        this.totalCount.set(0);
-        this.isLoading.set(false);
-      },
-    });
+      });
   }
 
   onSearch(value: string): void {
-    this.searchTerm.set(value);
-    this.currentPage.set(1);
-    this.loadChats();
+    this.searchSubject.next(value);
   }
 
   toggleFilterDialog(): void {
@@ -255,11 +276,6 @@ export class AdminChats implements OnInit {
 
         this.totalCount.update(count => Math.max(0, count - 1));
         this.snackbarService.success('تم حذف المحادثة نهائياً');
-
-        const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
-        cachedState.showDeleteModal = false;
-        cachedState.selectedChatToDelete = null;
-        this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
 
         this.isDeleting.set(false);
         this.closeDeleteModal();

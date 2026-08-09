@@ -60,13 +60,21 @@ export class UserService extends ApiService {
   }
 
   rejectUser(userId: string, reason: string): Observable<ApiResponse<string>> {
-    return this.post<ApiResponse<string>>(`${this.baseUrl}/reject/${userId}`, { reason }).pipe(
+    return this.post<ApiResponse<string>>(
+      `${this.baseUrl}/Reject/${userId}`,
+      JSON.stringify(reason),
+      { headers: { 'Content-Type': 'application/json' } }
+    ).pipe(
       tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS]))
     );
   }
 
   toggleBlockStatus(userId: string, reason?: string): Observable<ApiResponse<string>> {
-    return this.post<ApiResponse<string>>(`${this.baseUrl}/toggle-block/${userId}`, { reason: reason || null }).pipe(
+    return this.post<ApiResponse<string>>(
+      `${this.baseUrl}/ToggleBlock/${userId}`,
+      JSON.stringify(reason || ''),
+      { headers: { 'Content-Type': 'application/json' } }
+    ).pipe(
       tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS]))
     );
   }
