@@ -1,4 +1,4 @@
-import { Component,ElementRef,ViewChild, inject , OnInit, signal, AfterViewInit } from '@angular/core';
+import { Component,ElementRef,ViewChild, inject , OnInit, signal, AfterViewInit, computed } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe,CommonModule } from '@angular/common';
@@ -19,6 +19,8 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
 import { validateImageFile} from '../../../../shared/validators/image-validation.validator';
 import { validateVideoFile } from '../../../../shared/validators/video-validation.validator';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+import { CaseStatus } from '../../../../shared/enums/case-status';
+import {getCaseStatusTranslationAr} from '../../../../core/constants/dictionaries/case.status.dictionary';
 @Component({
   selector: 'app-chat-window',
   standalone: true,
@@ -44,6 +46,7 @@ export class ChatWindow implements OnInit {
   readonly FileType = FileType;
 
   isAdmin = false;
+  CaseStatus = CaseStatus;
 
   isLoading = signal<boolean>(true);
   messagesLoaded = signal(false);
@@ -60,6 +63,20 @@ export class ChatWindow implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
 
+  canSendMessage = computed(() => {
+    const status = this.chat()?.caseStatus;
+    return(
+      status === CaseStatus.Active ||
+      status === CaseStatus.Found ||
+      status === CaseStatus.Expired
+    );
+  });
+
+  isReadOnly = computed(() => {
+    return this.chat()?.caseStatus === CaseStatus.Deleted;
+  });
+
+getCaseStatusTranslationAr = getCaseStatusTranslationAr;
 
   async ngOnInit(): Promise<void> {
     this.route.data.subscribe(data => {
@@ -500,7 +517,11 @@ openProfile(userId?: string): void {
 }
 
 goToCaseDetails(caseId: number, caseType: string): void {
+
+  const chat = this.chat();
+
   if(this.isAdmin){
+    
     switch(caseType) {
 
     case 'Urgent':
@@ -517,6 +538,17 @@ goToCaseDetails(caseId: number, caseType: string): void {
     }
   }
   else{
+     const status = this.chat()?.caseStatus;
+
+    if (status === CaseStatus.Deleted) {
+      this.snackbarService.show("هذه الحالة تم حذفها");
+      return;
+    }
+
+    if(status === CaseStatus.Found){
+      this.router.navigate(['/founded',chat?.foundCaseId]);
+      return;
+    }
 
   switch(caseType) {
 
