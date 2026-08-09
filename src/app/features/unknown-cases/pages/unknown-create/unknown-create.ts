@@ -2,7 +2,7 @@ import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { Component, inject, signal, ChangeDetectionStrategy, DestroyRef, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
@@ -26,6 +26,8 @@ import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.vali
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
 import { ImageService } from '../../../../shared/services/image.service';
+import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
+
 
 type Step = 1 | 2 | 3;
 
@@ -90,6 +92,7 @@ export class UnknownCreate implements OnInit {
   additionalPhotosError = signal<string | null>(null);
 
   videoFile = signal<File | null>(null);
+  videoError = signal<string | null>(null);
 
   showForceCreatePopup = signal(false);
   showDuplicateInfoDialog = signal(false);
@@ -280,8 +283,29 @@ export class UnknownCreate implements OnInit {
   }
 
   onVideoSelected(event: Event): void {
-    this.videoFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0] ?? null;
+
+  if (!file) {
+    this.videoFile.set(null);
+    return;
   }
+
+  const validation = validateVideoFile(file, 50);
+
+  if (!validation.valid) {
+    this.videoFile.set(null);
+    this.videoError.set(validation.errorMessage ?? 'الملف غير صالح.');
+
+    // مهم عشان لو اختار نفس الملف تاني بعد الرفض
+    input.value = '';
+
+    return;
+  }
+
+  this.videoError.set(null);
+  this.videoFile.set(file);
+}
 
   // --- إرسال النموذج ---
   onSubmit(forceCreate = false): void {

@@ -8,6 +8,7 @@ import Swal from 'sweetalert2';
 import { mustMatch } from '../../../../shared/validators/must-match.validator';
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 @Component({
   selector: 'app-reset-password',
@@ -58,6 +59,7 @@ export class ResetPassword implements OnDestroy {
   }
 
   onRequestOtp() {
+    if (this.isLoading()) return;
     this.apiErrorMessage.set('');
     if (this.emailForm.invalid) { this.emailForm.markAllAsTouched(); return; }
 
@@ -72,7 +74,7 @@ export class ResetPassword implements OnDestroy {
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.apiErrorMessage.set(err.error?.detail || 'حدث خطأ، تأكد من بريدك الإلكتروني.');
+        this.apiErrorMessage.set(extractErrorMessage(err, 'حدث خطأ، تأكد من بريدك الإلكتروني.'));
       }
     });
   }
@@ -96,12 +98,13 @@ export class ResetPassword implements OnDestroy {
           clearInterval(this.intervalId);
           this.intervalId = null;
         }
-        this.apiErrorMessage.set(err.error?.detail || 'حدث خطأ أثناء إعادة إرسال الرمز. يرجى المحاولة لاحقاً.');
+        this.apiErrorMessage.set(extractErrorMessage(err, 'حدث خطأ أثناء إعادة إرسال الرمز. يرجى المحاولة لاحقاً.'));
       }
     });
   }
 
   onResetPassword() {
+    if (this.isLoading()) return;
     this.apiErrorMessage.set('');
     if (this.resetForm.invalid) { this.resetForm.markAllAsTouched(); return; }
 
@@ -125,7 +128,7 @@ export class ResetPassword implements OnDestroy {
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.apiErrorMessage.set(err.error?.detail || 'رمز التحقق غير صحيح أو منتهي الصلاحية.');
+        this.apiErrorMessage.set(extractErrorMessage(err, 'رمز التحقق غير صحيح أو منتهي الصلاحية.'));
       }
     });
   }

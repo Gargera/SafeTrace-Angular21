@@ -11,9 +11,7 @@
     </div>
 
     @if (isLoading()) {
-    <div class="flex min-h-[300px] items-center justify-center p-8">
-      <span class="material-symbols-outlined animate-spin text-3xl text-secondary">progress_activity</span>
-    </div>
+      <app-update-form-skeleton></app-update-form-skeleton>
     } @else {
 
     <!-- Body Container (Spacing & Padding) -->
@@ -429,27 +427,80 @@
             فيديو توضيحي <span class="font-normal text-on-surface-variant/70">(اختياري)</span>
           </label>
 
-          @if (existingVideoUrl() && !videoFile()) {
-          <div
-            class="mb-3 flex items-center justify-between rounded-xl border border-outline-variant/40 bg-surface-container-low p-3.5">
-            <span class="text-xs font-medium text-on-surface">الفيديو الحالي مرفوع بالفعل</span>
-            <a [href]="existingVideoUrl()" target="_blank" class="text-xs text-secondary font-semibold underline">مشاهدة
-              الفيديو</a>
-          </div>
-          }
+   
+            @if (existingVideoUrl() && !videoFile()) {
+              <div
+                class="mb-3 flex items-center justify-between gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-low p-3.5">
 
-          <div
-            class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
-            [class.border-secondary]="!!videoFile()" [class.bg-surface-container-low]="!!videoFile()"
-            (click)="videoInput.click()">
-            <input #videoInput type="file" accept="video/*" class="hidden" (change)="onVideoSelected($event)" />
-            <div
-              class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
-              <span class="material-symbols-outlined text-3xl"
-                [ngClass]="videoFile() ? 'text-secondary' : 'text-outline'">videocam</span>
-            </div>
-            <p class="text-sm font-bold text-on-surface">{{ videoFile()?.name ?? 'استبدال / رفع فيديو' }}</p>
-          </div>
+                <div class="flex min-w-0 items-center gap-2">
+                  <span class="material-symbols-outlined shrink-0 text-lg text-secondary">
+                    videocam
+                  </span>
+
+                  <span class="truncate text-xs font-medium text-on-surface">
+                    يوجد فيديو حالي مرفوع
+                  </span>
+                </div>
+
+                <a
+                  [href]="existingVideoUrl()"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="shrink-0 text-xs font-semibold text-secondary underline underline-offset-2 transition-opacity hover:opacity-80">
+                  مشاهدة الفيديو
+                </a>
+              </div>
+            }
+
+<div
+  class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60
+         bg-surface-bright p-6 text-center shadow-2xs
+         transition-all duration-200
+         hover:-translate-y-0.5 hover:border-secondary
+         hover:bg-surface-container-low hover:shadow-xs"
+  [class.border-secondary]="!!videoFile()"
+  [class.bg-surface-container-low]="!!videoFile()"
+  (click)="videoInput.click()">
+
+  <input
+    #videoInput
+    type="file"
+    accept=".mp4,.mov,.webm,video/mp4,video/quicktime,video/webm"
+    class="hidden"
+    (change)="onVideoSelected($event)"
+  />
+
+  <div
+    class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center
+           rounded-2xl bg-secondary/10 text-secondary
+           transition-transform duration-200 group-hover:scale-110">
+
+    <span
+      class="material-symbols-outlined text-3xl"
+      [ngClass]="videoFile() ? 'text-secondary' : 'text-outline'">
+      videocam
+    </span>
+  </div>
+
+  <p class="text-sm font-bold text-on-surface">
+    {{ videoFile()?.name ?? 'استبدال / رفع فيديو' }}
+  </p>
+
+  <p class="mt-1 text-xs text-on-surface-variant/70">
+    MP4 / MOV / WebM — حتى 50 MB
+  </p>
+</div>
+
+@if (videoError()) {
+  <p class="mt-1.5 flex items-center gap-1 text-xs text-error">
+    <span class="material-symbols-outlined text-sm">
+      error
+    </span>
+
+    {{ videoError() }}
+  </p>
+}
+
         </div>
 
       </div>

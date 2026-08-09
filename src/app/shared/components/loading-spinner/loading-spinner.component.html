@@ -6,20 +6,31 @@
   [class.flex.flex-col.items-center.justify-center]="!fullscreen()"
 >
   <div class="flex flex-col items-center gap-4">
-    <!-- Spinner -->
-    <div
-      class="animate-spin rounded-full border-4"
-      [class.border-surface-container-highest]="variant() === 'secondary'"
-      [class.border-outline-variant/30]="variant() === 'primary'"
-      [class.border-t-secondary]="variant() === 'secondary'"
-      [class.border-t-primary]="variant() === 'primary'"
-      [class.h-8.w-8]="size() === 'sm'"
-      [class.h-12.w-12]="size() === 'md'"
-      [class.h-16.w-16]="size() === 'lg'"
-      [class.w-8]="size() === 'sm'"
-      [class.w-12]="size() === 'md'"
-      [class.w-16]="size() === 'lg'"
-    ></div>
+    <!-- Spinner Container -->
+    <div class="relative inline-flex items-center justify-center">
+      <!-- Rotating Ring -->
+      <div
+        class="animate-spin"
+        style="border-radius: 50%; border-style: solid; background-color: transparent;"
+        [class.border-4]="size() === 'sm' || size() === 'md'"
+        [class.border-8]="size() === 'lg'"
+        [class.border-surface-container-highest]="variant() === 'secondary'"
+        [class.border-outline-variant/30]="variant() === 'primary'"
+        [class.border-t-secondary]="variant() === 'secondary'"
+        [class.border-t-primary]="variant() === 'primary'"
+        [style.width]="size() === 'sm' ? '64px' : (size() === 'md' ? '96px' : '128px')"
+        [style.height]="size() === 'sm' ? '64px' : (size() === 'md' ? '96px' : '128px')"
+      ></div>
+      <!-- Logo -->
+      <img 
+        src="/images/logo.svg" 
+        alt="Loading..." 
+        class="absolute drop-shadow-sm object-contain"
+        style="border-radius: 50%; background-color: transparent;"
+        [style.width]="size() === 'sm' ? '52px' : (size() === 'md' ? '84px' : '108px')"
+        [style.height]="size() === 'sm' ? '52px' : (size() === 'md' ? '84px' : '108px')"
+      />
+    </div>
 
     @if (showTitle() && title()) {
       <h3 class="text-center text-lg font-semibold text-on-surface">

@@ -12,9 +12,7 @@
   </header>
 
   @if (isUserLoading()) {
-    <div class="flex justify-center items-center h-64">
-      <app-loading-spinner title="جارِ تحميل بيانات المستخدم..."></app-loading-spinner>
-    </div>
+    <app-profile-skeleton></app-profile-skeleton>
   } @else if (user()) {
     
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
@@ -67,7 +65,7 @@
                     }
                     <span prefix><span class="material-symbols-outlined text-on-surface-variant">chevron</span></span>
                   </app-form-field>
-                  <app-button (onClick)="onChangeRole(selectedRole())" [disabled]="loadingAction() !== null || selectedRole() === user()?.role" [loading]="loadingAction() === 'changeRole'" variant="primary" extraClass="w-full py-2.5 rounded-lg text-label-md font-bold justify-center">
+                  <app-button (onClick)="onChangeRole(selectedRole())" [disabled]="loadingAction() !== null" [loading]="loadingAction() === 'changeRole'" variant="primary" extraClass="w-full py-2.5 rounded-lg text-label-md font-bold justify-center">
                     تغيير
                   </app-button>
                 </div>
@@ -146,12 +144,12 @@
               @if (canManageUser()) {
                 <div class="flex flex-wrap gap-3 mt-6 pt-6 border-t border-outline-variant/50">
                   @if (!isInternalRole()) {
-                    <app-button *hasPermission="Permissions.Users.Approve" (onClick)="onApprove()" [disabled]="loadingAction() !== null || user()?.verificationStatus === verificationStatusEnum.Verified || !user()?.identificationImageFront || !user()?.identificationImageBack" [loading]="loadingAction() === 'approve'" variant="primary" extraClass="flex-1 px-4 py-2.5 rounded-xl text-label-md font-bold !bg-[#006b5f] !text-white hover:!bg-[#008f81] border-none justify-center gap-2 transition-all">
+                    <app-button *hasPermission="Permissions.Users.Approve" (onClick)="onApprove()" [disabled]="loadingAction() !== null" [loading]="loadingAction() === 'approve'" variant="primary" extraClass="flex-1 px-4 py-2.5 rounded-xl text-label-md font-bold !bg-[#006b5f] !text-white hover:!bg-[#008f81] border-none justify-center gap-2 transition-all">
                       <span class="material-symbols-outlined text-[20px]">check_circle</span>
                       قبول
                     </app-button>
                     
-                    <app-button *hasPermission="Permissions.Users.Reject" (onClick)="onReject()" [disabled]="loadingAction() !== null || user()?.verificationStatus === verificationStatusEnum.Verified || !user()?.identificationImageFront || !user()?.identificationImageBack" [loading]="loadingAction() === 'reject'" variant="primary" extraClass="flex-1 px-4 py-2.5 rounded-xl text-label-md font-bold !bg-error !text-white hover:!bg-error/90 border-none justify-center gap-2 transition-all">
+                    <app-button *hasPermission="Permissions.Users.Reject" (onClick)="onReject()" [disabled]="loadingAction() !== null" [loading]="loadingAction() === 'reject'" variant="primary" extraClass="flex-1 px-4 py-2.5 rounded-xl text-label-md font-bold !bg-error !text-white hover:!bg-error/90 border-none justify-center gap-2 transition-all">
                       <span class="material-symbols-outlined text-[20px]">cancel</span>
                       رفض
                     </app-button>
@@ -209,9 +207,7 @@
       <div class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-50">
         
         @if (isPermissionsLoading()) {
-          <div class="flex justify-center items-center h-48">
-            <app-loading-spinner title="جارِ تحميل الصلاحيات..."></app-loading-spinner>
-          </div>
+          <app-table-skeleton [rows]="6"></app-table-skeleton>
         } @else {
           <div class="divide-y divide-outline-variant">
             
@@ -330,7 +326,7 @@
 </main>
 
 @if (selectedZoomImage()) {
-  <div class="fixed inset-0 bg-black/80 z-100 flex items-center justify-center p-0 sm:p-6 backdrop-blur-sm animate-fade-in" (click)="selectedZoomImage.set(null)">
+  <div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 bg-black/80 z-100 flex items-center justify-center p-0 sm:p-6 backdrop-blur-sm animate-fade-in" (click)="selectedZoomImage.set(null)">
     
     <button (click)="selectedZoomImage.set(null)" class="absolute top-4 right-4 sm:top-6 sm:right-6 z-110 bg-white/10 hover:bg-error text-white w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all backdrop-blur-md border border-white/20 shadow-lg">
       <span class="material-symbols-outlined text-[20px] sm:text-[24px]">close</span>
@@ -350,8 +346,10 @@
     [confirmText]="modalConfig().confirmText"
     [icon]="modalConfig().icon"
     [variant]="modalConfig().variant"
+    [confirmLoading]="loadingAction() !== null"
+    [confirmDisabled]="loadingAction() !== null"
     (confirm)="onConfirmModal()"
-    (cancel)="showConfirmModal.set(false)"
+    (cancel)="onCancelModal()"
   >
     @if (modalConfig().title === 'تأكيد رفض الحساب') {
       <div class="mt-4 w-full text-right px-2">

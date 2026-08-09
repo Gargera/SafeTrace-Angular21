@@ -1,4 +1,5 @@
-import { Component, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, effect, inject, OnDestroy, OnInit, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProfileSidebar } from './shared/profile-sidebar/profile-sidebar';
 
@@ -10,12 +11,14 @@ import { ProfileService } from './service/profile.service';
 import { MyCasesTab } from './tabs/cases-tab/cases-tab';
 import { EditProfile } from './tabs/Edit-profile/edit-profile';
 import { MyDonationsComponent } from '../donations/pages/my-donations/my-donations.component';
+import { CommonModule } from '@angular/common';
 export type ProfileTab = 'edit' | 'cases' | 'chat' | 'notifications' | 'donations'; // ADDED 'donations'
 
 @Component({
   selector: 'app-profile-view',
   imports: [
     RouterModule,
+    CommonModule,
     ProfileSidebar,
     EditProfile,
     NotificationsTab,
@@ -45,14 +48,28 @@ export class ProfileView implements OnInit, OnDestroy {
     { id: 'donations', label: 'تبرعاتي' }, // ADDED ' },
   ];
   
+  readonly #destroyRef = inject(DestroyRef);
+
   ngOnInit(): void {
     // Read tab from query param
-    this.#route.queryParamMap.subscribe((params) => {
-      const tab = params.get('tab') as ProfileTab | null;
-      if (tab && this.tabs.some((t) => t.id === tab)) {
-        this.activeTab.set(tab);
-      }
-    });
+    this.#route.queryParamMap
+      .pipe(takeUntilDestroyed(this.#destroyRef))
+      .subscribe((params) => {
+        const tab = params.get('tab') as ProfileTab | null;
+        if (tab && this.tabs.some((t) => t.id === tab)) {
+          this.activeTab.set(tab);
+          this.closeImageZoom();
+        } else {
+          // Default to 'edit' and update URL
+          this.activeTab.set('edit');
+          this.closeImageZoom();
+          this.#router.navigate([], {
+            relativeTo: this.#route,
+            queryParams: { tab: 'edit' },
+            replaceUrl: true
+          });
+        }
+      });
 
     this.#loadUserInfo();
     this.notificationService.startConnection();

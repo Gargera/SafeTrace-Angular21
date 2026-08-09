@@ -146,7 +146,7 @@ export class UrgentCaseService extends ApiService {
    */
   markAsFound(id: number, request: FoundPersonInfoRequest): Observable<ApiResponse<string>> {
     return this.put<ApiResponse<string>>(`${this.baseUrl}/${id}/mark-as-found`, request).pipe(
-      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.URGENT_CASES]))
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.URGENT_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
     );
   }
 
@@ -156,7 +156,7 @@ export class UrgentCaseService extends ApiService {
    */
   permanentDelete(id: number): Observable<ApiResponse<string>> {
     return this.delete<ApiResponse<string>>(`${this.baseUrl}/${id}/permanent`).pipe(
-      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.URGENT_CASES]))
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.URGENT_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
     );
   }
 

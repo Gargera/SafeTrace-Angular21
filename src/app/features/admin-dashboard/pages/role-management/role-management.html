@@ -97,9 +97,8 @@
     <div class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-50">
       
       @if (isLoadingTree()) {
-        <app-loading-spinner title="جارِ تحميل الصلاحيات..." [fullscreen]="false" containerClass="absolute inset-0 bg-white/70 flex items-center justify-center z-10 backdrop-blur-sm"></app-loading-spinner>
-      }
-
+        <app-table-skeleton [rows]="10"></app-table-skeleton>
+      } @else {
       <div class="divide-y divide-outline-variant">
         
         <div class="bg-surface-variant/30 p-md">
@@ -195,6 +194,7 @@
           </div>
         }
       </div>
+      }
     </div>
   </section>
   </ng-container>
@@ -225,6 +225,6 @@
     [icon]="modalConfig().icon"
     [variant]="modalConfig().variant"
     (confirm)="onConfirmModal()"
-    (cancel)="showConfirmModal.set(false)"
+    (cancel)="onCancelModal()"
   ></app-confirmation-modal>
 }

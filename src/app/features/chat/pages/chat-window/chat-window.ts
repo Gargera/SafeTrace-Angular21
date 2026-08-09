@@ -14,16 +14,17 @@ import { FileType } from '../../../../shared/enums/file-type';
 import { environment } from '../../../../../environments/environment';
 import { Location } from '@angular/common';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { ChatSkeletonComponent } from '../../../../shared/components/skeletons/chat-skeleton/chat-skeleton.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { validateImageFile} from '../../../../shared/validators/image-validation.validator';
 import { validateVideoFile } from '../../../../shared/validators/video-validation.validator';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import {getCaseStatusTranslationAr} from '../../../../core/constants/dictionaries/case.status.dictionary';
 @Component({
   selector: 'app-chat-window',
   standalone: true,
-  imports: [FormsModule, DatePipe, ViewProfilePopup,LoadingSpinnerComponent,
+  imports: [FormsModule, DatePipe, ViewProfilePopup, ChatSkeletonComponent,
     CommonModule
   ],
   templateUrl: './chat-window.html',
@@ -100,7 +101,7 @@ getCaseStatusTranslationAr = getCaseStatusTranslationAr;
       },
       error: (err) => {
         this.snackbarService.error(
-         err.error?.detail ?? 'تعذر تحميل بيانات المحادثة'
+         extractErrorMessage(err, 'تعذر تحميل بيانات المحادثة')
         );
         this.isLoading.set(false);
       },
@@ -270,7 +271,7 @@ private handleMessageDeletedForEveryone = (
     },
     error: (err) => {
       this.snackbarService.error(
-        err.error?.detail ?? err.error?.title ?? 'تعذر تحميل الرسائل'
+        extractErrorMessage(err, 'تعذر تحميل الرسائل')
       );
       this.isLoading.set(false);
     }
@@ -381,7 +382,7 @@ private handleMessageDeletedForEveryone = (
         error: (err) => {
 
           this.snackbarService.error(
-            err.error?.detail ?? err.error?.title ?? 'تعذر إرسال الرسالة، تحقق من الاتصال وحاول مرة أخرى');
+            extractErrorMessage(err, 'تعذر إرسال الرسالة، تحقق من الاتصال وحاول مرة أخرى'));
           this.sending.set(false);
         }
     });
@@ -420,7 +421,7 @@ private handleMessageDeletedForEveryone = (
 
     error: (err) => {
       this.snackbarService.error(
-        err.error?.detail ?? err.error?.title ?? 'تعذر حذف الرسالة، حاول مرة أخرى'
+        extractErrorMessage(err, 'تعذر حذف الرسالة، حاول مرة أخرى')
       );
     },
   });

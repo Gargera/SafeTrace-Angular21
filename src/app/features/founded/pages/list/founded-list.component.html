@@ -42,8 +42,11 @@
 
       <!-- Empty State -->
       @if (!isLoading() && !hasError() && items().length === 0) {
-      <app-empty-state title="لا توجد نتائج" message="جرّب تغيير معايير البحث أو الفلاتر للعثور على من تبحث عنه.">
-      </app-empty-state>
+        <app-empty-state
+          [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات معثور عليها'"
+          [message]="hasActiveFilters() ? 'لم نتمكن من العثور على حالات تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم تسجيل أي حالات معثور عليها حتى الآن.'"
+        >
+        </app-empty-state>
       }
 
       @if (!isLoading() && !hasError() && items().length > 0) {

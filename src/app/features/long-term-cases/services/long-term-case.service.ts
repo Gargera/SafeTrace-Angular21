@@ -143,7 +143,7 @@ export class LongTermCaseService extends ApiService {
       JSON.stringify(rejectionReason),
       { headers: { 'Content-Type': 'application/json' } },
     ).pipe(
-      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.LONG_TERM_CASES]))
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.LONG_TERM_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
     );
   }
 
@@ -153,7 +153,7 @@ export class LongTermCaseService extends ApiService {
    */
   deleteCase(id: number): Observable<ApiResponse<string>> {
     return this.delete<ApiResponse<string>>(`${this.baseUrl}/Delete/${id}`).pipe(
-      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.LONG_TERM_CASES]))
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.LONG_TERM_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
     );
   }
 
@@ -163,7 +163,7 @@ export class LongTermCaseService extends ApiService {
    */
   markAsFound(id: number, request: FoundPersonInfoRequest): Observable<ApiResponse<string>> {
     return this.put<ApiResponse<string>>(`${this.baseUrl}/MarkAsFound/${id}`, request).pipe(
-      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.LONG_TERM_CASES]))
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.LONG_TERM_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
     );
   }
 
@@ -173,7 +173,7 @@ export class LongTermCaseService extends ApiService {
    */
   permanentDelete(id: number): Observable<ApiResponse<string>> {
     return this.delete<ApiResponse<string>>(`${this.baseUrl}/PermanentDeletion/${id}`).pipe(
-      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.LONG_TERM_CASES]))
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.LONG_TERM_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
     );
   }
 

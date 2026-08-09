@@ -4,7 +4,7 @@ import { AiMatchingService, AiMatchedCase } from '../../services/ai-search.servi
 
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { CardSkeletonComponent } from '../../../../shared/components/skeletons/card-skeleton/card-skeleton.component';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Router } from '@angular/router';
@@ -15,7 +15,7 @@ import { ImageService } from '../../../../shared/services/image.service';
 @Component({
   selector: 'app-ai-search',
   standalone: true,
-  imports: [CommonModule, CaseCardComponent, LoadingSpinnerComponent, HeaderComponent],
+  imports: [CommonModule, CaseCardComponent, CardSkeletonComponent, HeaderComponent],
   templateUrl: './ai-search.html',
   styleUrl: './ai-search.css',
 })

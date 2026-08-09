@@ -1,6 +1,6 @@
 import { Component, inject, signal, ChangeDetectionStrategy, OnInit, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
@@ -25,6 +25,8 @@ import { ImageService } from '../../../../shared/services/image.service';
 import { CommonModule } from '@angular/common';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
+import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
+import { UpdateFormSkeletonComponent } from '../../../../shared/components/skeletons/update-form-skeleton/update-form-skeleton.component';
 
 type Step = 1 | 2 | 3;
 
@@ -39,6 +41,7 @@ type Step = 1 | 2 | 3;
     CardComponent,
     HeaderComponent,
     ConfirmationModalComponent,
+    UpdateFormSkeletonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./unknown-update.css'],
@@ -75,6 +78,7 @@ export class UnknownUpdate implements OnInit {
 
   existingVideoUrl = signal<string | null>(null);
   videoFile = signal<File | null>(null);
+  videoError = signal<string | null>(null);
 
   readonly genders = Gender;
   readonly governorates = EGYPT_GOVERNORATES;
@@ -298,9 +302,31 @@ export class UnknownUpdate implements OnInit {
     this.newPhotoPreviews.update((p) => p.filter((_, i) => i !== index));
   }
 
-  onVideoSelected(event: Event): void {
-    this.videoFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
+  
+onVideoSelected(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0] ?? null;
+
+  if (!file) {
+    return;
   }
+
+  const validation = validateVideoFile(file, 50);
+
+  if (!validation.valid) {
+    this.videoFile.set(null);
+    this.videoError.set(
+      validation.errorMessage ?? 'الفيديو غير صالح.'
+    );
+
+    input.value = '';
+    return;
+  }
+
+  this.videoError.set(null);
+  this.videoFile.set(file);
+}
+
 
   onSubmit(): void {
     if (this.isSubmitting()) return;

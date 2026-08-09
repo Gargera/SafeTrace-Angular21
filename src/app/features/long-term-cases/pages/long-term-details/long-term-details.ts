@@ -3,6 +3,7 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, EMPTY, switchMap } from 'rxjs';
+import { CacheService } from '../../../../core/cache/cache.service';
 
 import { environment } from '../../../../../environments/environment';
 
@@ -31,8 +32,20 @@ import { Permissions } from '../../../../core/constants/Permissions';
 
 import { RejectCasePopupComponent } from '../../../../shared/components/cases-components/reject-case-popup/reject-case-popup';
 import { RejectionReasonCardComponent } from '../../../../shared/components/cases-components/rejection-reason-card/rejection-reason-card';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
+import { CaseDetailsSkeletonComponent } from '../../../../shared/components/skeletons/case-details-skeleton/case-details-skeleton.component';
+
+/**
+ * The backend DTO includes a `video` field (a plain path string) that is
+ * separate from `photos`. The generated `LongTermCaseDetailResponse` model
+ * may or may not declare it explicitly, so we widen the type locally
+ * instead of touching the shared model file.
+ */
+type LongTermCaseDetailWithVideo = LongTermCaseDetailResponse & { video?: string | null };
+
+/** Sentinel id used for the synthetic video media item, since the backend doesn't provide one. */
+const VIDEO_MEDIA_ID = -1;
 
 @Component({
   selector: 'app-long-term-details',
@@ -46,6 +59,7 @@ import { ViewProfilePopup } from '../../../../shared/components/view-profile-pop
     AgeBadgeDirective,
     ConfirmationModalComponent,
     FoundedPopupComponent,
+    CaseDetailsSkeletonComponent,
     HasPermissionDirective,
     ButtonComponent,
     RejectCasePopupComponent,
@@ -61,6 +75,7 @@ export class LongTermDetails implements OnInit {
   private readonly router = inject(Router);
   private readonly longTermCaseService = inject(LongTermCaseService);
   private readonly snackbar = inject(SnackbarService);
+  private readonly cacheService = inject(CacheService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly apiUrl = environment.baseUrl;
@@ -89,7 +104,7 @@ export class LongTermDetails implements OnInit {
   rejectApiError = signal<string | null>(null);
   showPermanentDeleteConfirmation = signal(false);
 
-  caseDetails = signal<LongTermCaseDetailResponse | null>(null);
+  caseDetails = signal<LongTermCaseDetailWithVideo | null>(null);
 
   loading = signal(true);
 
@@ -108,6 +123,35 @@ export class LongTermDetails implements OnInit {
     return false;
   });
 
+  /**
+   * Unified media collection combining `photos` (images) with the single
+   * `video` path returned separately by the backend. The video is wrapped
+   * into a `CasePhotoResponse`-shaped object so the rest of the component
+   * (and the existing HTML) can treat all media uniformly.
+   * Order: all photos first, then the video appended at the end
+   * (Image → Image → Video ...).
+   */
+  readonly mediaList = computed<CasePhotoResponse[]>(() => {
+    const details = this.caseDetails();
+    if (!details) return [];
+
+    const photos: CasePhotoResponse[] = details.photos ?? [];
+    const media: CasePhotoResponse[] = [...photos];
+
+    if (details.video) {
+      const videoMedia: CasePhotoResponse = {
+        id: VIDEO_MEDIA_ID,
+        imagePath: details.video,
+        isPrimary: false,
+        type: FileType.Video,
+      } as CasePhotoResponse;
+
+      media.push(videoMedia);
+    }
+
+    return media;
+  });
+
   selectedMedia = signal<CasePhotoResponse | null>(null);
 
   // Lightbox
@@ -115,6 +159,9 @@ export class LongTermDetails implements OnInit {
   currentIndex = signal(0);
   isAdminPage = signal(false);
   isMyCasePage = signal(false);
+
+  constructor() {
+  }
 
   ngOnInit(): void {
     this.isAdminPage.set(this.route.snapshot.data['mode'] === 'dashboard');
@@ -152,13 +199,19 @@ export class LongTermDetails implements OnInit {
           if (apiRes.success && apiRes.data) {
             this.caseDetails.set(apiRes.data);
 
-            if (apiRes.data.photos?.length) {
-              const primary =
-                apiRes.data.photos.find((x) => x.isPrimary) ?? apiRes.data.photos[0];
+            const hasReject = this.cacheService.has(`RejectPopup_LongTerm_${apiRes.data.id}`);
+            const hasFounded = this.cacheService.has(`FoundedPopup_LongTerm_${apiRes.data.id}`);
+
+            if (hasReject) this.showRejectConfirmation.set(true);
+            if (hasFounded) this.showFoundedPopup.set(true);
+
+            const media = this.mediaList();
+            if (media.length) {
+              const primary = media.find((x) => x.isPrimary) ?? media[0];
 
               this.selectedMedia.set(primary);
               this.currentIndex.set(
-                apiRes.data.photos.findIndex((x) => x.id === primary.id),
+                media.findIndex((x) => x.id === primary.id && x.type === primary.type),
               );
             }
           }
@@ -179,14 +232,15 @@ export class LongTermDetails implements OnInit {
 
   changeMedia(media: CasePhotoResponse): void {
     this.selectedMedia.set(media);
-    const index =
-      this.caseDetails()?.photos.findIndex((x) => x.id === media.id) ?? 0;
-    this.currentIndex.set(index);
+    const index = this.mediaList().findIndex(
+      (x) => x.id === media.id && x.type === media.type,
+    );
+    this.currentIndex.set(index >= 0 ? index : 0);
   }
 
   openLightbox(index: number): void {
     this.currentIndex.set(index);
-    const media = this.caseDetails()?.photos[index];
+    const media = this.mediaList()[index];
     if (media) {
       this.selectedMedia.set(media);
       this.lightboxVisible.set(true);
@@ -198,29 +252,29 @@ export class LongTermDetails implements OnInit {
   }
 
   previousMedia(): void {
-    const photos = this.caseDetails()?.photos;
-    if (!photos?.length) return;
+    const media = this.mediaList();
+    if (!media.length) return;
 
     let index = this.currentIndex() - 1;
     if (index < 0) {
-      index = photos.length - 1;
+      index = media.length - 1;
     }
 
     this.currentIndex.set(index);
-    this.selectedMedia.set(photos[index]);
+    this.selectedMedia.set(media[index]);
   }
 
   nextMedia(): void {
-    const photos = this.caseDetails()?.photos;
-    if (!photos?.length) return;
+    const media = this.mediaList();
+    if (!media.length) return;
 
     let index = this.currentIndex() + 1;
-    if (index >= photos.length) {
+    if (index >= media.length) {
       index = 0;
     }
 
     this.currentIndex.set(index);
-    this.selectedMedia.set(photos[index]);
+    this.selectedMedia.set(media[index]);
   }
 
   // --- Actions ---
@@ -250,6 +304,7 @@ export class LongTermDetails implements OnInit {
 
           if (res.success) {
             this.snackbar.success('تم تحديث الحالة إلى تم العثور عليه');
+            this.cacheService.remove(`FoundedPopup_LongTerm_${id}`);
             this.caseDetails.update((current) => {
               if (!current) return current;
               return {
@@ -388,6 +443,7 @@ export class LongTermDetails implements OnInit {
           this.isRejecting.set(false);
           if (res.success) {
             this.showRejectConfirmation.set(false);
+            this.cacheService.remove(`RejectPopup_LongTerm_${id}`);
             const successMessage = res.message || 'تم رفض الحالة بنجاح';
             this.snackbar.success(successMessage);
             this.refreshCaseDetails(id);

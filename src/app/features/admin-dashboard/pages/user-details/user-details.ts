@@ -8,6 +8,9 @@ import { SnackbarService } from '../../../../shared/services/toast.service';
 import { UserService } from '../../services/user.service';
 import { RoleService } from '../../services/role.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+import { DestroyRef } from '@angular/core';
 import { UserPermissionDto } from '../../models/User/responses/UserPermissionDto';
 import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
 import { GetUserByIdDto } from '../../models/User/responses/GetUserByIdDto';
@@ -20,11 +23,13 @@ import Swal from 'sweetalert2';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { FormField } from '../../../../shared/components/form-field/form-field';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { ProfileSkeletonComponent } from '../../../../shared/components/skeletons/profile-skeleton/profile-skeleton.component';
+import { TableSkeletonComponent } from '../../../../shared/components/skeletons/table-skeleton/table-skeleton.component';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 interface PermissionGroup {
   groupName: string;
   groupTitle: string;
@@ -35,7 +40,7 @@ interface PermissionGroup {
 @Component({
   selector: 'app-user-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, FormField, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective, HeaderComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, FormField, ProfileSkeletonComponent, TableSkeletonComponent, ConfirmationModalComponent, HasPermissionDirective, HeaderComponent],
   templateUrl: './user-details.html',
   styleUrl: './user-details.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -47,6 +52,8 @@ export class UserDetails implements OnInit {
   private route = inject(ActivatedRoute);
   private location = inject(Location);
   private snackbar = inject(SnackbarService);
+  private cacheService = inject(CacheService);
+  private destroyRef = inject(DestroyRef);
   Permissions = Permissions;
 
   userId = signal<string>('');
@@ -76,14 +83,46 @@ export class UserDetails implements OnInit {
     action: () => {}
   });
 
-  openConfirmModal(title: string, message: string, confirmText: string, action: () => void, icon = 'help_outline', variant: 'primary' | 'danger' = 'primary') {
+  currentOpenModal = signal<'ROLE' | 'APPROVE' | 'REJECT' | 'BLOCK' | 'SAVE' | null>(null);
+
+  openConfirmModal(title: string, message: string, confirmText: string, action: () => void, icon = 'help_outline', variant: 'primary' | 'danger' = 'primary', modalType: 'ROLE' | 'APPROVE' | 'REJECT' | 'BLOCK' | 'SAVE' | null = null) {
     this.modalConfig.set({ title, message, confirmText, icon, variant, action });
+    this.currentOpenModal.set(modalType);
     this.showConfirmModal.set(true);
   }
 
   onConfirmModal() {
-    this.showConfirmModal.set(false);
     this.modalConfig().action();
+  }
+
+  onCancelModal() {
+    this.showConfirmModal.set(false);
+    this.currentOpenModal.set(null);
+    this.rejectReason.set('');
+    this.blockReason.set('');
+    const id = this.userId();
+    if (id) {
+      this.cacheService.set(`UserDetails_State_${id}`, {
+        rejectReason: '',
+        blockReason: '',
+        selectedRole: this.selectedRole(),
+        currentOpenModal: null
+      }, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+    }
+  }
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      const id = this.userId();
+      if (id) {
+        this.cacheService.set(`UserDetails_State_${id}`, {
+          rejectReason: this.rejectReason(),
+          blockReason: this.blockReason(),
+          selectedRole: this.selectedRole(),
+          currentOpenModal: this.currentOpenModal()
+        }, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+      }
+    });
   }
 
   verificationStatusEnum = VerificationStatus;
@@ -156,6 +195,9 @@ export class UserDetails implements OnInit {
   hasChanges = computed(() => Object.keys(this.dirtyGroups()).length > 0);
 
   ngOnInit() {
+    this.destroyRef.onDestroy(() => {
+      document.body.style.overflow = '';
+    });
     this.loadRoles();
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
@@ -200,13 +242,29 @@ export class UserDetails implements OnInit {
       next: (res) => {
         if (res.success) {
           this.user.set(res.data);
-          this.selectedRole.set(res.data?.role || '');
+          
+          const state = this.cacheService.get<any>(`UserDetails_State_${this.userId()}`);
+          if (state) {
+            if (state.selectedRole) this.selectedRole.set(state.selectedRole);
+            else this.selectedRole.set(res.data?.role || '');
+
+            this.rejectReason.set(state.rejectReason || '');
+            this.blockReason.set(state.blockReason || '');
+
+            if (state.currentOpenModal === 'REJECT') {
+              this.onReject();
+            } else if (state.currentOpenModal === 'BLOCK') {
+              this.onToggleBlock();
+            }
+          } else {
+            this.selectedRole.set(res.data?.role || '');
+          }
         }
         this.isUserLoading.set(false);
       },
       error: (err) => {
         this.isUserLoading.set(false);
-        this.snackbar.error(err.error?.detail || 'فشل في تحميل بيانات المستخدم.');
+        this.snackbar.error(extractErrorMessage(err, 'فشل في تحميل بيانات المستخدم.'));
       }
     });
 
@@ -237,7 +295,8 @@ export class UserDetails implements OnInit {
         this.executeAction(this.userService.changeUserRole({ userId: this.userId(), newRole: newRole }), 'تم تغيير دور المستخدم بنجاح.', 'changeRole');
       },
       'manage_accounts',
-      'primary'
+      'primary',
+      'ROLE'
     );
   }
 
@@ -250,14 +309,14 @@ export class UserDetails implements OnInit {
         this.executeAction(this.userService.approveUser(this.userId()), 'تم توثيق حساب المستخدم بنجاح.', 'approve');
       },
       'verified_user',
-      'primary'
+      'primary',
+      'APPROVE'
     );
   }
 
   rejectReason = signal<string>('');
 
   onReject() {
-    this.rejectReason.set('');
     this.openConfirmModal(
       'تأكيد رفض الحساب',
       'يرجى كتابة سبب رفض توثيق هذا الحساب (اختياري):',
@@ -267,7 +326,8 @@ export class UserDetails implements OnInit {
         this.executeAction(this.userService.rejectUser(this.userId(), reason), 'تم رفض طلب التوثيق بنجاح وإرسال السبب.', 'reject');
       },
       'cancel',
-      'danger'
+      'danger',
+      'REJECT'
     );
   }
 
@@ -276,10 +336,6 @@ export class UserDetails implements OnInit {
   onToggleBlock() {
     const isBlocking = !this.user()?.isBlocked;
     const actionText = isBlocking ? 'حظر' : 'فك حظر';
-    
-    if (isBlocking) {
-      this.blockReason.set('');
-    }
 
     this.openConfirmModal(
       `تأكيد ${actionText} المستخدم`,
@@ -290,7 +346,8 @@ export class UserDetails implements OnInit {
         this.executeAction(this.userService.toggleBlockStatus(this.userId(), reason), `تم ${actionText} المستخدم بنجاح.`, 'block');
       },
       isBlocking ? 'block' : 'lock_open',
-      isBlocking ? 'danger' : 'primary'
+      isBlocking ? 'danger' : 'primary',
+      'BLOCK'
     );
   }
 
@@ -300,12 +357,27 @@ export class UserDetails implements OnInit {
     observable.subscribe({
       next: () => {
         this.loadingAction.set(null);
+        this.showConfirmModal.set(false);
+        this.currentOpenModal.set(null);
+        this.rejectReason.set('');
+        this.blockReason.set('');
+
+        const id = this.userId();
+        if (id) {
+          this.cacheService.set(`UserDetails_State_${id}`, {
+            rejectReason: '',
+            blockReason: '',
+            selectedRole: this.selectedRole(),
+            currentOpenModal: null
+          }, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+        }
+
         this.snackbar.success(successMessage);
         this.loadUserData();
       },
       error: (err: any) => {
         this.loadingAction.set(null);
-        this.snackbar.error(err.error?.detail || err.error?.message || 'حدث خطأ غير متوقع. قد لا تملك الصلاحية الكافية.');
+        this.snackbar.error(extractErrorMessage(err, 'حدث خطأ غير متوقع. قد لا تملك الصلاحية الكافية.'));
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     });
@@ -330,13 +402,14 @@ export class UserDetails implements OnInit {
           },
           error: (err) => {
             this.isSavingPerms.set(false);
-            this.snackbar.error(err.error?.detail || 'فشل حفظ الصلاحيات. تأكد من امتلاكك الصلاحية اللازمة.');
+            this.snackbar.error(extractErrorMessage(err, 'فشل حفظ الصلاحيات. تأكد من امتلاكك الصلاحية اللازمة.'));
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }
         });
       },
       'admin_panel_settings',
-      'primary'
+      'primary',
+      'SAVE'
     );
   }
 

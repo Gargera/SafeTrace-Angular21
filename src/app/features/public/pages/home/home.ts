@@ -1,5 +1,7 @@
- import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { UrgentCaseService } from '../../../../features/urgent-cases/services/urgent-case.service';
@@ -17,6 +19,7 @@ import { caseCodeValidator } from '../../../../shared/validators/case-code.valid
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { Gender } from '../../../../shared/enums/gender';
 import { CaseListItemResponse } from '../../../../core/models/cases.model';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 @Component({
   selector: 'app-home',
@@ -33,6 +36,9 @@ export class Home implements OnInit {
   private complaintSvc = inject(ComplaintsService);
   private snackbar = inject(SnackbarService);
   private router = inject(Router);
+  private cacheService = inject(CacheService);
+  private destroyRef = inject(DestroyRef);
+  private readonly DRAFT_CACHE_KEY = 'Home_Complaint_Draft';
 
   urgentCases = signal<any[]>([]);
   longTermCases = signal<any[]>([]);
@@ -51,6 +57,14 @@ export class Home implements OnInit {
     'اقتراح لتحسين المنصة',
     'أخرى'
   ];
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      if (this.complaintForm && this.complaintForm.dirty) {
+        this.cacheService.set(this.DRAFT_CACHE_KEY, this.complaintForm.value, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+      }
+    });
+  }
 
   ngOnInit() {
     this.complaintForm = this.fb.group({
@@ -77,6 +91,12 @@ export class Home implements OnInit {
       caseCodeControl?.updateValueAndValidity();
       contactTypeControl?.updateValueAndValidity();
     });
+
+    const draft = this.cacheService.get<any>(this.DRAFT_CACHE_KEY);
+    if (draft) {
+      this.complaintForm.patchValue(draft);
+      this.complaintForm.markAsDirty();
+    }
 
     this.urgentSvc.getAllCases({ pageNumber: 1, pageSize: 4 } as any).subscribe({
       next: (res: any) => {
@@ -126,11 +146,12 @@ export class Home implements OnInit {
         if (res.success) {
           this.snackbar.success('تم إرسال رسالتك بنجاح، سيتواصل معك فريقنا قريباً');
           this.complaintForm.reset();
+          this.cacheService.remove(this.DRAFT_CACHE_KEY);
         }
         this.isSendingComplaint.set(false);
       },
       error: (err) => {
-        this.snackbar.error(err.error?.message || err.error?.detail || 'حدث خطأ أثناء إرسال الرسالة، يرجى المحاولة مرة أخرى');
+        this.snackbar.error(err.error?.message || extractErrorMessage(err, 'حدث خطأ أثناء إرسال الرسالة، يرجى المحاولة مرة أخرى'));
         this.isSendingComplaint.set(false);
       }
     });

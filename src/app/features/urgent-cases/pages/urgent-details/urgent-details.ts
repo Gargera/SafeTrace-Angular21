@@ -3,6 +3,7 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, EMPTY, switchMap } from 'rxjs';
+import { CacheService } from '../../../../core/cache/cache.service';
 
 import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -26,8 +27,9 @@ import { UrgentCaseDetailResponse } from '../../models/response/UrgentCaseDetail
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { Permissions } from '../../../../core/constants/Permissions';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
+import { CaseDetailsSkeletonComponent } from '../../../../shared/components/skeletons/case-details-skeleton/case-details-skeleton.component';
 
 @Component({
   selector: 'urgent-details',
@@ -45,6 +47,7 @@ import { ViewProfilePopup } from '../../../../shared/components/view-profile-pop
     HasPermissionDirective,
     ButtonComponent,
     ViewProfilePopup,
+    CaseDetailsSkeletonComponent,
   ],
   templateUrl: './urgent-details.html',
   styleUrls: ['./urgent-details.css'],
@@ -58,6 +61,7 @@ export class UrgentDetails implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly apiUrl = environment.baseUrl;
+  private readonly cacheService = inject(CacheService);
   readonly FileType = FileType;
   readonly CaseStatus = CaseStatus;
   readonly Permissions = Permissions;
@@ -105,6 +109,10 @@ export class UrgentDetails implements OnInit {
   lightboxVisible = signal(false);
   currentIndex = signal(0);
 
+  constructor() {
+    // Modal states should not be cached across navigation
+  }
+
   ngOnInit(): void {
     this.isAdminPage.set(this.route.snapshot.data['mode'] === 'dashboard');
     this.isMyCasePage.set(this.route.snapshot.data['mode'] === 'my-case');
@@ -140,6 +148,9 @@ export class UrgentDetails implements OnInit {
         next: (apiRes) => {
           if (apiRes.success && apiRes.data) {
             this.caseDetails.set(apiRes.data);
+
+            const hasFounded = this.cacheService.has(`FoundedPopup_Urgent_${apiRes.data.id}`);
+            if (hasFounded) this.showFoundedPopup.set(true);
 
             if (apiRes.data.photos?.length) {
               const primary =
@@ -236,6 +247,7 @@ export class UrgentDetails implements OnInit {
 
           if (res.success) {
             this.snackbar.success('تم تحديث الحالة إلى تم العثور عليه');
+            this.cacheService.remove(`FoundedPopup_Urgent_${id}`);
             this.caseDetails.update((current) => {
               if (!current) return current;
               return {

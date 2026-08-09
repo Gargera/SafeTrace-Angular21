@@ -6,380 +6,456 @@
     </section>
 
     @if (loading()) {
-      <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-12 text-center">
-        <p class="text-on-surface-variant">جاري تحميل بيانات الحالة...</p>
-      </div>
+    <app-case-details-skeleton></app-case-details-skeleton>
     }
 
     @else if (caseDetails()) {
-      <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
-        <div class="grid grid-cols-1 lg:grid-cols-2">
+    <div class="flex flex-col lg:flex-row items-start gap-6">
 
-          <!-- ================= Images ================= -->
-          <div class="p-6">
-            <div class="relative">
-              <button
-                class="absolute left-4 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-2xl text-white transition hover:bg-black/70"
-                (click)="previousMedia()">
-                ❮
-              </button>
+      <!-- ================= اليمين: الميديا وصور الحالة + الأزرار ================= -->
+      <div
+        class="w-full lg:w-5/12 overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 shadow-sm">
 
-              @if(selectedMedia()?.type === 'Video'){
-                <video controls class="h-137.5 w-full rounded-xl border border-outline-variant object-cover">
-                  <source [src]="getImageUrl(selectedMedia()?.imagePath)" type="video/mp4">
-                </video>
-              } @else {
-                <img 
-                  class="h-137.5 w-full cursor-pointer rounded-xl border border-outline-variant object-cover"
-                  [src]="getImageUrl(selectedMedia()?.imagePath)" 
-                  (click)="openLightbox(currentIndex())">
-              }
+        <!-- Main Media -->
+        <div class="group relative overflow-hidden rounded-xl">
 
-              <button
-                class="absolute right-4 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-2xl text-white transition hover:bg-black/70"
-                (click)="nextMedia()">
-                ❯
-              </button>
+          @if(selectedMedia()?.type === 'Video'){
+          <video controls class="h-137.5 w-full rounded-xl object-cover">
+            <source [src]="getImageUrl(selectedMedia()?.imagePath)" type="video/mp4">
+          </video>
+          } @else {
+          <img class="h-137.5 w-full cursor-pointer rounded-xl object-cover"
+            [src]="getImageUrl(selectedMedia()?.imagePath)" (click)="openLightbox(currentIndex())">
+          }
+
+          @if (mediaList().length > 1) {
+          <button
+            class="absolute left-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md transition hover:bg-black/50"
+            (click)="previousMedia()" aria-label="السابق">
+            <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+          </button>
+
+          <button
+            class="absolute right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md transition hover:bg-black/50"
+            (click)="nextMedia()" aria-label="التالي">
+            <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+          </button>
+
+          <div class="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full
+         border border-white/20 bg-black/40 px-3 py-1 text-xs
+         font-medium text-white backdrop-blur-md">
+            {{ currentIndex() + 1 }} / {{ mediaList().length }}
+          </div>
+          }
+        </div>
+
+        <!-- Gallery -->
+        @if (mediaList().length > 0) {
+        <div class="mt-4 flex gap-3 overflow-x-auto pb-2">
+
+          @for (media of mediaList(); track media.id + '-' + media.type) {
+
+          @if (media.type === FileType.Video) {
+
+          <!-- Video Thumbnail -->
+          <div class="relative h-20 w-20 shrink-0 cursor-pointer overflow-hidden rounded-lg border-2 transition"
+            [class.border-primary]="
+            selectedMedia()?.id === media.id &&
+            selectedMedia()?.type === media.type
+          " [class.border-outline-variant]="
+            !(
+              selectedMedia()?.id === media.id &&
+              selectedMedia()?.type === media.type
+            )
+          " (click)="changeMedia(media)">
+
+            <video muted preload="metadata" class="h-full w-full object-cover pointer-events-none">
+              <source [src]="getImageUrl(media.imagePath)" type="video/mp4">
+            </video>
+
+            <!-- Play Icon -->
+            <div class="absolute inset-0 flex items-center justify-center bg-black/35">
+              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-black/60">
+                <span class="material-symbols-outlined text-[20px] text-white">
+                  play_arrow
+                </span>
+              </div>
             </div>
 
-            <!-- Gallery -->
-            @if(caseDetails()?.photos?.length){
-              <div class="mt-4 flex gap-3 overflow-x-auto pb-2">
-                @for(photo of caseDetails()!.photos; track photo.id){
-                  @if(photo.type ==='Video'){
-                    <div 
-                      class="relative h-24 w-24 cursor-pointer overflow-hidden rounded-lg border-2"
-                      [class.border-primary]="selectedMedia()?.id===photo.id"
-                      [class.border-outline-variant]="selectedMedia()?.id!==photo.id"
-                      (click)="changeMedia(photo)">
-                      <video muted class="h-full w-full object-cover">
-                        <source [src]="getImageUrl(photo.imagePath)" type="video/mp4">
-                      </video>
-                      <div class="absolute inset-0 flex items-center justify-center bg-black/35">
-                        ▶
-                      </div>
-                    </div>
-                  } @else {
-                    <img 
-                      [src]="getImageUrl(photo.imagePath)"
-                      class="h-24 w-24 cursor-pointer rounded-lg border-2 object-cover transition hover:scale-105"
-                      [class.border-primary]="selectedMedia()?.id===photo.id"
-                      [class.border-outline-variant]="selectedMedia()?.id!==photo.id"
-                      (click)="changeMedia(photo)">
-                  }
-                }
-              </div>
-            }
           </div>
 
-          <!-- ================= Details ================= -->
-          <div class="space-y-6 p-6">
-            <app-rejection-reason-card
-              [isOwner]="isOwner()"
-              [isAdmin]="isAdminPage()"
-              [status]="caseDetails()?.status"
-              [rejectionReason]="caseDetails()?.rejectionReason">
-            </app-rejection-reason-card>
+          } @else {
 
-            <div>
-              <h1 class="text-3xl font-bold text-on-background">
-                {{caseDetails()?.fName}}
-                {{caseDetails()?.sName}}
-                {{caseDetails()?.tName}}
-                {{caseDetails()?.lName}}
+          <!-- Image Thumbnail -->
+          <img [src]="getImageUrl(media.imagePath)"
+            class="h-20 w-20 shrink-0 cursor-pointer rounded-lg border-2 object-cover transition hover:scale-105"
+            [class.border-primary]="
+            selectedMedia()?.id === media.id &&
+            selectedMedia()?.type === media.type
+          " [class.border-outline-variant]="
+            !(
+              selectedMedia()?.id === media.id &&
+              selectedMedia()?.type === media.type
+            )
+          " (click)="changeMedia(media)" alt="صورة الحالة" />
+
+          }
+
+          }
+
+        </div>
+        }
+        <!-- ================= Owner Buttons ================= -->
+        @if (
+        isOwner() &&
+        !isAdminPage() &&
+        caseDetails()?.status !== CaseStatus.Found
+        ) {
+        <div class="mt-5 flex flex-wrap items-center gap-2.5 border-t border-outline-variant pt-4">
+
+          @if(caseDetails()?.status !== CaseStatus.Rejected){
+          <app-button *hasPermission="Permissions.UnknownCases.MarkAsFounded" (onClick)="openFoundedPopup()"
+            variant="primary"
+            extraClass="flex items-center gap-1.5 rounded-xl !bg-[#009688] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#00796b]">
+            <span class="material-symbols-outlined text-[18px]">beenhere</span>
+            <span>تم العثور</span>
+          </app-button>
+          }
+
+          <app-button *hasPermission="Permissions.UnknownCases.Update" (onClick)="editCase()" variant="primary"
+            extraClass="flex items-center gap-1.5 rounded-xl !bg-[#0265DC] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#0252b5]">
+            <span class="material-symbols-outlined text-[18px]">edit</span>
+            <span>تعديل</span>
+          </app-button>
+
+          <app-button *hasPermission="Permissions.UnknownCases.SoftDelete" (onClick)="deleteCase()" variant="primary"
+            extraClass="flex items-center gap-1.5 rounded-xl !bg-[#C61A1A] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+            <span>حذف</span>
+          </app-button>
+
+        </div>
+        }
+
+        @if (
+        !isAdminPage() &&
+        !isOwner() &&
+        caseDetails()?.status !== CaseStatus.Found
+        ) {
+        <app-button variant="secondary" (onClick)="startChat(caseDetails()?.id!)" extraClass="mt-5 w-full justify-center gap-2 rounded-xl
+             border-t border-outline-variant
+             py-4
+             hover:border-primary hover:bg-primary/5 hover:text-primary">
+
+          <span class="material-symbols-outlined material-icon-sm">
+            chat
+          </span>
+
+          تواصل مع المُبلّغ
+        </app-button>
+        }
+
+        <!-- ================= Admin Buttons ================= -->
+        @let status = caseDetails()?.status;
+
+        @if (isAdminPage()) {
+        <div class="mt-5 flex flex-wrap items-center gap-2.5 border-t border-outline-variant pt-4">
+          @if(!isOwner()){
+          <app-button variant="secondary" (onClick)="startChat(caseDetails()?.id!)"
+            extraClass="flex items-center gap-1.5 rounded-xl">
+            <span class="material-symbols-outlined material-icon-sm">chat</span>
+            <span>تواصل مع المُبلّغ</span>
+          </app-button>
+          }
+
+          @if (status === CaseStatus.Pending) {
+          <app-button *hasPermission="Permissions.LongTermCases.Approve" (onClick)="openApproveConfirmation()"
+            variant="primary"
+            extraClass="flex items-center gap-1.5 rounded-xl !bg-[#009688] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#00796b]">
+            <span class="material-symbols-outlined text-[18px]">check_circle</span>
+            <span>قبول</span>
+          </app-button>
+
+          <app-button *hasPermission="Permissions.LongTermCases.Reject" (onClick)="openRejectConfirmation()"
+            variant="primary"
+            extraClass="flex items-center gap-1.5 rounded-xl !bg-[#C61A1A] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
+            <span class="material-symbols-outlined text-[18px]">cancel</span>
+            <span>رفض</span>
+          </app-button>
+          }
+
+          @if (status === CaseStatus.Pending || status === CaseStatus.Active) {
+          <app-button *hasPermission="Permissions.LongTermCases.MarkAsFounded" (onClick)="openFoundedPopup()"
+            variant="primary"
+            extraClass="flex items-center gap-1.5 rounded-xl !bg-[#009688] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#00796b]">
+            <span class="material-symbols-outlined text-[18px]">beenhere</span>
+            <span>تم العثور</span>
+          </app-button>
+          <app-button *hasPermission="Permissions.LongTermCases.SoftDelete"
+            (onClick)="openPermanentDeleteConfirmation()" variant="primary"
+            extraClass="flex items-center gap-1.5 rounded-xl !bg-[#C61A1A] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
+            <span class="material-symbols-outlined text-[18px]">delete_forever</span>
+            <span>حذف </span>
+          </app-button>
+          }
+
+          <app-button *hasPermission="Permissions.LongTermCases.HardDelete"
+            (onClick)="openPermanentDeleteConfirmation()" variant="primary"
+            extraClass="flex items-center gap-1.5 rounded-xl !bg-[#C61A1A] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
+            <span class="material-symbols-outlined text-[18px]">delete_forever</span>
+            <span>حذف نهائي</span>
+          </app-button>
+        </div>
+        }
+
+      </div>
+
+      <!-- ================= اليسار: تفاصيل الحالة ================= -->
+      <div class="w-full lg:w-7/12 space-y-6">
+
+        <app-rejection-reason-card [isOwner]="isOwner()" [isAdmin]="isAdminPage()" [status]="caseDetails()?.status"
+          [rejectionReason]="caseDetails()?.rejectionReason">
+        </app-rejection-reason-card>
+
+        <!-- كارت البيانات الأساسية -->
+        <div
+          class="divide-y divide-outline-variant overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+
+          <div class="space-y-4 p-6">
+            <div class="flex items-start justify-between gap-3">
+              <h1 class="text-2xl font-bold text-on-background sm:text-3xl">
+                {{caseDetails()?.fName}} {{caseDetails()?.sName}} {{caseDetails()?.tName}} {{caseDetails()?.lName}}
               </h1>
-              <p class="mt-2 text-on-surface-variant">
-                {{caseDetails()?.government}} - {{caseDetails()?.city}} - {{caseDetails()?.street}}
-              </p>
             </div>
 
-            <div class="flex flex-wrap gap-2">
-              <span [appCaseStatusBadgeDirective]="caseDetails()!.status"></span>
-              <span [appCaseTypeBadgeDirective]="caseDetails()!.caseType"></span>
-              <span [appGenderBadgeDirective]="caseDetails()!.gender"></span>
-            </div>
+            <p class="flex items-center gap-1.5 text-on-surface-variant">
+              <span class="material-symbols-outlined text-[18px]">location_on</span>
+              {{caseDetails()?.government}} - {{caseDetails()?.city}} - {{caseDetails()?.street}}
+            </p>
 
-            <!-- كارت الناشر -->
-            @if (caseDetails()?.user) {
-            <div (click)="openPublisherProfile()"
-              class="flex items-center gap-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-low p-3.5 cursor-pointer transition-all hover:border-primary hover:bg-primary/5 group/pub">
-              @if (caseDetails()?.user?.profileImage) {
-              <img [src]="getImageUrl(caseDetails()?.user?.profileImage!)"
-                class="h-11 w-11 rounded-full object-cover border border-outline-variant group-hover/pub:border-primary" alt="صورة الناشر" />
-              } @else {
-              <div class="flex h-11 w-11 items-center justify-center rounded-full bg-primary/15 text-primary font-bold text-sm border border-primary/20 group-hover/pub:bg-primary group-hover/pub:text-on-primary">
-                {{ ((caseDetails()?.user?.fName?.[0] ?? '') + (caseDetails()?.user?.lName?.[0] ?? '')).toUpperCase() }}
-              </div>
-              }
-              <div class="flex flex-col min-w-0 flex-1">
-                <span class="text-xs text-on-surface-variant">ناشر الحالة (المُبلّغ)</span>
-                <h4 class="font-bold text-on-surface text-base flex items-center gap-1.5 group-hover/pub:text-primary">
-                  {{ isOwner() ? 'أنت (صاحب الحالة)' : (caseDetails()?.user?.fName + ' ' + caseDetails()?.user?.lName) }}
-                  <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover/pub:text-primary">open_in_new</span>
-                </h4>
-              </div>
-            </div>
-            }
+            <!-- شبكة المعلومات -->
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
 
-            <div class="grid grid-cols-2 gap-4">
               <div class="rounded-lg border border-outline-variant p-4">
-                <p class="text-sm text-on-surface-variant">العمر</p>
-                <h3 class="mt-2 text-lg font-semibold">{{caseDetails()?.age}}</h3>
+                <p class="text-xs text-on-surface-variant">كود الحالة</p>
+                <h3 class="mt-2 font-semibold">{{caseDetails()?.caseCode}}</h3>
               </div>
 
               <div class="rounded-lg border border-outline-variant p-4">
-                <p class="text-sm text-on-surface-variant">تاريخ الإضافة</p>
-                <h3 class="mt-2 font-semibold">{{caseDetails()?.createdAt | date:'dd/MM/yyyy'}}</h3>
+                <p class="text-xs text-on-surface-variant">العمر</p>
+                <h3 class="mt-2 font-semibold">{{caseDetails()?.age}}</h3>
               </div>
 
               <div class="rounded-lg border border-outline-variant p-4">
-                <p class="text-sm text-on-surface-variant">الفئة العمرية</p>
+                <p class="text-xs text-on-surface-variant">الفئة العمرية</p>
                 <div class="mt-2">
                   <span [appAgeBadgeDirective]="getAgeCategoryEnum()"></span>
                 </div>
               </div>
 
               <div class="rounded-lg border border-outline-variant p-4">
-                <p class="text-sm text-on-surface-variant">رقم التواصل</p>
-                <h3 class="mt-2 font-semibold">{{caseDetails()?.communicationPhone || '-'}}</h3>
+                <p class="text-xs text-on-surface-variant">الجنس</p>
+                <div class="mt-2">
+                  <span [appGenderBadgeDirective]="caseDetails()!.gender"></span>
+                </div>
               </div>
 
               <div class="rounded-lg border border-outline-variant p-4">
-                <p class="text-sm text-on-surface-variant">تاريخ الاختفاء</p>
-                <h3 class="mt-2 font-semibold">{{caseDetails()?.eventDate | date:'dd/MM/yyyy'}}</h3>
-              </div>
-            </div>
-
-            <div class="rounded-xl bg-surface-container p-5">
-              <h3 class="mb-3 text-lg font-bold">الوصف</h3>
-              <p class="leading-8 text-on-surface-variant">
-                {{caseDetails()?.description || 'لا يوجد وصف'}}
-              </p>
-            </div>
-
-            @if(caseDetails()?.relatedCases?.length){
-              <div class="space-y-4">
-                <h2 class="text-xl font-bold">حالات مشابهة</h2>
-                <div class="grid gap-4">
-                  @for(item of caseDetails()!.relatedCases; track item.id){
-                    <div 
-                      class="flex cursor-pointer items-center gap-4 rounded-xl border border-outline-variant p-4 transition hover:bg-surface-container"
-                      (click)="goToCase(item.id)">
-                      <img class="h-24 w-24 rounded-lg object-cover" [src]="getImageUrl(item.mainPhotoPath)" />
-                      <div class="flex-1">
-                        <p class="text-sm text-on-surface-variant">{{item.createdAt | date:'dd/MM/yyyy'}}</p>
-                        @if(item.similarity == null){
-                          <p class="mt-1 text-on-surface-variant">الحالة المرجعية للمجموعة</p>
-                        } @else {
-                          <p class="mt-1 text-primary">تشابه مع الحالة الحالية: {{ item.similarity }}%</p>
-                        }
-                      </div>
-                    </div>
-                  }
+                <p class="text-xs text-on-surface-variant">نوع الحالة</p>
+                <div class="mt-2">
+                  <span [appCaseTypeBadgeDirective]="caseDetails()!.caseType"></span>
                 </div>
               </div>
-            }
 
-            <!-- ================= Owner Buttons ================= -->
-           @if (
-            isOwner() &&
-            !isAdminPage() &&
-            caseDetails()?.status !== CaseStatus.Found
-          ) {
-              <div class="flex flex-wrap items-center gap-3 pt-2">
-
-              @if(caseDetails()?.status !== CaseStatus.Rejected){
-                <app-button
-                  *hasPermission="Permissions.UnknownCases.MarkAsFounded"
-                  (onClick)="openFoundedPopup()"
-                  variant="primary"
-                  extraClass="flex items-center gap-2 rounded-2xl !bg-[#009688] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#00796b]">
-                  <span class="material-symbols-outlined text-[20px]">beenhere</span>
-                  <span>تم العثور</span>
-                </app-button>
+              @if (isAdminPage()||isMyCasePage()) {
+              <div class="rounded-lg border border-outline-variant p-4">
+                <p class="text-xs text-on-surface-variant">حالة البلاغ</p>
+                <div class="mt-2">
+                  <span [appCaseStatusBadgeDirective]="caseDetails()!.status"></span>
+                </div>
+              </div>
               }
 
-              <app-button
-                *hasPermission="Permissions.UnknownCases.Update"
-                (onClick)="editCase()"
-                variant="primary"
-                extraClass="flex items-center gap-2 rounded-2xl !bg-[#0265DC] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#0252b5]">
-                <span class="material-symbols-outlined text-[20px]">edit</span>
-                <span>تعديل</span>
-              </app-button>
+              <div class="rounded-lg border border-outline-variant p-4">
+                <p class="text-xs text-on-surface-variant">تاريخ الاختفاء</p>
+                <h3 class="mt-2 font-semibold">{{caseDetails()?.eventDate | date:'dd/MM/yyyy'}}</h3>
+              </div>
 
-              <app-button
-                *hasPermission="Permissions.UnknownCases.SoftDelete"
-                (onClick)="deleteCase()"
-                variant="primary"
-                extraClass="flex items-center gap-2 rounded-2xl !bg-[#C61A1A] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
-                <span class="material-symbols-outlined text-[20px]">delete</span>
-                <span>حذف</span>
-              </app-button>
+
+              <div class="rounded-lg border border-outline-variant p-4">
+                <p class="text-xs text-on-surface-variant">رقم التواصل</p>
+                <h3 class="mt-2 font-semibold">{{caseDetails()?.communicationPhone || '-'}}</h3>
+              </div>
 
             </div>
-          }
-          @if (
-            !isAdminPage() &&
-            !isOwner() &&
-            caseDetails()?.status !== CaseStatus.Found
-          ) {
-            <app-button
-              variant="secondary"
-              (onClick)="startChat(caseDetails()?.id!)"
-              extraClass="w-full justify-center gap-2 hover:border-primary hover:bg-primary/5 hover:text-primary">
-              <span class="material-symbols-outlined material-icon-sm">chat</span>
-              تواصل مع المُبلّغ
-            </app-button>
-          }
-
-            <!-- ================= Admin Buttons ================= -->
-            @let status = caseDetails()?.status;
-
-            @if (isAdminPage()) {
-              <div class="flex flex-wrap items-center gap-3 pt-2">
-                @if(!isOwner()){
-                <app-button
-                variant="secondary"
-                (onClick)="startChat(caseDetails()?.id!)"
-                extraClass="flex items-center gap-2">
-                <span class="material-symbols-outlined material-icon-sm">chat</span>
-                <span>تواصل مع المُبلّغ</span>
-              </app-button>
-            }
-
-                @if (status === CaseStatus.Pending) {
-                  <app-button 
-                    *hasPermission="Permissions.UnknownCases.Approve"
-                    (onClick)="openApproveConfirmation()" 
-                    variant="primary"
-                    extraClass="flex items-center gap-2 rounded-2xl !bg-[#009688] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#00796b]">
-                    <span class="material-symbols-outlined text-[20px]">check_circle</span>
-                    <span>قبول</span>
-                  </app-button>
-
-                  <app-button 
-                    *hasPermission="Permissions.UnknownCases.Reject"
-                    (onClick)="openRejectConfirmation()" 
-                    variant="primary"
-                    extraClass="flex items-center gap-2 rounded-2xl !bg-[#C61A1A] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
-                    <span class="material-symbols-outlined text-[20px]">cancel</span>
-                    <span>رفض</span>
-                  </app-button>
-                }
-
-                @if (status === CaseStatus.Pending || status === CaseStatus.Active) {
-                  <app-button 
-                    *hasPermission="Permissions.UnknownCases.MarkAsFounded"
-                    (onClick)="openFoundedPopup()" 
-                    variant="primary"
-                    extraClass="flex items-center gap-2 rounded-2xl !bg-[#009688] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#00796b]">
-                    <span class="material-symbols-outlined text-[20px]">beenhere</span>
-                    <span>تم العثور</span>
-                  </app-button>
-
-                  <app-button 
-                    *hasPermission="Permissions.UnknownCases.HardDelete"
-                    (onClick)="openPermanentDeleteConfirmation()" 
-                    variant="primary"
-                    extraClass="flex items-center gap-2 rounded-2xl !bg-[#C61A1A] px-6 py-3 text-base font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
-                    <span class="material-symbols-outlined text-[20px]">delete_forever</span>
-                    <span>حذف نهائي</span>
-                  </app-button>
-                }
-
-              </div>
-            }
-
           </div>
+
+          <!-- كارت الناشر -->
+          @if (caseDetails()?.user && !(isOwner() && isMyCasePage())) {
+          <div class="p-6">
+            <div (click)="openPublisherProfile()"
+              class="group/pub flex cursor-pointer items-center gap-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-low p-3.5 transition-all hover:border-primary hover:bg-primary/5">
+              @if (caseDetails()?.user?.profileImage) {
+              <img [src]="getImageUrl(caseDetails()!.user!.profileImage!)"
+                class="h-11 w-11 rounded-full border border-outline-variant object-cover group-hover/pub:border-primary"
+                alt="صورة الناشر" />
+              } @else {
+              <div
+                class="flex h-11 w-11 items-center justify-center rounded-full border border-primary/20 bg-primary/15 text-sm font-bold text-primary group-hover/pub:bg-primary group-hover/pub:text-on-primary">
+                {{ ((caseDetails()?.user?.fName || '').charAt(0) + (caseDetails()?.user?.lName ||
+                '').charAt(0)).toUpperCase() }}
+              </div>
+              }
+              <div class="flex min-w-0 flex-1 flex-col">
+                <span class="text-xs text-on-surface-variant">ناشر الحالة (المُبلّغ)</span>
+                <h4 class="flex items-center gap-1.5 text-base font-bold text-on-surface group-hover/pub:text-primary">
+                  {{ isOwner() ? 'أنت (صاحب الحالة)' : (caseDetails()?.user?.fName + ' ' + caseDetails()?.user?.lName)
+                  }}
+                  <span
+                    class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover/pub:text-primary">open_in_new</span>
+                </h4>
+              </div>
+            </div>
+          </div>
+          }
+
+          <!-- الوصف -->
+          <div class="p-6">
+            <h3 class="mb-3 text-lg font-bold text-on-surface">الوصف</h3>
+            <p class="whitespace-pre-line leading-8 text-on-surface-variant">
+              {{caseDetails()?.description || 'لا يوجد وصف'}}
+            </p>
+          </div>
+
+          <!-- حالات مشابهة -->
+          @if(caseDetails()?.relatedCases?.length){
+          <div class="p-6">
+            <div class="mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary">manage_search</span>
+              <h3 class="text-lg font-bold text-on-surface">حالات مشابهة</h3>
+            </div>
+
+            <div class="space-y-2.5">
+              @for(item of caseDetails()!.relatedCases; track item.id){
+              <button (click)="goToCase(item.id)"
+                class="group/rc flex w-full items-center gap-4 rounded-xl border border-outline-variant/70 bg-surface-container-low p-3 text-start transition-all hover:border-primary hover:bg-primary/5">
+
+                <img
+                  class="h-16 w-16 shrink-0 rounded-lg border border-outline-variant object-cover group-hover/rc:border-primary"
+                  [src]="getImageUrl(item.mainPhotoPath)" />
+
+                <div class="min-w-0 flex-1">
+                  <p class="flex items-center gap-1 text-xs text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[14px]">calendar_today</span>
+                    {{item.createdAt | date:'dd/MM/yyyy'}}
+                  </p>
+
+                  @if(item.similarity == null){
+                  <p class="mt-1.5 text-sm font-medium text-on-surface-variant">الحالة المرجعية للمجموعة</p>
+                  } @else {
+                  <div
+                    class="mt-1.5 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                    <span class="material-symbols-outlined text-[14px]">insights</span>
+                    تشابه {{ item.similarity }}%
+                  </div>
+                  }
+                </div>
+
+                <span
+                  class="material-symbols-outlined shrink-0 text-on-surface-variant transition group-hover/rc:translate-x-[-2px] group-hover/rc:text-primary">
+                  chevron_left
+                </span>
+              </button>
+              }
+            </div>
+          </div>
+          }
+
         </div>
+
       </div>
 
-      <!-- Lightbox -->
-      @if(lightboxVisible()){
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
-          <button class="absolute right-6 top-6 text-4xl text-white" (click)="closeLightbox()">✕</button>
-          <button class="absolute left-5 text-5xl text-white" (click)="previousMedia()">❮</button>
-
-          @if(selectedMedia()?.type === FileType.Video){
-            <video controls autoplay class="max-h-[90vh] max-w-[90vw] rounded-xl">
-              <source [src]="getImageUrl(selectedMedia()?.imagePath)" type="video/mp4">
-            </video>
-          } @else {
-            <img class="max-h-[90vh] max-w-[90vw] rounded-xl" [src]="getImageUrl(selectedMedia()?.imagePath)">
-          }
-
-          <button class="absolute right-5 text-5xl text-white" (click)="nextMedia()">❯</button>
-        </div>
-      }
+    </div>
     }
 
     @else {
-      <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-12 text-center">
-        <h2 class="mb-2 text-xl font-bold">الحالة غير موجودة</h2>
-        <p class="text-on-surface-variant">لم يتم العثور على بيانات هذه الحالة.</p>
-      </div>
+    <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-12 text-center">
+      <h2 class="mb-2 text-xl font-bold">الحالة غير موجودة</h2>
+      <p class="text-on-surface-variant">لم يتم العثور على بيانات هذه الحالة.</p>
+    </div>
     }
 
   </div>
 
+  <!-- ================= Lightbox ================= -->
+  @if(lightboxVisible()){
+  <div role="dialog" aria-modal="true" aria-label="نافذة منبثقة"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
+    <button
+      class="absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition hover:bg-white/20"
+      (click)="closeLightbox()">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+
+    <button
+      class="absolute left-5 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition hover:bg-white/20"
+      (click)="previousMedia()">
+      <span class="material-symbols-outlined text-[24px]">chevron_left</span>
+    </button>
+
+    @if(selectedMedia()?.type === FileType.Video){
+    <video controls autoplay class="max-h-[90vh] max-w-[90vw] rounded-xl">
+      <source [src]="getImageUrl(selectedMedia()?.imagePath)" type="video/mp4">
+    </video>
+    } @else {
+    <img class="max-h-[90vh] max-w-[90vw] rounded-xl" [src]="getImageUrl(selectedMedia()?.imagePath)">
+    }
+
+    <button
+      class="absolute right-5 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition hover:bg-white/20"
+      (click)="nextMedia()">
+      <span class="material-symbols-outlined text-[24px]">chevron_right</span>
+    </button>
+  </div>
+  }
+
   <!-- ================= Modals ================= -->
 
   @if(showDeleteConfirmation()){
-    <app-confirmation-modal 
-      title="حذف الحالة"
-      message="هل أنت متأكد أنك تريد حذف هذه الحالة؟ لا يمكن التراجع عن هذا الإجراء." 
-      confirmText="حذف"
-      cancelText="إلغاء" 
-      icon="delete" 
-      variant="danger" 
-      (confirm)="confirmDelete()" 
-      (cancel)="cancelDelete()">
-    </app-confirmation-modal>
+  <app-confirmation-modal title="حذف الحالة"
+    message="هل أنت متأكد أنك تريد حذف هذه الحالة؟ لا يمكن التراجع عن هذا الإجراء." confirmText="حذف" cancelText="إلغاء"
+    icon="delete" variant="danger" (confirm)="confirmDelete()" (cancel)="cancelDelete()">
+  </app-confirmation-modal>
   }
-
 
   @if(showApproveConfirmation()){
-    <app-confirmation-modal 
-      title="قبول الحالة"
-      message="هل أنت متأكد أنك تريد قبول هذه الحالة وإظهارها للجميع؟" 
-      confirmText="قبول"
-      cancelText="إلغاء" 
-      variant="primary" 
-      (confirm)="confirmApprove()" 
-      (cancel)="cancelApprove()">
-    </app-confirmation-modal>
+  <app-confirmation-modal title="قبول الحالة" message="هل أنت متأكد أنك تريد قبول هذه الحالة وإظهارها للجميع؟"
+    confirmText="قبول" cancelText="إلغاء" icon="check_circle" variant="primary" (confirm)="confirmApprove()"
+    (cancel)="cancelApprove()">
+  </app-confirmation-modal>
   }
-  
 
   @if(showRejectConfirmation()){
-    <app-reject-case-popup
-      [isSubmitting]="isRejecting()"
-      [apiError]="rejectApiError()"
-      (confirm)="confirmReject($event)"
-      (cancel)="cancelReject()">
-    </app-reject-case-popup>
+  <app-reject-case-popup [isSubmitting]="isRejecting()" [apiError]="rejectApiError()"
+    [contextKey]="'RejectPopup_Unknown_' + caseDetails()?.id" (cancel)="cancelReject()"
+    (confirm)="confirmReject($event)">
+  </app-reject-case-popup>
   }
 
   @if(showPermanentDeleteConfirmation()){
-    <app-confirmation-modal 
-      title="حذف نهائي"
-      message="هل أنت متأكد أنك تريد حذف هذه الحالة نهائياً من النظام؟ هذا الإجراء لا يمكن التراجع عنه." 
-      confirmText="حذف نهائي"
-      cancelText="إلغاء" 
-      variant="danger" 
-      (confirm)="confirmPermanentDelete()" 
-      (cancel)="cancelPermanentDelete()">
-    </app-confirmation-modal>
+  <app-confirmation-modal title="حذف نهائي"
+    message="هل أنت متأكد أنك تريد حذف هذه الحالة نهائياً من النظام؟ هذا الإجراء لا يمكن التراجع عنه."
+    confirmText="حذف نهائي" cancelText="إلغاء" icon="delete_forever" variant="danger"
+    (confirm)="confirmPermanentDelete()" (cancel)="cancelPermanentDelete()">
+  </app-confirmation-modal>
   }
 
   @if(showFoundedPopup()){
-    <app-founded-popup (confirmed)="confirmFounded($event)" (cancel)="cancelFounded()">
-    </app-founded-popup>
+  <app-founded-popup [caseId]="caseDetails()?.id" [contextKey]="'FoundedPopup_Unknown_' + caseDetails()?.id"
+    (confirmed)="confirmFounded($event)" (cancel)="cancelFounded()">
+  </app-founded-popup>
   }
 
-  <app-view-profile-popup
-    [userId]="selectedUserId()"
-    (closed)="selectedUserId.set(null)">
+  <app-view-profile-popup [userId]="selectedUserId()" (closed)="selectedUserId.set(null)">
   </app-view-profile-popup>
 </div>

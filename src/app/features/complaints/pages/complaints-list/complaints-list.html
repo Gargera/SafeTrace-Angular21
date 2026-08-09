@@ -116,15 +116,11 @@
 <section
   class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75"
 >
-  @if (isLoading()) {
-    <app-loading-spinner
-      title="جاري تحميل الشكاوى..."
-      [fullscreen]="false"
-      containerClass="absolute inset-0 bg-white/60 flex items-center justify-center z-10"
-    ></app-loading-spinner>
-  }
+  @if (isLoading() && complaints().length === 0) {
+    <app-table-skeleton [rows]="10"></app-table-skeleton>
+  } @else {
 
-  <div class="overflow-x-auto">
+  <div class="overflow-x-auto" [class.opacity-50]="isLoading()" [class.pointer-events-none]="isLoading()">
     <table class="w-full text-right border-collapse whitespace-nowrap">
       <thead>
         <tr class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant">
@@ -186,9 +182,10 @@
             <tr>
               <td colspan="6" class="py-xl">
                 <app-empty-state
-                  title="لا يوجد شكاوى"
-                  message="لا توجد شكاوى تطابق شروط البحث."
-                ></app-empty-state>
+                  [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد شكاوى'"
+                  [message]="hasActiveFilters() ? 'لم نتمكن من العثور على شكاوى تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم تقديم أي شكاوى حتى الآن.'"
+                >
+                </app-empty-state>
               </td>
             </tr>
           }
@@ -196,6 +193,7 @@
       </tbody>
     </table>
   </div>
+  }
 
   @if (totalPages() > 1) {
     <div
@@ -216,7 +214,7 @@
 
 <!-- Details Modal -->
 @if (showDetailsModal() && selectedComplaint()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" (click)="closeDetailsModal()">
+  <div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" (click)="closeDetailsModal()">
     <app-card extraClass="w-full max-w-6xl max-h-[90vh] overflow-y-auto bg-surface-container-lowest shadow-2xl rounded-2xl mx-4" dir="rtl" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between border-b border-outline-variant px-6 py-4">
         <span class="font-bold text-lg text-primary">تفاصيل الشكوى</span>

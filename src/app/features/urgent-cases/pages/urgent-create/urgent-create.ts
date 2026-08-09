@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed, ChangeDetectionStrategy, DestroyRef, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { extractErrorMessage } from '../../../../shared/helper/case-error.helper';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -25,13 +25,14 @@ import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
+
 // Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { urgentEventDate, toDatetimeLocalString } from '../../../../shared/validators/urgent-event-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
 import { ImageService } from '../../../../shared/services/image.service';
-
+import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 
@@ -51,6 +52,7 @@ interface UrgentCreateDraft {
   selectedLat: number | null;
   selectedLng: number | null;
   selectedAddress: string;
+  isMapModalOpen: boolean;
 }
 
 @Component({
@@ -110,6 +112,7 @@ export class UrgentCreate implements OnInit {
   additionalPhotoPreviews = signal<string[]>([]);
   additionalPhotosError = signal<string | null>(null);
   videoFile = signal<File | null>(null);
+  videoError = signal<string | null>(null);
 
   selectedLat = signal<number | null>(null);
   selectedLng = signal<number | null>(null);
@@ -208,7 +211,8 @@ export class UrgentCreate implements OnInit {
           existingCaseType: this.existingCaseType(),
           selectedLat: this.selectedLat(),
           selectedLng: this.selectedLng(),
-          selectedAddress: this.selectedAddress()
+          selectedAddress: this.selectedAddress(),
+          isMapModalOpen: this.isMapModalOpen()
         };
         this.cacheService.set(DRAFT_CACHE_KEY, draft, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
       }
@@ -246,6 +250,7 @@ export class UrgentCreate implements OnInit {
           this.externalLocation.set({ lat: draft.selectedLat, lng: draft.selectedLng });
       }
 
+      this.isMapModalOpen.set(draft.isMapModalOpen || false);
       if (draft.showForceCreatePopup || draft.showDuplicateInfoDialog) {
         this.snackbar.info('تم استعادة بيانات النموذج. يرجى إعادة إرفاق الصور للمتابعة.');
       }
@@ -406,9 +411,30 @@ export class UrgentCreate implements OnInit {
     this.additionalPhotoPreviews.update((p) => p.filter((_, i) => i !== index));
   }
 
-  onVideoSelected(event: Event): void {
-    this.videoFile.set((event.target as HTMLInputElement).files?.[0] ?? null);
+ onVideoSelected(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0] ?? null;
+
+  if (!file) {
+    this.videoFile.set(null);
+    return;
   }
+
+  const validation = validateVideoFile(file, 50);
+
+  if (!validation.valid) {
+    this.videoFile.set(null);
+    this.videoError.set(validation.errorMessage ?? 'الملف غير صالح.');
+
+    // مهم عشان لو اختار نفس الملف تاني بعد الرفض
+    input.value = '';
+
+    return;
+  }
+
+  this.videoError.set(null);
+  this.videoFile.set(file);
+}
 
   // ─────────────────────────────────────────────────────────────
   // Submit
