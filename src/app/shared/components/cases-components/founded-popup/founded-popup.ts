@@ -23,7 +23,6 @@ import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 // Shared validators
-import { arabicText } from '../../../validators/arabic-text.validator';
 import { pastDate } from '../../../validators/past-date.validator';
 import { validGovernorate } from '../../../validators/governorate.validator';
 import { validCity } from '../../../validators/city.validator';
