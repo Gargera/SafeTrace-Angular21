@@ -20,8 +20,10 @@ import { CardComponent } from '../../../../shared/components/card/card';
 // Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
-import { urgentEventDate, toDatetimeLocalString } from '../../../../shared/validators/urgent-event-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
+import { validCity } from '../../../../shared/validators/city.validator';
+import { validGovernorate } from '../../../../shared/validators/governorate.validator';
+import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { ImageService } from '../../../../shared/services/image.service';
 
 import { CommonModule } from '@angular/common';
@@ -49,6 +51,7 @@ type Step = 1 | 2 | 3;
     HeaderComponent,
     ConfirmationModalComponent,
     UpdateFormSkeletonComponent,
+    ImageCropperComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./urgent-update.css'],
@@ -59,17 +62,6 @@ export class UrgentUpdate implements OnInit {
   private imageService = inject(ImageService);
   private destroyRef = inject(DestroyRef);
 
-  // Allowed datetime range for urgent cases (last 6 hours)
-  readonly minEventDate = computed(() => {
-    const now = new Date();
-    const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
-    return toDatetimeLocalString(sixHoursAgo);
-  });
-
-  readonly maxEventDate = computed(() => {
-    const now = new Date();
-    return toDatetimeLocalString(now);
-  });
   private service = inject(UrgentCaseService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -95,6 +87,11 @@ export class UrgentUpdate implements OnInit {
   newPrimaryPreview = signal<string | null>(null);
   newPrimaryError = signal<string | null>(null);
   newPhotosError = signal<string | null>(null);
+
+  // Cropper state for Update (same pattern as Create)
+  cropImageEvent = signal<Event | null>(null);
+  tempCroppedBlob = signal<Blob | null>(null);
+  croppedPrimaryImagePreview = signal<string | null>(null);
 
   existingVideoUrl = signal<string | null>(null);
   videoFile = signal<File | null>(null);
@@ -133,17 +130,16 @@ export class UrgentUpdate implements OnInit {
     sName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
     tName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
     lName: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
-    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(120)]],
+    age: [null as number | null, [Validators.required, Validators.min(1), Validators.max(120)]],
     gender: ['' as Gender | '', [Validators.required, validEnum(Gender)]],
     // Relation is optional on Update
     relation: [null as RelationType | null, [validEnum(RelationType)]],
     // Phone — optional, Egyptian format, max 15
     communicationPhone: ['', [egyptianPhone(), Validators.maxLength(15)]],
     description: ['', [Validators.maxLength(2000)]],
-    government: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
-    city: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
+    government: ['', [Validators.required, validGovernorate(), Validators.minLength(2), Validators.maxLength(100)]],
+    city: ['', [Validators.required]],
     street: ['', [Validators.required, Validators.maxLength(200)]],
-    eventDate: ['', [Validators.required, urgentEventDate()]],
   });
 
   // ─────────────────────────────────────────────────────────────
@@ -162,6 +158,10 @@ export class UrgentUpdate implements OnInit {
   ngOnInit(): void {
     this.caseId = Number(this.route.snapshot.paramMap.get('id'));
 
+    // Set city validator after form is initialized to avoid circular reference
+    this.form.get('city')?.setValidators([Validators.required, validCity(() => this.form.get('government')?.value ?? null)]);
+    this.form.get('city')?.updateValueAndValidity();
+
     this.form.get('government')?.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((gov) => {
@@ -171,6 +171,7 @@ export class UrgentUpdate implements OnInit {
         if (currentCity && !cities.includes(currentCity)) {
           this.form.get('city')?.setValue('');
         }
+        this.form.get('city')?.updateValueAndValidity();
       });
 
     this.loadCase();
@@ -216,7 +217,6 @@ export class UrgentUpdate implements OnInit {
             government: c.government ?? '',
             city: c.city ?? '',
             street: c.street ?? '',
-            eventDate: c.eventDate ? toDatetimeLocalString(new Date(String(c.eventDate))) : '',
           });
 
           if (c.latitude != null && c.longitude != null) {
@@ -328,7 +328,7 @@ export class UrgentUpdate implements OnInit {
       if (fields.some((f) => this.form.get(f)?.invalid)) return;
     }
     if (this.currentStep === 2) {
-      const fields = ['government', 'city', 'street', 'eventDate'];
+      const fields = ['government', 'city', 'street'];
       fields.forEach((f) => this.form.get(f)?.markAsTouched());
       if (fields.some((f) => this.form.get(f)?.invalid)) return;
       if (this.selectedLat() === null || this.selectedLng() === null) {
@@ -384,9 +384,40 @@ export class UrgentUpdate implements OnInit {
     }
 
     this.newPrimaryError.set(null);
-    this.newPrimaryImage.set(file);
-    this.newPrimaryPreview.set(URL.createObjectURL(file));
+    // Open crop dialog — same pattern as Create
+    this.cropImageEvent.set(event);
     this.primaryPhotoId.set(null);
+  }
+
+  onImageCropped(event: ImageCroppedEvent): void {
+    const blob = event.blob;
+    if (!blob) return;
+    this.tempCroppedBlob.set(blob);
+  }
+
+  confirmCrop(): void {
+    const blob = this.tempCroppedBlob();
+    if (!blob) return;
+    const croppedFile = new File([blob], 'primary_image.jpg', { type: 'image/jpeg' });
+    this.newPrimaryImage.set(croppedFile);
+    this.newPrimaryPreview.set(URL.createObjectURL(croppedFile));
+    this.croppedPrimaryImagePreview.set(URL.createObjectURL(croppedFile));
+    this.cropImageEvent.set(null);
+  }
+
+  cancelCrop(): void {
+    this.cropImageEvent.set(null);
+  }
+
+  reCropPhoto(): void {
+    this.croppedPrimaryImagePreview.set(null);
+    this.newPrimaryImage.set(null);
+    this.newPrimaryPreview.set(null);
+    this.cropImageEvent.set(null);
+  }
+
+  onCropCancel(): void {
+    this.cropImageEvent.set(null);
   }
 
   clearNewPrimary(): void {
@@ -469,7 +500,7 @@ onVideoSelected(event: Event): void {
       government: v.government!,
       city: v.city!,
       street: v.street!,
-      eventDate: v.eventDate ? new Date(v.eventDate).toISOString() : v.eventDate!,
+      eventDate: new Date().toISOString(),
       primaryImage: this.newPrimaryImage(),
       newPhotos: this.newPhotos().length ? this.newPhotos() : null,
       deletedPhotoIds: this.deletedPhotoIds().length ? this.deletedPhotoIds() : null,

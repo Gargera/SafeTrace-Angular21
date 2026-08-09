@@ -20,6 +20,13 @@
 
     <!-- Matched Cases Body -->
     <div class="p-6 md:p-8 flex flex-col gap-5 flex-1">
+
+      <!-- Search guidance hint -->
+      <div class="flex items-start gap-2 rounded-xl bg-blue-50 border border-blue-200 px-4 py-2.5 text-xs text-blue-700">
+        <span class="material-symbols-outlined text-[18px] shrink-0 mt-px text-blue-500">info</span>
+        <span>يمكن البحث عن الحالة باستخدام كود الحالة في خانة البحث — انسخ الكود من الكارت أدناه.</span>
+      </div>
+
       @for (m of matches(); track m.caseCode) {
       <app-card
         extraClass="flex flex-col sm:flex-row gap-5 border-[1.5px] border-slate-200 rounded-[18px] p-4 bg-white hover:border-[#0058be] hover:shadow-[0_10px_20px_rgba(0,88,190,0.08)] hover:bg-[#fafcff] transition-all duration-300 overflow-hidden group">
@@ -54,10 +61,33 @@
               <span class="material-symbols-outlined text-[18px] text-slate-400">calendar_today</span>
               العمر: {{ m.age }} سنوات
             </div>
-            <div
-              class="col-span-2 flex items-center gap-1.5 text-[#0058be] font-semibold bg-[#f4f7fa] px-2 py-1 rounded-md w-fit">
-              <span class="material-symbols-outlined text-[18px] text-[#0058be]">qr_code</span>
-              كود: {{ m.caseCode }}
+
+            <!-- Case Code compact chip with copy button -->
+            <div class="col-span-2 flex flex-col gap-1 mt-1">
+              <span class="text-[10px] text-slate-400 font-medium">كود الحالة</span>
+              <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5 bg-[#f0f4ff] border border-[#c7d7f8] rounded-lg px-2.5 py-1.5 font-mono text-[13px] font-bold text-[#0058be] select-all tracking-wide">
+                  <span class="material-symbols-outlined text-[15px] text-[#0058be]">qr_code</span>
+                  {{ m.caseCode }}
+                </div>
+                <button
+                  type="button"
+                  (click)="copyCode($event, m.caseCode)"
+                  [title]="copiedCode() === m.caseCode ? 'تم النسخ!' : 'نسخ الكود'"
+                  class="flex items-center justify-center h-7 w-7 rounded-md border transition-all duration-150"
+                  [class.bg-green-50]="copiedCode() === m.caseCode"
+                  [class.border-green-400]="copiedCode() === m.caseCode"
+                  [class.text-green-600]="copiedCode() === m.caseCode"
+                  [class.bg-slate-100]="copiedCode() !== m.caseCode"
+                  [class.border-slate-300]="copiedCode() !== m.caseCode"
+                  [class.text-slate-500]="copiedCode() !== m.caseCode"
+                  [class.hover:bg-blue-50]="copiedCode() !== m.caseCode"
+                  aria-label="نسخ كود الحالة">
+                  <span class="material-symbols-outlined text-[16px]">
+                    {{ copiedCode() === m.caseCode ? 'check' : 'content_copy' }}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -69,7 +99,7 @@
           </app-button>
         </div>
       </app-card>
-      }`
+      }
     </div>
 
     <!-- Footer -->
