@@ -72,20 +72,13 @@ export class NotificationService implements OnDestroy {
 
   startConnection(): void {
     if (this.#hubConnection) return;
-    for (let i = 0; i < this.#notifications().length; i++) {
-      console.log(this.#notifications()[i].createdAt);
-      console.log(new Date(this.#notifications()[i].createdAt));
-      console.log(new Date());
-    }
+
     this.#hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(environment.signalRHubUrl, {
         // Cookie-based auth: credentials are sent automatically.
         // If you switch to bearer token in the future, provide it here:
         // accessTokenFactory: () => tokenService.getToken()
-        // accessTokenFactory: () => this.#authService.getToken() ?? '',
-        accessTokenFactory: async () => {
-          return (await this.#authService.getValidAccessTokenSignalR()) ?? '';
-        },
+        accessTokenFactory: () => this.#authService.getToken() ?? '',
         // withCredentials: true,
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
@@ -540,25 +533,20 @@ export class NotificationService implements OnDestroy {
   }
 
   formatDate(dateStr: string): string {
-    if (!dateStr) return '';
+    const date = new Date(dateStr); // اعتبره UTC
 
-    const deletedDate = new Date(dateStr);
-    const now = new Date();
+    const diff = Date.now() - date.getTime();
 
-    const diffMs = now.getTime() - deletedDate.getTime();
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMinutes / 60);
-    const diffDays = Math.floor(diffHours / 24);
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
 
-    if (diffMinutes < 1) return 'منذ لحظات';
-    if (diffMinutes < 60) return `منذ ${diffMinutes} دقيقة`;
-    if (diffHours < 24) return `منذ ${diffHours} ساعة`;
-    if (diffDays < 30) return `منذ ${diffDays} يوم`;
+    if (seconds < 60) return 'منذ لحظات';
+    if (minutes < 60) return `منذ ${minutes} دقيقة`;
+    if (hours < 24) return `منذ ${hours} ساعة`;
+    if (days < 30) return `منذ ${days} يوم`;
 
-    const diffMonths = Math.floor(diffDays / 30);
-    if (diffMonths < 12) return `منذ ${diffMonths} شهر`;
-
-    const diffYears = Math.floor(diffMonths / 12);
-    return `منذ ${diffYears} سنة`;
+    return date.toLocaleDateString('ar-EG');
   }
 }
