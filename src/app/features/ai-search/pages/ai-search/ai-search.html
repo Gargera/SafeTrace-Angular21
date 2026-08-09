@@ -135,7 +135,11 @@
 
   @if (isLoading()) {
     <div class="mt-2xl">
-      <app-card-skeleton [items]="4" layout="case-card"></app-card-skeleton>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <app-case-card-skeleton></app-case-card-skeleton>
+        }
+      </div>
     </div>
   }
 
