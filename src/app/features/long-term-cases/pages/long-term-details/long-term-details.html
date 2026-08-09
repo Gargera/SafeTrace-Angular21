@@ -6,9 +6,7 @@
     </section>
 
     @if (loading()) {
-      <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-12 text-center">
-        <p class="text-on-surface-variant">جاري تحميل بيانات الحالة...</p>
-      </div>
+      <app-case-details-skeleton></app-case-details-skeleton>
     }
 
     @else if (caseDetails()) {

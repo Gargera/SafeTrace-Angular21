@@ -17,81 +17,83 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="flex flex-col lg:flex-row items-start gap-6 animate-pulse" role="status" aria-label="جاري تحميل تفاصيل الحالة">
 
-      <!-- ===== LEFT COLUMN: Media + Buttons (w-full lg:w-5/12) ===== -->
-      <div class="w-full lg:w-5/12 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
+      <!-- ================= اليمين: الميديا والأزرار ================= -->
+      <div class="w-full lg:w-5/12 overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 shadow-sm">
+        
+        <!-- Main Media Placeholder -->
+        <div class="h-137.5 w-full rounded-xl bg-surface-container-high"></div>
 
-        <!-- Main image placeholder (mirrors h-[550px] of the real img/video) -->
-        <div class="w-full h-[550px] rounded-xl bg-surface-container-high"></div>
-
-        <!-- Thumbnail gallery strip (4 thumbnails 96x96) -->
+        <!-- Thumbnail gallery strip -->
         <div class="mt-4 flex gap-3 overflow-hidden pb-2">
           @for (i of [1,2,3,4]; track i) {
-            <div class="h-24 w-24 shrink-0 rounded-lg bg-surface-container-high"></div>
+            <div class="h-20 w-20 shrink-0 rounded-lg bg-surface-container-high border-2 border-transparent"></div>
           }
         </div>
 
         <!-- Action buttons row -->
-        <div class="flex flex-wrap items-center gap-3 mt-6 pt-4 border-t border-outline-variant/50">
-          <div class="h-11 flex-1 min-w-[100px] rounded-2xl bg-surface-container-high"></div>
-          <div class="h-11 flex-1 min-w-[100px] rounded-2xl bg-surface-container-high"></div>
+        <div class="mt-5 flex flex-wrap items-center gap-2.5 border-t border-outline-variant pt-4">
+          <div class="h-10 flex-1 min-w-[100px] rounded-xl bg-surface-container-high"></div>
+          <div class="h-10 flex-1 min-w-[100px] rounded-xl bg-surface-container-high"></div>
         </div>
+
       </div>
 
-      <!-- ===== RIGHT COLUMN: Details (w-full lg:w-7/12) ===== -->
+      <!-- ================= اليسار: تفاصيل الحالة ================= -->
       <div class="w-full lg:w-7/12 space-y-6">
 
-        <!-- Name + Location card -->
-        <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm space-y-4">
+        <!-- Rejection Reason Card Placeholder -->
+        <div class="h-16 w-full rounded-2xl bg-surface-container-high/50"></div>
 
-          <!-- Full name (headline) -->
-          <div class="space-y-2">
-            <div class="h-8 bg-surface-container-high rounded w-3/4"></div>
-            <div class="h-4 bg-surface-container-high rounded w-1/2"></div>
-          </div>
+        <!-- كارت البيانات الأساسية -->
+        <div class="divide-y divide-outline-variant overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+          
+          <div class="space-y-4 p-6">
+            <!-- Full name -->
+            <div class="h-8 w-3/4 rounded bg-surface-container-high"></div>
+            <!-- Location -->
+            <div class="h-4 w-1/2 rounded bg-surface-container-high"></div>
 
-          <!-- Status badges row -->
-          <div class="flex flex-wrap gap-2">
-            <div class="h-7 w-20 rounded-full bg-surface-container-high"></div>
-            <div class="h-7 w-24 rounded-full bg-surface-container-high"></div>
-            <div class="h-7 w-16 rounded-full bg-surface-container-high"></div>
-          </div>
-
-          <!-- Publisher card (avatar + name) -->
-          <div class="flex items-center gap-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-low p-3.5">
-            <div class="h-11 w-11 rounded-full bg-surface-container-high shrink-0"></div>
-            <div class="flex flex-col gap-1.5 flex-1">
-              <div class="h-3 bg-surface-container-high rounded w-16"></div>
-              <div class="h-4 bg-surface-container-high rounded w-32"></div>
+            <!-- 3-column info grid -->
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              @for (i of [1,2,3,4,5,6]; track i) {
+                <div class="rounded-lg border border-outline-variant p-4 space-y-2">
+                  <div class="h-3 w-16 rounded bg-surface-container-high"></div>
+                  <div class="h-5 w-24 rounded bg-surface-container-high"></div>
+                </div>
+              }
             </div>
           </div>
 
-          <!-- 2x2 info grid (age, date, gender, ...) -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            @for (i of [1,2,3,4]; track i) {
-              <div class="rounded-lg border border-outline-variant p-4 space-y-2">
-                <div class="h-3 bg-surface-container-high rounded w-16"></div>
-                <div class="h-5 bg-surface-container-high rounded w-24"></div>
+          <!-- كارت الناشر -->
+          <div class="p-6">
+            <div class="flex items-center gap-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-low p-3.5">
+              <div class="h-11 w-11 shrink-0 rounded-full bg-surface-container-high"></div>
+              <div class="flex flex-1 flex-col gap-1.5">
+                <div class="h-3 w-20 rounded bg-surface-container-high"></div>
+                <div class="h-4 w-32 rounded bg-surface-container-high"></div>
               </div>
-            }
+            </div>
           </div>
 
-          <!-- Description text lines -->
-          <div class="space-y-2 pt-2">
-            <div class="h-4 bg-surface-container-high rounded w-full"></div>
-            <div class="h-4 bg-surface-container-high rounded w-5/6"></div>
-            <div class="h-4 bg-surface-container-high rounded w-4/6"></div>
+          <!-- Description -->
+          <div class="p-6 space-y-2">
+            <div class="h-4 w-full rounded bg-surface-container-high"></div>
+            <div class="h-4 w-5/6 rounded bg-surface-container-high"></div>
+            <div class="h-4 w-4/6 rounded bg-surface-container-high"></div>
           </div>
+
         </div>
 
-        <!-- Map card placeholder -->
-        <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
-          <div class="px-4 py-3 border-b border-outline-variant/50">
-            <div class="h-4 bg-surface-container-high rounded w-32"></div>
+        <!-- Map Card Placeholder -->
+        <div class="overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+          <div class="border-b border-outline-variant/50 px-5 py-4">
+            <div class="h-5 w-32 rounded bg-surface-container-high"></div>
           </div>
-          <div class="h-48 bg-surface-container-high w-full"></div>
+          <div class="h-64 w-full bg-surface-container-high"></div>
         </div>
 
       </div>
+
     </div>
   `,
 })

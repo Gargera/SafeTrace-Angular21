@@ -31,6 +31,7 @@ import { RejectCasePopupComponent } from '../../../../shared/components/cases-co
 import { RejectionReasonCardComponent } from '../../../../shared/components/cases-components/rejection-reason-card/rejection-reason-card';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
+import { CaseDetailsSkeletonComponent } from '../../../../shared/components/skeletons/case-details-skeleton/case-details-skeleton.component';
 
 /**
  * The backend DTO includes a `video` field (a plain path string) that is
@@ -55,6 +56,7 @@ const VIDEO_MEDIA_ID = -1;
     AgeBadgeDirective,
     ConfirmationModalComponent,
     FoundedPopupComponent,
+    CaseDetailsSkeletonComponent,
     HasPermissionDirective,
     ButtonComponent,
     RejectCasePopupComponent,

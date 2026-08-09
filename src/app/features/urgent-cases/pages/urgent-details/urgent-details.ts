@@ -29,6 +29,7 @@ import { HasPermissionDirective } from '../../../../shared/directives/has-permis
 import { Permissions } from '../../../../core/constants/Permissions';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
+import { CaseDetailsSkeletonComponent } from '../../../../shared/components/skeletons/case-details-skeleton/case-details-skeleton.component';
 
 @Component({
   selector: 'urgent-details',
@@ -46,6 +47,7 @@ import { ViewProfilePopup } from '../../../../shared/components/view-profile-pop
     HasPermissionDirective,
     ButtonComponent,
     ViewProfilePopup,
+    CaseDetailsSkeletonComponent,
   ],
   templateUrl: './urgent-details.html',
   styleUrls: ['./urgent-details.css'],
