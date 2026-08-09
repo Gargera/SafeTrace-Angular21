@@ -252,12 +252,23 @@
             }
 
             @if (message.isMine) {
-            <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5">
+            <svg
+              viewBox="0 0 24 24"
+              class="w-3.5 h-3.5"
+              [ngClass]="message.isRead ? 'text-blue-500' : 'text-on-surface-variant'"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <!-- الصح الأولى -->
               <path d="M4 12l4 4 8-9" />
+
+              <!-- الصح الثانية تظهر فقط بعد القراءة -->
               @if (message.isRead) {
-              <path d="M9 12l4 4 8-9" /> }
+                <path d="M9 12l4 4 8-9" />
+              }
             </svg>
-            }
+          }
 
             <span dir="rtl">{{ message.sendAt | date:'shortTime':'':'ar-EG' }}</span>
           </div>
@@ -322,14 +333,31 @@
           </button>
         </div>
 
-        <button type="button"
-          class="w-9 h-9 rounded-full bg-secondary text-on-secondary flex items-center justify-center shrink-0 disabled:opacity-50 cursor-pointer"
-          [disabled]="(!draft().trim() && !selectedFile()) || sending()" (click)="onSend()" aria-label="إرسال">
-          <svg viewBox="0 0 24 24" class="w-4 h-4 scale-x-[-1]" fill="none" stroke="currentColor" stroke-width="1.5"
-            stroke-linecap="round" stroke-linejoin="round">
+        
+      <button type="button"
+        class="w-9 h-9 rounded-full bg-secondary text-on-secondary flex items-center justify-center shrink-0 disabled:opacity-50 cursor-pointer"
+        [disabled]="(!draft().trim() && !selectedFile()) || sending()"
+        (click)="onSend()"
+        aria-label="إرسال">
+
+        @if (sending()) {
+          <span
+            class="w-4 h-4 border-2 border-on-secondary border-t-transparent rounded-full animate-spin">
+          </span>
+        } @else {
+          <svg
+            viewBox="0 0 24 24"
+            class="w-4 h-4 scale-x-[-1]"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round">
             <path d="M3 12 21 3l-5 9 5 9L3 12Zm0 0h9" />
           </svg>
-        </button>
+        }
+      </button>
+
       </div>
       @if (fileError()) {
             <span class="text-sm text-error px-md pb-2" dir="rtl">
