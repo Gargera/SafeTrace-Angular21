@@ -66,7 +66,7 @@
     <app-table-skeleton [rows]="10"></app-table-skeleton>
   } @else {
 
-  <div class="overflow-x-auto" [class.opacity-50]="isLoading()" [class.pointer-events-none]="isLoading()">
+  <div class="w-full max-w-full overflow-x-auto" [class.opacity-50]="isLoading()" [class.pointer-events-none]="isLoading()">
     <table class="w-full text-right border-collapse whitespace-nowrap">
       <thead>
         <tr class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant">
