@@ -18,6 +18,16 @@ export class CacheService {
     return entry.value;
   }
 
+  has(key: string): boolean {
+    const entry = this.cache.get(key);
+    if (!entry) return false;
+    if (Date.now() > entry.expiry) {
+      this.cache.delete(key);
+      return false;
+    }
+    return true;
+  }
+
   set<T>(key: string, value: T, ttl: number, tags: string[] = []): void {
     this.cache.set(key, { value, expiry: Date.now() + ttl, tags });
   }

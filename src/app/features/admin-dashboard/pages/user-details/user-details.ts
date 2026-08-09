@@ -92,14 +92,23 @@ export class UserDetails implements OnInit {
   }
 
   onConfirmModal() {
-    this.showConfirmModal.set(false);
-    this.currentOpenModal.set(null);
     this.modalConfig().action();
   }
 
   onCancelModal() {
     this.showConfirmModal.set(false);
     this.currentOpenModal.set(null);
+    this.rejectReason.set('');
+    this.blockReason.set('');
+    const id = this.userId();
+    if (id) {
+      this.cacheService.set(`UserDetails_State_${id}`, {
+        rejectReason: '',
+        blockReason: '',
+        selectedRole: this.selectedRole(),
+        currentOpenModal: null
+      }, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+    }
   }
 
   constructor() {
@@ -109,7 +118,8 @@ export class UserDetails implements OnInit {
         this.cacheService.set(`UserDetails_State_${id}`, {
           rejectReason: this.rejectReason(),
           blockReason: this.blockReason(),
-          selectedRole: this.selectedRole()
+          selectedRole: this.selectedRole(),
+          currentOpenModal: this.currentOpenModal()
         }, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
       }
     });
@@ -240,6 +250,12 @@ export class UserDetails implements OnInit {
 
             this.rejectReason.set(state.rejectReason || '');
             this.blockReason.set(state.blockReason || '');
+
+            if (state.currentOpenModal === 'REJECT') {
+              this.onReject();
+            } else if (state.currentOpenModal === 'BLOCK') {
+              this.onToggleBlock();
+            }
           } else {
             this.selectedRole.set(res.data?.role || '');
           }
@@ -351,8 +367,9 @@ export class UserDetails implements OnInit {
           this.cacheService.set(`UserDetails_State_${id}`, {
             rejectReason: '',
             blockReason: '',
-            selectedRole: this.selectedRole()
-          }, 300000);
+            selectedRole: this.selectedRole(),
+            currentOpenModal: null
+          }, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
         }
 
         this.snackbar.success(successMessage);

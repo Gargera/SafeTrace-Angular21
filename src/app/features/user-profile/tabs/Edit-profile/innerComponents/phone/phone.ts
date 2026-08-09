@@ -19,9 +19,9 @@ import { ButtonComponent } from '../../../../../../shared/components/button/butt
 import { egyptianPhone } from '../../../../../../shared/validators/egyptian-phone.validator';
 import { extractErrorMessage } from '../../../../../../shared/helper/error.helper';
 import { CacheService } from '../../../../../../core/cache/cache.service';
-import { CACHE_TAGS, CACHE_TTL } from '../../../../../../core/cache/cache.constants';
+import { CACHE_TAGS, CACHE_TTL, PROFILE_CACHE_KEYS } from '../../../../../../core/cache/cache.constants';
 
-const DRAFT_CACHE_KEY = 'PhoneEdit_Draft';
+const DRAFT_CACHE_KEY = PROFILE_CACHE_KEYS.DRAFT_PHONE;
 
 @Component({
   selector: 'app-phone',

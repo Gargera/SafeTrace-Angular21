@@ -58,6 +58,16 @@ export class ProfileView implements OnInit, OnDestroy {
         const tab = params.get('tab') as ProfileTab | null;
         if (tab && this.tabs.some((t) => t.id === tab)) {
           this.activeTab.set(tab);
+          this.closeImageZoom();
+        } else {
+          // Default to 'edit' and update URL
+          this.activeTab.set('edit');
+          this.closeImageZoom();
+          this.#router.navigate([], {
+            relativeTo: this.#route,
+            queryParams: { tab: 'edit' },
+            replaceUrl: true
+          });
         }
       });
 

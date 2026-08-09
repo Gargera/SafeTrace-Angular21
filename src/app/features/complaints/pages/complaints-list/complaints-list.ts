@@ -76,6 +76,9 @@ export class ComplaintsList implements OnInit {
   solutionMessage = signal<string>('');
   isResolving = signal<boolean>(false);
 
+  private activeComplaintDraftId: number | null = null;
+  private activeComplaintDraftMsg: string | null = null;
+
   showDeleteModal = signal<boolean>(false);
   complaintToDelete = signal<ComplaintResponseDto | null>(null);
 
@@ -118,11 +121,20 @@ export class ComplaintsList implements OnInit {
 
   constructor() {
     this.destroyRef.onDestroy(() => {
+      const state: any = {
+        filter: this.filter()
+      };
+      
+      const complaint = this.selectedComplaint();
+      const msg = this.solutionMessage();
+      if (this.showDetailsModal() && complaint && msg) {
+        state.activeComplaintId = complaint.id;
+        this.cacheService.set(`ComplaintSolution_Draft_${complaint.id}`, msg, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+      }
+
       this.cacheService.set(
         UI_STATE_CACHE_KEY,
-        {
-          filter: this.filter()
-        },
+        state,
         CACHE_TTL.UI_STATE,
         [CACHE_TAGS.UI_STATE]
       );
@@ -133,6 +145,14 @@ export class ComplaintsList implements OnInit {
     const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY);
     if (cachedState) {
       if (cachedState.filter) this.filter.set(cachedState.filter);
+      
+      if (cachedState.activeComplaintId) {
+        const msg = this.cacheService.get<string>(`ComplaintSolution_Draft_${cachedState.activeComplaintId}`);
+        if (msg) {
+          this.activeComplaintDraftId = cachedState.activeComplaintId;
+          this.activeComplaintDraftMsg = msg;
+        }
+      }
     }
 
     this.loadStatistics();
@@ -190,6 +210,17 @@ export class ComplaintsList implements OnInit {
           this.complaints.set(res.data.items);
           this.totalCount.set(res.data.totalCount);
           this.totalPages.set(res.data.totalPages ?? Math.ceil(res.data.totalCount / this.filter().pageSize));
+          
+          if (this.activeComplaintDraftId) {
+            const found = res.data.items.find((c: any) => c.id === this.activeComplaintDraftId);
+            if (found) {
+              this.selectedComplaint.set(found);
+              this.solutionMessage.set(this.activeComplaintDraftMsg!);
+              this.showDetailsModal.set(true);
+            }
+            this.activeComplaintDraftId = null;
+            this.activeComplaintDraftMsg = null;
+          }
         }
         this.isLoading.set(false);
       });
@@ -222,6 +253,10 @@ export class ComplaintsList implements OnInit {
   }
 
   closeDetailsModal() {
+    const complaint = this.selectedComplaint();
+    if (complaint) {
+      this.cacheService.remove(`ComplaintSolution_Draft_${complaint.id}`);
+    }
     this.showDetailsModal.set(false);
     this.selectedComplaint.set(null);
   }
@@ -240,6 +275,7 @@ export class ComplaintsList implements OnInit {
       next: (res) => {
         if (res.success) {
           this.toast.success('تم حل الشكوى وإشعار المستخدم بنجاح');
+          this.cacheService.remove(`ComplaintSolution_Draft_${complaint.id}`);
 
           const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
           this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);

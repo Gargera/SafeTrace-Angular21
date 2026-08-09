@@ -4,7 +4,7 @@
 
 <!-- Filters Card (Always Visible) -->
 <section class="overflow-hidden rounded-xl border border-outline-variant bg-surface shadow-sm my-6">
-  <app-case-filters [showSearch]="true" [showCaseType]="true" [showCaseStatus]="true" [showGender]="false"
+  <app-case-filters [initialFilter]="filterRequest()" [showSearch]="true" [showCaseType]="true" [showCaseStatus]="true" [showGender]="false"
     [showAgeCategory]="false" [showGovernment]="false" [showCity]="false" [showFromDate]="false" [showToDate]="false"
     [showAgeSort]="false" [showDateSort]="false" (filterChange)="onFilterChange($event)"
     (reset)="onFilterReset()"></app-case-filters>
@@ -76,6 +76,7 @@
 
 <!-- Mark as Found Modal -->
 @if (showMarkAsFoundModal()) {
-<app-founded-popup [caseId]="markAsFoundCaseId()!" (confirmed)="handleMarkAsFoundConfirm($event)"
+<app-founded-popup [caseId]="markAsFoundCaseId()!" [contextKey]="PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND + '_' + markAsFoundCaseId()"
+  (confirmed)="handleMarkAsFoundConfirm($event)"
   (cancel)="closeMarkAsFoundModal()" />
 }

@@ -149,6 +149,9 @@ export class UrgentDetails implements OnInit {
           if (apiRes.success && apiRes.data) {
             this.caseDetails.set(apiRes.data);
 
+            const hasFounded = this.cacheService.has(`FoundedPopup_Urgent_${apiRes.data.id}`);
+            if (hasFounded) this.showFoundedPopup.set(true);
+
             if (apiRes.data.photos?.length) {
               const primary =
                 apiRes.data.photos.find((x) => x.isPrimary) ?? apiRes.data.photos[0];

@@ -18,7 +18,7 @@ import { LongTermCaseService } from '../../../long-term-cases/services/long-term
 import { UnknownCaseService } from '../../../unknown-cases/services/unknown-case.service';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { CacheService } from '../../../../core/cache/cache.service';
-import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+import { CACHE_TAGS, CACHE_TTL, PROFILE_CACHE_KEYS } from '../../../../core/cache/cache.constants';
 
 import { MyCaseListItemResponse, MyCasesFilterRequest } from '../../model/profile.model';
 import { CaseType } from '../../../../shared/enums/case-type';
@@ -37,7 +37,7 @@ import { FoundedPopupComponent } from '../../../../shared/components/cases-compo
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 const CASE_TYPE_ORDER: CaseType[] = [CaseType.Urgent, CaseType.LongTerm, CaseType.Unknown];
-const UI_STATE_CACHE_KEY = 'MyCasesTab_UI_State';
+const UI_STATE_CACHE_KEY = PROFILE_CACHE_KEYS.UI_MY_CASES;
 
 @Component({
   selector: 'app-my-cases-tab',
@@ -63,6 +63,7 @@ const UI_STATE_CACHE_KEY = 'MyCasesTab_UI_State';
 export class MyCasesTab implements OnInit, OnDestroy {
   protected readonly CaseType = CaseType;
   protected readonly CaseStatus = CaseStatus;
+  protected readonly PROFILE_CACHE_KEYS = PROFILE_CACHE_KEYS;
 
   private profileService = inject(ProfileService);
   private urgentService = inject(UrgentCaseService);
@@ -150,12 +151,22 @@ export class MyCasesTab implements OnInit, OnDestroy {
 
   constructor() {
     this.destroyRef.onDestroy(() => {
+      const state: any = {
+        filterRequest: this.filterRequest(),
+        currentPage: this.currentPage(),
+      };
+      
+      if (this.showMarkAsFoundModal() && this.markAsFoundCaseId()) {
+        const hasDraft = this.cacheService.has(`${PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND}_${this.markAsFoundCaseId()}`);
+        if (hasDraft) {
+          state.markAsFoundCaseId = this.markAsFoundCaseId();
+          state.markAsFoundCaseType = this.markAsFoundCaseType();
+        }
+      }
+
       this.cacheService.set(
         UI_STATE_CACHE_KEY,
-        {
-          filterRequest: this.filterRequest(),
-          currentPage: this.currentPage(),
-        },
+        state,
         CACHE_TTL.UI_STATE,
         [CACHE_TAGS.UI_STATE]
       );
@@ -167,6 +178,14 @@ export class MyCasesTab implements OnInit, OnDestroy {
     if (cachedState) {
       if (cachedState.filterRequest) this.filterRequest.set(cachedState.filterRequest);
       if (cachedState.currentPage) this.currentPage.set(cachedState.currentPage);
+      
+      if (cachedState.markAsFoundCaseId && cachedState.markAsFoundCaseType) {
+        if (this.cacheService.has(`${PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND}_${cachedState.markAsFoundCaseId}`)) {
+          this.markAsFoundCaseId.set(cachedState.markAsFoundCaseId);
+          this.markAsFoundCaseType.set(cachedState.markAsFoundCaseType);
+          this.showMarkAsFoundModal.set(true);
+        }
+      }
     }
 
     this.loadCases();
@@ -351,6 +370,7 @@ export class MyCasesTab implements OnInit, OnDestroy {
         );
         this.toast.success('تم تحديث الحالة بنجاح');
         
+        this.cacheService.remove(`FoundedPopup_Profile_${id}`);
         this.showMarkAsFoundModal.set(false);
         this.markAsFoundCaseId.set(null);
         this.markAsFoundCaseType.set(null);
@@ -363,6 +383,9 @@ export class MyCasesTab implements OnInit, OnDestroy {
   }
 
   closeMarkAsFoundModal(): void {
+    if (this.markAsFoundCaseId()) {
+      this.cacheService.remove(`${PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND}_${this.markAsFoundCaseId()}`);
+    }
     this.showMarkAsFoundModal.set(false);
     this.markAsFoundCaseId.set(null);
     this.markAsFoundCaseType.set(null);
