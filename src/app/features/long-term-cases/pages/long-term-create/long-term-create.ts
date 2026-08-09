@@ -48,6 +48,10 @@ interface LongTermCreateDraft {
   isBlockedDuplicate: boolean;
   matchedCases: MatchedCaseResponse[];
   existingCaseType: CaseType | null;
+  primaryPhotoFile?: File | null;
+  additionalPhotos?: File[];
+  policeReportFile?: File | null;
+  videoFile?: File | null;
 }
 
 @Component({
@@ -159,7 +163,7 @@ export class LongTermCreate implements OnInit {
   constructor() {
     this.destroyRef.onDestroy(() => {
       // Only cache if we didn't just submit successfully
-      if (this.form.dirty || this.currentStep > 1 || this.matchedCases().length > 0) {
+      if (this.form.dirty || this.currentStep > 1 || this.matchedCases().length > 0 || this.primaryPhotoFile()) {
         const draft: LongTermCreateDraft = {
           formValue: this.form.getRawValue(),
           currentStep: this.currentStep,
@@ -168,7 +172,11 @@ export class LongTermCreate implements OnInit {
           currentDuplicateDecision: this.currentDuplicateDecision(),
           isBlockedDuplicate: this.isBlockedDuplicate(),
           matchedCases: this.matchedCases(),
-          existingCaseType: this.existingCaseType()
+          existingCaseType: this.existingCaseType(),
+          primaryPhotoFile: this.primaryPhotoFile(),
+          additionalPhotos: this.additionalPhotos(),
+          policeReportFile: this.policeReportFile(),
+          videoFile: this.videoFile()
         };
         this.cacheService.set(DRAFT_CACHE_KEY, draft, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
       }
@@ -202,9 +210,21 @@ export class LongTermCreate implements OnInit {
       this.matchedCases.set(draft.matchedCases);
       this.existingCaseType.set(draft.existingCaseType);
 
-      if (draft.showForceCreatePopup || draft.showDuplicateInfoDialog) {
-        this.snackbar.info('تم استعادة بيانات النموذج. يرجى إعادة إرفاق الصور والمستندات للمتابعة.');
+      if (draft.primaryPhotoFile) {
+        this.primaryPhotoFile.set(draft.primaryPhotoFile);
+        this.croppedPrimaryImagePreview.set(URL.createObjectURL(draft.primaryPhotoFile));
       }
+      if (draft.additionalPhotos && draft.additionalPhotos.length > 0) {
+        this.additionalPhotos.set(draft.additionalPhotos);
+        this.additionalPhotoPreviews.set(draft.additionalPhotos.map(f => URL.createObjectURL(f)));
+      }
+      if (draft.policeReportFile) {
+        this.policeReportFile.set(draft.policeReportFile);
+      }
+      if (draft.videoFile) {
+        this.videoFile.set(draft.videoFile);
+      }
+
     }
   }
 

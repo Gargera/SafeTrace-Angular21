@@ -21,6 +21,9 @@ import { validateVideoFile } from '../../../../shared/validators/video-validatio
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import {getCaseStatusTranslationAr} from '../../../../core/constants/dictionaries/case.status.dictionary';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+import { DestroyRef } from '@angular/core';
 @Component({
   selector: 'app-chat-window',
   standalone: true,
@@ -39,6 +42,8 @@ export class ChatWindow implements OnInit {
   private snackbarService = inject(SnackbarService);
   private chatHubService = inject(ChatHubService);
   private authService = inject(AuthService);
+  private cacheService = inject(CacheService);
+  private destroyRef = inject(DestroyRef);
 
   readonly selectedUserId = signal<string | null>(null);
 
@@ -113,6 +118,25 @@ getCaseStatusTranslationAr = getCaseStatusTranslationAr;
     this.chatHubService.onReceiveMessage(this.handleReceivedMessage);
     this.chatHubService.onMessagesRead(this.handleMessagesRead);
     this.chatHubService.onMessageDeletedForEveryone(this.handleMessageDeletedForEveryone);
+
+    // Restore draft
+    const draftKey = `CHAT_DRAFT_${this.chatId}`;
+    const savedDraft = this.cacheService.get<{ draft: string; file: File | null }>(draftKey);
+    if (savedDraft) {
+      this.draft.set(savedDraft.draft);
+      if (savedDraft.file) {
+        this.selectedFile.set(savedDraft.file);
+      }
+    }
+
+    // Save draft on destroy
+    this.destroyRef.onDestroy(() => {
+      if (this.draft() || this.selectedFile()) {
+        this.cacheService.set(draftKey, { draft: this.draft(), file: this.selectedFile() }, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+      } else {
+        this.cacheService.remove(draftKey);
+      }
+    });
 
     this.loadMessages();
   }
@@ -389,6 +413,8 @@ private handleMessageDeletedForEveryone = (
 
     this.draft.set('');
     this.clearSelectedFile();
+    const draftKey = `CHAT_DRAFT_${this.chatId}`;
+    this.cacheService.remove(draftKey);
   }
 
  async onDeleteMessage(message: MessageDto): Promise<void> {

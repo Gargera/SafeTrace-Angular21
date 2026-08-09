@@ -54,6 +54,9 @@ interface UrgentCreateDraft {
   selectedLng: number | null;
   selectedAddress: string;
   isMapModalOpen: boolean;
+  primaryFile?: File | null;
+  additionalPhotos?: File[];
+  videoFile?: File | null;
 }
 
 @Component({
@@ -200,7 +203,7 @@ export class UrgentCreate implements OnInit {
   constructor() {
     this.destroyRef.onDestroy(() => {
       // Only cache if we didn't just submit successfully
-      if (this.form.dirty || this.currentStep > 1 || this.matchedCases().length > 0) {
+      if (this.form.dirty || this.currentStep > 1 || this.matchedCases().length > 0 || this.primaryFile()) {
         const draft: UrgentCreateDraft = {
           formValue: this.form.getRawValue(),
           currentStep: this.currentStep,
@@ -213,7 +216,10 @@ export class UrgentCreate implements OnInit {
           selectedLat: this.selectedLat(),
           selectedLng: this.selectedLng(),
           selectedAddress: this.selectedAddress(),
-          isMapModalOpen: this.isMapModalOpen()
+          isMapModalOpen: this.isMapModalOpen(),
+          primaryFile: this.primaryFile(),
+          additionalPhotos: this.additionalPhotos(),
+          videoFile: this.videoFile()
         };
         this.cacheService.set(DRAFT_CACHE_KEY, draft, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
       }
@@ -252,15 +258,25 @@ export class UrgentCreate implements OnInit {
       this.selectedLat.set(draft.selectedLat);
       this.selectedLng.set(draft.selectedLng);
       this.selectedAddress.set(draft.selectedAddress);
-      
+
       if (draft.selectedLat !== null && draft.selectedLng !== null) {
           this.externalLocation.set({ lat: draft.selectedLat, lng: draft.selectedLng });
       }
 
       this.isMapModalOpen.set(draft.isMapModalOpen || false);
-      if (draft.showForceCreatePopup || draft.showDuplicateInfoDialog) {
-        this.snackbar.info('تم استعادة بيانات النموذج. يرجى إعادة إرفاق الصور للمتابعة.');
+
+      if (draft.primaryFile) {
+        this.primaryFile.set(draft.primaryFile);
+        this.croppedPrimaryImagePreview.set(URL.createObjectURL(draft.primaryFile));
       }
+      if (draft.additionalPhotos && draft.additionalPhotos.length > 0) {
+        this.additionalPhotos.set(draft.additionalPhotos);
+        this.additionalPhotoPreviews.set(draft.additionalPhotos.map(f => URL.createObjectURL(f)));
+      }
+      if (draft.videoFile) {
+        this.videoFile.set(draft.videoFile);
+      }
+
     }
   }
 

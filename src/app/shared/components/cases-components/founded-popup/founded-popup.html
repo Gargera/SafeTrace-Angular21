@@ -112,7 +112,7 @@
 
         <!-- Street -->
         <div>
-          <app-form-field label="الشارع / المنطقة" formControlName="street" type="text"
+          <app-form-field label="الشارع / المنطقة *" formControlName="street" type="text"
             placeholder="أدخل اسم الشارع أو المنطقة وأي معالم قريبة (مثال: شارع التحرير، بجوار مسجد السلام)"
             [extraClass]="isInvalid('street') ? 'border-error' : ''" />
           @if (isInvalid('street')) {
