@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatchedCaseResponse } from '../../../../core/models/cases.model';
 import { environment } from '../../../../../environments/environment';
-import { CaseType } from '../../../../shared/enums/case-type';
 import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
 import { CaseTypeBadgeDirective } from '../../../directives/case-type-badge-directive';
 
@@ -40,6 +39,9 @@ export class ForceCreatePopupComponent {
 
   // ── Private helpers ───────────────────────────────────────────────────────
   private readonly router = inject(Router);
+
+  /** Tracks which case code was just copied (for visual feedback) */
+  copiedCode = signal<string | null>(null);
 
   readonly baseUrl = environment.baseUrl;
   readonly placeholderImg = 'assets/images/no-photo-placeholder.png';
@@ -109,5 +111,19 @@ export class ForceCreatePopupComponent {
     if ((event.target as HTMLElement) === event.currentTarget) {
       this.cancel.emit();
     }
+  }
+
+  /**
+   * Copy case code to clipboard and show brief toast confirmation.
+   * Stops click propagation so it does not trigger the card click.
+   */
+  copyCode(event: MouseEvent, code: string): void {
+    event.stopPropagation();
+    navigator.clipboard.writeText(code).then(() => {
+      this.copiedCode.set(code);
+      setTimeout(() => this.copiedCode.set(null), 2000);
+    }).catch(() => {
+      // silent — user can copy manually from the chip
+    });
   }
 }

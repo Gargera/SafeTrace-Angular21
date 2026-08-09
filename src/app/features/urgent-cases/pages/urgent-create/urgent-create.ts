@@ -26,11 +26,12 @@ import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 
-// Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
-import { urgentEventDate, toDatetimeLocalString } from '../../../../shared/validators/urgent-event-date.validator';
+import { urgentEventDate, toDatetimeLocalString, URGENT_EVENT_MAX_AGE_HOURS } from '../../../../shared/validators/urgent-event-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
+import { validCity } from '../../../../shared/validators/city.validator';
+import { validGovernorate } from '../../../../shared/validators/governorate.validator';
 import { ImageService } from '../../../../shared/services/image.service';
 import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
 import { CardComponent } from '../../../../shared/components/card/card';
@@ -80,11 +81,11 @@ export class UrgentCreate implements OnInit {
   private destroyRef = inject(DestroyRef);
   private cacheService = inject(CacheService);
 
-  // Allowed datetime range for urgent cases (last 6 hours)
+  // Allowed datetime range for urgent cases (last 24 hours)
   readonly minEventDate = computed(() => {
     const now = new Date();
-    const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
-    return toDatetimeLocalString(sixHoursAgo);
+    const limitAgo = new Date(now.getTime() - URGENT_EVENT_MAX_AGE_HOURS * 60 * 60 * 1000);
+    return toDatetimeLocalString(limitAgo);
   });
 
   readonly maxEventDate = computed(() => {
@@ -157,8 +158,8 @@ export class UrgentCreate implements OnInit {
     sName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
     tName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
     lName: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
-    // Age — required, 0-120
-    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(120)]],
+    // Age — required, 1-120 (0 is not a valid age)
+    age: [null as number | null, [Validators.required, Validators.min(1), Validators.max(120)]],
     // Gender — required, valid enum
     gender: ['' as Gender | '', [Validators.required, validEnum(Gender)]],
     // Relation — required, valid enum (Urgent Create only)
@@ -167,12 +168,12 @@ export class UrgentCreate implements OnInit {
     communicationPhone: ['', [egyptianPhone(), Validators.maxLength(15)]],
     // Description — optional, max 2000
     description: ['', [Validators.maxLength(2000)]],
-    // Location — required, Arabic only, 2-100 chars
-    government: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
-    city: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
+    // Location — required, valid governorate, 2-100 chars
+    government: ['', [Validators.required, validGovernorate(), Validators.minLength(2), Validators.maxLength(100)]],
+    city: ['', [Validators.required]],
     // Street — required, NOT Arabic-only, max 200
     street: ['', [Validators.required, Validators.maxLength(200)]],
-    // EventDate — required, recent (within 6 hours)
+    // EventDate — required, within last 24 hours
     eventDate: ['', [Validators.required, urgentEventDate()]],
   });
 
@@ -220,6 +221,10 @@ export class UrgentCreate implements OnInit {
   }
 
   ngOnInit(): void {
+    // Set city validator here (after form is initialized) to avoid circular reference
+    this.form.get('city')?.setValidators([Validators.required, validCity(() => this.form.get('government')?.value ?? null)]);
+    this.form.get('city')?.updateValueAndValidity();
+
     this.form.get('government')?.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((gov) => {
@@ -229,6 +234,8 @@ export class UrgentCreate implements OnInit {
         if (currentCity && !cities.includes(currentCity)) {
           this.form.get('city')?.setValue('');
         }
+        // Revalidate city whenever governorate changes
+        this.form.get('city')?.updateValueAndValidity();
       });
 
     const draft = this.cacheService.get<UrgentCreateDraft>(DRAFT_CACHE_KEY);
@@ -525,7 +532,7 @@ export class UrgentCreate implements OnInit {
           this.cacheService.remove(DRAFT_CACHE_KEY);
           this.showForceCreatePopup.set(false);
           this.showDuplicateInfoDialog.set(false);
-          this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
+          this.snackbar.success('تم إنشاء الحالة بنجاح.');
           this.router.navigate(['/urgent']);
         },
         error: (err: unknown) => {

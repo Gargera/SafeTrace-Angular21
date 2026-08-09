@@ -1,6 +1,8 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
-export function urgentEventDate(maxHoursAgo: number = 6): ValidatorFn {
+export const URGENT_EVENT_MAX_AGE_HOURS = 24;
+
+export function urgentEventDate(maxHoursAgo: number = URGENT_EVENT_MAX_AGE_HOURS): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const value = control.value;
 
