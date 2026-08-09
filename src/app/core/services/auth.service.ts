@@ -77,7 +77,7 @@ export class AuthService {
         atob(base64)
           .split('')
           .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
+          .join(''),
       );
       return JSON.parse(decodedPayload);
     } catch {
@@ -129,6 +129,39 @@ export class AuthService {
     return localStorage.getItem('refreshTokenExpiration');
   }
 
+  async getValidAccessTokenSignalR(): Promise<string | null> {
+    const token = this.getToken();
+
+    if (!token) {
+      return null;
+    }
+
+    const decoded = this.getDecodedToken();
+
+    if (!decoded?.exp) {
+      return token;
+    }
+
+    const expirationTime = decoded.exp * 1000;
+
+    // لو باقي أقل من دقيقة، اعمل refresh
+    if (expirationTime - Date.now() < 60_000) {
+      try {
+        const response = await firstValueFrom(this.refreshToken());
+
+        if (response.success && response.data) {
+          return response.data.accessToken;
+        }
+
+        return null;
+      } catch {
+        return null;
+      }
+    }
+
+    return token;
+  }
+
   setSession(response: AuthResponse): void {
     this.accessToken = response.accessToken;
 
@@ -139,7 +172,7 @@ export class AuthService {
       profileImage: response.profileImage || null,
       isVerified: response.verificationStatus === VerificationStatus.Verified,
       verificationStatus: response.verificationStatus,
-      permissions: response.permissions || []
+      permissions: response.permissions || [],
     };
 
     localStorage.setItem(this.userDataKey, JSON.stringify(userData));
@@ -208,7 +241,7 @@ export class AuthService {
         }),
       );
   }
-  
+
   googleLogin(data: { providerToken: string }): Observable<ApiResponse<AuthResponse>> {
     return this.http
       .post<ApiResponse<AuthResponse>>(`${this.baseUrl}/google-login`, data, {
