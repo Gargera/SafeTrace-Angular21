@@ -27,16 +27,14 @@ import { FoundPersonInfoRequest, CasesFilterRequest } from '../../../../core/mod
 
 import { CardSkeletonComponent } from '../../../../shared/components/skeletons/card-skeleton/card-skeleton.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
-import { ButtonComponent } from '../../../../shared/components/button/button';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { CaseCardCompactComponent } from '../../../../shared/components/cases-components/case-card-compact/case-card-compact.component';
-import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup';
 
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
-const CASE_TYPE_ORDER: CaseType[] = [CaseType.Urgent, CaseType.LongTerm, CaseType.Unknown];
+
 const UI_STATE_CACHE_KEY = PROFILE_CACHE_KEYS.UI_MY_CASES;
 
 @Component({
@@ -49,9 +47,7 @@ const UI_STATE_CACHE_KEY = PROFILE_CACHE_KEYS.UI_MY_CASES;
     CardSkeletonComponent,
     CaseCardCompactComponent,
     EmptyStateComponent,
-    ButtonComponent,
     ConfirmationModalComponent,
-    HeaderComponent,
     CaseFiltersComponent,
     FoundedPopupComponent,
   ],
@@ -104,7 +100,6 @@ export class MyCasesTab implements OnInit, OnDestroy {
   markAsFoundCaseId = signal<number | null>(null);
   markAsFoundCaseType = signal<CaseType | null>(null);
 
-  private isFirstFilterRun = true;
 
   // Computed
   // No local filtering – all filtering is done by the backend.
@@ -123,31 +118,13 @@ export class MyCasesTab implements OnInit, OnDestroy {
 
   hasNextPage = computed(() => this.currentPage() < this.totalPages());
 
-  groupedCases = computed(() => {
-    const cases = this.filteredCases();
-
-    const map = new Map<CaseType, MyCaseListItemResponse[]>();
-
-    for (const item of cases) {
-      if (!map.has(item.caseType)) {
-        map.set(item.caseType, []);
-      }
-
-      map.get(item.caseType)!.push(item);
-    }
-
-    const labels: Record<CaseType, string> = {
-      [CaseType.Urgent]: 'حالات عاجلة',
-      [CaseType.LongTerm]: 'حالات مفقودين طويل الأمد',
-      [CaseType.Unknown]: 'حالات مجهولة الهوية',
-    };
-
-    return CASE_TYPE_ORDER.filter((type) => map.has(type)).map((type) => ({
-      type,
-      label: labels[type],
-      cases: map.get(type)!,
-    }));
-  });
+  sortedCases = computed(() =>
+    [...this.filteredCases()].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    })
+  );
 
   constructor() {
     this.destroyRef.onDestroy(() => {
@@ -201,12 +178,17 @@ export class MyCasesTab implements OnInit, OnDestroy {
       caseType: request.caseType,
     };
 
-    if (this.isFirstFilterRun) {
-      this.isFirstFilterRun = false;
-      this.filterRequest.set(myCasesFilter);
-      return;
-    }
+    const prev = this.filterRequest();
+    const unchanged =
+      prev.fullName === myCasesFilter.fullName &&
+      prev.caseCode === myCasesFilter.caseCode &&
+      prev.status === myCasesFilter.status &&
+      prev.caseType === myCasesFilter.caseType;
+
     this.filterRequest.set(myCasesFilter);
+
+    if (unchanged) return; // nothing actually changed, skip API call
+
     this.currentPage.set(1);
     this.loadCases();
   }
@@ -262,6 +244,16 @@ export class MyCasesTab implements OnInit, OnDestroy {
         this.loading.set(false);
       },
     });
+  }
+
+  onScroll(event: Event): void {
+    const target = event.target as HTMLElement;
+    const threshold = 100;
+    const reachedBottom = target.scrollHeight - target.scrollTop - target.clientHeight <= threshold;
+
+    if (reachedBottom && !this.loadingMore() && this.hasNextPage() && !this.loading()) {
+      this.loadMore();
+    }
   }
 
   loadMore(): void {

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, HostListener } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { GetUserNotificationsDTO } from '../../../../core/models/notification.model';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -63,14 +63,10 @@ export class NotificationsTab implements OnInit {
     return item.id;
   }
 
-  @HostListener('window:scroll')
-  onScroll(): void {
+  onScroll(event: Event): void {
+    const target = event.target as HTMLElement;
     const threshold = 100;
-    
-    // Window scroll calculation
-    const scrollPosition = window.innerHeight + window.scrollY;
-    const documentHeight = document.documentElement.scrollHeight;
-    const reachedBottom = documentHeight - scrollPosition <= threshold;
+    const reachedBottom = target.scrollHeight - target.scrollTop - target.clientHeight <= threshold;
 
     if (
       reachedBottom &&
