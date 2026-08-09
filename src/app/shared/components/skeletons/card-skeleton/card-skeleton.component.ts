@@ -12,27 +12,27 @@ import { CommonModule } from '@angular/common';
         
         <!-- case-card-compact -->
         @if (layout() === 'case-card-compact') {
-          <div dir="rtl" class="flex flex-col lg:flex-row overflow-hidden rounded-2xl border border-outline-variant/50 bg-surface-container-lowest shadow-sm">
-            <div class="relative w-full aspect-[4/3] lg:aspect-auto lg:w-44 lg:min-w-[176px] lg:h-auto overflow-hidden bg-surface-container-high shrink-0"></div>
-            <div class="flex-1 min-w-0 flex flex-col justify-between p-3.5 lg:p-4 gap-4">
-              <div class="flex items-start justify-between gap-2 border-b border-outline-variant/30 pb-2">
-                <div class="space-y-2 w-1/2">
-                  <div class="h-4 bg-surface-container-high rounded w-full"></div>
-                  <div class="h-2 bg-surface-container-high rounded w-1/2"></div>
+          <div dir="rtl" class="flex flex-col sm:flex-row overflow-hidden rounded-xl border border-outline-variant/50 bg-surface-container-lowest shadow-sm">
+            <div class="shrink-0 p-3 flex items-center justify-center bg-surface-container-lowest">
+              <div class="relative w-20 h-20 sm:w-24 sm:h-24 overflow-hidden rounded-xl border border-outline-variant/30 shadow-sm bg-surface-container-high"></div>
+            </div>
+            <div class="flex-1 min-w-0 flex flex-col justify-between p-3">
+              <div class="flex items-start justify-between gap-2 pb-1.5">
+                <div class="space-y-2 min-w-0">
+                  <div class="h-4 bg-surface-container-high rounded w-32"></div>
+                  <div class="h-3 bg-surface-container-high rounded w-16"></div>
                 </div>
                 <div class="h-4 bg-surface-container-high rounded w-16"></div>
               </div>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2.5">
-                <div class="h-3 bg-surface-container-high rounded w-full"></div>
-                <div class="h-3 bg-surface-container-high rounded w-full"></div>
-                <div class="h-3 bg-surface-container-high rounded w-full"></div>
-                <div class="h-3 bg-surface-container-high rounded w-full"></div>
-                <div class="h-3 bg-surface-container-high rounded w-full col-span-2 md:col-span-1"></div>
-                <div class="h-3 bg-surface-container-high rounded w-full col-span-2 md:col-span-3"></div>
-              </div>
-              <div class="flex justify-end gap-2 mt-2.5 lg:mt-3 pt-3 border-t border-outline-variant/30">
-                <div class="h-9 w-9 bg-surface-container-high rounded-full"></div>
-                <div class="h-9 bg-surface-container-high rounded-lg w-24"></div>
+              <div class="flex items-center justify-between gap-2 mt-3 pt-2">
+                <div class="flex items-center gap-1.5">
+                  <div class="h-5 bg-surface-container-high rounded w-12"></div>
+                  <div class="h-5 bg-surface-container-high rounded w-12"></div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <div class="h-7 bg-surface-container-high rounded-lg min-w-[70px]"></div>
+                  <div class="h-7 bg-surface-container-high rounded-lg min-w-[70px]"></div>
+                </div>
               </div>
             </div>
           </div>
