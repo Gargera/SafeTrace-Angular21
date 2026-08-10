@@ -11,10 +11,12 @@
  * inventing a name/avatar field that doesn't exist on the backend, the
  * ConversationCardComponent below only renders what's actually here.
  */
+import {CaseStatus} from '../../../shared/enums/case-status';
 export interface ChatSummaryDto {
   chatId: number;
   caseId: number;
   caseTitle: string;
+  caseStatus : CaseStatus;
   lastMessage?: string;
   lastMessageDate?: string; // ISO date string (C# DateTime?)
   unreadCount: number;
@@ -49,6 +51,8 @@ export interface ChatDetailsDto {
   caseTitle: string;
   caseImage: string;
   caseType:CaseType;
+  caseStatus : CaseStatus;
+  foundCaseId?: number;
   senderId: string;
   senderName?: string;
   senderImage?:string;

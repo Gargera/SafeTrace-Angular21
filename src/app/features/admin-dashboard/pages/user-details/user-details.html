@@ -12,9 +12,7 @@
   </header>
 
   @if (isUserLoading()) {
-    <div class="flex justify-center items-center h-64">
-      <app-loading-spinner title="جارِ تحميل بيانات المستخدم..."></app-loading-spinner>
-    </div>
+    <app-profile-skeleton></app-profile-skeleton>
   } @else if (user()) {
     
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
@@ -209,9 +207,7 @@
       <div class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-50">
         
         @if (isPermissionsLoading()) {
-          <div class="flex justify-center items-center h-48">
-            <app-loading-spinner title="جارِ تحميل الصلاحيات..."></app-loading-spinner>
-          </div>
+          <app-table-skeleton [rows]="6"></app-table-skeleton>
         } @else {
           <div class="divide-y divide-outline-variant">
             
@@ -350,6 +346,8 @@
     [confirmText]="modalConfig().confirmText"
     [icon]="modalConfig().icon"
     [variant]="modalConfig().variant"
+    [confirmLoading]="loadingAction() !== null"
+    [confirmDisabled]="loadingAction() !== null"
     (confirm)="onConfirmModal()"
     (cancel)="onCancelModal()"
   >

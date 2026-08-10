@@ -4,7 +4,7 @@ import { AiMatchingService, AiMatchedCase } from '../../services/ai-search.servi
 
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { CaseCardSkeletonComponent } from '../../../../shared/components/skeletons/case-card-skeleton/case-card-skeleton.component';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Router } from '@angular/router';
@@ -15,7 +15,7 @@ import { ImageService } from '../../../../shared/services/image.service';
 @Component({
   selector: 'app-ai-search',
   standalone: true,
-  imports: [CommonModule, CaseCardComponent, LoadingSpinnerComponent, HeaderComponent],
+  imports: [CommonModule, CaseCardComponent, CaseCardSkeletonComponent, HeaderComponent],
   templateUrl: './ai-search.html',
   styleUrl: './ai-search.css',
 })
@@ -34,15 +34,21 @@ export class AiSearch implements OnInit {
 
   ngOnInit(): void {
     // Restore state from service cache if available
-    const cachedImage = this.aiMatchingService.cachedImageFile();
-    const cachedPreview = this.aiMatchingService.cachedImagePreview();
-    const cachedResults = this.aiMatchingService.cachedResults();
+    const cache = this.aiMatchingService.getCache();
 
-    if (cachedImage) {
-      this.selectedImage.set(cachedImage);
-      this.selectedImagePreview.set(cachedPreview);
-      this.results.set(cachedResults);
+    if (cache && cache.imageFile) {
+      this.selectedImage.set(cache.imageFile);
+      this.selectedImagePreview.set(cache.imagePreview);
+      this.results.set(cache.results);
     }
+  }
+
+  private syncCache() {
+    this.aiMatchingService.saveCache({
+      results: this.results(),
+      imagePreview: this.selectedImagePreview(),
+      imageFile: this.selectedImage()
+    });
   }
 
   onDragOver(event: DragEvent) {
@@ -87,13 +93,12 @@ export class AiSearch implements OnInit {
     }
 
     this.selectedImage.set(file);
-    this.aiMatchingService.cachedImageFile.set(file);
 
     const reader = new FileReader();
     reader.onload = (e) => {
       const previewUrl = e.target?.result as string;
       this.selectedImagePreview.set(previewUrl);
-      this.aiMatchingService.cachedImagePreview.set(previewUrl);
+      this.syncCache();
     };
     reader.readAsDataURL(file);
   }
@@ -118,7 +123,7 @@ export class AiSearch implements OnInit {
         this.isLoading.set(false);
         if (res.success && res.data) {
           this.results.set(res.data);
-          this.aiMatchingService.cachedResults.set(res.data);
+          this.syncCache();
           if (res.data.length === 0) {
             this.toast.info('لم يتم العثور على أي تطابق في قاعدة البيانات');
           }

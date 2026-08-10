@@ -11,12 +11,14 @@ import { ProfileService } from './service/profile.service';
 import { MyCasesTab } from './tabs/cases-tab/cases-tab';
 import { EditProfile } from './tabs/Edit-profile/edit-profile';
 import { MyDonationsComponent } from '../donations/pages/my-donations/my-donations.component';
+import { CommonModule } from '@angular/common';
 export type ProfileTab = 'edit' | 'cases' | 'chat' | 'notifications' | 'donations'; // ADDED 'donations'
 
 @Component({
   selector: 'app-profile-view',
   imports: [
     RouterModule,
+    CommonModule,
     ProfileSidebar,
     EditProfile,
     NotificationsTab,
@@ -56,6 +58,16 @@ export class ProfileView implements OnInit, OnDestroy {
         const tab = params.get('tab') as ProfileTab | null;
         if (tab && this.tabs.some((t) => t.id === tab)) {
           this.activeTab.set(tab);
+          this.closeImageZoom();
+        } else {
+          // Default to 'edit' and update URL
+          this.activeTab.set('edit');
+          this.closeImageZoom();
+          this.#router.navigate([], {
+            relativeTo: this.#route,
+            queryParams: { tab: 'edit' },
+            replaceUrl: true
+          });
         }
       });
 

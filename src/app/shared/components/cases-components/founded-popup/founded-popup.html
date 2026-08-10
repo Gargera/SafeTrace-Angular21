@@ -25,7 +25,7 @@
 
       <button type="button"
         class="flex h-9 w-9 items-center justify-center rounded-full text-on-tertiary/80 transition hover:bg-error-container hover:text-error cursor-pointer"
-        (click)="cancel.emit()" aria-label="إغلاق">
+        (click)="onCancel()" aria-label="إغلاق">
         <span class="material-symbols-outlined text-xl">close</span>
       </button>
     </div>
@@ -112,7 +112,7 @@
 
         <!-- Street -->
         <div>
-          <app-form-field label="الشارع / المنطقة" formControlName="street" type="text"
+          <app-form-field label="الشارع / المنطقة *" formControlName="street" type="text"
             placeholder="أدخل اسم الشارع أو المنطقة وأي معالم قريبة (مثال: شارع التحرير، بجوار مسجد السلام)"
             [extraClass]="isInvalid('street') ? 'border-error' : ''" />
           @if (isInvalid('street')) {
@@ -152,7 +152,7 @@
       </p>
 
       <div class="flex items-center gap-3">
-        <app-button variant="secondary" type="button" (onClick)="cancel.emit()">
+        <app-button variant="secondary" type="button" (onClick)="onCancel()">
           إلغاء
         </app-button>
 

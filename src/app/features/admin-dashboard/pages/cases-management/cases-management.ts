@@ -6,8 +6,10 @@ import {
   computed,
   OnInit,
   OnDestroy,
-  effect,
+  DestroyRef,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, switchMap, tap, catchError, EMPTY } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -15,7 +17,7 @@ import { CaseListItemResponse, CasesFilterRequest } from '../../../../core/model
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { CardComponent } from '../../../../shared/components/card/card';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
@@ -38,9 +40,9 @@ import { PaginationComponent } from '../../../../shared/components/pagination/pa
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+import { CasesFilterState } from '../../../../shared/helper/cases-filter-state';
+import { TableSkeletonComponent } from '../../../../shared/components/skeletons/table-skeleton/table-skeleton.component';
 
-
-const FILTER_DEBOUNCE_MS = 400;
 const UI_STATE_CACHE_KEY = 'Dashboard_UI_State';
 
 @Component({
@@ -51,7 +53,7 @@ const UI_STATE_CACHE_KEY = 'Dashboard_UI_State';
     FormsModule,
     RouterModule,
     CardComponent,
-    LoadingSpinnerComponent,
+
     EmptyStateComponent,
     ButtonComponent,
     ConfirmationModalComponent,
@@ -61,6 +63,7 @@ const UI_STATE_CACHE_KEY = 'Dashboard_UI_State';
     CaseFiltersComponent,
     HasPermissionDirective,
     PaginationComponent,
+    TableSkeletonComponent,
   ],
   templateUrl: './cases-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -86,19 +89,24 @@ export class CasesManagement implements OnInit, OnDestroy {
   private readonly toast = inject(SnackbarService);
   private readonly reportService = inject(ReportService);
   private readonly cacheService = inject(CacheService);
+  private readonly destroyRef = inject(DestroyRef);
 
   // Statistics
   statistics = signal<DashboardStatistics | null>(null);
   loadingStats = signal(true);
 
-  // Data & pagination
-  currentPage = signal(1);
-  totalPages = signal(0);
-  totalCount = signal(0);
-  readonly pageSize = 12;
-
+  // State & Data
+  readonly filterState = new CasesFilterState<CasesFilterRequest>(12);
+  readonly currentPage = this.filterState.currentPage;
+  readonly totalPages = this.filterState.totalPages;
+  readonly totalCount = this.filterState.totalItems;
+  readonly pageSize = this.filterState.pageSize;
+  readonly baseFilter = this.filterState.filter;
+  
   cases = signal<CaseListItemResponse[]>([]);
-  loading = signal(true);
+  loading = this.filterState.loading;
+
+  private readonly fetchTrigger$ = new Subject<void>();
 
   // Modal
   showConfirmModal = signal(false);
@@ -111,8 +119,6 @@ export class CasesManagement implements OnInit, OnDestroy {
     caseId?: number;
     caseType?: CaseType;
   } | null>(null);
-
-  private searchDebounceTimer: ReturnType<typeof setTimeout> | undefined;
 
   // Computed
   hasResults = computed(() => this.cases().length > 0);
@@ -138,100 +144,49 @@ export class CasesManagement implements OnInit, OnDestroy {
     );
   });
 
-  // -------- UNIFIED FILTER --------
-  public baseFilter = signal<CasesFilterRequest>(this.getDefaultFilter());
-
-  private getDefaultFilter(): CasesFilterRequest {
-    return {
-      status: null,
-      gender: null,
-      ageCategory: null,
-      fullName: null,
-      government: null,
-      city: null,
-      minAge: null,
-      maxAge: null,
-      fromDate: null,
-      toDate: null,
-      ageSort: null,
-      dateSort: null,
-      caseType: null,
-      caseCode: null,
-      page: 1,
-      pageSize: this.pageSize,
-    };
-  }
-
-  private isInitialized = false;
-
   constructor() {
-    effect(() => {
-      this.baseFilter();
-
-      if (!this.isInitialized) {
-        return;
-      }
-
-      if (this.searchDebounceTimer) {
-        clearTimeout(this.searchDebounceTimer);
-      }
-
-      this.searchDebounceTimer = setTimeout(() => {
-        this.loadCases();
-      }, FILTER_DEBOUNCE_MS);
+    this.destroyRef.onDestroy(() => {
+      this.cacheService.set(
+        UI_STATE_CACHE_KEY,
+        {
+          filter: this.baseFilter(),
+          page: this.currentPage()
+        },
+        CACHE_TTL.UI_STATE,
+        [CACHE_TAGS.UI_STATE]
+      );
     });
   }
 
   ngOnInit(): void {
-    const cachedState = this.cacheService.get<{ filter: CasesFilterRequest, page: number, modalConfig: any }>(UI_STATE_CACHE_KEY);
+    const cachedState = this.cacheService.get<{ filter: CasesFilterRequest, page: number }>(UI_STATE_CACHE_KEY);
     if (cachedState) {
-      this.baseFilter.set(cachedState.filter);
-      this.currentPage.set(cachedState.page);
-      if (cachedState.modalConfig) {
-        this.modalConfig.set(cachedState.modalConfig);
-        this.showConfirmModal.set(true);
+      this.filterState.restoreState(cachedState.filter);
+      if (cachedState.page) {
+        this.filterState.onPageChange(cachedState.page);
       }
     }
 
-    this.isInitialized = true;
+    this.setupFetchPipeline();
     this.loadStatistics();
     this.loadCases();
   }
 
-  ngOnDestroy(): void {
-    this.cacheService.set(
-      UI_STATE_CACHE_KEY,
-      {
-        filter: this.baseFilter(),
-        page: this.currentPage(),
-        modalConfig: this.showConfirmModal() ? this.modalConfig() : null
-      },
-      CACHE_TTL.UI_STATE,
-      [CACHE_TAGS.UI_STATE]
-    );
-
-    if (this.searchDebounceTimer) {
-      clearTimeout(this.searchDebounceTimer);
-    }
-  }
+  ngOnDestroy(): void {}
 
   // ---------- Event handlers ----------
   onFilterChange(filter: CasesFilterRequest): void {
-    this.currentPage.set(1);
-    this.baseFilter.set(filter);
+    this.filterState.onFilterChange(filter, () => this.loadCases());
   }
 
   resetFilters(): void {
     this.cacheService.remove(UI_STATE_CACHE_KEY);
-    this.baseFilter.set(this.getDefaultFilter());
-    this.currentPage.set(1);
-    this.loadCases();
+    this.filterState.onFilterReset(() => this.loadCases());
   }
 
   changePage(page: number): void {
     if (page < 1 || page > this.totalPages() || page === this.currentPage()) return;
-    this.currentPage.set(page);
-    this.loadCases();
+    this.filterState.onPageChange(page, () => this.loadCases());
   }
 
   getFullName(item: CaseListItemResponse): string {
@@ -268,23 +223,40 @@ export class CasesManagement implements OnInit, OnDestroy {
 
   // ---------- Cases loading ----------
   private loadCases(): void {
-    this.loading.set(true);
+    this.fetchTrigger$.next();
+  }
 
-    this.casesService.getCases(this.baseFilter(), this.currentPage(), this.pageSize).subscribe({
-      next: (result) => {
-        this.cases.set(result.items);
-        this.totalCount.set(result.totalCount);
-        this.totalPages.set(result.totalPages);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم'));
-        this.cases.set([]);
-        this.totalCount.set(0);
-        this.totalPages.set(0);
-        this.loading.set(false);
-      },
-    });
+  private setupFetchPipeline(): void {
+    this.fetchTrigger$
+      .pipe(
+        tap(() => {
+          this.loading.set(true);
+          this.filterState.hasError.set(false);
+        }),
+        switchMap(() =>
+          this.casesService.getCases(this.baseFilter(), this.currentPage(), this.pageSize()).pipe(
+            catchError((err) => {
+              this.loading.set(false);
+              this.filterState.hasError.set(true);
+              this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم'));
+              this.cases.set([]);
+              this.totalCount.set(0);
+              this.filterState.totalPages.set(0);
+              return EMPTY;
+            })
+          )
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: (result) => {
+          if (!result) return;
+          this.cases.set(result.items);
+          this.totalCount.set(result.totalCount);
+          this.filterState.totalPages.set(result.totalPages);
+          this.loading.set(false);
+        }
+      });
   }
 
   // ---------- Delete ----------
@@ -320,7 +292,7 @@ export class CasesManagement implements OnInit, OnDestroy {
         this.isDeleting.set(false);
         this.cases.update((items) => items.filter((item) => item.id !== config.caseId));
         this.totalCount.update((c) => Math.max(0, c - 1));
-        if (this.totalCount() === 0) this.totalPages.set(0);
+        if (this.totalCount() === 0) this.filterState.totalPages.set(0);
         this.toast.success('تم حذف الحالة بنجاح');
         this.modalConfig.set(null);
       },

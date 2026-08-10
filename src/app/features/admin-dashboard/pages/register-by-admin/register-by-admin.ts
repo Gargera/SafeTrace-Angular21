@@ -10,6 +10,7 @@ import { RoleDto } from '../../models/Role/responses/RoleDto';
 import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 
 import { ButtonComponent } from '../../../../shared/components/button/button';
@@ -62,9 +63,8 @@ export class RegisterByAdmin implements OnInit {
   constructor() {
     this.destroyRef.onDestroy(() => {
       this.cacheService.set('RegisterByAdmin_State', {
-        openModal: this.showConfirmModal(),
         formValue: this.registerForm.value
-      }, 300000);
+      }, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
     });
   }
 
@@ -82,14 +82,8 @@ export class RegisterByAdmin implements OnInit {
     this.fetchRoles();
 
     const state = this.cacheService.get<any>('RegisterByAdmin_State');
-    if (state) {
-      if (state.formValue) {
-        this.registerForm.patchValue(state.formValue);
-      }
-      if (state.openModal) {
-        // Use timeout to ensure form is fully updated and roles are fetched
-        setTimeout(() => this.onSubmit(), 0);
-      }
+    if (state && state.formValue) {
+      this.registerForm.patchValue(state.formValue);
     }
   }
 

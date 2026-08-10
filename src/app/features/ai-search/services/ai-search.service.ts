@@ -1,12 +1,20 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { CaseListItemResponse } from '../../../core/models/cases.model';
+import { CacheService } from '../../../core/cache/cache.service';
+import { CACHE_TTL, CACHE_TAGS } from '../../../core/cache/cache.constants';
 
 export interface AiMatchedCase extends CaseListItemResponse {
   similarity: number;
+}
+
+export interface AiSearchCache {
+  results: AiMatchedCase[];
+  imagePreview: string | null;
+  imageFile: File | null;
 }
 
 @Injectable({
@@ -14,17 +22,20 @@ export interface AiMatchedCase extends CaseListItemResponse {
 })
 export class AiMatchingService {
   private http = inject(HttpClient);
+  private cacheService = inject(CacheService);
   private baseUrl = `${environment.baseUrl}/api/AiMatching`;
+  private readonly CACHE_KEY = 'AI_SEARCH_STATE';
 
-  // Cache state for back navigation
-  cachedResults = signal<AiMatchedCase[]>([]);
-  cachedImagePreview = signal<string | null>(null);
-  cachedImageFile = signal<File | null>(null);
+  getCache(): AiSearchCache | null {
+    return this.cacheService.get<AiSearchCache>(this.CACHE_KEY);
+  }
+
+  saveCache(state: AiSearchCache) {
+    this.cacheService.set(this.CACHE_KEY, state, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+  }
 
   clearCache() {
-    this.cachedResults.set([]);
-    this.cachedImagePreview.set(null);
-    this.cachedImageFile.set(null);
+    this.cacheService.remove(this.CACHE_KEY);
   }
 
   searchFace(image: File): Observable<ApiResponse<AiMatchedCase[]>> {

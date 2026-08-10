@@ -14,6 +14,7 @@ import { ConfirmationModalComponent } from '../../confirmation-modal/confirmatio
 
 import { getFormFieldError, isFieldInvalid } from '../../../helper/form-validation.helper';
 import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -58,9 +59,11 @@ export class RejectCasePopupComponent implements OnInit {
       const cached = this.cacheService.get<string>(this.contextKey()!);
       if (cached) {
         this.form.patchValue({ rejectionReason: cached });
+      } else {
+        this.cacheService.set(this.contextKey()!, this.form.value.rejectionReason, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
       }
       this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(val => {
-        this.cacheService.set(this.contextKey()!, val.rejectionReason, 300000); // 5 mins
+        this.cacheService.set(this.contextKey()!, val.rejectionReason, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
       });
     }
   }
@@ -81,6 +84,9 @@ export class RejectCasePopupComponent implements OnInit {
 
   onCancel(): void {
     this.form.reset();
+    if (this.contextKey()) {
+      this.cacheService.remove(this.contextKey()!);
+    }
     this.cancel.emit();
   }
 }

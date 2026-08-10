@@ -6,7 +6,6 @@ import { RouterModule, Router } from '@angular/router';
 import { CaseListItemResponse } from '../../../../core/models/cases.model';
 import { getAgeCategory } from '../../../helper/age-category.helper';
 
-import { GenderBadgeDirective } from '../../../directives/gender-badge-directive';
 import { AgeBadgeDirective } from '../../../directives/age-badge-directive';
 import { CaseTypeBadgeDirective } from '../../../directives/case-type-badge-directive';
 import { CardComponent } from '../../card/card';

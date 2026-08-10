@@ -4,10 +4,7 @@
   <app-card extraClass="overflow-hidden rounded-2xl border border-outline-variant/30 bg-white shadow-sm">
 
     @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center p-12 text-on-surface-variant">
-      <span class="material-symbols-outlined animate-spin text-4xl text-secondary">progress_activity</span>
-      <p class="mt-3 text-sm">جاري تحميل بيانات البلاغ...</p>
-    </div>
+      <app-update-form-skeleton></app-update-form-skeleton>
     } @else {
 
     <!-- 1. Header -->
@@ -226,14 +223,7 @@
             getFieldError('street') }}</p> }
         </div>
 
-        <!-- Event Date -->
-        <div>
-          <app-form-field label="تاريخ ووقت الحادث *" formControlName="eventDate" type="datetime-local"
-            [min]="minEventDate()" [max]="maxEventDate()"
-            [extraClass]="isInvalid('eventDate') ? 'border-error' : ''"></app-form-field>
-          @if (isInvalid('eventDate')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{
-            getFieldError('eventDate') }}</p> }
-        </div>
+
 
         <!-- Map Location Picker Section -->
         <div class="flex flex-col gap-3 rounded-2xl border border-outline-variant/40 bg-surface-bright p-5 shadow-2xs">
@@ -325,6 +315,9 @@
           <label class="mb-2 block text-sm font-medium text-on-surface-variant">
             استبدال الصورة الأساسية <span class="font-normal text-on-surface-variant/70">(اختياري)</span>
           </label>
+
+          <!-- 1. Upload Dropzone -->
+          @if (!cropImageEvent() && !croppedPrimaryImagePreview()) {
           <div
             class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
             [class.border-secondary]="!!newPrimaryImage()" [class.bg-surface-container-low]="!!newPrimaryImage()"
@@ -336,8 +329,27 @@
               <span class="material-symbols-outlined text-3xl"
                 [ngClass]="newPrimaryImage() ? 'text-secondary' : 'text-outline'">add_photo_alternate</span>
             </div>
-            <p class="text-sm font-bold text-on-surface">{{ newPrimaryImage() ? 'تم اختيار صورة أساسية جديدة' : 'اضغط
-              لاختيار صورة أساسية جديدة' }}</p>
+            <p class="text-sm font-bold text-on-surface">{{ newPrimaryImage() ? 'تم اختيار صورة أساسية جديدة' : 'اضغط لاختيار صورة أساسية جديدة' }}</p>
+            <p class="mt-1 text-xs text-on-surface-variant/70">JPG / JPEG / PNG / WebP — حتى 5 MB</p>
+          </div>
+          @if (newPrimaryError()) { <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ newPrimaryError() }}</p> }
+          }
+
+          <!-- 2. Image Cropper -->
+          @if (cropImageEvent()) {
+          <div class="rounded-2xl bg-inverse-surface p-5 text-center text-inverse-on-surface shadow-md">
+            <p class="mb-3 text-sm font-medium">حرك المربع لتحديد الوجه بالكامل داخل الإطار:</p>
+            <image-cropper [imageChangedEvent]="cropImageEvent()" [maintainAspectRatio]="true" [aspectRatio]="4 / 3"
+              format="jpeg" (imageCropped)="onImageCropped($event)">
+            </image-cropper>
+            <div class="mt-4 flex justify-center gap-3">
+              <app-button type="button" variant="primary" (onClick)="confirmCrop()" extraClass="px-5 py-2 text-sm">
+                <span class="material-symbols-outlined text-base">check</span> اعتماد الصورة
+              </app-button>
+              <app-button type="button" variant="secondary" (onClick)="cancelCrop()" extraClass="px-5 py-2 text-sm">
+                إلغاء
+              </app-button>
+            </div>
           </div>
           @if (newPrimaryPreview()) {
           <div

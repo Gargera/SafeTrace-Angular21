@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } 
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { TableSkeletonComponent } from '../../../../shared/components/skeletons/table-skeleton/table-skeleton.component';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { Permissions } from '../../../../core/constants/Permissions';
@@ -37,7 +37,7 @@ interface PermissionGroup {
 @Component({
   selector: 'app-role-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective, HeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, FormField, ButtonComponent, CardComponent, TableSkeletonComponent, ConfirmationModalComponent, HasPermissionDirective, HeaderComponent],
   templateUrl: './role-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -103,7 +103,7 @@ export class RoleManagement implements OnInit {
     this.destroyRef.onDestroy(() => {
       this.cacheService.set('RoleManagement_State', {
          selectedRoleId: this.selectedRoleId(),
-         openModal: this.showConfirmModal() ? this.currentOpenModal() : null
+         roleName: this.createRoleForm.value.roleName
       }, 300000);
     });
   }
@@ -168,6 +168,15 @@ export class RoleManagement implements OnInit {
   hasChanges = computed(() => Object.keys(this.dirtyGroups()).length > 0);
 
   ngOnInit() {
+    const state = this.cacheService.get<any>('RoleManagement_State');
+    if (state) {
+      if (state.roleName) {
+        this.createRoleForm.patchValue({ roleName: state.roleName });
+      }
+      if (state.selectedRoleId) {
+        this.selectedRoleId.set(state.selectedRoleId);
+      }
+    }
     this.loadRoles();
   }
 
@@ -177,11 +186,8 @@ export class RoleManagement implements OnInit {
       next: (res) => {
         if (res.success && res.data) {
           this.roles.set(res.data);
-          
-          const state = this.cacheService.get<any>('RoleManagement_State');
-          if (state && state.selectedRoleId) {
-            this.selectedRoleId.set(state.selectedRoleId);
-            this.onRoleSelected(state.selectedRoleId, state.openModal);
+          if (this.selectedRoleId()) {
+            this.onRoleSelected(this.selectedRoleId());
           }
         }
         this.isLoadingRoles.set(false);
@@ -207,6 +213,7 @@ export class RoleManagement implements OnInit {
           next: () => {
             this.isCreating.set(false);
             this.createRoleForm.reset();
+            this.cacheService.remove('RoleManagement_State');
             this.loadRoles();
             this.snackbar.success('تم إنشاء الدور بنجاح');
           },

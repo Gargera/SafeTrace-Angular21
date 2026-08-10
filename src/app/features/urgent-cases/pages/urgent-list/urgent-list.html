@@ -40,16 +40,6 @@
           [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات طارئة'"
           [message]="hasActiveFilters() ? 'لم نتمكن من العثور على حالات تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم إضافة أي حالات طارئة حتى الآن.'"
         >
-          @if (hasActiveFilters()) {
-            <app-button
-              emptyActions
-              variant="outline"
-              size="md"
-              (click)="resetFilters()"
-            >
-              إلغاء تصفية البحث
-            </app-button>
-          }
         </app-empty-state>
       }
 
