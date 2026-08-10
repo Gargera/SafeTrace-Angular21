@@ -300,7 +300,7 @@
             @for (photo of existingPhotos(); track photo.id) {
             <div
               class="relative h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
-              <img [src]="photo.imagePath" alt="صورة" class="h-full w-full object-cover" />
+              <img [src]="photo.imagePath" alt="صورة" width="96" height="96" class="h-full w-full object-cover" />
               @if (primaryPhotoId() === photo.id) {
               <span
                 class="absolute top-1 right-1 rounded-md bg-secondary px-1.5 py-0.5 text-[10px] text-on-secondary font-medium shadow-xs">أساسية</span>
@@ -342,7 +342,8 @@
           @if (newPrimaryPreview()) {
           <div
             class="relative mt-3 h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
-            <img [src]="newPrimaryPreview()" alt="صورة أساسية جديدة" class="h-full w-full object-cover" />
+            <img [src]="newPrimaryPreview()" width="105" height="80"
+            class="h-20 w-26.25 rounded-xl border border-outline-variant/60 object-cover shadow-xs transition-transform duration-200 hover:scale-105" />
             <button type="button" (click)="clearNewPrimary()"
               class="absolute top-1 right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110">
               <span class="material-symbols-outlined text-xs">close</span>
@@ -373,7 +374,7 @@
             @for (preview of newPhotoPreviews(); track preview; let i = $index) {
             <div
               class="relative h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
-              <img [src]="preview" alt="صورة جديدة" class="h-full w-full object-cover" />
+              <img [src]="preview" alt="صورة جديدة" width="80" height="80" class="h-full w-full object-cover" />
               <button type="button" (click)="removeNewPhoto(i)"
                 class="absolute top-1 right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110">
                 <span class="material-symbols-outlined text-xs">close</span>

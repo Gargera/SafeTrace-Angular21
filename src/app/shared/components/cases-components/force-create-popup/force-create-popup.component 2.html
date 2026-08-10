@@ -41,12 +41,10 @@
         >
 
           <!-- Photo Container -->
-          <div class="relative w-full md:w-[200px] h-[200px] rounded-2xl overflow-hidden shrink-0 bg-slate-100 border border-slate-200/60 shadow-xs">
-            <img
-              [src]="m.mainPhoto ? (baseUrl + '/' + m.mainPhoto) : placeholderImg"
-              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              [alt]="'صورة ' + getFullName(m)"
-            />
+          <div class="relative w-full md:w-50 h-50 rounded-2xl overflow-hidden shrink-0 bg-slate-100 border border-slate-200/60 shadow-xs">
+            <img [src]="m.mainPhoto ? (baseUrl + '/' + m.mainPhoto) : placeholderImg" width="180" height="180"
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          [alt]="'صورة ' + getFullName(m)" />
 
             <!-- Top-right Similarity Badge -->
             @if (formatSimilarity(m) > 0) {
