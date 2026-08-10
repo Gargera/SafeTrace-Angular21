@@ -3,7 +3,7 @@ import { NotificationType } from '../../shared/enums/Notification-Type';
 export interface GetUserNotificationsDTO {
   id: number;
   isRead: boolean;
-  createdAt: Date;
+  createdAt: string;
   type: NotificationType;
   content: string;
   notificationDirectLink: string | null;

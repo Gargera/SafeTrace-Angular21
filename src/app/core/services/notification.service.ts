@@ -1085,6 +1085,35 @@ export class NotificationService implements OnDestroy {
 
   //   return date.toLocaleDateString('ar-EG');
   // }
+  // formatDate(date: string | Date | null): string {
+  //   if (!date) return '';
+
+  //   const messageDate = new Date(date);
+  //   const now = new Date();
+
+  //   // اليوم
+  //   if (messageDate.toDateString() === now.toDateString()) {
+  //     return new Intl.DateTimeFormat('ar-EG', {
+  //       hour: 'numeric',
+  //       minute: '2-digit',
+  //     }).format(messageDate);
+  //   }
+
+  //   // أمس
+  //   const yesterday = new Date(now);
+  //   yesterday.setDate(now.getDate() - 1);
+
+  //   if (messageDate.toDateString() === yesterday.toDateString()) {
+  //     return 'أمس';
+  //   }
+
+  //   // قبل كده
+  //   return new Intl.DateTimeFormat('ar-EG', {
+  //     day: 'numeric',
+  //     month: 'numeric',
+  //     year: 'numeric',
+  //   }).format(messageDate);
+  // }
   formatDate(dateStr: Date | string): string {
     // CreatedAt يترسل من السيرفر كـ UTC (DateTime.UtcNow)، لكن لو الـ Kind
     // اتفقد بعد الرجوع من الداتابيز (شائع مع EF Core)، الـ JSON بييجي من غير
