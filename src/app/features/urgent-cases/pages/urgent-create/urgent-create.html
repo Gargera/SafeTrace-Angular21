@@ -454,9 +454,8 @@
     } @else {
     <app-button variant="primary" type="button" [disabled]="isSubmitting()" [loading]="isSubmitting()"
       (onClick)="onSubmit()">
-      @if (!isSubmitting()) {
-      <span class="material-symbols-outlined text-lg">check_circle</span> إرسال البلاغ
-      }
+      <span class="material-symbols-outlined text-lg">check_circle</span>
+      <span>إرسال البلاغ</span>
     </app-button>
     }
 </div>

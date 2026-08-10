@@ -1,5 +1,4 @@
-import { Component, input, output, inject } from '@angular/core';
-import { GlobalLoadingService } from '../../../core/services/global-loading.service';
+import { Component, input, output } from '@angular/core';
 
 export type ButtonVariant =
   'primary' | 'secondary' | 'text' | 'icon' | 'danger' | 'success' | 'outline';
@@ -22,10 +21,8 @@ export class ButtonComponent {
 
   onClick = output<Event>();
 
-  globalLoading = inject(GlobalLoadingService).isLoading;
-
   get computedDisabled(): boolean {
-    return this.disabled() || this.loading() || this.globalLoading();
+    return this.disabled() || this.loading();
   }
 
   get baseClasses(): string {
