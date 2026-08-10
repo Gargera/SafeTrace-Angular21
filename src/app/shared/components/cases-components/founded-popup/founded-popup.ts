@@ -48,7 +48,7 @@ export class FoundedPopupComponent implements OnInit {
 
   readonly governorates = EGYPT_GOVERNORATES;
   readonly availableCities = signal<string[]>([]);
-  readonly isSubmitting = signal(false);
+  readonly isSubmitting = input(false);
   readonly errorMsg = signal<string | null>(null);
 
   readonly form = this.fb.nonNullable.group({

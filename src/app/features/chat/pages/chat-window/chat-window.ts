@@ -28,7 +28,7 @@ import { DestroyRef } from '@angular/core';
   selector: 'app-chat-window',
   standalone: true,
   imports: [FormsModule, DatePipe, ViewProfilePopup, ChatSkeletonComponent,
-    CommonModule
+    CommonModule, ButtonComponent
   ],
   templateUrl: './chat-window.html',
 })

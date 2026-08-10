@@ -70,23 +70,20 @@
                   <span class="material-symbols-outlined text-[15px] text-[#0058be]">qr_code</span>
                   {{ m.caseCode }}
                 </div>
-                <button
-                  type="button"
-                  (click)="copyCode($event, m.caseCode)"
-                  [title]="copiedCode() === m.caseCode ? 'تم النسخ!' : 'نسخ الكود'"
-                  class="flex items-center justify-center h-7 w-7 rounded-md border transition-all duration-150"
-                  [class.bg-green-50]="copiedCode() === m.caseCode"
-                  [class.border-green-400]="copiedCode() === m.caseCode"
-                  [class.text-green-600]="copiedCode() === m.caseCode"
-                  [class.bg-slate-100]="copiedCode() !== m.caseCode"
-                  [class.border-slate-300]="copiedCode() !== m.caseCode"
-                  [class.text-slate-500]="copiedCode() !== m.caseCode"
-                  [class.hover:bg-blue-50]="copiedCode() !== m.caseCode"
-                  aria-label="نسخ كود الحالة">
-                  <span class="material-symbols-outlined text-[16px]">
+                <app-button
+                  variant="icon"
+                  (onClick)="copyCode($event, m.caseCode)"
+                  [ariaLabel]="copiedCode() === m.caseCode ? 'تم النسخ!' : 'نسخ الكود'"
+                  extraClass="flex items-center justify-center h-7 w-7 rounded-md border transition-all duration-150 p-0"
+                  [ngClass]="{
+                    'bg-green-50 border-green-400 text-green-600': copiedCode() === m.caseCode,
+                    'border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700': copiedCode() !== m.caseCode
+                  }"
+                >
+                  <span class="material-symbols-outlined text-[15px]">
                     {{ copiedCode() === m.caseCode ? 'check' : 'content_copy' }}
                   </span>
-                </button>
+                </app-button>
               </div>
             </div>
           </div>
@@ -104,12 +101,12 @@
 
     <!-- Footer -->
     <div class="flex justify-end gap-3 p-5 md:px-8 border-t border-slate-200 sticky bottom-0 bg-white z-10">
-      <app-button variant="outline" (onClick)="cancel.emit()">
+      <app-button variant="outline" (onClick)="cancel.emit()" [disabled]="isSubmitting()">
         {{ cancelLabel() }}
       </app-button>
 
       @if (canForceCreate()) {
-      <app-button variant="primary" (onClick)="forceCreate.emit()">
+      <app-button variant="primary" (onClick)="forceCreate.emit()" [loading]="isSubmitting()" [disabled]="isSubmitting()">
         <span class="material-symbols-outlined text-[20px]">add_circle</span>
         تجاهل وإنشاء البلاغ
       </app-button>

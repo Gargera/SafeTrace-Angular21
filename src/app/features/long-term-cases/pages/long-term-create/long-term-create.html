@@ -306,10 +306,14 @@
             class="h-20 w-26.25 rounded-xl border border-outline-variant/60 object-cover shadow-xs transition-transform duration-200 hover:scale-105" />
             <div class="flex-1">
               <p class="mb-1 text-sm font-semibold text-on-tertiary-container">✓ تم تحديد الصورة وتأطيرها بنجاح</p>
-              <button type="button" (click)="reCropPhoto()"
-                class="p-0 text-xs text-secondary font-medium underline hover:opacity-80 transition">
+              <app-button
+                type="button"
+                variant="text"
+                (onClick)="reCropPhoto()"
+                extraClass="!p-0 text-xs text-secondary font-medium underline hover:opacity-80 transition"
+              >
                 إعادة ضبط وتعديل المربع
-              </button>
+              </app-button>
             </div>
           </div>
           }
@@ -437,13 +441,10 @@
     التالي <span class="material-symbols-outlined text-lg">arrow_back</span>
     </app-button>
     } @else {
-    <app-button variant="primary" type="button" [disabled]="isSubmitting()" (onClick)="onSubmit()">
-      @if (isSubmitting()) {
-      <span class="material-symbols-outlined animate-spin text-lg">progress_activity</span> جاري الإرسال...
-      } @else {
-      <span class="material-symbols-outlined text-lg">check_circle</span> إرسال البلاغ
-      }
-    </app-button>
+      <app-button variant="primary" type="button" [disabled]="isSubmitting()" [loading]="isSubmitting()" (onClick)="onSubmit()">
+        <span class="material-symbols-outlined text-lg">check_circle</span>
+        <span>إرسال البلاغ</span>
+      </app-button>
     }
 </div>
 
@@ -452,7 +453,7 @@
 <!-- 5. Popup outside the card -->
 @defer (when showForceCreatePopup()) {
 @if (showForceCreatePopup()) {
-<app-force-create-popup [matches]="matchedCases()" [isBlocked]="isBlockedDuplicate()"
+<app-force-create-popup [isSubmitting]="isSubmitting()" [matches]="matchedCases()" [isBlocked]="isBlockedDuplicate()"
   [readOnly]="currentDuplicateDecision() === 'ActiveOwnerCase'" [duplicateDecision]="currentDuplicateDecision()"
   (cancel)="onForceCreateCancel()" (forceCreate)="onForceCreateConfirm()">
 </app-force-create-popup>

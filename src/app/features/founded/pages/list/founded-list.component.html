@@ -32,11 +32,10 @@
         <span class="material-symbols-outlined text-6xl text-outline mb-4">wifi_off</span>
         <h3 class="text-xl font-bold text-on-surface mb-2">تعذر تحميل البيانات</h3>
         <p class="text-on-surface-variant mb-6">تحقق من اتصالك بالإنترنت وحاول مرة أخرى</p>
-        <button (click)="retry()"
-          class="inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold bg-secondary text-on-secondary shadow-sm hover:opacity-90 hover:shadow transition-all duration-200 active:scale-95">
+        <app-button (onClick)="retry()" variant="secondary" [loading]="isLoading()">
           <span class="material-symbols-outlined text-[20px]">refresh</span>
           <span>إعادة المحاولة</span>
-        </button>
+        </app-button>
       </div>
       }
 

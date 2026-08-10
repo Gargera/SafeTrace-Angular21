@@ -60,12 +60,13 @@
 @if (showConfirmModal() && modalConfig(); as config) {
 <app-confirmation-modal [title]="config.title" [message]="config.message" [confirmText]="config.confirmText"
   [cancelText]="config.cancelText" [variant]="config.variant ?? 'primary'" [icon]="config.icon ?? 'help_outline'"
+  [confirmLoading]="isSubmitting()"
   (confirm)="confirmAction()" (cancel)="closeModal()" />
 }
 
 <!-- Mark as Found Modal -->
 @if (showMarkAsFoundModal()) {
-<app-founded-popup [caseId]="markAsFoundCaseId()!" [contextKey]="PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND + '_' + markAsFoundCaseId()"
+<app-founded-popup [caseId]="markAsFoundCaseId()!" [isSubmitting]="isSubmitting()" [contextKey]="PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND + '_' + markAsFoundCaseId()"
   (confirmed)="handleMarkAsFoundConfirm($event)"
   (cancel)="closeMarkAsFoundModal()" />
 }

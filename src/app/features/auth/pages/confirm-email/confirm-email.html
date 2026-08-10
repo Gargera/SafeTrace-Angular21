@@ -65,7 +65,7 @@
   <div class="text-center mt-6">
     <p class="text-on-surface-variant text-body-sm">
       لم يصلك الرمز؟ 
-      <app-button type="button" (onClick)="resendOtp()" [disabled]="countdown() > 0" variant="text" extraClass="text-secondary font-semibold hover:underline bg-transparent border-none cursor-pointer disabled:opacity-100 disabled:cursor-not-allowed disabled:hover:no-underline transition-all">
+      <app-button type="button" (onClick)="resendOtp()" [disabled]="countdown() > 0" [loading]="isResending()" variant="text" extraClass="text-secondary font-semibold hover:underline bg-transparent border-none cursor-pointer disabled:opacity-100 disabled:cursor-not-allowed disabled:hover:no-underline transition-all">
         @if (countdown() > 0) {
           <span class="inline-flex items-center gap-1 bg-surface-variant/70 px-2.5 py-1 rounded-full text-on-surface-variant font-bold text-[11px]">إعادة الإرسال بعد {{ countdown() }} ثانية</span>
         } @else {

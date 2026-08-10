@@ -77,6 +77,8 @@ export class DonationsListComponent implements OnInit {
     { label: 'مسترد', value: PaymentStatus.Refunded },
   ];
 
+  isDownloading = signal(false);
+
   pageNumber = signal(1);
   pageSize = 12;
   totalCount = signal(0);
@@ -222,6 +224,8 @@ export class DonationsListComponent implements OnInit {
   }
 
   downloadReport(): void {
+    if (this.isDownloading()) return;
+    this.isDownloading.set(true);
     this.reportService
       .generateDonationPdfReport({
         pageNumber: this.pageNumber(),
@@ -231,9 +235,11 @@ export class DonationsListComponent implements OnInit {
       })
       .subscribe({
         next: (response) => {
+          this.isDownloading.set(false);
           this.reportService.download(response);
         },
         error: (err) => {
+          this.isDownloading.set(false);
           this.toast.error(extractErrorMessage(err, 'حدث خطأ أثناء تحميل التقرير.'));
         }
       });

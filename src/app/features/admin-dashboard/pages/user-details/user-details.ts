@@ -59,13 +59,13 @@ export class UserDetails implements OnInit {
   user = signal<GetUserByIdDto | null>(null);
   selectedRole = signal<string>('');
   roles = signal<RoleDto[]>([]);
-  
+
   originalPermissionsList = signal<UserPermissionDto[]>(this.generateEmptyPermissions());
   permissionsList = signal<UserPermissionDto[]>(this.generateEmptyPermissions());
-  
+
   expandedGroups = signal<Record<string, boolean>>({});
   isRootExpanded = signal<boolean>(true);
-  
+
   isUserLoading = signal<boolean>(true);
   isPermissionsLoading = signal<boolean>(true);
   isSavingPerms = signal<boolean>(false);
@@ -79,7 +79,7 @@ export class UserDetails implements OnInit {
     confirmText: '',
     icon: 'help_outline',
     variant: 'primary' as 'primary' | 'danger',
-    action: () => {}
+    action: () => { }
   });
 
   currentOpenModal = signal<'ROLE' | 'APPROVE' | 'REJECT' | 'BLOCK' | 'SAVE' | null>(null);
@@ -138,7 +138,7 @@ export class UserDetails implements OnInit {
   canManageUser = computed(() => {
     const targetUser = this.user();
     if (!targetUser || this.isCurrentUser()) return false;
-    
+
     const myRole = this.authService.getUserRole();
     const targetRole = targetUser.role;
 
@@ -236,12 +236,12 @@ export class UserDetails implements OnInit {
   loadUserData() {
     this.isUserLoading.set(true);
     this.isPermissionsLoading.set(true);
-    
+
     this.userService.getUserById(this.userId()).subscribe({
       next: (res) => {
         if (res.success) {
           this.user.set(res.data);
-          
+
           const state = this.cacheService.get<any>(`UserDetails_State_${this.userId()}`);
           if (state) {
             if (state.selectedRole) this.selectedRole.set(state.selectedRole);
@@ -275,7 +275,7 @@ export class UserDetails implements OnInit {
       next: (res) => {
         if (res.success && res.data) {
           this.permissionsList.set(res.data.permissions);
-          this.originalPermissionsList.set(this.permissionsList().map(p => ({...p})));
+          this.originalPermissionsList.set(this.permissionsList().map(p => ({ ...p })));
         }
         this.isPermissionsLoading.set(false);
       },
@@ -396,8 +396,9 @@ export class UserDetails implements OnInit {
         this.userService.assignUserPermissions({ userId: this.userId(), selectedPermissions: selectedValues }).subscribe({
           next: () => {
             this.isSavingPerms.set(false);
-            this.originalPermissionsList.set(this.permissionsList().map(p => ({...p})));
+            this.originalPermissionsList.set(this.permissionsList().map(p => ({ ...p })));
             this.snackbar.success('تم تحديث صلاحيات المستخدم');
+            this.onCancelModal();
           },
           error: (err) => {
             this.isSavingPerms.set(false);
@@ -413,7 +414,7 @@ export class UserDetails implements OnInit {
   }
 
   resetAll() {
-    this.permissionsList.set(this.originalPermissionsList().map(p => ({...p})));
+    this.permissionsList.set(this.originalPermissionsList().map(p => ({ ...p })));
   }
 
   resetGroup(groupName: string) {
@@ -469,7 +470,7 @@ export class UserDetails implements OnInit {
   getRoleName(roleName: string | undefined): string {
     return getRoleTranslationAr(roleName);
   }
-  
+
   getImageUrl(path: string | undefined): string {
     if (!path) return '';
     return path.startsWith('http') ? path : `${environment.baseUrl}/${path.replace(/^\//, '')}`;

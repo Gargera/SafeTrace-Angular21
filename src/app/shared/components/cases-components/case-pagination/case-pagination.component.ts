@@ -5,10 +5,11 @@ import {
   output,
 } from '@angular/core';
 
+import { NgClass } from '@angular/common';
 @Component({
   selector: 'app-pagination',
   standalone: true,
-  imports: [],
+  imports: [NgClass],
   templateUrl: './case-pagination.component.html',
   styleUrls: ['./case-pagination.component.css'],
 })

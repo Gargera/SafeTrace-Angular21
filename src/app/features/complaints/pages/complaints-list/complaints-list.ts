@@ -334,7 +334,11 @@ export class ComplaintsList implements OnInit {
       }
     });
   }
+  isDownloading = signal<boolean>(false);
+
   downloadReport(): void {
+    if (this.isDownloading()) return;
+    this.isDownloading.set(true);
     const filter = {
       ...this.filter(),
       status: this.filter().status || null
@@ -343,9 +347,11 @@ export class ComplaintsList implements OnInit {
       .generateComplaintPdfReport(filter)
       .subscribe({
         next: (response) => {
+          this.isDownloading.set(false);
           this.reportService.download(response);
         },
         error: (err) => {
+          this.isDownloading.set(false);
           const message = extractErrorMessage(err, 'حدث خطأ أثناء تنزيل التقرير');
           this.toast.error(message);
         }

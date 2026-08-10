@@ -39,6 +39,7 @@ const UI_STATE_CACHE_KEY = 'FoundedList_UI_State';
     PaginationComponent,
     CaseFiltersComponent,
     CaseCardComponent,
+    ButtonComponent,
   ],
   templateUrl: './founded-list.component.html',
 })

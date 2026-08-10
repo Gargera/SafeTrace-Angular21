@@ -1,4 +1,11 @@
-import { Component, input, output } from '@angular/core';
+import {
+  Component,
+  input,
+  output,
+  AfterContentInit,
+  ElementRef,
+  ChangeDetectorRef,
+} from '@angular/core';
 
 export type ButtonVariant =
   'primary' | 'secondary' | 'text' | 'icon' | 'danger' | 'success' | 'outline';
@@ -7,9 +14,24 @@ export type ButtonVariant =
   selector: 'app-button',
   standalone: true,
   templateUrl: './button.html',
+  styles: [
+    `
+      button.replace-icon-loading .material-symbols-outlined {
+        display: none !important;
+      }
+      button .spinner {
+        display: inline-flex;
+      }
+      button .spinner svg {
+        display: inline-block;
+      }
+    `,
+  ],
+  host: {
+    style: 'display: contents;',
+  },
 })
 export class ButtonComponent {
-  // 1. أضفنا 'outline' هنا
   variant = input<ButtonVariant>('primary');
   type = input<'button' | 'submit' | 'reset'>('button');
   disabled = input(false);
@@ -18,6 +40,30 @@ export class ButtonComponent {
   ariaLabel = input('');
 
   onClick = output<Event>();
+
+  private _hasIcon = false;
+
+  constructor(
+    private host: ElementRef,
+    private cd: ChangeDetectorRef,
+  ) {}
+
+  hasIcon(): boolean {
+    return this._hasIcon;
+  }
+
+  ngAfterContentInit(): void {
+    try {
+      this._hasIcon = !!this.host.nativeElement.querySelector('.material-symbols-outlined');
+    } catch (e) {
+      this._hasIcon = false;
+    }
+    this.cd.detectChanges();
+  }
+
+  get computedDisabled(): boolean {
+    return this.disabled() || this.loading();
+  }
 
   get baseClasses(): string {
     const common =
@@ -29,7 +75,6 @@ export class ButtonComponent {
       secondary:
         'border border-outline-variant bg-surface-container-low text-on-surface hover:bg-surface-container-high',
 
-      // 2. أضفنا ستايل الـ outline هنا (مكافئ لـ Tailwind / Material Design)
       outline:
         'border border-outline text-primary bg-transparent hover:bg-surface-container-low active:bg-surface-container',
 
@@ -39,11 +84,13 @@ export class ButtonComponent {
     };
 
     if (this.variant() === 'icon') {
-      return `group flex items-center justify-center rounded-xl border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary active:scale-95 disabled:pointer-events-none disabled:opacity-50 ${this.extraClass()}`;
+      // Standardized small icon button: compact square with centered icon.
+      // Use important (!) utilities to ensure size is applied when consumers pass extraClass overrides.
+      return `group inline-flex items-center justify-center transition-all duration-200 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 !w-8 !h-8 !p-0.5  !leading-none rounded-full ${this.extraClass()}`;
     }
 
     if (this.variant() === 'text') {
-      return `group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 focus:outline-none disabled:pointer-events-none disabled:opacity-50 ${this.extraClass()}`;
+      return `group inline-flex items-center gap-2 transition-all duration-200 focus:outline-none disabled:pointer-events-none disabled:opacity-50 ${this.extraClass()}`;
     }
 
     return `${common} ${variants[this.variant()] ?? ''} ${this.extraClass()}`;

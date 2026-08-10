@@ -6,14 +6,14 @@
 
     @if (!isEditingIdImage()) {
       @if (canEdit) {
-        <button
-          type="button"
-          (click)="toggleIdImageEdit(true)"
-          class="material-symbols-outlined text-[20px] cursor-pointer text-on-surface-variant hover:text-primary transition-colors p-1 rounded-lg hover:bg-surface-container-high border-none bg-transparent"
-          aria-label="تعديل صور الهوية"
+        <app-button
+          variant="icon"
+          ariaLabel="تعديل صور الهوية"
+          (onClick)="toggleIdImageEdit(true)"
+          extraClass="text-on-surface-variant hover:text-primary transition-colors p-1 rounded-lg hover:bg-surface-container-high border-none bg-transparent"
         >
-          edit
-        </button>
+          <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+        </app-button>
       }
     } @else {
       <div class="flex items-center gap-xs">
@@ -29,14 +29,9 @@
           type="button"
           [disabled]="isSavingIdImage()"
           (click)="saveIdImage()"
-          [attr.aria-busy]="isSavingIdImage()"
+          [loading]="isSavingIdImage()"
           variant="success"
         >
-          @if (isSavingIdImage()) {
-            <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
-              >progress_activity</span
-            >
-          }
           حفظ
         </app-button>
       </div>
@@ -61,7 +56,7 @@
               class="w-24 h-24 rounded-lg border-2 border-dashed border-outline-variant flex items-center justify-center text-on-surface-variant"
               aria-hidden="true"
             >
-              <span class="material-symbols-outlined text-[32px]">badge</span>
+              <span class="material-symbols-outlined">badge</span>
             </div>
           }
         </div>
@@ -111,7 +106,7 @@
               class="w-24 h-24 rounded-lg border-2 border-dashed border-outline-variant flex items-center justify-center text-on-surface-variant"
               aria-hidden="true"
             >
-              <span class="material-symbols-outlined text-[32px]">credit_card</span>
+              <span class="material-symbols-outlined">credit_card</span>
             </div>
           }
         </div>
@@ -151,17 +146,17 @@
     <div class="flex-1 flex flex-col gap-xs justify-center mt-2">
       @if (isVerified) {
         <span class="text-label-sm font-semibold text-emerald-600 flex items-center gap-1">
-          <span class="material-symbols-outlined text-[18px]">verified</span>
+          <span class="material-symbols-outlined">verified</span>
           تم توثيق الهوية بنجاح
         </span>
       } @else if (isPending) {
         <span class="text-label-sm font-semibold text-amber-600 flex items-center gap-1">
-          <span class="material-symbols-outlined text-[18px]">hourglass_empty</span>
+          <span class="material-symbols-outlined">hourglass_empty</span>
           هوية المستخدم قيد المراجعة
         </span>
       } @else if (!idImageFrontPreview() || !idImageBackPreview()) {
         <span class="text-label-sm text-on-surface-variant flex items-center gap-1">
-          <span class="material-symbols-outlined text-[18px]">info</span>
+          <span class="material-symbols-outlined">info</span>
           قم برفع صورتي الهوية (الأمامي والخلفي)
         </span>
       }

@@ -12,10 +12,12 @@ import { Permissions } from '../../../../core/constants/Permissions';
 
 import { ImageService } from '../../../../shared/services/image.service';
 
+import { ButtonComponent } from '../../../../shared/components/button/button';
+
 @Component({
   selector: 'app-ai-search',
   standalone: true,
-  imports: [CommonModule, CaseCardComponent, CaseCardSkeletonComponent, HeaderComponent],
+  imports: [CommonModule, CaseCardComponent, CaseCardSkeletonComponent, HeaderComponent, ButtonComponent],
   templateUrl: './ai-search.html',
   styleUrl: './ai-search.css',
 })
