@@ -81,6 +81,7 @@ export class UrgentDetails implements OnInit {
   showFoundedPopup = signal(false);
   isFounding = signal(false);
   showPermanentDeleteConfirmation = signal(false);
+  isPermanentDeleting = signal(false);
   showLocationModal = signal(false);
 
   caseDetails = signal<UrgentCaseDetailResponse | null>(null);
@@ -293,16 +294,17 @@ export class UrgentDetails implements OnInit {
       .subscribe({
         next: (res) => {
           this.deleting.set(false);
-          this.showDeleteConfirmation.set(false);
 
           if (res.success) {
+            this.showDeleteConfirmation.set(false);
             this.snackbar.success('تم حذف الحالة بنجاح');
             this.router.navigate(['/urgent']);
+          } else {
+            this.snackbar.error(res.message || 'حدث خطأ أثناء حذف الحالة');
           }
         },
         error: (err: unknown) => {
           this.deleting.set(false);
-          this.showDeleteConfirmation.set(false);
           const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء حذف الحالة');
           this.snackbar.error(errorMessage);
         },
@@ -326,21 +328,27 @@ export class UrgentDetails implements OnInit {
   }
 
   confirmPermanentDelete(): void {
+    if (this.isPermanentDeleting()) return;
     const id = this.caseDetails()?.id;
     if (!id) return;
+
+    this.isPermanentDeleting.set(true);
 
     this.UrgentDetailsService.permanentDelete(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          this.showPermanentDeleteConfirmation.set(false);
+          this.isPermanentDeleting.set(false);
           if (res.success) {
+            this.showPermanentDeleteConfirmation.set(false);
             this.snackbar.success('تم حذف الحالة نهائياً');
             this.router.navigate(['/admin/cases-management']);
+          } else {
+            this.snackbar.error(res.message || 'حدث خطأ أثناء الحذف النهائي');
           }
         },
         error: (err: unknown) => {
-          this.showPermanentDeleteConfirmation.set(false);
+          this.isPermanentDeleting.set(false);
           const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء الحذف النهائي');
           this.snackbar.error(errorMessage);
         },

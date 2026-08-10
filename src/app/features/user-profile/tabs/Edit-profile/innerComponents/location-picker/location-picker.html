@@ -56,20 +56,19 @@
   <!-- Action Bar & Coordinates display -->
   <div class="flex flex-wrap items-center justify-between gap-md pt-xs">
     <div class="flex items-center gap-sm">
-      <button
+      <app-button
+        variant="text"
         type="button"
         (click)="useCurrentLocation()"
         [disabled]="isLocating() || isSavingLocation()"
-        class="text-label-sm text-secondary hover:underline flex items-center gap-xs font-bold cursor-pointer disabled:opacity-50"
+        [loading]="isLocating()"
+        extraClass="text-label-sm text-secondary hover:underline font-bold"
       >
-        @if (isLocating()) {
-          <span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
-          جاري التحديد...
-        } @else {
+        @if (!isLocating()) {
           <span class="material-symbols-outlined text-[16px]" aria-hidden="true">my_location</span>
           استخدام موقعي الحالي
         }
-      </button>
+      </app-button>
     </div>
 
     @if (selectedLat() !== null && selectedLng() !== null) {

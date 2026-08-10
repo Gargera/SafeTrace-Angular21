@@ -7,10 +7,12 @@ import { StartChatContextDto } from '../../models/chat.model';
 import { Location } from '@angular/common';
 import { StartChatSkeletonComponent } from '../../../../shared/components/skeletons/start-chat-skeleton/start-chat-skeleton.component';
 
+import { ButtonComponent } from '../../../../shared/components/button/button';
+
 @Component({
   selector: 'app-start-chat',
   standalone: true,
-  imports: [StartChatSkeletonComponent],
+  imports: [StartChatSkeletonComponent, ButtonComponent],
   templateUrl: './start-chat.html',
 })
 export class StartChat implements OnInit {
@@ -55,21 +57,25 @@ export class StartChat implements OnInit {
   //   this.router.navigate(['/chat/chat', chat.chatId]);
   // }
 
+  isSubmitting = signal(false);
+
   startOrContinueChat(): void {
+    if (this.isSubmitting()) return;
+    this.isSubmitting.set(true);
     this.chatService.createChat({
       caseId: this.caseId
     })
     .subscribe({
       next: (res) => {
+        this.isSubmitting.set(false);
         if (!res.data) {
-        this.snackbarService.error('لم يتم إنشاء المحادثة');
-        return;
-      }
-        // this.snackbarService.success(res.message);
-
+          this.snackbarService.error('لم يتم إنشاء المحادثة');
+          return;
+        }
         this.router.navigate(['/chat/chat', res.data.chatId]);
       },
       error: (err) => {
+        this.isSubmitting.set(false);
         this.snackbarService.error(err.error?.message || 'حدث خطأ أثناء بدء المحادثة');
       }
     });

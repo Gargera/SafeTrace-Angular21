@@ -337,8 +337,11 @@
 
             <div class="space-y-2.5">
               @for(item of caseDetails()!.relatedCases; track item.id){
-              <button (click)="goToCase(item.id)"
-                class="group/rc flex w-full items-center gap-4 rounded-xl border border-outline-variant/70 bg-surface-container-low p-3 text-start transition-all hover:border-primary hover:bg-primary/5">
+              <app-button
+                variant="text"
+                (onClick)="goToCase(item.id)"
+                extraClass="group/rc flex w-full items-center gap-4 rounded-xl border border-outline-variant/70 bg-surface-container-low p-3 text-start transition-all hover:border-primary hover:bg-primary/5 p-0"
+              >
 
                 <img
                   class="h-16 w-16 shrink-0 rounded-lg border border-outline-variant object-cover group-hover/rc:border-primary"
@@ -365,7 +368,7 @@
                   class="material-symbols-outlined shrink-0 text-on-surface-variant transition group-hover/rc:translate-x-[-2px] group-hover/rc:text-primary">
                   chevron_left
                 </span>
-              </button>
+              </app-button>
               }
             </div>
           </div>
@@ -424,13 +427,13 @@
   @if(showDeleteConfirmation()){
   <app-confirmation-modal title="حذف الحالة"
     message="هل أنت متأكد أنك تريد حذف هذه الحالة؟ لا يمكن التراجع عن هذا الإجراء." confirmText="حذف" cancelText="إلغاء"
-    icon="delete" variant="danger" (confirm)="confirmDelete()" (cancel)="cancelDelete()">
+    icon="delete" variant="danger" [confirmLoading]="deleting()" (confirm)="confirmDelete()" (cancel)="cancelDelete()">
   </app-confirmation-modal>
   }
 
   @if(showApproveConfirmation()){
   <app-confirmation-modal title="قبول الحالة" message="هل أنت متأكد أنك تريد قبول هذه الحالة وإظهارها للجميع؟"
-    confirmText="قبول" cancelText="إلغاء" icon="check_circle" variant="primary" (confirm)="confirmApprove()"
+    confirmText="قبول" cancelText="إلغاء" icon="check_circle" variant="primary" [confirmLoading]="isApproving()" (confirm)="confirmApprove()"
     (cancel)="cancelApprove()">
   </app-confirmation-modal>
   }
@@ -446,12 +449,12 @@
   <app-confirmation-modal title="حذف نهائي"
     message="هل أنت متأكد أنك تريد حذف هذه الحالة نهائياً من النظام؟ هذا الإجراء لا يمكن التراجع عنه."
     confirmText="حذف نهائي" cancelText="إلغاء" icon="delete_forever" variant="danger"
-    (confirm)="confirmPermanentDelete()" (cancel)="cancelPermanentDelete()">
+    [confirmLoading]="isPermanentDeleting()" (confirm)="confirmPermanentDelete()" (cancel)="cancelPermanentDelete()">
   </app-confirmation-modal>
   }
 
   @if(showFoundedPopup()){
-  <app-founded-popup [caseId]="caseDetails()?.id" [contextKey]="'FoundedPopup_Unknown_' + caseDetails()?.id"
+  <app-founded-popup [caseId]="caseDetails()?.id" [isSubmitting]="isFounding()" [contextKey]="'FoundedPopup_Unknown_' + caseDetails()?.id"
     (confirmed)="confirmFounded($event)" (cancel)="cancelFounded()">
   </app-founded-popup>
   }

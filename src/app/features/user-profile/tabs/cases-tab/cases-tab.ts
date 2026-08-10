@@ -387,15 +387,15 @@ export class MyCasesTab implements OnInit, OnDestroy {
     const config = this.modalConfig();
     if (!config || !config.caseId || !config.caseType) return;
 
-    this.showConfirmModal.set(false);
     const { caseId, caseType, action } = config;
 
     if (action === 'delete') {
       this.executeDelete(caseId, caseType);
     } else if (action === 'markAsFound') {
+      this.showConfirmModal.set(false);
       this.showMarkAsFoundModal.set(true);
+      this.modalConfig.set(null);
     }
-    this.modalConfig.set(null);
   }
 
   private executeDelete(caseId: number, caseType: CaseType): void {
@@ -427,12 +427,12 @@ export class MyCasesTab implements OnInit, OnDestroy {
         }
 
         this.toast.success('تم حذف الحالة بنجاح');
+        this.showConfirmModal.set(false);
         this.modalConfig.set(null);
       },
       error: (err) => {
         this.isSubmitting.set(false);
         this.toast.error(extractErrorMessage(err, 'فشل حذف الحالة'));
-        this.modalConfig.set(null);
       },
     });
   }

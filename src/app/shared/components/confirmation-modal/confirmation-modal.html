@@ -2,7 +2,12 @@
   <div class="relative w-full max-w-120 rounded-[28px] border border-outline-variant/30 bg-surface-container-lowest shadow-2xl animate-scale-in flex flex-col overflow-hidden" (click)="$event.stopPropagation()">
     
     <!-- Close Button -->
-    <button (click)="cancel.emit()" class="absolute top-5 right-5 flex h-8 w-8 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50">
+    <button
+      type="button"
+      (click)="cancel.emit()"
+      aria-label="إغلاق"
+      class="absolute top-5 right-5 flex h-8 w-8 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors"
+    >
       <span class="material-symbols-outlined text-[20px]">close</span>
     </button>
 

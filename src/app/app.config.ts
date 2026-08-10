@@ -14,6 +14,7 @@ import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { jwtInterceptor } from './core/interceptors/jwt.interceptor';
 import { registerLocaleData } from '@angular/common';
+import { globalLoadingInterceptor } from './core/interceptors/global-loading.interceptor';
 import localeAr from '@angular/common/locales/ar';
 import { environment } from '../environments/environment';
 import { AuthService } from './core/services/auth.service';
@@ -22,7 +23,7 @@ registerLocaleData(localeAr);
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideHttpClient(withInterceptors([jwtInterceptor])),
+    provideHttpClient(withInterceptors([jwtInterceptor, globalLoadingInterceptor])),
     provideBrowserGlobalErrorListeners(),
     provideRouter(
       routes,

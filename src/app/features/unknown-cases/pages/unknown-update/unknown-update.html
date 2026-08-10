@@ -437,10 +437,8 @@
         التالي <span class="material-symbols-outlined text-lg">arrow_back</span>
       </app-button>
       } @else {
-      <app-button variant="primary" type="button" [disabled]="isSubmitting()" (onClick)="onSubmit()">
-        @if (isSubmitting()) {
-        <span class="material-symbols-outlined animate-spin text-lg">progress_activity</span> جاري الحفظ...
-        } @else {
+      <app-button variant="primary" type="button" [disabled]="isSubmitting()" [loading]="isSubmitting()" (onClick)="onSubmit()">
+        @if (!isSubmitting()) {
         <span class="material-symbols-outlined text-lg">check_circle</span> حفظ التعديلات
         }
       </app-button>

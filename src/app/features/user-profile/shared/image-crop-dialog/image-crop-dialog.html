@@ -24,7 +24,7 @@
           type="button"
           (click)="onCancel()"
           aria-label="إغلاق"
-          class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
+          class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer p-1"
         >
           <span class="material-symbols-outlined text-[22px]" aria-hidden="true">close</span>
         </button>
@@ -117,21 +117,21 @@
 
       <!-- Footer -->
       <div class="flex items-center justify-end gap-sm p-lg border-t border-outline-variant">
-        <button
-          type="button"
-          (click)="onCancel()"
-          class="px-md py-xs text-secondary border border-secondary rounded-lg text-label-sm font-bold hover:bg-secondary-fixed focus-visible:ring-2 focus-visible:ring-secondary transition-colors cursor-pointer"
+        <app-button
+          variant="outline"
+          (onClick)="onCancel()"
+          extraClass="px-md py-xs text-secondary border-secondary rounded-lg text-label-sm font-bold"
         >
           إلغاء
-        </button>
-        <button
-          type="button"
-          (click)="onSave()"
-          class="px-md py-xs text-on-primary bg-secondary rounded-lg text-label-sm font-bold hover:opacity-90 focus-visible:ring-2 focus-visible:ring-secondary transition-all flex items-center gap-xs cursor-pointer"
+        </app-button>
+        <app-button
+          variant="secondary"
+          (onClick)="onSave()"
+          extraClass="px-md py-xs rounded-lg text-label-sm font-bold flex items-center gap-xs"
         >
           <span class="material-symbols-outlined text-[16px]" aria-hidden="true">check</span>
           حفظ
-        </button>
+        </app-button>
       </div>
     </div>
   </div>

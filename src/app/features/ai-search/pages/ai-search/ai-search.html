@@ -45,28 +45,32 @@
           ميجابايت.
         </p>
 
-        <div class="relative z-10 flex gap-4">
-          <label
-            class="bg-secondary text-on-secondary border border-secondary px-6 py-4 rounded-full font-bold text-[16px] shadow-sm active:scale-95 transition-transform flex items-center gap-2 cursor-pointer hover:bg-secondary/90"
+        <div class="relative z-10 flex gap-4 flex-wrap">
+          <app-button
+            (onClick)="fileInput.click()"
+            extraClass="!bg-secondary !text-on-secondary !border-secondary px-6 py-4 rounded-full font-bold text-[16px] shadow-sm active:scale-95 transition-transform flex items-center gap-2 cursor-pointer hover:!bg-secondary/90"
           >
             <span>اختيار صورة</span>
-            <input
-              class="hidden"
-              type="file"
-              accept=".jpg,.jpeg,.png,.webp"
-              (change)="onFileSelected($event)"
-            />
-          </label>
+            <span class="material-symbols-outlined text-[20px]">upload_file</span>
+          </app-button>
+          <input
+            #fileInput
+            class="hidden"
+            type="file"
+            accept=".jpg,.jpeg,.png,.webp"
+            (change)="onFileSelected($event)"
+          />
 
           @if (selectedImage()) {
-            <button
-              (click)="startSearch()"
+            <app-button
+              (onClick)="startSearch()"
               [disabled]="isLoading()"
-              class="bg-primary text-on-primary px-6 py-4 rounded-full font-bold text-[16px] shadow-md active:scale-95 transition-transform flex items-center gap-2 cursor-pointer disabled:opacity-50 hover:bg-primary/90"
+              [loading]="isLoading()"
+              extraClass="!bg-primary !text-on-primary hover:!bg-primary/90 px-6 py-4 rounded-full font-bold text-[16px] shadow-md active:scale-95 transition-transform flex items-center gap-2 cursor-pointer"
             >
-              <span>{{ isLoading() ? 'جاري البحث...' : 'بدء البحث الذكي' }}</span>
+              <span>بدء البحث الذكي</span>
               <span class="material-symbols-outlined">auto_awesome</span>
-            </button>
+            </app-button>
           }
         </div>
       </div>

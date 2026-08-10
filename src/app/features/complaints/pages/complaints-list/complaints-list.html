@@ -91,6 +91,8 @@
     <app-button
       *hasPermission="Permissions.Complaints.GenerateComplaintsPdfReport"
       variant="outline"
+      [disabled]="isDownloading()"
+      [loading]="isDownloading()"
       (onClick)="downloadReport()"
     >
       <span class="material-symbols-outlined text-[18px]">download</span>
@@ -218,7 +220,12 @@
     <app-card extraClass="w-full max-w-6xl max-h-[90vh] overflow-y-auto bg-surface-container-lowest shadow-2xl rounded-2xl mx-4" dir="rtl" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between border-b border-outline-variant px-6 py-4">
         <span class="font-bold text-lg text-primary">تفاصيل الشكوى</span>
-        <button (click)="closeDetailsModal()" class="text-on-surface-variant hover:text-error transition-colors">
+        <button
+          type="button"
+          (click)="closeDetailsModal()"
+          aria-label="إغلاق"
+          class="text-on-surface-variant hover:text-error transition-colors"
+        >
           <span class="material-symbols-outlined text-xl">close</span>
         </button>
       </div>
@@ -272,7 +279,7 @@
         </app-button>
         <div class="flex-1"></div>
         @if (selectedComplaint()!.complaintStatus !== ComplaintStatusEnum.Solved) {
-          <app-button *hasPermission="Permissions.Complaints.MarkAsSolved" variant="primary" (onClick)="resolveComplaint()" [disabled]="isResolving()" extraClass="w-full sm:w-auto min-w-[140px]">
+          <app-button *hasPermission="Permissions.Complaints.MarkAsSolved" variant="primary" (onClick)="resolveComplaint()" [disabled]="isResolving()" [loading]="isResolving()" extraClass="w-full sm:w-auto min-w-[140px]">
             <span class="material-symbols-outlined text-[18px]">check_circle</span>
             {{ isResolving() ? 'جاري الحل...' : 'اعتماد الحل' }}
           </app-button>
@@ -291,6 +298,7 @@
     cancelText="إلغاء"
     icon="delete"
     variant="danger"
+    [confirmLoading]="isDeleting()"
     (confirm)="confirmDelete()"
     (cancel)="closeDeleteModal()"
   ></app-confirmation-modal>

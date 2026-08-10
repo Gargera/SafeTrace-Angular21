@@ -398,6 +398,7 @@ export class UserDetails implements OnInit {
             this.isSavingPerms.set(false);
             this.originalPermissionsList.set(this.permissionsList().map(p => ({ ...p })));
             this.snackbar.success('تم تحديث صلاحيات المستخدم');
+            this.onCancelModal();
           },
           error: (err) => {
             this.isSavingPerms.set(false);

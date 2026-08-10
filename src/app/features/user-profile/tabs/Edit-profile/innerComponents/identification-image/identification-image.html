@@ -6,14 +6,14 @@
 
     @if (!isEditingIdImage()) {
       @if (canEdit) {
-        <button
-          type="button"
-          (click)="toggleIdImageEdit(true)"
-          class="material-symbols-outlined text-[20px] cursor-pointer text-on-surface-variant hover:text-primary transition-colors p-1 rounded-lg hover:bg-surface-container-high border-none bg-transparent"
-          aria-label="تعديل صور الهوية"
+        <app-button
+          variant="icon"
+          ariaLabel="تعديل صور الهوية"
+          (onClick)="toggleIdImageEdit(true)"
+          extraClass="text-on-surface-variant hover:text-primary transition-colors p-1 rounded-lg hover:bg-surface-container-high border-none bg-transparent"
         >
-          edit
-        </button>
+          <span class="material-symbols-outlined text-[20px]" aria-hidden="true">edit</span>
+        </app-button>
       }
     } @else {
       <div class="flex items-center gap-xs">
@@ -29,14 +29,9 @@
           type="button"
           [disabled]="isSavingIdImage()"
           (click)="saveIdImage()"
-          [attr.aria-busy]="isSavingIdImage()"
+          [loading]="isSavingIdImage()"
           variant="success"
         >
-          @if (isSavingIdImage()) {
-            <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
-              >progress_activity</span
-            >
-          }
           حفظ
         </app-button>
       </div>

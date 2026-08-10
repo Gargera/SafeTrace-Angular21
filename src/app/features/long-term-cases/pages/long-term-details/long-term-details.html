@@ -380,13 +380,13 @@
   @if(showDeleteConfirmation()){
   <app-confirmation-modal title="حذف الحالة"
     message="هل أنت متأكد أنك تريد حذف هذه الحالة؟ لا يمكن التراجع عن هذا الإجراء." confirmText="حذف" cancelText="إلغاء"
-    icon="delete" variant="danger" (confirm)="confirmDelete()" (cancel)="cancelDelete()">
+    icon="delete" variant="danger" [confirmLoading]="deleting()" (confirm)="confirmDelete()" (cancel)="cancelDelete()">
   </app-confirmation-modal>
   }
 
   @if(showApproveConfirmation()){
   <app-confirmation-modal title="قبول الحالة" message="هل أنت متأكد أنك تريد قبول هذه الحالة وإظهارها للجميع؟"
-    confirmText="قبول" cancelText="إلغاء" icon="check_circle" variant="primary" (confirm)="confirmApprove()"
+    confirmText="قبول" cancelText="إلغاء" icon="check_circle" variant="primary" [confirmLoading]="isApproving()" (confirm)="confirmApprove()"
     (cancel)="cancelApprove()">
   </app-confirmation-modal>
   }
@@ -402,13 +402,13 @@
   <app-confirmation-modal title="حذف نهائي"
     message="هل أنت متأكد أنك تريد حذف هذه الحالة نهائياً من النظام؟ هذا الإجراء لا يمكن التراجع عنه."
     confirmText="حذف نهائي" cancelText="إلغاء" icon="delete_forever" variant="danger"
-    (confirm)="confirmPermanentDelete()" (cancel)="cancelPermanentDelete()">
+    [confirmLoading]="isPermanentDeleting()" (confirm)="confirmPermanentDelete()" (cancel)="cancelPermanentDelete()">
   </app-confirmation-modal>
   }
 
   <!-- موديول بوب أب تم العثور عليه -->
   @if(showFoundedPopup()){
-  <app-founded-popup [caseId]="caseDetails()?.id" [contextKey]="'FoundedPopup_LongTerm_' + caseDetails()?.id"
+  <app-founded-popup [caseId]="caseDetails()?.id" [isSubmitting]="isFounding()" [contextKey]="'FoundedPopup_LongTerm_' + caseDetails()?.id"
     (confirmed)="confirmFounded($event)" (cancel)="cancelFounded()">
   </app-founded-popup>
   }

@@ -7,76 +7,75 @@
 <ng-container *hasPermission="Permissions.Dashboard.GetCasesStatistics">
   @if (loadingStats()) {
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-  @for (i of [1, 2, 3, 4, 5, 6]; track i) {
-  <app-card
-    extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse">
-    <div class="h-4 bg-surface-container-high rounded w-3/4 mb-2"></div>
-    <div class="h-6 bg-surface-container-high rounded w-1/2"></div>
-  </app-card>
+    @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+    <app-card
+      extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse">
+      <div class="h-4 bg-surface-container-high rounded w-3/4 mb-2"></div>
+      <div class="h-6 bg-surface-container-high rounded w-1/2"></div>
+    </app-card>
+    }
+  </div>
+  } @else {
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+    <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-on-surface-variant">الإجمالي</span>
+        <span class="material-symbols-outlined text-secondary">folder</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.total ?? 0 }}</p>
+    </app-card>
+    <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-on-surface-variant">عاجل</span>
+        <span class="material-symbols-outlined text-red-500">emergency</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.urgent ?? 0 }}</p>
+    </app-card>
+    <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-on-surface-variant">طويل الأمد</span>
+        <span class="material-symbols-outlined text-indigo-500">schedule</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.longTerm ?? 0 }}</p>
+    </app-card>
+    <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-on-surface-variant">مجهول</span>
+        <span class="material-symbols-outlined text-gray-500">help</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.unknown ?? 0 }}</p>
+    </app-card>
+    <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-on-surface-variant">نشط</span>
+        <span class="material-symbols-outlined text-green-500">check_circle</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.active ?? 0 }}</p>
+    </app-card>
+    <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-medium text-on-surface-variant">تم العثور</span>
+        <span class="material-symbols-outlined text-blue-500">beenhere</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.found ?? 0 }}</p>
+    </app-card>
+  </div>
   }
-</div>
-} @else {
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">الإجمالي</span>
-      <span class="material-symbols-outlined text-secondary">folder</span>
-    </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.total ?? 0 }}</p>
-  </app-card>
-  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">عاجل</span>
-      <span class="material-symbols-outlined text-red-500">emergency</span>
-    </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.urgent ?? 0 }}</p>
-  </app-card>
-  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">طويل الأمد</span>
-      <span class="material-symbols-outlined text-indigo-500">schedule</span>
-    </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.longTerm ?? 0 }}</p>
-  </app-card>
-  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">مجهول</span>
-      <span class="material-symbols-outlined text-gray-500">help</span>
-    </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.unknown ?? 0 }}</p>
-  </app-card>
-  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">نشط</span>
-      <span class="material-symbols-outlined text-green-500">check_circle</span>
-    </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.active ?? 0 }}</p>
-  </app-card>
-  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">تم العثور</span>
-      <span class="material-symbols-outlined text-blue-500">beenhere</span>
-    </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.found ?? 0 }}</p>
-  </app-card>
-</div>
-}
 </ng-container>
 
 <!-- Filters Card (styled exactly like user-list) -->
 <section class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm mb-lg">
-  <app-case-filters [initialFilter]="baseFilter()" [showCaseType]="true" [showCaseStatus]="true" [genderInAdvanced]="true"
-    [ageCategoryInAdvanced]="true" (filterChange)="onFilterChange($event)">
-    
-    <app-button
-      actions
-      *hasPermission="Permissions.Dashboard.GenerateCasesPdfReport"
-      variant="outline"
-      (onClick)="downloadReport()">
+  <app-case-filters [initialFilter]="baseFilter()" [showCaseType]="true" [showCaseStatus]="true"
+    [genderInAdvanced]="true" [ageCategoryInAdvanced]="true" (filterChange)="onFilterChange($event)">
+
+    <app-button actions *hasPermission="Permissions.Dashboard.GenerateCasesPdfReport" variant="outline"
+      [loading]="isDownloading()" (onClick)="downloadReport()">
+      @if (!isDownloading()) {
       <span class="material-symbols-outlined text-[18px]">download</span>
+      }
       <span>تحميل التقرير</span>
     </app-button>
-    
+
   </app-case-filters>
 </section>
 
@@ -85,7 +84,7 @@
 <!-- Cases Table -->
 <section class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75">
   @if (loading()) {
-    <app-table-skeleton [rows]="12"></app-table-skeleton>
+  <app-table-skeleton [rows]="12"></app-table-skeleton>
   } @else {
 
   <div class="w-full max-w-full overflow-x-auto">
@@ -123,12 +122,14 @@
           <ng-container *hasPermission="caseActionPermissions">
             <td class="px-lg py-md text-center">
               <div class="flex items-center justify-center gap-2">
-                <app-button *hasPermission="getViewPermission(caseItem.caseType)" [routerLink]="getDetailsRoute(caseItem)" variant="primary"
+                <app-button *hasPermission="getViewPermission(caseItem.caseType)"
+                  [routerLink]="getDetailsRoute(caseItem)" variant="primary"
                   extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-secondary-container transition-all duration-200">
                   <span class="material-symbols-outlined text-[16px]">visibility</span>
                   عرض
                 </app-button>
-                <app-button *hasPermission="getDeletePermission(caseItem.caseType)" variant="danger" (onClick)="requestDelete(caseItem.id)"
+                <app-button *hasPermission="getDeletePermission(caseItem.caseType)" variant="danger"
+                  (onClick)="requestDelete(caseItem.id)"
                   extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200">
                   <span class="material-symbols-outlined text-[16px]">delete</span>
                   حذف
@@ -141,10 +142,8 @@
         @if (!loading()) {
         <tr>
           <td colspan="6" class="py-xl">
-            <app-empty-state
-              [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات مسجلة'"
-              [message]="hasActiveFilters() ? 'لم نتمكن من العثور على حالات تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم تسجيل أي حالات حتى الآن.'"
-            >
+            <app-empty-state [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات مسجلة'"
+              [message]="hasActiveFilters() ? 'لم نتمكن من العثور على حالات تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم تسجيل أي حالات حتى الآن.'">
             </app-empty-state>
           </td>
         </tr>
@@ -162,11 +161,7 @@
     <span class="text-label-sm text-on-surface-variant font-medium">
       إجمالي عدد الحالات: <span class="font-bold">{{ totalCount() }}</span>
     </span>
-    <app-pagination
-      [currentPage]="currentPage()"
-      [totalPages]="totalPages()"
-      (pageChange)="changePage($event)"
-    />
+    <app-pagination [currentPage]="currentPage()" [totalPages]="totalPages()" (pageChange)="changePage($event)" />
   </div>
   }
 </section>
@@ -175,5 +170,5 @@
 @if (showConfirmModal()) {
 <app-confirmation-modal [title]="modalConfig()?.title || 'تأكيد'" [message]="modalConfig()?.message || 'هل أنت متأكد؟'"
   [confirmText]="modalConfig()?.confirmText || 'تأكيد'" [cancelText]="modalConfig()?.cancelText || 'إلغاء'"
-  icon="delete" variant="danger" (confirm)="confirmAction()" (cancel)="closeModal()" />
+  [confirmLoading]="isDeleting()" icon="delete" variant="danger" (confirm)="confirmAction()" (cancel)="closeModal()" />
 }

@@ -1,4 +1,4 @@
-<button [type]="type()" [disabled]="disabled() || loading()" [class]="baseClasses" [attr.aria-label]="ariaLabel()" (click)="onClick.emit($event)">
+<button [type]="type()" [disabled]="computedDisabled" [class]="baseClasses" [attr.aria-label]="ariaLabel()" (click)="onClick.emit($event)">
   @if (loading()) {
     <svg class="h-5 w-5 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
       <circle class="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />

@@ -153,7 +153,12 @@
             <h3 class="text-xl font-bold text-on-surface" id="modal-title">
               تفاصيل التعديل ({{ selectedLog()?.tableName }})
             </h3>
-            <button (click)="closeModal()" class="text-on-surface-variant hover:text-error transition-colors p-1 rounded-full hover:bg-surface-container-high">
+            <button
+              type="button"
+              (click)="closeModal()"
+              aria-label="إغلاق"
+              class="text-on-surface-variant hover:text-error transition-colors p-1 rounded-full hover:bg-surface-container-high"
+            >
               <span class="material-symbols-outlined">close</span>
             </button>
           </div>

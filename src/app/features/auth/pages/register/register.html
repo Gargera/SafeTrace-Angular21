@@ -14,9 +14,9 @@
   @if (apiErrorMessage()) {
     <div class="bg-error-container text-on-error-container p-4 rounded-xl mb-6 flex justify-between items-start gap-3 border border-error/20">
       <span class="font-body-sm font-medium">{{ apiErrorMessage() }}</span>
-      <button type="button" (click)="apiErrorMessage.set('')" class="text-on-error-container hover:text-error transition-colors">
+      <app-button variant="icon" (onClick)="apiErrorMessage.set('')" extraClass="text-on-error-container hover:text-error transition-colors border-none bg-transparent p-0">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-      </button>
+      </app-button>
     </div>
   }
 

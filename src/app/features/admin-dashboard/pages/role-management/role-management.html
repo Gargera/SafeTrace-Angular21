@@ -224,6 +224,7 @@
     [confirmText]="modalConfig().confirmText"
     [icon]="modalConfig().icon"
     [variant]="modalConfig().variant"
+    [confirmLoading]="isCreating() || isDeleting() || isSaving()"
     (confirm)="onConfirmModal()"
     (cancel)="onCancelModal()"
   ></app-confirmation-modal>

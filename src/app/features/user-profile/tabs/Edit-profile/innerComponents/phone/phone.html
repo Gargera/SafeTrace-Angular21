@@ -10,14 +10,14 @@
       رقم الهاتف
     </h3>
     @if (!isEditingPhone()) {
-      <button
-        type="button"
-        (click)="togglePhoneEdit(true)"
-        class="material-symbols-outlined text-[20px] cursor-pointer text-on-surface-variant hover:text-primary transition-colors p-1 rounded-lg hover:bg-surface-container-high border-none bg-transparent"
-        aria-label="تعديل رقم الهاتف"
+      <app-button
+        variant="icon"
+        ariaLabel="تعديل رقم الهاتف"
+        (onClick)="togglePhoneEdit(true)"
+        extraClass="text-on-surface-variant hover:text-primary transition-colors p-1 rounded-lg hover:bg-surface-container-high border-none bg-transparent"
       >
-        edit
-      </button>
+        <span class="material-symbols-outlined text-[20px]" aria-hidden="true">edit</span>
+      </app-button>
     } @else {
       <div class="flex items-center gap-sm">
         <app-button
@@ -32,13 +32,8 @@
           type="submit"
           variant="success"
           [disabled]="isSavingPhone()"
-          [attr.aria-busy]="isSavingPhone()"
+          [loading]="isSavingPhone()"
         >
-          @if (isSavingPhone()) {
-            <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
-              >progress_activity</span
-            >
-          }
           حفظ
         </app-button>
       </div>

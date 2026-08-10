@@ -280,12 +280,12 @@ export class CasesManagement implements OnInit, OnDestroy {
   }
 
   isDeleting = signal(false);
+  isDownloading = signal(false);
 
   confirmAction(): void {
     const config = this.modalConfig();
     if (!config || !config.caseId || !config.caseType || this.isDeleting()) return;
     this.isDeleting.set(true);
-    this.showConfirmModal.set(false);
 
     this.casesService.deleteCase(config.caseId, config.caseType).subscribe({
       next: () => {
@@ -294,7 +294,7 @@ export class CasesManagement implements OnInit, OnDestroy {
         this.totalCount.update((c) => Math.max(0, c - 1));
         if (this.totalCount() === 0) this.filterState.totalPages.set(0);
         this.toast.success('تم حذف الحالة بنجاح');
-        this.modalConfig.set(null);
+        this.closeModal();
       },
       error: (err) => {
         this.isDeleting.set(false);
@@ -344,13 +344,17 @@ export class CasesManagement implements OnInit, OnDestroy {
   }
 
   downloadReport(): void {
+    if (this.isDownloading()) return;
+    this.isDownloading.set(true);
     this.reportService
       .generateCasesPdfReport(this.baseFilter())
       .subscribe({
         next: (response) => {
+          this.isDownloading.set(false);
           this.reportService.download(response);
         },
         error: (err) => {
+          this.isDownloading.set(false);
           this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتنزيل تقرير الحالات'));
         }
       });

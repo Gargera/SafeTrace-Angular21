@@ -14,7 +14,7 @@
         type="button"
         (click)="close()"
         aria-label="إغلاق"
-        class="absolute top-4 left-4 grid h-8 w-8 place-items-center rounded-[9999px] bg-surface-container text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface focus-visible:outline-2 focus-visible:outline-secondary focus-visible:outline-offset-2"
+        class="absolute top-4 left-4 grid h-8 w-8 place-items-center rounded-[9999px] bg-surface-container text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
       >
         <span class="material-symbols-outlined material-icon-sm">close</span>
       </button>
@@ -33,13 +33,14 @@
         <div class="flex flex-col items-center px-1 pb-1 pt-4 text-center" role="alert">
           <span class="material-symbols-outlined mb-2 text-[30px] text-error">error</span>
           <p class="mb-4 text-sm text-on-surface">{{ error() }}</p>
-          <button
-            type="button"
-            (click)="retry()"
-            class="rounded-[9999px] bg-primary px-5 py-2 text-[13.5px] font-semibold text-on-primary transition-[filter,transform] hover:brightness-110 active:scale-95 focus-visible:outline-2 focus-visible:outline-secondary focus-visible:outline-offset-2"
+          <app-button
+            variant="primary"
+            [loading]="loading()"
+            (onClick)="retry()"
+            extraClass="rounded-[9999px] px-5 py-2 text-[13.5px] font-semibold"
           >
             إعادة المحاولة
-          </button>
+          </app-button>
         </div>
       } @else if (profile(); as p) {
         <div class="flex flex-col items-center text-center">

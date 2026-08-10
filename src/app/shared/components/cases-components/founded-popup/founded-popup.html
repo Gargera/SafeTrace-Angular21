@@ -23,9 +23,12 @@
         </div>
       </div>
 
-      <button type="button"
+      <button
+        type="button"
+        (click)="onCancel()"
+        aria-label="إغلاق"
         class="flex h-9 w-9 items-center justify-center rounded-full text-on-tertiary/80 transition hover:bg-error-container hover:text-error cursor-pointer"
-        (click)="onCancel()" aria-label="إغلاق">
+      >
         <span class="material-symbols-outlined text-xl">close</span>
       </button>
     </div>
@@ -156,10 +159,8 @@
           إلغاء
         </app-button>
 
-        <app-button variant="success" type="button" [disabled]="isSubmitting()" (onClick)="onSubmit()">
-          @if (isSubmitting()) {
-          <span class="material-symbols-outlined animate-spin text-lg">progress_activity</span> جاري الحفظ...
-          } @else {
+        <app-button variant="success" type="button" [disabled]="isSubmitting()" [loading]="isSubmitting()" (onClick)="onSubmit()">
+          @if (!isSubmitting()) {
           <span class="material-symbols-outlined text-lg">verified</span> تأكيد العثور
           }
         </app-button>

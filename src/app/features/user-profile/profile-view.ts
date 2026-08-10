@@ -14,6 +14,8 @@ import { MyDonationsComponent } from '../donations/pages/my-donations/my-donatio
 import { CommonModule } from '@angular/common';
 export type ProfileTab = 'edit' | 'cases' | 'chat' | 'notifications' | 'donations'; // ADDED 'donations'
 
+import { ButtonComponent } from '../../shared/components/button/button';
+
 @Component({
   selector: 'app-profile-view',
   imports: [
@@ -25,6 +27,7 @@ export type ProfileTab = 'edit' | 'cases' | 'chat' | 'notifications' | 'donation
     MyCasesTab,
     MyChats,
     MyDonationsComponent,
+    ButtonComponent,
   ], // ADDED MyCasesTab and MyDonationsComponent
   templateUrl: './profile-view.html',
   styleUrl: './profile-view.css',

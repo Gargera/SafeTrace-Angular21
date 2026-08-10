@@ -4,10 +4,11 @@ import { GetUserNotificationsDTO } from '../../../../core/models/notification.mo
 import { NotificationService } from '../../../../core/services/notification.service';
 import { NotificationType } from '../../../../shared/enums/Notification-Type';
 import { NotificationSkeletonComponent } from '../../../../shared/components/skeletons/notification-skeleton/notification-skeleton.component';
+import { ButtonComponent } from '../../../../shared/components/button/button';
 
 @Component({
   selector: 'app-notifications-tab',
-  imports: [NotificationSkeletonComponent],
+  imports: [NotificationSkeletonComponent, ButtonComponent],
   standalone: true,
   templateUrl: './notifications-tab.html',
   styleUrl: './notifications-tab.css',

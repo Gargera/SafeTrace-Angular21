@@ -12,10 +12,14 @@
     <!-- Filter tabs -->
     <div class="flex gap-xs mb-md">
       @for (tab of filterTabs; track tab.key) {
-      <app-button [variant]="activeFilter() === tab.key ? 'primary' : 'secondary'"
-          extraClass="rounded-full !h-9 !px-4 rounded-full text-sm text-sm" (onClick)="setFilter(tab.key)">
+        <button
+          type="button"
+          (click)="setFilter(tab.key)"
+          class="h-9 px-4 rounded-full text-sm font-medium transition-colors cursor-pointer"
+          [ngClass]="activeFilter() === tab.key ? 'bg-secondary text-white shadow-sm' : 'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'"
+        >
           {{ tab.label }}
-      </app-button>
+        </button>
       }
     </div>
   </div>
@@ -72,16 +76,14 @@
           }
         </div>
 
-        <button
-          type="button"
-          class="text-on-surface-variant hover:text-error shrink"
-          (click)="$event.stopPropagation(); openDeleteModal(chat)"
-          aria-label="حذف المحادثة"
+        <app-button
+          variant="icon"
+          ariaLabel="حذف المحادثة"
+          extraClass="text-on-surface-variant hover:text-error shrink p-1 border-none bg-transparent"
+          (onClick)="$event.stopPropagation(); openDeleteModal(chat)"
         >
-          <svg viewBox="0 0 24 24" class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-12" />
-          </svg>
-        </button>
+          <span class="material-symbols-outlined text-[20px]">delete</span>
+        </app-button>
       </div>
     } @empty {
       <p class="text-center text-on-surface-variant py-2xl">

@@ -46,16 +46,12 @@
     />
   } @else {
     <div class="w-full h-full rounded-full bg-primary text-on-primary flex items-center justify-center">
-      <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4.4 0-8 2.24-8 5v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1c0-2.76-3.6-5-8-5z" />
-      </svg>
+      <span class="material-symbols-outlined text-[24px]">person</span>
     </div>
   }
 
   <span class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center border-2 border-surface-container-lowest shadow-sm">
-    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-    </svg>
+    <span class="material-symbols-outlined text-[14px]">chat</span>
   </span>
 
 </div>
@@ -69,34 +65,31 @@
 
       <!-- الزرار الديناميكي بناءً على حالة الشات -->
       @if (c.chatExists) {
-        <button
-          type="button"
-          class="w-full bg-secondary text-on-secondary rounded-full py-sm font-bold inline-flex items-center justify-center gap-2 hover:opacity-90 transition"
-          (click)="startOrContinueChat()"
+        <app-button
+          variant="secondary"
+          [loading]="isSubmitting()"
+          [disabled]="isSubmitting()"
+          extraClass="w-full rounded-full py-sm font-bold inline-flex items-center justify-center gap-2"
+          (onClick)="startOrContinueChat()"
         >
           متابعة المحادثة
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-          </svg>
-        </button>
+          <span class="material-symbols-outlined text-[18px]">chat</span>
+        </app-button>
       } @else {
-        <button
-          type="button"
-          class="w-full bg-secondary text-on-secondary rounded-full py-sm font-bold inline-flex items-center justify-center gap-2 hover:opacity-90 transition"
-          (click)="startOrContinueChat()"
+        <app-button
+          variant="secondary"
+          [loading]="isSubmitting()"
+          [disabled]="isSubmitting()"
+          extraClass="w-full rounded-full py-sm font-bold inline-flex items-center justify-center gap-2"
+          (onClick)="startOrContinueChat()"
         >
           بدء المحادثة
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" />
-          </svg>
-        </button>
+          <span class="material-symbols-outlined text-[18px] rtl:rotate-180">send</span>
+        </app-button>
       }
 
       <span class="inline-flex items-center justify-center gap-xs text-sm font-bold text-on-tertiary-container bg-surface-container-low rounded-xl px-md py-sm" dir="rtl">
-  <svg class="w-4 h-4 shrink-0 text-on-tertiary-container" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3z" />
-    <path d="m9 12 2 2 4-4" />
-  </svg>
+  <span class="material-symbols-outlined text-[18px] text-on-tertiary-container">verified_user</span>
   محادثة آمنة ومشفرة تماماً لضمان الخصوصية
 </span>
     </div>

@@ -30,21 +30,18 @@
           <label class="block text-sm font-semibold text-on-surface-variant mb-2.5">المبالغ المقترحة (ج.م)</label>
           <div class="grid grid-cols-4 gap-3">
             @for (value of presetAmounts; track value) {
-              <button
+              <app-button
                 type="button"
-                (click)="selectAmount(value)"
-                class="h-12 rounded-xl border font-bold text-sm transition-all duration-200 active:scale-95 flex items-center justify-center gap-1 cursor-pointer"
-                [class.bg-secondary]="amount === value"
-                [class.text-on-secondary]="amount === value"
-                [class.border-secondary]="amount === value"
-                [class.shadow-md]="amount === value"
-                [class.bg-surface-container-low]="amount !== value"
-                [class.text-on-surface]="amount !== value"
-                [class.border-outline-variant/70]="amount !== value"
-                [class.hover:border-secondary]="amount !== value"
-                [class.hover:bg-secondary/5]="amount !== value">
+                variant="text"
+                (onClick)="selectAmount(value)"
+                extraClass="h-12 rounded-xl border font-bold text-sm transition-all duration-200 active:scale-95 flex items-center justify-center gap-1 cursor-pointer"
+                [ngClass]="{
+                  'bg-secondary text-on-secondary border-secondary shadow-md': amount === value,
+                  'bg-surface-container-low text-on-surface border-outline-variant/70 hover:border-secondary hover:bg-secondary/5': amount !== value
+                }"
+              >
                 <span>{{ value }} ج.م</span>
-              </button>
+              </app-button>
             }
           </div>
         </div>

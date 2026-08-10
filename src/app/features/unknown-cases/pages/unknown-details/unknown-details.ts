@@ -96,10 +96,12 @@ export class UnknownDetails implements OnInit {
   isFounding = signal(false);
 
   showApproveConfirmation = signal(false);
+  isApproving = signal(false);
   showRejectConfirmation = signal(false);
   isRejecting = signal(false);
   rejectApiError = signal<string | null>(null);
   showPermanentDeleteConfirmation = signal(false);
+  isPermanentDeleting = signal(false);
 
   caseDetails = signal<UnknownCaseDetailWithVideo | null>(null);
   loading = signal(true);
@@ -353,17 +355,18 @@ export class UnknownDetails implements OnInit {
       .subscribe({
         next: (res) => {
           this.deleting.set(false);
-          this.showDeleteConfirmation.set(false);
 
           if (res.success) {
+            this.showDeleteConfirmation.set(false);
             this.snackbar.success('تم حذف الحالة بنجاح');
             this.router.navigate(['/unknown']);
+          } else {
+            this.snackbar.error(res.message || 'حدث خطأ أثناء حذف الحالة');
           }
         },
 
         error: (err: unknown) => {
           this.deleting.set(false);
-          this.showDeleteConfirmation.set(false);
           const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء حذف الحالة');
           this.snackbar.error(errorMessage);
         },
@@ -407,22 +410,27 @@ export class UnknownDetails implements OnInit {
   }
 
   confirmApprove(): void {
+    if (this.isApproving()) return;
     const id = this.caseDetails()?.id;
     if (!id) return;
 
+    this.isApproving.set(true);
     this.UnknownCaseService
       .approveCase(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          this.showApproveConfirmation.set(false);
+          this.isApproving.set(false);
           if (res.success) {
+            this.showApproveConfirmation.set(false);
             this.snackbar.success('تم قبول الحالة بنجاح');
             this.refreshCaseDetails(id);
+          } else {
+            this.snackbar.error(res.message || 'حدث خطأ أثناء قبول الحالة');
           }
         },
         error: (err: unknown) => {
-          this.showApproveConfirmation.set(false);
+          this.isApproving.set(false);
           const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء قبول الحالة');
           this.snackbar.error(errorMessage);
         },
@@ -480,22 +488,27 @@ export class UnknownDetails implements OnInit {
   }
 
   confirmPermanentDelete(): void {
+    if (this.isPermanentDeleting()) return;
     const id = this.caseDetails()?.id;
     if (!id) return;
 
+    this.isPermanentDeleting.set(true);
     this.UnknownCaseService
       .permanentDelete(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          this.showPermanentDeleteConfirmation.set(false);
+          this.isPermanentDeleting.set(false);
           if (res.success) {
+            this.showPermanentDeleteConfirmation.set(false);
             this.snackbar.success('تم حذف الحالة نهائياً');
             this.router.navigate(['/admin/cases-management']);
+          } else {
+            this.snackbar.error(res.message || 'حدث خطأ أثناء الحذف النهائي');
           }
         },
         error: (err: unknown) => {
-          this.showPermanentDeleteConfirmation.set(false);
+          this.isPermanentDeleting.set(false);
           const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء الحذف النهائي');
           this.snackbar.error(errorMessage);
         },
