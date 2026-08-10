@@ -40,7 +40,6 @@
 
       <div class="relative group h-full flex items-center">
         <button
-          type="button"
           class="text-on-surface-variant hover:text-primary flex items-center gap-1 transition-colors duration-200"
         >
           <span>تصفح البلاغات</span>
@@ -162,13 +161,15 @@
               <div class="flex-1 overflow-y-auto px-3 py-3 space-y-2">
                 @if (notificationService.isLoading()) {
                   <div class="flex justify-center items-center h-full">
-                    <span class="material-symbols-outlined animate-spin text-secondary">
+                    <span class="material-symbols-outlined animate-spin text-secondary text-[30px]">
                       progress_activity
                     </span>
                   </div>
                 } @else if (notificationService.notifications().length === 0) {
                   <div class="h-full flex flex-col items-center justify-center text-center gap-3">
-                    <span class="material-symbols-outlined text-on-surface-variant opacity-30">
+                    <span
+                      class="material-symbols-outlined text-[56px] text-on-surface-variant opacity-30"
+                    >
                       notifications_off
                     </span>
 
@@ -192,7 +193,7 @@
                         [class]="details.bgClass"
                       >
                         <span
-                          class="material-symbols-outlined"
+                          class="material-symbols-outlined text-[22px]"
                           style="font-variation-settings: 'FILL' 1"
                         >
                           {{ details.icon }}

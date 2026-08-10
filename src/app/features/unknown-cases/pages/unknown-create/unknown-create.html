@@ -1,8 +1,8 @@
 <div dir="rtl" class="mx-auto max-w-190 px-4 pb-16 pt-6">
-
   <!-- Single app-card containing the entire page -->
-  <app-card extraClass="overflow-hidden rounded-2xl border border-outline-variant/30 bg-white shadow-sm">
-
+  <app-card
+    extraClass="overflow-hidden rounded-2xl border border-outline-variant/30 bg-white shadow-sm"
+  >
     <!-- 1. Header -->
     <div class="px-6 md:px-8 pt-6 md:pt-8">
       <app-header
@@ -16,53 +16,54 @@
 
     <!-- Body Container (Spacing & Padding) -->
     <div class="space-y-8 p-6 md:p-8">
-
       <!-- 2. Refined Modern Stepper -->
       <div class="flex items-center justify-between">
         @for (s of steps; track s.num; let i = $index) {
-        <!-- Step Item -->
-        <div class="flex flex-col items-center">
-          <!-- Outer Step Card (56px x 56px) -->
-          <div
-            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border bg-white shadow-2xs transition-all duration-200"
-            [ngClass]="{
-              'border-secondary bg-secondary/5 shadow-xs': currentStep === s.num,
-              'border-outline-variant/30': currentStep !== s.num
-            }"
-          >
-            <!-- Inner Circle (32px x 32px) -->
+          <!-- Step Item -->
+          <div class="flex flex-col items-center">
+            <!-- Outer Step Card (56px x 56px) -->
             <div
-              class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors duration-200"
+              class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border bg-white shadow-2xs transition-all duration-200"
               [ngClass]="{
-                'bg-secondary text-on-secondary shadow-2xs': currentStep >= s.num,
-                'bg-surface-container text-on-surface-variant/70': currentStep < s.num
+                'border-secondary bg-secondary/5 shadow-xs': currentStep === s.num,
+                'border-outline-variant/30': currentStep !== s.num,
               }"
             >
-              @if (currentStep > s.num) {
-              <span class="material-symbols-outlined text-sm">check</span>
-              } @else { {{ s.num }} }
+              <!-- Inner Circle (32px x 32px) -->
+              <div
+                class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors duration-200"
+                [ngClass]="{
+                  'bg-secondary text-on-secondary shadow-2xs': currentStep >= s.num,
+                  'bg-surface-container text-on-surface-variant/70': currentStep < s.num,
+                }"
+              >
+                @if (currentStep > s.num) {
+                  <span class="material-symbols-outlined text-sm">check</span>
+                } @else {
+                  {{ s.num }}
+                }
+              </div>
+            </div>
+
+            <!-- Step Label (11px) -->
+            <div
+              class="mt-2 text-center text-[11px] font-medium leading-tight transition-colors duration-200"
+              [ngClass]="{
+                'text-secondary font-semibold': currentStep === s.num,
+                'text-on-surface-variant/70': currentStep !== s.num,
+              }"
+            >
+              {{ s.label }}
             </div>
           </div>
 
-          <!-- Step Label (11px) -->
-          <div
-            class="mt-2 text-center text-[11px] font-medium leading-tight transition-colors duration-200"
-            [ngClass]="{
-              'text-secondary font-semibold': currentStep === s.num,
-              'text-on-surface-variant/70': currentStep !== s.num
-            }"
-          >
-            {{ s.label }}
-          </div>
-        </div>
-
-        <!-- Connector Line (2px Thin, 12px Spacing) -->
-        @if (i < steps.length - 1) {
-        <div
-          class="mb-5 mx-3 h-0.5 flex-1 rounded-full transition-colors duration-200"
-          [ngClass]="currentStep > s.num ? 'bg-secondary' : 'bg-outline-variant/30'"
-        ></div>
-        }
+          <!-- Connector Line (2px Thin, 12px Spacing) -->
+          @if (i < steps.length - 1) {
+            <div
+              class="mb-5 mx-3 h-0.5 flex-1 rounded-full transition-colors duration-200"
+              [ngClass]="currentStep > s.num ? 'bg-secondary' : 'bg-outline-variant/30'"
+            ></div>
+          }
         }
       </div>
 
@@ -72,255 +73,430 @@
       <!-- 3. Form Content (all steps) -->
       <form [formGroup]="form">
         @if (currentStep === 1) {
-        <div class="flex flex-col gap-6 animate-in fade-in duration-200">
-          
-          <!-- Section Header (Step 1) -->
-          <div class="mb-2 rounded-2xl border border-secondary/15 bg-secondary/5 p-5">
-            <div class="flex items-center gap-3">
-              <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-on-secondary shadow-sm">
-                <span class="material-symbols-outlined text-2xl">person</span>
-              </div>
+          <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+            <!-- Section Header (Step 1) -->
+            <div class="mb-2 rounded-2xl border border-secondary/15 bg-secondary/5 p-5">
+              <div class="flex items-center gap-3">
+                <div
+                  class="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-on-secondary shadow-sm"
+                >
+                  <span class="material-symbols-outlined text-2xl">person</span>
+                </div>
 
-              <div class="flex-1">
-                <h2 class="text-lg font-bold text-on-surface">
-                  بيانات الشخص (إن وُجدت)
-                </h2>
-                <p class="mt-1 text-sm text-on-surface-variant">
-                  أدخل البيانات المتاحة عن الشخص مجهول الهوية للمساعدة في التعرف عليه.
+                <div class="flex-1">
+                  <h2 class="text-lg font-bold text-on-surface">بيانات الشخص (إن وُجدت)</h2>
+                  <p class="mt-1 text-sm text-on-surface-variant">
+                    أدخل البيانات المتاحة عن الشخص مجهول الهوية للمساعدة في التعرف عليه.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Name Fields (2 inputs in first row, 2 inputs in second row) -->
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <app-form-field
+                  label="الاسم الأول (اختياري)"
+                  formControlName="fName"
+                  type="text"
+                  placeholder="مثال: أحمد"
+                  [extraClass]="isInvalid('fName') ? 'border-error' : ''"
+                ></app-form-field>
+                @if (isInvalid('fName')) {
+                  <p class="mt-1 flex items-center gap-1 text-xs text-error">
+                    {{ getFieldError('fName') }}
+                  </p>
+                }
+              </div>
+              <div>
+                <app-form-field
+                  label="اسم الأب (اختياري)"
+                  formControlName="sName"
+                  type="text"
+                  placeholder="مثال: محمد"
+                  [extraClass]="isInvalid('sName') ? 'border-error' : ''"
+                ></app-form-field>
+                @if (isInvalid('sName')) {
+                  <p class="mt-1 flex items-center gap-1 text-xs text-error">
+                    {{ getFieldError('sName') }}
+                  </p>
+                }
+              </div>
+              <div>
+                <app-form-field
+                  label="اسم الجد (اختياري)"
+                  formControlName="tName"
+                  type="text"
+                  placeholder="مثال: محمود"
+                  [extraClass]="isInvalid('tName') ? 'border-error' : ''"
+                ></app-form-field>
+                @if (isInvalid('tName')) {
+                  <p class="mt-1 flex items-center gap-1 text-xs text-error">
+                    {{ getFieldError('tName') }}
+                  </p>
+                }
+              </div>
+              <div>
+                <app-form-field
+                  label="اسم العائلة (اختياري)"
+                  formControlName="lName"
+                  type="text"
+                  placeholder="مثال: السعيد"
+                  [extraClass]="isInvalid('lName') ? 'border-error' : ''"
+                ></app-form-field>
+                @if (isInvalid('lName')) {
+                  <p class="mt-1 flex items-center gap-1 text-xs text-error">
+                    {{ getFieldError('lName') }}
+                  </p>
+                }
+              </div>
+            </div>
+
+            <!-- Age & Gender Row -->
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <app-form-field
+                  label="العمر التقريبي *"
+                  formControlName="age"
+                  type="number"
+                  min="0"
+                  max="120"
+                  placeholder="أدخل العمر التقريبي بالسنوات (مثال: 25)"
+                  [extraClass]="isInvalid('age') ? 'border-error' : ''"
+                ></app-form-field>
+                @if (isInvalid('age')) {
+                  <p class="mt-1 flex items-center gap-1 text-xs text-error">
+                    {{ getFieldError('age') }}
+                  </p>
+                }
+              </div>
+              <div>
+                <app-form-field
+                  label="الجنس *"
+                  type="select"
+                  formControlName="gender"
+                  [extraClass]="isInvalid('gender') ? 'border-error' : ''"
+                >
+                  <option value="" disabled>اختر الجنس</option>
+                  <option [value]="genders.Male">ذكر</option>
+                  <option [value]="genders.Female">أنثى</option>
+                </app-form-field>
+                @if (isInvalid('gender')) {
+                  <p class="mt-1 flex items-center gap-1 text-xs text-error">
+                    {{ getFieldError('gender') }}
+                  </p>
+                }
+              </div>
+            </div>
+
+            <!-- Communication Phone -->
+            <div>
+              <app-form-field
+                label="رقم تواصل (اختياري)"
+                formControlName="communicationPhone"
+                type="tel"
+                placeholder="أدخل رقم تواصل إضافي (مثال: 01012345678)"
+                [extraClass]="isInvalid('communicationPhone') ? 'border-error' : ''"
+              ></app-form-field>
+              @if (isInvalid('communicationPhone')) {
+                <p class="mt-1 flex items-center gap-1 text-xs text-error">
+                  {{ getFieldError('communicationPhone') }}
                 </p>
+              }
+            </div>
+
+            <!-- Description -->
+            <div>
+              <app-form-field
+                label="وصف الشخص"
+                type="textarea"
+                formControlName="description"
+                placeholder="أدخل أي تفاصيل تساعد في التعرف عليه (مثل العلامات المميزة، الطول، الملابس، أو الحالة الصحية)"
+              ></app-form-field>
+              <div class="mt-1 text-left text-[11px] text-on-surface-variant/70">
+                {{ form.get('description')?.value?.length ?? 0 }} / 2000
               </div>
+              @if (isInvalid('description')) {
+                <p class="mt-1 flex items-center gap-1 text-xs text-error">
+                  {{ getFieldError('description') }}
+                </p>
+              }
             </div>
           </div>
-
-          <!-- Name Fields (2 inputs in first row, 2 inputs in second row) -->
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <app-form-field label="الاسم الأول (اختياري)" formControlName="fName" type="text" placeholder="مثال: أحمد"
-                [extraClass]="isInvalid('fName') ? 'border-error' : ''"></app-form-field>
-              @if (isInvalid('fName')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('fName') }}</p> }
-            </div>
-            <div>
-              <app-form-field label="اسم الأب (اختياري)" formControlName="sName" type="text" placeholder="مثال: محمد"
-                [extraClass]="isInvalid('sName') ? 'border-error' : ''"></app-form-field>
-              @if (isInvalid('sName')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('sName') }}</p> }
-            </div>
-            <div>
-              <app-form-field label="اسم الجد (اختياري)" formControlName="tName" type="text" placeholder="مثال: محمود"
-                [extraClass]="isInvalid('tName') ? 'border-error' : ''"></app-form-field>
-              @if (isInvalid('tName')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('tName') }}</p> }
-            </div>
-            <div>
-              <app-form-field label="اسم العائلة (اختياري)" formControlName="lName" type="text" placeholder="مثال: السعيد"
-                [extraClass]="isInvalid('lName') ? 'border-error' : ''"></app-form-field>
-              @if (isInvalid('lName')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('lName') }}</p> }
-            </div>
-          </div>
-
-          <!-- Age & Gender Row -->
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <app-form-field label="العمر التقريبي *" formControlName="age" type="number" min="0" max="120" placeholder="أدخل العمر التقريبي بالسنوات (مثال: 25)"
-                [extraClass]="isInvalid('age') ? 'border-error' : ''"></app-form-field>
-              @if (isInvalid('age')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('age') }}</p> }
-            </div>
-            <div>
-              <app-form-field label="الجنس *" type="select" formControlName="gender"
-                [extraClass]="isInvalid('gender') ? 'border-error' : ''">
-                <option value="" disabled>اختر الجنس</option>
-                <option [value]="genders.Male">ذكر</option>
-                <option [value]="genders.Female">أنثى</option>
-              </app-form-field>
-              @if (isInvalid('gender')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('gender') }}</p> }
-            </div>
-          </div>
-
-          <!-- Communication Phone -->
-          <div>
-            <app-form-field label="رقم تواصل (اختياري)" formControlName="communicationPhone" type="tel" placeholder="أدخل رقم تواصل إضافي (مثال: 01012345678)"
-              [extraClass]="isInvalid('communicationPhone') ? 'border-error' : ''"></app-form-field>
-            @if (isInvalid('communicationPhone')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('communicationPhone') }}</p> }
-          </div>
-
-          <!-- Description -->
-          <div>
-            <app-form-field label="وصف الشخص" type="textarea" formControlName="description"
-              placeholder="أدخل أي تفاصيل تساعد في التعرف عليه (مثل العلامات المميزة، الطول، الملابس، أو الحالة الصحية)"></app-form-field>
-            <div class="mt-1 text-left text-[11px] text-on-surface-variant/70">{{ form.get('description')?.value?.length ?? 0 }} / 2000</div>
-            @if (isInvalid('description')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('description') }}</p> }
-          </div>
-        </div>
         }
 
         @if (currentStep === 2) {
-        <div class="flex flex-col gap-6 animate-in fade-in duration-200">
-          
-          <!-- Section Header (Step 2) -->
-          <div class="mb-2 rounded-2xl border border-secondary/15 bg-secondary/5 p-5">
-            <div class="flex items-center gap-3">
-              <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-on-secondary shadow-sm">
-                <span class="material-symbols-outlined text-2xl">location_on</span>
-              </div>
+          <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+            <!-- Section Header (Step 2) -->
+            <div class="mb-2 rounded-2xl border border-secondary/15 bg-secondary/5 p-5">
+              <div class="flex items-center gap-3">
+                <div
+                  class="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-on-secondary shadow-sm"
+                >
+                  <span class="material-symbols-outlined text-2xl">location_on</span>
+                </div>
 
-              <div class="flex-1">
-                <h2 class="text-lg font-bold text-on-surface">
-                  موقع العثور عليه
-                </h2>
-                <p class="mt-1 text-sm text-on-surface-variant">
-                  حدد المحافظة والمدينة والشارع وتاريخ العثور عليه بدقة.
+                <div class="flex-1">
+                  <h2 class="text-lg font-bold text-on-surface">موقع العثور عليه</h2>
+                  <p class="mt-1 text-sm text-on-surface-variant">
+                    حدد المحافظة والمدينة والشارع وتاريخ العثور عليه بدقة.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Government & City -->
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <app-form-field
+                  label="المحافظة *"
+                  type="select"
+                  formControlName="government"
+                  [extraClass]="isInvalid('government') ? 'border-error' : ''"
+                >
+                  <option value="" disabled>اختر المحافظة</option>
+                  @for (g of governorates; track g) {
+                    <option [value]="g">{{ g }}</option>
+                  }
+                </app-form-field>
+                @if (isInvalid('government')) {
+                  <p class="mt-1 flex items-center gap-1 text-xs text-error">
+                    {{ getFieldError('government') }}
+                  </p>
+                }
+              </div>
+              <div>
+                <app-form-field
+                  label="المدينة / المركز *"
+                  type="select"
+                  formControlName="city"
+                  [extraClass]="isInvalid('city') ? 'border-error' : ''"
+                >
+                  <option value="" disabled>اختر المدينة / المركز</option>
+                  @for (c of availableCities(); track c) {
+                    <option [value]="c">{{ c }}</option>
+                  }
+                </app-form-field>
+                @if (isInvalid('city')) {
+                  <p class="mt-1 flex items-center gap-1 text-xs text-error">
+                    {{ getFieldError('city') }}
+                  </p>
+                }
+              </div>
+            </div>
+
+            <!-- Street -->
+            <div>
+              <app-form-field
+                label="الشارع / المنطقة *"
+                formControlName="street"
+                type="text"
+                placeholder="أدخل الشارع أو المنطقة وأي معالم قريبة (مثال: شارع التحرير، بجوار مسجد السلام)"
+                [extraClass]="isInvalid('street') ? 'border-error' : ''"
+              ></app-form-field>
+              @if (isInvalid('street')) {
+                <p class="mt-1 flex items-center gap-1 text-xs text-error">
+                  {{ getFieldError('street') }}
                 </p>
-              </div>
+              }
             </div>
-          </div>
 
-          <!-- Government & City -->
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <!-- Event Date -->
             <div>
-              <app-form-field label="المحافظة *" type="select" formControlName="government"
-                [extraClass]="isInvalid('government') ? 'border-error' : ''">
-                <option value="" disabled>اختر المحافظة</option>
-                @for (g of governorates; track g) { <option [value]="g">{{ g }}</option> }
-              </app-form-field>
-              @if (isInvalid('government')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('government') }}</p> }
-            </div>
-            <div>
-              <app-form-field label="المدينة / المركز *" type="select" formControlName="city"
-                [extraClass]="isInvalid('city') ? 'border-error' : ''">
-                <option value="" disabled>اختر المدينة / المركز</option>
-                @for (c of availableCities(); track c) { <option [value]="c">{{ c }}</option> }
-              </app-form-field>
-              @if (isInvalid('city')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('city') }}</p> }
+              <app-form-field
+                label="تاريخ العثور عليه *"
+                formControlName="eventDate"
+                type="date"
+                [extraClass]="isInvalid('eventDate') ? 'border-error' : ''"
+              ></app-form-field>
+              @if (isInvalid('eventDate')) {
+                <p class="mt-1 flex items-center gap-1 text-xs text-error">
+                  {{ getFieldError('eventDate') }}
+                </p>
+              }
             </div>
           </div>
-
-          <!-- Street -->
-          <div>
-            <app-form-field label="الشارع / المنطقة *" formControlName="street" type="text" placeholder="أدخل الشارع أو المنطقة وأي معالم قريبة (مثال: شارع التحرير، بجوار مسجد السلام)"
-              [extraClass]="isInvalid('street') ? 'border-error' : ''"></app-form-field>
-            @if (isInvalid('street')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('street') }}</p> }
-          </div>
-
-          <!-- Event Date -->
-          <div>
-            <app-form-field label="تاريخ العثور عليه *" formControlName="eventDate" type="date"
-              [extraClass]="isInvalid('eventDate') ? 'border-error' : ''"></app-form-field>
-            @if (isInvalid('eventDate')) { <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ getFieldError('eventDate') }}</p> }
-          </div>
-        </div>
         }
 
         @if (currentStep === 3) {
-        <div class="flex flex-col gap-6 animate-in fade-in duration-200">
-          
-          <!-- Section Header (Step 3) -->
-          <div class="mb-2 rounded-2xl border border-secondary/15 bg-secondary/5 p-5">
-            <div class="flex items-center gap-3">
-              <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-on-secondary shadow-sm">
-                <span class="material-symbols-outlined text-2xl">photo_library</span>
-              </div>
+          <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+            <!-- Section Header (Step 3) -->
+            <div class="mb-2 rounded-2xl border border-secondary/15 bg-secondary/5 p-5">
+              <div class="flex items-center gap-3">
+                <div
+                  class="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-on-secondary shadow-sm"
+                >
+                  <span class="material-symbols-outlined text-2xl">photo_library</span>
+                </div>
 
-              <div class="flex-1">
-                <h2 class="text-lg font-bold text-on-surface">
-                  صور ومستندات
-                </h2>
-                <p class="mt-1 text-sm text-on-surface-variant">
-                  ارفع الصور ومقاطع الفيديو المتاحة للشخص مجهول الهوية.
+                <div class="flex-1">
+                  <h2 class="text-lg font-bold text-on-surface">صور ومستندات</h2>
+                  <p class="mt-1 text-sm text-on-surface-variant">
+                    ارفع الصور ومقاطع الفيديو المتاحة للشخص مجهول الهوية.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Primary Photo Section -->
+            <div>
+              <label class="mb-2 block text-sm font-medium text-on-surface-variant">
+                الصورة الأساسية (يرجى تحديد الوجه بدقة) <span class="mr-0.5 text-error">*</span>
+              </label>
+
+              <!-- 1. Upload Dropzone -->
+              @if (!cropImageEvent() && !croppedPrimaryImagePreview()) {
+                <div
+                  class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-7 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
+                  (click)="primaryInput.click()"
+                >
+                  <input
+                    #primaryInput
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    class="hidden"
+                    (change)="onPrimaryPhotoSelected($event)"
+                  />
+                  <div
+                    class="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110"
+                  >
+                    <span class="material-symbols-outlined text-3xl">add_photo_alternate</span>
+                  </div>
+                  <p class="text-sm font-bold text-on-surface">
+                    اضغط لإضافة الصورة الأساسية وتحديد الوجه
+                  </p>
+                  <p class="mt-1 text-xs text-on-surface-variant/70">
+                    JPG / JPEG / PNG / WebP — حتى 5 MB
+                  </p>
+                </div>
+                @if (primaryPhotoError()) {
+                  <p class="mt-1.5 flex items-center gap-1 text-xs text-error">
+                    {{ primaryPhotoError() }}
+                  </p>
+                }
+              }
+
+              <!-- 2. Image Cropper Container -->
+              @if (cropImageEvent()) {
+                <div
+                  class="rounded-2xl bg-inverse-surface p-5 text-center text-inverse-on-surface shadow-md"
+                >
+                  <p class="mb-3 text-sm font-medium">
+                    حرك المربع لتحديد الوجه بالكامل داخل الإطار:
+                  </p>
+
+                  <image-cropper
+                    [imageChangedEvent]="cropImageEvent()"
+                    [maintainAspectRatio]="true"
+                    [aspectRatio]="4 / 3"
+                    format="jpeg"
+                    (imageCropped)="onImageCropped($event)"
+                  >
+                  </image-cropper>
+
+                  <div class="mt-4 flex justify-center gap-3">
+                    <button
+                      type="button"
+                      (click)="confirmCrop()"
+                      class="px-5 py-2 text-sm rounded-lg bg-secondary text-on-secondary shadow-sm hover:bg-secondary/90"
+                    >
+                      <span class="material-symbols-outlined text-base">check</span> اعتماد الصورة
+                    </button>
+                    <button
+                      type="button"
+                      (click)="cancelCrop()"
+                      class="px-5 py-2 text-sm rounded-lg bg-surface-container-highest text-on-surface hover:bg-surface-container-high"
+                    >
+                      إلغاء
+                    </button>
+                  </div>
+                </div>
+              }
+
+              <!-- 3. Cropped Preview Box -->
+              @if (croppedPrimaryImagePreview() && !cropImageEvent()) {
+                <div
+                  class="flex items-center gap-4 rounded-2xl border border-outline-variant/50 bg-surface-container-low p-4 shadow-xs"
+                >
+                  <img
+                    [src]="croppedPrimaryImagePreview()"
+                    width="105"
+                    height="80"
+                    class="h-20 w-26.25 rounded-xl border border-outline-variant/60 object-cover shadow-xs transition-transform duration-200 hover:scale-105"
+                  />
+                  <div class="flex-1">
+                    <p class="mb-1 text-sm font-semibold text-on-tertiary-container">
+                      ✓ تم تحديد الصورة وتأطيرها بنجاح
+                    </p>
+                    <button
+                      type="button"
+                      (click)="reCropPhoto()"
+                      class="p-0 text-xs text-secondary font-medium underline hover:opacity-80 transition"
+                    >
+                      إعادة ضبط وتعديل المربع
+                    </button>
+                  </div>
+                </div>
+              }
+
+              <!-- Additional Photos -->
+              <label class="mb-2 mt-5 block text-sm font-medium text-on-surface-variant"
+                >صور إضافية (حتى 4 صور)</label
+              >
+              <div
+                class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
+                (click)="additionalInput.click()"
+              >
+                <input
+                  #additionalInput
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  class="hidden"
+                  (change)="onAdditionalPhotosSelected($event)"
+                />
+                <div
+                  class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110"
+                >
+                  <span class="material-symbols-outlined text-2xl">add_photo_alternate</span>
+                </div>
+                <p class="text-xs text-on-surface-variant/70">
+                  JPG / JPEG / PNG / WebP — حتى 5MB لكل صورة
                 </p>
               </div>
-            </div>
-          </div>
+              @if (additionalPhotosError()) {
+                <p class="mt-1.5 flex items-center gap-1 text-xs text-error">
+                  {{ additionalPhotosError() }}
+                </p>
+              }
 
-          <!-- Primary Photo Section -->
-          <div>
-            <label class="mb-2 block text-sm font-medium text-on-surface-variant">
-              الصورة الأساسية (يرجى تحديد الوجه بدقة) <span class="mr-0.5 text-error">*</span>
-            </label>
-
-            <!-- 1. Upload Dropzone -->
-            @if (!cropImageEvent() && !croppedPrimaryImagePreview()) {
-            <div
-              class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-7 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
-              (click)="primaryInput.click()"
-            >
-              <input #primaryInput type="file" accept="image/jpeg,image/png,image/webp" class="hidden"
-                (change)="onPrimaryPhotoSelected($event)" />
-              <div class="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
-                <span class="material-symbols-outlined text-3xl">add_photo_alternate</span>
-              </div>
-              <p class="text-sm font-bold text-on-surface">اضغط لإضافة الصورة الأساسية وتحديد الوجه</p>
-              <p class="mt-1 text-xs text-on-surface-variant/70">JPG / JPEG / PNG / WebP — حتى 5 MB</p>
-            </div>
-            @if (primaryPhotoError()) { <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ primaryPhotoError() }}</p> }
-            }
-
-            <!-- 2. Image Cropper Container -->
-            @if (cropImageEvent()) {
-            <div class="rounded-2xl bg-inverse-surface p-5 text-center text-inverse-on-surface shadow-md">
-              <p class="mb-3 text-sm font-medium">حرك المربع لتحديد الوجه بالكامل داخل الإطار:</p>
-
-              <image-cropper [imageChangedEvent]="cropImageEvent()" [maintainAspectRatio]="true" [aspectRatio]="4 / 3"
-                format="jpeg" (imageCropped)="onImageCropped($event)">
-              </image-cropper>
-
-              <div class="mt-4 flex justify-center gap-3">
-                <button type="button" (click)="confirmCrop()" class="px-5 py-2 text-sm rounded-lg bg-secondary text-on-secondary shadow-sm hover:bg-secondary/90">
-                  <span class="material-symbols-outlined text-base">check</span> اعتماد الصورة
-                </button>
-                <button type="button" (click)="cancelCrop()" class="px-5 py-2 text-sm rounded-lg bg-surface-container-highest text-on-surface hover:bg-surface-container-high">
-                  إلغاء
-                </button>
-              </div>
-            </div>
-            }
-
-            <!-- 3. Cropped Preview Box -->
-            @if (croppedPrimaryImagePreview() && !cropImageEvent()) {
-            <div class="flex items-center gap-4 rounded-2xl border border-outline-variant/50 bg-surface-container-low p-4 shadow-xs">
-              <img [src]="croppedPrimaryImagePreview()"
-                class="h-20 w-26.25 rounded-xl border border-outline-variant/60 object-cover shadow-xs transition-transform duration-200 hover:scale-105" />
-              <div class="flex-1">
-                <p class="mb-1 text-sm font-semibold text-on-tertiary-container">✓ تم تحديد الصورة وتأطيرها بنجاح</p>
-                <button type="button" (click)="reCropPhoto()"
-                  class="p-0 text-xs text-secondary font-medium underline hover:opacity-80 transition">
-                  إعادة ضبط وتعديل المربع
-                </button>
-              </div>
-            </div>
-            }
-
-            <!-- Additional Photos -->
-            <label class="mb-2 mt-5 block text-sm font-medium text-on-surface-variant">صور إضافية (حتى 4 صور)</label>
-            <div
-              class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
-              (click)="additionalInput.click()"
-            >
-              <input #additionalInput type="file" accept="image/jpeg,image/png,image/webp" multiple class="hidden"
-                (change)="onAdditionalPhotosSelected($event)" />
-              <div class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
-                <span class="material-symbols-outlined text-2xl">add_photo_alternate</span>
-              </div>
-              <p class="text-xs text-on-surface-variant/70">JPG / JPEG / PNG / WebP — حتى 5MB لكل صورة</p>
-            </div>
-            @if (additionalPhotosError()) { <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ additionalPhotosError() }}</p> }
-
-            @if (additionalPhotoPreviews().length > 0) {
-            <div class="mt-3.5 flex flex-wrap gap-3">
-              @for (preview of additionalPhotoPreviews(); track preview; let i = $index) {
-              <div class="relative h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
-                <img [src]="preview" alt="صورة إضافية" class="h-full w-full object-cover" />
-                <button
-                  type="button"
-                  (click)="removeAdditionalPhoto(i)"
-                  class="absolute top-1 right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110 p-0"
-                >
-                  <span class="material-symbols-outlined text-xs">close</span>
-                </button>
-              </div>
+              @if (additionalPhotoPreviews().length > 0) {
+                <div class="mt-3.5 flex flex-wrap gap-3">
+                  @for (preview of additionalPhotoPreviews(); track preview; let i = $index) {
+                    <div
+                      class="relative h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105"
+                    >
+                      <img
+                        [src]="preview"
+                        alt="صورة إضافية"
+                        width="80"
+                        height="80"
+                        class="h-full w-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        (click)="removeAdditionalPhoto(i)"
+                        class="absolute top-1 right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110"
+                      >
+                        <span class="material-symbols-outlined text-xs">close</span>
+                      </button>
+                    </div>
+                  }
+                </div>
               }
             </div>
-            }
-          </div>
 
-          <!-- Video -->
+            <!-- Video -->
             <div>
               <label class="mb-2 block text-sm font-medium text-on-surface-variant">
                 فيديو
@@ -330,14 +506,11 @@
               </label>
 
               <div
-                class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60
-                      bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200
-                      hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low
-                      hover:shadow-xs"
+                class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
                 [class.border-secondary]="!!videoFile()"
                 [class.bg-surface-container-low]="!!videoFile()"
-                (click)="videoInput.click()">
-
+                (click)="videoInput.click()"
+              >
                 <input
                   #videoInput
                   type="file"
@@ -347,16 +520,14 @@
                 />
 
                 <div
-                  class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl
-                        bg-secondary/10 text-secondary transition-transform duration-200
-                        group-hover:scale-110">
-
+                  class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110"
+                >
                   <span
                     class="material-symbols-outlined text-3xl"
-                    [ngClass]="videoFile() ? 'text-secondary' : 'text-outline'">
+                    [ngClass]="videoFile() ? 'text-secondary' : 'text-outline'"
+                  >
                     videocam
                   </span>
-
                 </div>
 
                 <p class="text-sm font-bold text-on-surface">
@@ -374,15 +545,17 @@
                 </p>
               }
             </div>
-        </div>
+          </div>
         }
 
         <!-- Form Global Error -->
         @if (errorMsg()) {
-        <div class="mt-4 flex items-center gap-2.5 rounded-2xl border border-error/30 bg-error-container/30 p-4 text-xs font-medium text-on-error-container shadow-2xs">
-          <span class="material-symbols-outlined text-lg">error</span>
-          {{ errorMsg() }}
-        </div>
+          <div
+            class="mt-4 flex items-center gap-2.5 rounded-2xl border border-error/30 bg-error-container/30 p-4 text-xs font-medium text-on-error-container shadow-2xs"
+          >
+            <span class="material-symbols-outlined text-lg">error</span>
+            {{ errorMsg() }}
+          </div>
         }
       </form>
     </div>
@@ -392,54 +565,70 @@
 
     <!-- 4. Footer Buttons -->
     <div class="flex items-center justify-between bg-surface-bright/50 px-6 py-4.5 md:px-8">
-      <app-button variant="secondary" type="button" [extraClass]="currentStep === 1 ? 'invisible' : ''" (onClick)="prevStep()">
+      <app-button
+        variant="secondary"
+        type="button"
+        [extraClass]="currentStep === 1 ? 'invisible' : ''"
+        (onClick)="prevStep()"
+      >
         <span class="material-symbols-outlined text-lg">arrow_forward</span> السابق
       </app-button>
 
       <div class="flex gap-2">
         @for (s of steps; track s.num) {
-        <div
-          class="h-2.5 w-2.5 rounded-full transition-all duration-300"
-          [ngClass]="currentStep === s.num ? 'bg-secondary ring-2 ring-secondary/30 scale-110' : 'bg-outline-variant/40'"
-        ></div>
+          <div
+            class="h-2.5 w-2.5 rounded-full transition-all duration-300"
+            [ngClass]="
+              currentStep === s.num
+                ? 'bg-secondary ring-2 ring-secondary/30 scale-110'
+                : 'bg-outline-variant/40'
+            "
+          ></div>
         }
       </div>
 
       @if (currentStep < 3) {
-      <app-button variant="primary" type="button" (onClick)="nextStep()">
-        التالي <span class="material-symbols-outlined text-lg">arrow_back</span>
-      </app-button>
+        <app-button variant="primary" type="button" (onClick)="nextStep()">
+          التالي <span class="material-symbols-outlined text-lg">arrow_back</span>
+        </app-button>
       } @else {
-      <app-button variant="primary" type="button" [disabled]="isSubmitting()" [loading]="isSubmitting()" (onClick)="onSubmit()">
-        <span class="material-symbols-outlined text-lg">check_circle</span>
-        <span>إرسال البلاغ</span>
-      </app-button>
+        <app-button
+          variant="primary"
+          type="button"
+          [disabled]="isSubmitting()"
+          [loading]="isSubmitting()"
+          (onClick)="onSubmit()"
+        >
+          <span class="material-symbols-outlined text-lg">check_circle</span>
+          <span>إرسال البلاغ</span>
+        </app-button>
       }
     </div>
-
   </app-card>
 
   <!-- 5. Popup outside the card -->
   @if (showForceCreatePopup()) {
-  <app-force-create-popup [isSubmitting]="isSubmitting()"
-    [matches]="matchedCases()"
-    [isBlocked]="isBlockedDuplicate()"
-    [readOnly]="currentDuplicateDecision() === 'ActiveOwnerCase'"
-    [duplicateDecision]="currentDuplicateDecision()"
-    (cancel)="onForceCreateCancel()"
-    (forceCreate)="onForceCreateConfirm()">
-  </app-force-create-popup>
+    <app-force-create-popup
+      [isSubmitting]="isSubmitting()"
+      [matches]="matchedCases()"
+      [isBlocked]="isBlockedDuplicate()"
+      [readOnly]="currentDuplicateDecision() === 'ActiveOwnerCase'"
+      [duplicateDecision]="currentDuplicateDecision()"
+      (cancel)="onForceCreateCancel()"
+      (forceCreate)="onForceCreateConfirm()"
+    >
+    </app-force-create-popup>
   }
 
   <!-- 6. Informational duplicate dialog -->
   @if (showDuplicateInfoDialog()) {
-  <app-duplicate-info-dialog
-    [duplicateDecision]="currentDuplicateDecision()"
-    [existingCaseType]="existingCaseType()!"
-    [currentCaseType]="caseTypes.Unknown"
-    (close)="onPendingDialogClose()"
-    (continueCreate)="onPendingDialogContinueCreate()">
-  </app-duplicate-info-dialog>
+    <app-duplicate-info-dialog
+      [duplicateDecision]="currentDuplicateDecision()"
+      [existingCaseType]="existingCaseType()!"
+      [currentCaseType]="caseTypes.Unknown"
+      (close)="onPendingDialogClose()"
+      (continueCreate)="onPendingDialogContinueCreate()"
+    >
+    </app-duplicate-info-dialog>
   }
-
 </div>

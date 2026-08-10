@@ -302,8 +302,8 @@
           @if (croppedPrimaryImagePreview() && !cropImageEvent()) {
           <div
             class="flex items-center gap-4 rounded-2xl border border-outline-variant/50 bg-surface-container-low p-4 shadow-xs">
-            <img [src]="croppedPrimaryImagePreview()"
-              class="h-20 w-26.25 rounded-xl border border-outline-variant/60 object-cover shadow-xs transition-transform duration-200 hover:scale-105" />
+           <img [src]="croppedPrimaryImagePreview()" width="105" height="80"
+            class="h-20 w-26.25 rounded-xl border border-outline-variant/60 object-cover shadow-xs transition-transform duration-200 hover:scale-105" />
             <div class="flex-1">
               <p class="mb-1 text-sm font-semibold text-on-tertiary-container">✓ تم تحديد الصورة وتأطيرها بنجاح</p>
               <app-button
@@ -337,14 +337,14 @@
           @if (additionalPhotoPreviews().length > 0) {
           <div class="mt-3.5 flex flex-wrap gap-3">
             @for (preview of additionalPhotoPreviews(); track preview; let i = $index) {
-            <div
-              class="relative h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
-              <img [src]="preview" alt="صورة إضافية" class="h-full w-full object-cover" />
-              <button type="button" (click)="removeAdditionalPhoto(i)"
-                class="absolute top-1 right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110">
-                <span class="material-symbols-outlined text-xs">close</span>
-              </button>
-            </div>
+              <div
+            class="relative h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
+            <img [src]="preview" alt="صورة إضافية" width="80" height="80" class="h-full w-full object-cover" />
+            <button type="button" (click)="removeAdditionalPhoto(i)"
+              class="absolute top-1 right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110">
+              <span class="material-symbols-outlined text-xs">close</span>
+            </button>
+          </div>
             }
           </div>
           }
@@ -395,6 +395,7 @@
                 [ngClass]="videoFile() ? 'text-secondary' : 'text-outline'">videocam</span>
             </div>
             <p class="text-sm font-bold text-on-surface">{{ videoFile()?.name ?? 'رفع فيديو' }}</p>
+            <p class="mt-0.5 text-xs text-on-surface-variant/70">MP4 / MOV / WebM — حتى 50 MB</p>
           </div>
         </div>
 
