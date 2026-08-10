@@ -146,7 +146,7 @@
               </td>
               <ng-container *hasPermission="caseActionPermissions">
                 <td class="px-lg py-md text-center">
-                  <div class="flex items-center justify-center gap-2">
+                  <div class="flex items-center justify-end gap-2">
                     <app-button
                       *hasPermission="getViewPermission(caseItem.caseType)"
                       [routerLink]="getDetailsRoute(caseItem)"
