@@ -86,8 +86,7 @@ export class AuthService {
     if (!decodedToken) return null;
 
     return (
-      (decodedToken['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] as
-        string | undefined) ||
+      (decodedToken['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] as string | undefined) ||
       (decodedToken['sub'] as string | undefined) ||
       null
     );
@@ -103,8 +102,8 @@ export class AuthService {
     if (!decodedToken) return null;
 
     const roleClaim =
-      (decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] as
-        string | string[] | undefined) || (decodedToken['role'] as string | string[] | undefined);
+      (decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] as string | string[] | undefined) ||
+      (decodedToken['role'] as string | string[] | undefined);
     return typeof roleClaim === 'string'
       ? roleClaim
       : Array.isArray(roleClaim) && roleClaim.length > 0
@@ -224,7 +223,7 @@ export class AuthService {
       profileImage: response.profileImage || null,
       isVerified: response.verificationStatus === VerificationStatus.Verified,
       verificationStatus: response.verificationStatus,
-      permissions: response.permissions || [],
+      permissions: response.permissions || []
     };
 
     localStorage.setItem(this.userDataKey, JSON.stringify(userData));
@@ -295,7 +294,7 @@ export class AuthService {
         }),
       );
   }
-
+  
   googleLogin(data: { providerToken: string }): Observable<ApiResponse<AuthResponse>> {
     return this.http
       .post<ApiResponse<AuthResponse>>(`${this.baseUrl}/google-login`, data, {
