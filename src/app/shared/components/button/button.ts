@@ -44,7 +44,9 @@ export class ButtonComponent {
     };
 
     if (this.variant() === 'icon') {
-      return `group inline-flex items-center justify-center transition-all duration-200 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 ${this.extraClass()}`;
+      // Standardized small icon button: compact square with centered icon.
+      // Use important (!) utilities to ensure size is applied when consumers pass extraClass overrides.
+      return `group inline-flex items-center justify-center transition-all duration-200 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 !w-8 !h-8 !p-0.5 !text-[16px] !leading-none rounded-full ${this.extraClass()}`;
     }
 
     if (this.variant() === 'text') {

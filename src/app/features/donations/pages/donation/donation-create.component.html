@@ -2,150 +2,199 @@
   <div class="max-w-6xl mx-auto">
     <!-- Header Component -->
     <section class="mb-10 md:mb-12">
-    <app-header class="block"
-      title="دعم واستمرارية المنصة"
-      subtitle="التبرعات والمساهمات"
-      description="ساهم معنا في استمرارية وتطوير خدمات منصة لقاء ودعم تقنيات الذكاء الاصطناعي لإنقاذ وإعادة المفقودين"
-      [showPrimary]="false"
-      [showSecondary]="false">
-    </app-header>
+      <app-header
+        class="block"
+        title="دعم واستمرارية المنصة"
+        subtitle="التبرعات والمساهمات"
+        description="ساهم معنا في استمرارية وتطوير خدمات منصة لقاء ودعم تقنيات الذكاء الاصطناعي لإنقاذ وإعادة المفقودين"
+        [showPrimary]="false"
+        [showSecondary]="false"
+      >
+      </app-header>
     </section>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-12 gap-6 md:gap-8 md:items-stretch">
       <!-- Donation Card Form -->
       <div class="md:col-span-1 lg:col-span-7 min-w-0 md:h-full">
-      <app-card class="block md:h-full" extraClass="rounded-2xl border border-outline-variant/70 bg-surface-container-lowest p-6 sm:p-8 shadow-sm md:h-full">
-        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-outline-variant/60">
-          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/10 text-secondary font-bold">
-            <span class="material-symbols-outlined text-2xl">favorite</span>
+        <app-card
+          class="block md:h-full"
+          extraClass="rounded-2xl border border-outline-variant/70 bg-surface-container-lowest p-6 sm:p-8 shadow-sm md:h-full"
+        >
+          <div class="flex items-center gap-3 mb-6 pb-4 border-b border-outline-variant/60">
+            <div
+              class="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/10 text-secondary font-bold"
+            >
+              <span class="material-symbols-outlined text-2xl">favorite</span>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-on-surface">اختر مبلغ التبرع</h2>
+              <p class="text-sm text-on-surface-variant">
+                اختر أحد المبالغ الجاهزة أو أدخل مبلغاً مخصصاً
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 class="text-xl font-bold text-on-surface">اختر مبلغ التبرع</h2>
-            <p class="text-sm text-on-surface-variant">اختر أحد المبالغ الجاهزة أو أدخل مبلغاً مخصصاً</p>
-          </div>
-        </div>
 
-        <!-- Preset Amounts -->
-        <div class="mb-6">
-          <label class="block text-sm font-semibold text-on-surface-variant mb-2.5">المبالغ المقترحة (ج.م)</label>
-          <div class="grid grid-cols-4 gap-3">
-            @for (value of presetAmounts; track value) {
-              <app-button
-                type="button"
-                variant="text"
-                (onClick)="selectAmount(value)"
-                extraClass="h-12 rounded-xl border font-bold text-sm transition-all duration-200 active:scale-95 flex items-center justify-center gap-1 cursor-pointer"
-                [ngClass]="{
-                  'bg-secondary text-on-secondary border-secondary shadow-md': amount === value,
-                  'bg-surface-container-low text-on-surface border-outline-variant/70 hover:border-secondary hover:bg-secondary/5': amount !== value
-                }"
-              >
-                <span>{{ value }} ج.م</span>
-              </app-button>
+          <!-- Preset Amounts -->
+          <div class="mb-6">
+            <label class="block text-sm font-semibold text-on-surface-variant mb-2.5">
+              المبالغ المقترحة (ج.م)
+            </label>
+
+            <div class="grid grid-cols-4 gap-3">
+              @for (value of presetAmounts; track value) {
+                <app-button
+                  type="button"
+                  variant="text"
+                  (onClick)="selectAmount(value)"
+                  [extraClass]="
+                    'h-12 w-full rounded-xl border font-bold text-sm transition-all duration-200 active:scale-95 flex items-center justify-center gap-1 cursor-pointer ' +
+                    (amount === value
+                      ? 'bg-secondary text-on-secondary border-secondary shadow-md'
+                      : 'bg-surface-container-low text-on-surface border-outline-variant/70 hover:border-secondary hover:bg-secondary/5')
+                  "
+                >
+                  <span>{{ value }} ج.م</span>
+                </app-button>
+              }
+            </div>
+          </div>
+
+          <!-- Custom Amount Field using shared FormField -->
+          <div class="mb-5">
+            <app-form-field
+              label="مبلغ التبرع (بالجنيه المصري ج.م)*"
+              type="number"
+              [(ngModel)]="amount"
+              placeholder="أدخل مبلغ التبرع"
+              [min]="minAmount"
+              [max]="maxAmount"
+              [isInvalid]="!!amountError"
+            >
+            </app-form-field>
+
+            @if (amount && amountError) {
+              <p class="mt-1.5 flex items-center gap-1 text-xs font-medium text-error">
+                <span class="material-symbols-outlined text-sm">info</span>
+                <span>{{ amountError }}</span>
+              </p>
             }
           </div>
-        </div>
 
-        <!-- Custom Amount Field using shared FormField -->
-        <div class="mb-5">
-          <app-form-field
-            label="مبلغ التبرع (بالجنيه المصري ج.م)*"
-            type="number"
-            [(ngModel)]="amount"
-            placeholder="أدخل مبلغ التبرع"
-            [min]="minAmount"
-            [max]="maxAmount"
-            [isInvalid]="!!amountError">
-          </app-form-field>
+          <!-- Optional Message Field using shared FormField -->
+          <div class="mb-6">
+            <app-form-field
+              label="رسالة دعم (اختيارية)"
+              type="textarea"
+              [(ngModel)]="message"
+              placeholder="اكتب كلمة طيبة أو رسالة تشجيع لفريق العمل..."
+              [rows]="4"
+            >
+            </app-form-field>
+          </div>
 
-          @if (amount && amountError) {
-            <p class="mt-1.5 flex items-center gap-1 text-xs font-medium text-error">
-              <span class="material-symbols-outlined text-sm">info</span>
-              <span>{{ amountError }}</span>
-            </p>
-          }
-        </div>
+          <div
+            class="mb-6 flex items-center justify-center gap-2 rounded-xl border border-tertiary-container/20 bg-tertiary-container/10 p-3 text-sm font-semibold text-on-tertiary-container"
+          >
+            <span class="material-symbols-outlined text-lg">verified_user</span>
+            <span>جميع المعاملات المالية مشفرة وآمنة 100%</span>
+          </div>
 
-        <!-- Optional Message Field using shared FormField -->
-        <div class="mb-6">
-          <app-form-field
-            label="رسالة دعم (اختيارية)"
-            type="textarea"
-            [(ngModel)]="message"
-            placeholder="اكتب كلمة طيبة أو رسالة تشجيع لفريق العمل..."
-            [rows]="4">
-          </app-form-field>
-        </div>
-
-        <div class="mb-6 flex items-center justify-center gap-2 rounded-xl border border-tertiary-container/20 bg-tertiary-container/10 p-3 text-sm font-semibold text-on-tertiary-container">
-          <span class="material-symbols-outlined text-lg">verified_user</span>
-          <span>جميع المعاملات المالية مشفرة وآمنة 100%</span>
-        </div>
-
-        <!-- Submit Button using shared ButtonComponent -->
-        <app-button
-          variant="primary"
-          (onClick)="donate()"
-          [disabled]="loading"
-          [loading]="loading"
-          extraClass="w-full justify-center gap-2 text-base font-bold py-3">
-          <span class="material-symbols-outlined text-[20px]">volunteer_activism</span>
-          <span>{{ loading ? 'جاري التحويل لصفحة الدفع...' : 'تبرع الآن بشكل آمن' }}</span>
-        </app-button>
-      </app-card>
+          <!-- Submit Button using shared ButtonComponent -->
+          <app-button
+            variant="primary"
+            (onClick)="donate()"
+            [disabled]="loading"
+            [loading]="loading"
+            extraClass="w-full justify-center gap-2 text-base font-bold py-3"
+          >
+            <span class="material-symbols-outlined text-[20px]">volunteer_activism</span>
+            <span>{{ loading ? 'جاري التحويل لصفحة الدفع...' : 'تبرع الآن بشكل آمن' }}</span>
+          </app-button>
+        </app-card>
       </div>
 
       <!-- Impact Information Side Card -->
       <div class="md:col-span-1 lg:col-span-5 min-w-0 md:h-full">
-      <app-card class="block md:h-full" extraClass="rounded-2xl border border-outline-variant/70 bg-surface-container-low p-6 sm:p-8 shadow-sm space-y-6 md:h-full">
-        <div class="text-center pb-4 border-b border-outline-variant/60">
-          <div class="w-16 h-16 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center mx-auto mb-4 text-secondary shadow-sm">
-            <span class="material-symbols-outlined text-3xl">volunteer_activism</span>
+        <app-card
+          class="block md:h-full"
+          extraClass="rounded-2xl border border-outline-variant/70 bg-surface-container-low p-6 sm:p-8 shadow-sm space-y-6 md:h-full"
+        >
+          <div class="text-center pb-4 border-b border-outline-variant/60">
+            <div
+              class="w-16 h-16 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center mx-auto mb-4 text-secondary shadow-sm"
+            >
+              <span class="material-symbols-outlined text-3xl">volunteer_activism</span>
+            </div>
+            <h3 class="text-xl font-bold text-on-surface mb-2">شكراً لدعمكم السخي ❤️</h3>
+            <p class="text-sm text-on-surface-variant leading-relaxed">
+              تساعد تبرعاتكم المباشرة في الحفاظ على استقرار المنصة وتحديث تقنيات الذكاء الاصطناعي
+              لتسريع عمليات البحث والمطابقة.
+            </p>
           </div>
-          <h3 class="text-xl font-bold text-on-surface mb-2">شكراً لدعمكم السخي ❤️</h3>
-          <p class="text-sm text-on-surface-variant leading-relaxed">
-            تساعد تبرعاتكم المباشرة في الحفاظ على استقرار المنصة وتحديث تقنيات الذكاء الاصطناعي لتسريع عمليات البحث والمطابقة.
-          </p>
-        </div>
 
-        <!-- Impact Items -->
-        <div class="space-y-3.5">
-          <h4 class="text-sm font-bold text-on-surface-variant uppercase tracking-wider">أين تذهب تبرعاتكم؟</h4>
+          <!-- Impact Items -->
+          <div class="space-y-3.5">
+            <h4 class="text-sm font-bold text-on-surface-variant uppercase tracking-wider">
+              أين تذهب تبرعاتكم؟
+            </h4>
 
-          <div class="flex items-start gap-3 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/50">
-            <span class="material-symbols-outlined text-secondary text-xl mt-0.5">psychology</span>
-            <div class="text-sm">
-              <span class="font-bold text-on-surface block mb-0.5">تطوير نماذج الذكاء الاصطناعي</span>
-              <span class="text-on-surface-variant">تحسين خوارزميات التعرف على الوجوه والمطابقة البصرية.</span>
+            <div
+              class="flex items-start gap-3 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/50"
+            >
+              <span class="material-symbols-outlined text-secondary text-xl mt-0.5"
+                >psychology</span
+              >
+              <div class="text-sm">
+                <span class="font-bold text-on-surface block mb-0.5"
+                  >تطوير نماذج الذكاء الاصطناعي</span
+                >
+                <span class="text-on-surface-variant"
+                  >تحسين خوارزميات التعرف على الوجوه والمطابقة البصرية.</span
+                >
+              </div>
+            </div>
+
+            <div
+              class="flex items-start gap-3 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/50"
+            >
+              <span class="material-symbols-outlined text-secondary text-xl mt-0.5">speed</span>
+              <div class="text-sm">
+                <span class="font-bold text-on-surface block mb-0.5">تسريع خوادم البحث</span>
+                <span class="text-on-surface-variant"
+                  >رفع كفاءة البنية التحتية لمعالجة آلاف الحالات بسرعة فائقة.</span
+                >
+              </div>
+            </div>
+
+            <div
+              class="flex items-start gap-3 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/50"
+            >
+              <span class="material-symbols-outlined text-secondary text-xl mt-0.5"
+                >headset_mic</span
+              >
+              <div class="text-sm">
+                <span class="font-bold text-on-surface block mb-0.5">الدعم الفني</span>
+                <span class="text-on-surface-variant"
+                  >توفير الدعم الفني المتواصل للمستخدمين على مدار الساعة.</span
+                >
+              </div>
+            </div>
+
+            <div
+              class="flex items-start gap-3 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/50"
+            >
+              <span class="material-symbols-outlined text-secondary text-xl mt-0.5"
+                >volunteer_activism</span
+              >
+              <div class="text-sm">
+                <span class="font-bold text-on-surface block mb-0.5">مجانية الخدمة التامة</span>
+                <span class="text-on-surface-variant"
+                  >ضمان استمرار تقديم خدمات البحث مجاناً بالكامل لكل الأهالي.</span
+                >
+              </div>
             </div>
           </div>
-
-          <div class="flex items-start gap-3 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/50">
-            <span class="material-symbols-outlined text-secondary text-xl mt-0.5">speed</span>
-            <div class="text-sm">
-              <span class="font-bold text-on-surface block mb-0.5">تسريع خوادم البحث</span>
-              <span class="text-on-surface-variant">رفع كفاءة البنية التحتية لمعالجة آلاف الحالات بسرعة فائقة.</span>
-            </div>
-          </div>
-
-          <div class="flex items-start gap-3 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/50">
-            <span class="material-symbols-outlined text-secondary text-xl mt-0.5">headset_mic</span>
-            <div class="text-sm">
-              <span class="font-bold text-on-surface block mb-0.5">الدعم الفني</span>
-              <span class="text-on-surface-variant">توفير الدعم الفني المتواصل للمستخدمين على مدار الساعة.</span>
-            </div>
-          </div>
-
-          <div class="flex items-start gap-3 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/50">
-            <span class="material-symbols-outlined text-secondary text-xl mt-0.5">volunteer_activism</span>
-            <div class="text-sm">
-              <span class="font-bold text-on-surface block mb-0.5">مجانية الخدمة التامة</span>
-              <span class="text-on-surface-variant">ضمان استمرار تقديم خدمات البحث مجاناً بالكامل لكل الأهالي.</span>
-            </div>
-          </div>
-        </div>
-
-      </app-card>
+        </app-card>
       </div>
     </div>
   </div>
