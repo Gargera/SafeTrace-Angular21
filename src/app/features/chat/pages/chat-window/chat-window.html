@@ -193,7 +193,7 @@
             <span
               class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-error-container text-on-error-container text-[10px] sm:text-xs font-medium"
             >
-              <span class="material-symbols-outlined ms-icon-sm"> delete </span>
+              <span class="material-symbols-outlined"> delete </span>
               المرسل حذفها
               <span class="opacity-70"> · {{ getRelativeTime(c.senderDeletedAt) }} </span>
             </span>
@@ -203,7 +203,7 @@
             <span
               class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-error-container text-on-error-container text-[10px] sm:text-xs font-medium"
             >
-              <span class="material-symbols-outlined ms-icon-sm"> delete </span>
+              <span class="material-symbols-outlined"> delete </span>
               المستقبل حذفها
               <span class="opacity-70"> · {{ getRelativeTime(c.receiverDeletedAt) }} </span>
             </span>
@@ -354,13 +354,13 @@
                     (onClick)="onDeleteMessage(message)"
                     extraClass="text-on-surface-variant hover:text-error transition-opacity cursor-pointer border-none bg-transparent p-0"
                   >
-                    <span class="material-symbols-outlined ms-icon-sm"> delete </span>
+                    <span class="material-symbols-outlined"> delete </span>
                   </app-button>
                 }
 
                 @if (message.isMine) {
                   <span
-                    class="material-symbols-outlined ms-icon-sm"
+                    class="material-symbols-outlined"
                     [ngClass]="message.isRead ? 'text-blue-500' : 'text-on-surface-variant'"
                   >
                     {{ message.isRead ? 'done_all' : 'check' }}
@@ -376,19 +376,19 @@
               @if (isAdmin) {
                 @if (message.isDeletedForEveryone) {
                   <div class="text-[11px] text-error mt-0.5 px-1 flex items-center gap-1">
-                    <span class="material-symbols-outlined ms-icon-sm"> block </span>
+                    <span class="material-symbols-outlined"> block </span>
                     تم حذف الرسالة للجميع
                     {{ getRelativeTime(message.forEveryoneDeletedAt) }}
                   </div>
                 } @else if (message.deletedBySender) {
                   <div class="text-[11px] text-error mt-0.5 px-1 flex items-center gap-1">
-                    <span class="material-symbols-outlined ms-icon-sm"> delete </span>
+                    <span class="material-symbols-outlined"> delete </span>
                     حذفها المرسل لنفسه
                     {{ getRelativeTime(message.senderDeletedAt) }}
                   </div>
                 } @else if (message.deletedByReceiver) {
                   <div class="text-[11px] text-error mt-0.5 px-1 flex items-center gap-1">
-                    <span class="material-symbols-outlined ms-icon-sm"> delete </span>
+                    <span class="material-symbols-outlined"> delete </span>
                     حذفها المستقبل لنفسه
                     {{ getRelativeTime(message.receiverDeletedAt) }}
                   </div>
@@ -416,7 +416,7 @@
               class="flex items-center justify-between px-sm sm:px-md py-xs text-xs text-on-surface-variant bg-surface-container-high"
             >
               <span class="truncate flex items-center gap-1">
-                <span class="material-symbols-outlined ms-icon-sm"> attach_file </span>
+                <span class="material-symbols-outlined"> attach_file </span>
                 {{ file.name }}
               </span>
 
@@ -426,7 +426,7 @@
                 (onClick)="clearSelectedFile()"
                 extraClass="text-error shrink-0 cursor-pointer border-none bg-transparent p-0"
               >
-                <span class="material-symbols-outlined ms-icon-sm"> close </span>
+                <span class="material-symbols-outlined"> close </span>
               </app-button>
             </div>
           }
@@ -459,7 +459,7 @@
                 aria-label="إرفاق ملف"
                 class="text-on-surface-variant shrink-0 cursor-pointer flex items-center justify-center p-1 hover:text-primary transition-colors"
               >
-                <span class="material-symbols-outlined ms-icon-md"> attach_file </span>
+                <span class="material-symbols-outlined"> attach_file </span>
               </button>
             </div>
 
@@ -472,7 +472,7 @@
               ariaLabel="إرسال"
               extraClass="w-9 h-9 rounded-full flex items-center justify-center shrink-0 disabled:opacity-50 cursor-pointer p-0"
             >
-              <span class="material-symbols-outlined ms-icon-md rtl:rotate-180"> send </span>
+              <span class="material-symbols-outlined rtl:rotate-180"> send </span>
             </app-button>
           </div>
 

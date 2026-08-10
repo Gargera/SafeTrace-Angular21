@@ -33,7 +33,7 @@
               <div
                 class="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
               >
-                <span class="material-symbols-outlined ms-icon-lg text-white">zoom_in</span>
+                <span class="material-symbols-outlined text-white">zoom_in</span>
               </div>
             } @else {
               <span class="text-[56px] font-bold text-on-secondary-container font-sans">{{
@@ -46,9 +46,7 @@
               class="absolute bottom-2 left-2 bg-tertiary-fixed text-on-tertiary-fixed p-1.5 rounded-full border-2 border-white shadow-sm"
               title="مستخدم موثق"
             >
-              <span
-                class="material-symbols-outlined ms-icon-lg"
-                style="font-variation-settings: 'FILL' 1"
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1"
                 >verified_user</span
               >
             </div>
@@ -156,7 +154,7 @@
                     <div
                       class="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
                     >
-                      <span class="material-symbols-outlined ms-icon-lg text-white">zoom_in</span>
+                      <span class="material-symbols-outlined text-white">zoom_in</span>
                     </div>
                   </div>
                   <div
@@ -170,7 +168,7 @@
                     <div
                       class="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
                     >
-                      <span class="material-symbols-outlined ms-icon-lg text-white">zoom_in</span>
+                      <span class="material-symbols-outlined text-white">zoom_in</span>
                     </div>
                   </div>
                 </div>
@@ -178,14 +176,14 @@
                 <div
                   class="aspect-[1.6/1] bg-surface-variant/30 rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center text-outline"
                 >
-                  <span class="material-symbols-outlined ms-icon-lg mb-2">verified_user</span>
+                  <span class="material-symbols-outlined mb-2">verified_user</span>
                   <span class="text-label-sm">هذا الحساب موثق ولا يتطلب إثبات هوية</span>
                 </div>
               } @else {
                 <div
                   class="aspect-[1.6/1] bg-surface-variant/30 rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center text-outline"
                 >
-                  <span class="material-symbols-outlined ms-icon-lg mb-2">no_photography</span>
+                  <span class="material-symbols-outlined mb-2">no_photography</span>
                   <span class="text-label-sm">لم يقم المستخدم برفع هوية</span>
                 </div>
               }
@@ -218,7 +216,7 @@
                       variant="primary"
                       extraClass="flex-1 px-4 py-2.5 rounded-xl text-label-md font-bold !bg-[#006b5f] !text-white hover:!bg-[#008f81] border-none justify-center gap-2 transition-all"
                     >
-                      <span class="material-symbols-outlined ms-icon-lg">check_circle</span>
+                      <span class="material-symbols-outlined">check_circle</span>
                       قبول
                     </app-button>
 
@@ -230,7 +228,7 @@
                       variant="primary"
                       extraClass="flex-1 px-4 py-2.5 rounded-xl text-label-md font-bold !bg-error !text-white hover:!bg-error/90 border-none justify-center gap-2 transition-all"
                     >
-                      <span class="material-symbols-outlined ms-icon-lg">cancel</span>
+                      <span class="material-symbols-outlined">cancel</span>
                       رفض
                     </app-button>
                   }
@@ -248,7 +246,7 @@
                         : '!bg-error !text-white hover:!bg-error/90')
                     "
                   >
-                    <span class="material-symbols-outlined ms-icon-lg">{{
+                    <span class="material-symbols-outlined">{{
                       user()?.isBlocked ? 'lock_open_right' : 'block'
                     }}</span>
                     {{ user()?.isBlocked ? 'فك الحظر عن المستخدم' : 'حظر المستخدم' }}
@@ -259,7 +257,7 @@
                   <span
                     class="text-label-sm text-secondary font-medium flex items-center justify-center gap-1"
                   >
-                    <span class="material-symbols-outlined ms-icon-md">verified_user</span>
+                    <span class="material-symbols-outlined">verified_user</span>
                     هذا هو حسابك الشخصي النشط حالياً.
                   </span>
                 </div>
@@ -268,7 +266,7 @@
                   <span
                     class="text-label-sm text-error font-medium flex items-center justify-center gap-1"
                   >
-                    <span class="material-symbols-outlined ms-icon-md">shield_lock</span>
+                    <span class="material-symbols-outlined">shield_lock</span>
                     نظام محمي: لا يمكنك التعديل على هذا الحساب نظراً لصلاحياته الإدارية.
                   </span>
                 </div>
@@ -343,7 +341,7 @@
                           variant="text"
                           extraClass="mr-4 text-error bg-error-container/30 hover:bg-error hover:text-white px-3 py-1 rounded-lg transition-colors flex items-center gap-1 text-label-sm font-bold border border-error/20"
                         >
-                          <span class="material-symbols-outlined ms-icon-md">undo</span>
+                          <span class="material-symbols-outlined">undo</span>
                           إلغاء التعديلات
                         </app-button>
                       }
@@ -380,7 +378,7 @@
                                 [disabled]="!canManageUser()"
                                 (change)="toggleGroupCheckbox(group.groupName, $event)"
                               />
-                              <span class="material-symbols-outlined text-secondary ms-icon-lg">{{
+                              <span class="material-symbols-outlined text-secondary">{{
                                 group.icon
                               }}</span>
                               <span class="text-body-md font-bold text-primary">{{
@@ -394,7 +392,7 @@
                                   extraClass="mr-2 text-error bg-error-container/30 hover:bg-error hover:text-white p-1 rounded-full transition-colors flex items-center justify-center border border-error/20"
                                   title="تراجع عن تعديلات هذه المجموعة"
                                 >
-                                  <span class="material-symbols-outlined ms-icon-md">undo</span>
+                                  <span class="material-symbols-outlined">undo</span>
                                 </app-button>
                               }
                             </div>
@@ -473,7 +471,7 @@
     <div
       class="rounded-2xl border border-outline-variant bg-white p-12 text-center shadow-sm flex flex-col items-center"
     >
-      <span class="material-symbols-outlined ms-icon-lg text-outline mb-4">person_off</span>
+      <span class="material-symbols-outlined text-outline mb-4">person_off</span>
       <h2 class="mb-2 text-xl font-bold text-on-surface">المستخدم غير موجود</h2>
       <p class="text-on-surface-variant">
         لم يتم العثور على بيانات هذا المستخدم، قد يكون تم حذفه أو أن الرابط غير صحيح.
@@ -496,7 +494,7 @@
       aria-label="إغلاق"
       class="absolute top-4 right-4 sm:top-6 sm:right-6 z-110 bg-white/10 hover:bg-error text-white w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all backdrop-blur-md border border-white/20 shadow-lg"
     >
-      <span class="material-symbols-outlined ms-icon-lg">close</span>
+      <span class="material-symbols-outlined">close</span>
     </button>
 
     <div

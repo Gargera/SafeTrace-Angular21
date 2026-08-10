@@ -7,14 +7,12 @@
       id="location-heading"
       class="text-headline-sm font-bold text-primary flex items-center gap-sm"
     >
-      <span class="material-symbols-outlined ms-icon-lg" aria-hidden="true">location_on</span>
+      <span class="material-symbols-outlined" aria-hidden="true">location_on</span>
       الموقع الجغرافي
     </h3>
 
     <div (click)="openMapModal()" class="flex items-center cursor-pointer gap-1">
-      <span class="material-symbols-outlined ms-icon-sm cursor-pointer" aria-hidden="true"
-        >location_on</span
-      >
+      <span class="material-symbols-outlined cursor-pointer" aria-hidden="true">location_on</span>
       <span class="truncate">فتح الخريطة</span>
     </div>
   </div>
@@ -36,14 +34,14 @@
       />
       @if (isResolvingAddress() || isSavingLocation()) {
         <span
-          class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined ms-icon-md text-secondary animate-spin"
+          class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-secondary animate-spin"
           aria-hidden="true"
         >
           progress_activity
         </span>
       } @else if (resolvedAddress()) {
         <span
-          class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined ms-icon-md text-emerald-600"
+          class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-emerald-600"
           style="font-variation-settings: 'FILL' 1"
           aria-hidden="true"
         >
@@ -65,7 +63,7 @@
         extraClass="text-label-sm text-secondary hover:underline font-bold"
       >
         @if (!isLocating()) {
-          <span class="material-symbols-outlined ms-icon-sm" aria-hidden="true">my_location</span>
+          <span class="material-symbols-outlined" aria-hidden="true">my_location</span>
           استخدام موقعي الحالي
         }
       </app-button>

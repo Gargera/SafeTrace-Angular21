@@ -107,7 +107,7 @@
       >
       <div class="relative w-full">
         <span class="absolute inset-y-0 right-3 flex items-center text-on-surface-variant">
-          <span class="material-symbols-outlined ms-icon-lg">search</span>
+          <span class="material-symbols-outlined">search</span>
         </span>
         <app-form-field
           type="search"
@@ -288,7 +288,7 @@
                     <span
                       class="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-700"
                     >
-                      <span class="material-symbols-outlined ms-icon-sm">delete</span>
+                      <span class="material-symbols-outlined">delete</span>
                       حذفها {{ getRelativeTime(chat.senderDeletedAt) }}
                     </span>
                   }
@@ -302,7 +302,7 @@
                     <span
                       class="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-700"
                     >
-                      <span class="material-symbols-outlined ms-icon-sm">delete</span>
+                      <span class="material-symbols-outlined">delete</span>
                       حذفها {{ getRelativeTime(chat.receiverDeletedAt) }}
                     </span>
                   }
@@ -321,7 +321,7 @@
                     <span
                       class="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-surface-container-high px-2 py-0.5 text-[10px] font-semibold text-on-surface-variant"
                     >
-                      <span class="material-symbols-outlined ms-icon-sm"> schedule </span>
+                      <span class="material-symbols-outlined"> schedule </span>
 
                       آخر نشاط {{ getRelativeTime(chat.lastMessageAt) }}
                     </span>
@@ -358,7 +358,7 @@
                       (onClick)="openChat(chat)"
                       extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
                     >
-                      <span class="material-symbols-outlined ms-icon-md">visibility</span>
+                      <span class="material-symbols-outlined">visibility</span>
                       عرض
                     </app-button>
 
@@ -368,7 +368,7 @@
                       (onClick)="openDeleteModal(chat, $event)"
                       extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200"
                     >
-                      <span class="material-symbols-outlined ms-icon-md">delete</span>
+                      <span class="material-symbols-outlined">delete</span>
                       حذف
                     </app-button>
                   </div>

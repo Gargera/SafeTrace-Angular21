@@ -49,7 +49,7 @@ export class RoleBadgeDirective {
           else if (val === UserRole.VerifiedUser) icon = 'verified_user';
           else if (val === UserRole.User) icon = 'person';
 
-          return `<span class="material-symbols-outlined ms-icon-md leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
+          return `<span class="material-symbols-outlined  leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
         },
         useTextOnly: false,
       });

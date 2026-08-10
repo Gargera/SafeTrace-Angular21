@@ -39,7 +39,7 @@ export class AgeBadgeDirective {
           else if (value === AgeCategories.Teenager) icon = 'face';
           else if (value === AgeCategories.LateAdult) icon = 'elderly';
 
-          return `<span class="material-symbols-outlined ms-icon-md leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
+          return `<span class="material-symbols-outlined  leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
         },
         useTextOnly: false,
       });

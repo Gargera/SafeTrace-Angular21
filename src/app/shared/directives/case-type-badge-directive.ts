@@ -39,7 +39,7 @@ export class CaseTypeBadgeDirective {
           let icon = 'info';
           if (val === CaseType.Urgent) icon = 'warning';
           if (val === CaseType.LongTerm) icon = 'update';
-          return `<span class="material-symbols-outlined ms-icon-md leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
+          return `<span class="material-symbols-outlined  leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
         },
         useTextOnly: false,
       });

@@ -32,7 +32,7 @@
                 (click)="previousMedia()"
                 aria-label="السابق"
               >
-                <span class="material-symbols-outlined ms-icon-md">chevron_left</span>
+                <span class="material-symbols-outlined">chevron_left</span>
               </button>
 
               <button
@@ -40,7 +40,7 @@
                 (click)="nextMedia()"
                 aria-label="التالي"
               >
-                <span class="material-symbols-outlined ms-icon-md">chevron_right</span>
+                <span class="material-symbols-outlined">chevron_right</span>
               </button>
 
               <div
@@ -117,7 +117,7 @@
                   variant="primary"
                   extraClass="flex items-center gap-1.5 rounded-xl !bg-[#009688] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#00796b]"
                 >
-                  <span class="material-symbols-outlined ms-icon-sm">beenhere</span>
+                  <span class="material-symbols-outlined">beenhere</span>
                   <span>تم العثور</span>
                 </app-button>
               }
@@ -128,7 +128,7 @@
                 variant="primary"
                 extraClass="flex items-center gap-1.5 rounded-xl !bg-[#0265DC] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#0252b5]"
               >
-                <span class="material-symbols-outlined ms-icon-sm">edit</span>
+                <span class="material-symbols-outlined">edit</span>
                 <span>تعديل</span>
               </app-button>
 
@@ -138,7 +138,7 @@
                 variant="primary"
                 extraClass="flex items-center gap-1.5 rounded-xl !bg-[#C61A1A] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#a11313]"
               >
-                <span class="material-symbols-outlined ms-icon-sm">delete</span>
+                <span class="material-symbols-outlined">delete</span>
                 <span>حذف</span>
               </app-button>
             </div>
@@ -153,7 +153,7 @@
              py-4
              hover:border-primary hover:bg-primary/5 hover:text-primary"
             >
-              <span class="material-symbols-outlined ms-icon-sm"> chat </span>
+              <span class="material-symbols-outlined"> chat </span>
 
               تواصل مع المُبلّغ
             </app-button>
@@ -173,7 +173,7 @@
                   (onClick)="startChat(caseDetails()?.id!)"
                   extraClass="flex items-center gap-1.5 rounded-xl"
                 >
-                  <span class="material-symbols-outlined ms-icon-sm">chat</span>
+                  <span class="material-symbols-outlined">chat</span>
                   <span>تواصل مع المُبلّغ</span>
                 </app-button>
               }
@@ -185,7 +185,7 @@
                   variant="primary"
                   extraClass="flex items-center gap-1.5 rounded-xl !bg-[#009688] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#00796b]"
                 >
-                  <span class="material-symbols-outlined ms-icon-sm">check_circle</span>
+                  <span class="material-symbols-outlined">check_circle</span>
                   <span>قبول</span>
                 </app-button>
 
@@ -195,7 +195,7 @@
                   variant="primary"
                   extraClass="flex items-center gap-1.5 rounded-xl !bg-[#C61A1A] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#a11313]"
                 >
-                  <span class="material-symbols-outlined ms-icon-sm">cancel</span>
+                  <span class="material-symbols-outlined">cancel</span>
                   <span>رفض</span>
                 </app-button>
               }
@@ -207,7 +207,7 @@
                   variant="primary"
                   extraClass="flex items-center gap-1.5 rounded-xl !bg-[#009688] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#00796b]"
                 >
-                  <span class="material-symbols-outlined ms-icon-sm">beenhere</span>
+                  <span class="material-symbols-outlined">beenhere</span>
                   <span>تم العثور</span>
                 </app-button>
                 <app-button
@@ -216,7 +216,7 @@
                   variant="primary"
                   extraClass="flex items-center gap-1.5 rounded-xl !bg-[#C61A1A] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#a11313]"
                 >
-                  <span class="material-symbols-outlined ms-icon-sm">delete_forever</span>
+                  <span class="material-symbols-outlined">delete_forever</span>
                   <span>حذف </span>
                 </app-button>
               }
@@ -227,7 +227,7 @@
                 variant="primary"
                 extraClass="flex items-center gap-1.5 rounded-xl !bg-[#C61A1A] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#a11313]"
               >
-                <span class="material-symbols-outlined ms-icon-sm">delete_forever</span>
+                <span class="material-symbols-outlined">delete_forever</span>
                 <span>حذف نهائي</span>
               </app-button>
             </div>
@@ -256,7 +256,7 @@
                 </h1>
               </div>
               <p class="flex items-center gap-1.5 text-on-surface-variant">
-                <span class="material-symbols-outlined ms-icon-sm">location_on</span>
+                <span class="material-symbols-outlined">location_on</span>
                 {{ caseDetails()?.government }} - {{ caseDetails()?.city }} -
                 {{ caseDetails()?.street }}
               </p>
@@ -353,7 +353,7 @@
                           : caseDetails()?.user?.fName + ' ' + caseDetails()?.user?.lName
                       }}
                       <span
-                        class="material-symbols-outlined ms-icon-sm text-on-surface-variant group-hover/pub:text-primary"
+                        class="material-symbols-outlined text-on-surface-variant group-hover/pub:text-primary"
                         >open_in_new</span
                       >
                     </h4>
@@ -401,7 +401,7 @@
         class="absolute left-5 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition hover:bg-white/20"
         (click)="previousMedia()"
       >
-        <span class="material-symbols-outlined ms-icon-md">chevron_left</span>
+        <span class="material-symbols-outlined">chevron_left</span>
       </button>
 
       @if (selectedMedia()?.type === FileType.Video) {
@@ -419,7 +419,7 @@
         class="absolute right-5 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition hover:bg-white/20"
         (click)="nextMedia()"
       >
-        <span class="material-symbols-outlined ms-icon-md">chevron_right</span>
+        <span class="material-symbols-outlined">chevron_right</span>
       </button>
     </div>
   }

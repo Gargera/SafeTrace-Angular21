@@ -70,7 +70,7 @@
         [prefix]="true"
         [class.border-error]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
       >
-        <span prefix class="material-symbols-outlined ms-icon-md">mail</span>
+        <span prefix class="material-symbols-outlined">mail</span>
       </app-form-field>
       @if (loginForm.get('email')?.touched && loginForm.get('email')?.invalid) {
         <span class="text-error text-xs font-medium">
@@ -107,7 +107,7 @@
           loginForm.get('password')?.touched && loginForm.get('password')?.invalid
         "
       >
-        <span prefix class="material-symbols-outlined ms-icon-md">lock</span>
+        <span prefix class="material-symbols-outlined">lock</span>
 
         <button
           type="button"
@@ -116,9 +116,9 @@
           class="px-4 flex items-center text-on-surface-variant hover:text-primary transition-all duration-300 hover:scale-110 focus:outline-none pointer-events-auto"
         >
           @if (showPassword()) {
-            <span class="material-symbols-outlined ms-icon-md">visibility_off</span>
+            <span class="material-symbols-outlined">visibility_off</span>
           } @else {
-            <span class="material-symbols-outlined ms-icon-md">visibility</span>
+            <span class="material-symbols-outlined">visibility</span>
           }
         </button>
       </app-form-field>

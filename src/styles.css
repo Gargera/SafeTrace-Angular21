@@ -136,19 +136,7 @@
 
   @media (min-width: 1024px) {
     .material-symbols-outlined {
-      font-size: 22px !important;
+      font-size: 20px !important;
     }
-  }
-  /* utility helpers for consistent icon sizes across the app */
-  .ms-icon-sm {
-    font-size: 14px !important;
-  }
-
-  .ms-icon-md {
-    font-size: 18px !important;
-  }
-
-  .ms-icon-lg {
-    font-size: 22px !important;
   }
 }

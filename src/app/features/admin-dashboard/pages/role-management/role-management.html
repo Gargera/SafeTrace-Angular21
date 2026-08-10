@@ -43,7 +43,7 @@
             ariaLabel="حذف الدور"
           >
             @if (!isDeleting()) {
-              <span class="material-symbols-outlined ms-icon-lg">delete</span>
+              <span class="material-symbols-outlined">delete</span>
             }
           </app-button>
         }
@@ -63,7 +63,7 @@
           <div
             class="bg-error-container text-on-error-container p-3 rounded-lg text-sm flex items-start gap-2"
           >
-            <span class="material-symbols-outlined ms-icon-lg">error</span>
+            <span class="material-symbols-outlined">error</span>
             <span>{{ apiErrorMessage() }}</span>
           </div>
         }
@@ -110,7 +110,7 @@
             <span
               class="inline-flex items-center gap-1.5 text-error font-medium text-label-sm bg-error-container/30 px-3 py-1 rounded-full w-fit"
             >
-              <span class="material-symbols-outlined ms-icon-md">lock</span>
+              <span class="material-symbols-outlined">lock</span>
               صلاحيات هذا الدور أساسية في النظام ومحمية من التعديل
             </span>
           }
@@ -161,7 +161,7 @@
                       (change)="toggleAllPermissions($event)"
                     />
                   }
-                  <span class="material-symbols-outlined ms-icon-lg text-secondary">hub</span>
+                  <span class="material-symbols-outlined text-secondary">hub</span>
                   <span class="text-body-lg font-bold text-primary">نظام منصة لقاء</span>
 
                   @if (selectedRoleId() && !isReadOnly() && hasChanges()) {
@@ -171,7 +171,7 @@
                       extraClass="mr-4 text-error bg-error-container/30 hover:bg-error hover:text-white px-3 py-1 rounded-lg transition-colors flex items-center gap-1 text-label-sm font-bold border border-error/20"
                       title="إلغاء كل التعديلات"
                     >
-                      <span class="material-symbols-outlined ms-icon-lg">undo</span>
+                      <span class="material-symbols-outlined">undo</span>
                       إلغاء التعديلات
                     </app-button>
                   }
@@ -226,7 +226,7 @@
                               extraClass="mr-2 text-error bg-error-container/30 hover:bg-error hover:text-white p-1 rounded-full transition-colors flex items-center justify-center border border-error/20"
                               title="تراجع عن تعديلات هذه المجموعة"
                             >
-                              <span class="material-symbols-outlined ms-icon-lg">undo</span>
+                              <span class="material-symbols-outlined">undo</span>
                             </app-button>
                           }
                         </div>

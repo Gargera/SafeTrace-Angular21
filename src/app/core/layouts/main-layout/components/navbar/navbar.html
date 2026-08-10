@@ -162,15 +162,13 @@
               <div class="flex-1 overflow-y-auto px-3 py-3 space-y-2">
                 @if (notificationService.isLoading()) {
                   <div class="flex justify-center items-center h-full">
-                    <span class="material-symbols-outlined animate-spin text-secondary ms-icon-lg">
+                    <span class="material-symbols-outlined animate-spin text-secondary">
                       progress_activity
                     </span>
                   </div>
                 } @else if (notificationService.notifications().length === 0) {
                   <div class="h-full flex flex-col items-center justify-center text-center gap-3">
-                    <span
-                      class="material-symbols-outlined ms-icon-lg text-on-surface-variant opacity-30"
-                    >
+                    <span class="material-symbols-outlined text-on-surface-variant opacity-30">
                       notifications_off
                     </span>
 
@@ -194,7 +192,7 @@
                         [class]="details.bgClass"
                       >
                         <span
-                          class="material-symbols-outlined ms-icon-lg"
+                          class="material-symbols-outlined"
                           style="font-variation-settings: 'FILL' 1"
                         >
                           {{ details.icon }}

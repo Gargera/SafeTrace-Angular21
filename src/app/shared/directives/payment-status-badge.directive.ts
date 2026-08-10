@@ -61,7 +61,7 @@ export class PaymentStatusBadgeDirective implements OnChanges {
           translation = 'مسترد';
           icon = 'undo';
         }
-        return `<span class="material-symbols-outlined ms-icon-md leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
+        return `<span class="material-symbols-outlined  leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
       },
       useTextOnly: false,
     });

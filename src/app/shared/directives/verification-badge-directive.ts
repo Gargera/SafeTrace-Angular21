@@ -44,7 +44,7 @@ export class VerificationBadgeDirective {
         getContent: (value: VerificationStatus) => {
           const translation = getVerificationStatusTranslationAr(value) || 'غير موثق';
           const icon = this.getIcon(value);
-          return `<span class="material-symbols-outlined ms-icon-md leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
+          return `<span class="material-symbols-outlined  leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
         },
         useTextOnly: false,
       };
