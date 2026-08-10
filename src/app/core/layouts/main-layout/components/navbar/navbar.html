@@ -1,262 +1,410 @@
 <nav
-  class="bg-surface text-on-surface border-b border-outline-variant px-margin-mobile lg:px-margin-desktop h-16 sticky top-0 z-50 transition-colors duration-300">
+  class="bg-surface text-on-surface border-b border-outline-variant px-margin-mobile lg:px-margin-desktop h-16 sticky top-0 z-50 transition-colors duration-300"
+>
   <div class="max-w-max-width mx-auto h-full flex items-center justify-between">
     <div class="flex items-center gap-3">
       <button
         class="lg:hidden p-1 text-on-surface-variant hover:bg-surface-container-low rounded-md transition-colors mobile-menu-button"
-        (click)="toggleMobileMenu($event)">
+        (click)="toggleMobileMenu($event)"
+      >
         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"
+          ></path>
         </svg>
       </button>
 
-      <a routerLink="/home" class="flex items-center gap-2 md:gap-3 hover:opacity-90 transition-opacity">
+      <a
+        routerLink="/home"
+        class="flex items-center gap-2 md:gap-3 hover:opacity-90 transition-opacity"
+      >
         <img src="images/logo.svg" alt="منصة لقاء" class="h-9 md:h-10 w-auto" />
-        <span class="text-primary font-headline-md text-xl md:text-2xl tracking-wide mt-1 font-bold">لـقـاء</span>
+        <span class="text-primary font-headline-md text-xl md:text-2xl tracking-wide mt-1 font-bold"
+          >لـقـاء</span
+        >
       </a>
     </div>
 
     <div class="hidden lg:flex items-center gap-gutter h-full">
-      <a routerLink="/home" routerLinkActive="text-secondary border-b-2 border-secondary font-medium"
+      <a
+        routerLink="/home"
+        routerLinkActive="text-secondary border-b-2 border-secondary font-medium"
         [routerLinkActiveOptions]="{ exact: true }"
-        class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200">الرئيسية</a>
+        class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200"
+        >الرئيسية</a
+      >
 
       <div class="relative group h-full flex items-center">
         <button
-          class="text-on-surface-variant hover:text-primary flex items-center gap-1 transition-colors duration-200">
+          class="text-on-surface-variant hover:text-primary flex items-center gap-1 transition-colors duration-200"
+        >
           <span>تصفح البلاغات</span>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"
+            ></path>
           </svg>
         </button>
 
         <div
-          class="absolute right-0 top-14 w-48 bg-surface-container border border-outline-variant rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-          <a routerLink="/urgent" (click)="onNavClick()"
-            class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl">حالات طارئة</a>
-          <a routerLink="/long-term" (click)="onNavClick()"
-            class="block px-md py-sm text-on-surface hover:bg-surface-container-high">حالات طويلة المدى</a>
-          <a routerLink="/unknown" (click)="onNavClick()"
-            class="block px-md py-sm text-on-surface hover:bg-surface-container-high last:rounded-b-xl">حالات غير
-            معروفة</a>
+          class="absolute right-0 top-14 w-48 bg-surface-container border border-outline-variant rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50"
+        >
+          <a
+            routerLink="/urgent"
+            (click)="onNavClick()"
+            class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl"
+            >حالات طارئة</a
+          >
+          <a
+            routerLink="/long-term"
+            (click)="onNavClick()"
+            class="block px-md py-sm text-on-surface hover:bg-surface-container-high"
+            >حالات طويلة المدى</a
+          >
+          <a
+            routerLink="/unknown"
+            (click)="onNavClick()"
+            class="block px-md py-sm text-on-surface hover:bg-surface-container-high last:rounded-b-xl"
+            >حالات غير معروفة</a
+          >
         </div>
       </div>
 
-      <a routerLink="/founded" (click)="onNavClick()"
+      <a
+        routerLink="/founded"
+        (click)="onNavClick()"
         routerLinkActive="text-secondary border-b-2 border-secondary font-medium"
-        class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200">الحالات
-        المعثور عليها</a>
-      <a routerLink="/aisearch" routerLinkActive="text-secondary border-b-2 border-secondary font-medium"
-        class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 gap-1 transition-colors duration-200">البحث
-        الذكي بالصورة</a>
-      <a routerLink="/about" routerLinkActive="text-secondary border-b-2 border-secondary font-medium"
-        class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200">دليل
-        المنصة</a>
-      <a routerLink="/donation" routerLinkActive="text-secondary border-b-2 border-secondary font-medium"
-        class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200">التبرع</a>
+        class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200"
+        >الحالات المعثور عليها</a
+      >
+      <a
+        routerLink="/aisearch"
+        routerLinkActive="text-secondary border-b-2 border-secondary font-medium"
+        class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 gap-1 transition-colors duration-200"
+        >البحث الذكي بالصورة</a
+      >
+      <a
+        routerLink="/about"
+        routerLinkActive="text-secondary border-b-2 border-secondary font-medium"
+        class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200"
+        >دليل المنصة</a
+      >
+      <a
+        routerLink="/donation"
+        routerLinkActive="text-secondary border-b-2 border-secondary font-medium"
+        class="text-on-surface-variant hover:text-primary h-full flex items-center px-1 transition-colors duration-200"
+        >التبرع</a
+      >
     </div>
 
     <div class="flex items-center gap-sm md:gap-md">
       @if (isLoggedIn()) {
-      <div class="relative notification-container flex items-center h-full">
-        <button (click)="toggleNotificationDropdown($event)"
-          class="relative p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded-full transition-all duration-200 cursor-pointer">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
-            </path>
-          </svg>
-          @if (notificationService.unreadCount() > 0) {
-          <span
-            class="absolute top-0 right-0 bg-error min-w-[16px] h-4 px-1 rounded-full text-[10px] text-white flex items-center justify-center font-bold border border-surface shadow-sm">
-            {{ notificationService.unreadCount() }}
-          </span>
-          }
-        </button>
-
-        @if (isNotificationDropdownOpen()) {
-        <div
-          class="absolute -right-65 w-85 md:w-100 lg:w-112.5 h-125 bg-surface/95 top-16 md:-right-66.75 backdrop-blur-xl border border-outline-variant rounded-3xl shadow-2xl overflow-hidden flex flex-col z-50 animate-fade-in">
-          <!-- Header -->
-          <div
-            class="sticky top-0 z-20 flex items-center justify-between px-5 py-4 border-b border-outline-variant bg-surface-container/95 backdrop-blur-md">
-            <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1">
-                notifications
-              </span>
-
-              <span class="text-lg font-bold text-on-surface"> الإشعارات </span>
-            </div>
-
+        <div class="relative notification-container flex items-center h-full">
+          <button
+            (click)="toggleNotificationDropdown($event)"
+            class="relative p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded-full transition-all duration-200 cursor-pointer"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              ></path>
+            </svg>
             @if (notificationService.unreadCount() > 0) {
-            <button (click)="notificationService.markAllAsRead()"
-              class="text-sm font-semibold text-secondary hover:underline cursor-pointer">
-              تحديد الكل كمقروء
-            </button>
+              <span
+                class="absolute top-0 right-0 bg-error min-w-[16px] h-4 px-1 rounded-full text-[10px] text-white flex items-center justify-center font-bold border border-surface shadow-sm"
+              >
+                {{ notificationService.unreadCount() }}
+              </span>
             }
-          </div>
+          </button>
 
-          <!-- Notifications -->
-          <div class="flex-1 overflow-y-auto px-3 py-3 space-y-2">
-            @if (notificationService.isLoading()) {
-            <div class="flex justify-center items-center h-full">
-              <span class="material-symbols-outlined animate-spin text-secondary text-[30px]">
-                progress_activity
-              </span>
-            </div>
-            } @else if (notificationService.notifications().length === 0) {
-            <div class="h-full flex flex-col items-center justify-center text-center gap-3">
-              <span class="material-symbols-outlined text-[56px] text-on-surface-variant opacity-30">
-                notifications_off
-              </span>
+          @if (isNotificationDropdownOpen()) {
+            <div
+              class="absolute -right-65 w-85 md:w-100 lg:w-112.5 h-125 bg-surface/95 top-16 md:-right-66.75 backdrop-blur-xl border border-outline-variant rounded-3xl shadow-2xl overflow-hidden flex flex-col z-50 animate-fade-in"
+            >
+              <!-- Header -->
+              <div
+                class="sticky top-0 z-20 flex items-center justify-between px-5 py-4 border-b border-outline-variant bg-surface-container/95 backdrop-blur-md"
+              >
+                <div class="flex items-center gap-2">
+                  <span
+                    class="material-symbols-outlined text-secondary"
+                    style="font-variation-settings: 'FILL' 1"
+                  >
+                    notifications
+                  </span>
 
-              <h4 class="font-bold text-on-surface">لا توجد إشعارات</h4>
-
-              <p class="text-sm text-on-surface-variant">ستظهر هنا جميع إشعاراتك الجديدة.</p>
-            </div>
-            } @else {
-            @for (n of notificationService.notifications().slice(0, 5); track n.id) {
-            @let details = notificationService.getNotificationDetails(n);
-
-            <div (click)="onNotificationClick(n)"
-              class="group flex gap-4 rounded-2xl p-4 cursor-pointer transition-all duration-200 border border-transparent hover:border-outline-variant hover:bg-surface-container-high hover:shadow-md hover:scale-[1.01]"
-              [class.bg-surface-container-high]="!n.isRead" [class.bg-surface]="n.isRead">
-              <!-- Icon -->
-              <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-sm"
-                [class]="details.bgClass">
-                <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1">
-                  {{ details.icon }}
-                </span>
-              </div>
-
-              <!-- Content -->
-              <div class="flex-1 min-w-0">
-                <div class="flex justify-between items-start gap-2">
-                  <h4 class="font-bold text-[15px] text-on-surface">
-                    {{ details.title }}
-                  </h4>
-
-                  @if (!n.isRead) {
-                  <span class="w-2 h-2 rounded-full bg-secondary mt-1 shrink-0"></span>
-                  }
+                  <span class="text-lg font-bold text-on-surface"> الإشعارات </span>
                 </div>
 
-                <p class="mt-1 text-sm leading-6 text-on-surface-variant line-clamp-2 wrap-break-word">
-                  {{ n.content }}
-                </p>
+                @if (notificationService.unreadCount() > 0) {
+                  <button
+                    (click)="notificationService.markAllAsRead()"
+                    class="text-sm font-semibold text-secondary hover:underline cursor-pointer"
+                  >
+                    تحديد الكل كمقروء
+                  </button>
+                }
+              </div>
 
-                <span class="block mt-2 text-xs text-outline">
-                  {{ notificationService.formatDate(n.createdAt) }}
-                </span>
+              <!-- Notifications -->
+              <div class="flex-1 overflow-y-auto px-3 py-3 space-y-2">
+                @if (notificationService.isLoading()) {
+                  <div class="flex justify-center items-center h-full">
+                    <span class="material-symbols-outlined animate-spin text-secondary text-[30px]">
+                      progress_activity
+                    </span>
+                  </div>
+                } @else if (notificationService.notifications().length === 0) {
+                  <div class="h-full flex flex-col items-center justify-center text-center gap-3">
+                    <span
+                      class="material-symbols-outlined text-[56px] text-on-surface-variant opacity-30"
+                    >
+                      notifications_off
+                    </span>
+
+                    <h4 class="font-bold text-on-surface">لا توجد إشعارات</h4>
+
+                    <p class="text-sm text-on-surface-variant">ستظهر هنا جميع إشعاراتك الجديدة.</p>
+                  </div>
+                } @else {
+                  @for (n of notificationService.notifications().slice(0, 5); track n.id) {
+                    @let details = notificationService.getNotificationDetails(n);
+
+                    <div
+                      (click)="onNotificationClick(n)"
+                      class="group flex gap-4 rounded-2xl p-4 cursor-pointer transition-all duration-200 border border-transparent hover:border-outline-variant hover:bg-surface-container-high hover:shadow-md hover:scale-[1.01]"
+                      [class.bg-surface-container-high]="!n.isRead"
+                      [class.bg-surface]="n.isRead"
+                    >
+                      <!-- Icon -->
+                      <div
+                        class="w-12 h-12 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-sm"
+                        [class]="details.bgClass"
+                      >
+                        <span
+                          class="material-symbols-outlined text-[22px]"
+                          style="font-variation-settings: 'FILL' 1"
+                        >
+                          {{ details.icon }}
+                        </span>
+                      </div>
+
+                      <!-- Content -->
+                      <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-start gap-2">
+                          <h4 class="font-bold text-[15px] text-on-surface">
+                            {{ details.title }}
+                          </h4>
+
+                          @if (!n.isRead) {
+                            <span class="w-2 h-2 rounded-full bg-secondary mt-1 shrink-0"></span>
+                          }
+                        </div>
+
+                        <p
+                          class="mt-1 text-sm leading-6 text-on-surface-variant line-clamp-2 wrap-break-word"
+                        >
+                          {{ n.content }}
+                        </p>
+
+                        <span class="block mt-2 text-xs text-outline">
+                          {{ notificationService.formatDate(n.createdAt) }}
+                        </span>
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+
+              <!-- Footer -->
+              <div
+                class="sticky bottom-0 border-t border-outline-variant bg-surface-container/95 backdrop-blur-md"
+              >
+                <a
+                  routerLink="/profile"
+                  [queryParams]="{ tab: 'notifications' }"
+                  (click)="isNotificationDropdownOpen.set(false)"
+                  class="block py-4 text-center font-bold text-secondary transition-colors hover:bg-surface-container-high"
+                >
+                  عرض جميع الإشعارات
+                </a>
               </div>
             </div>
-            }
-            }
-          </div>
-
-          <!-- Footer -->
-          <div class="sticky bottom-0 border-t border-outline-variant bg-surface-container/95 backdrop-blur-md">
-            <a routerLink="/profile" [queryParams]="{ tab: 'notifications' }"
-              (click)="isNotificationDropdownOpen.set(false)"
-              class="block py-4 text-center font-bold text-secondary transition-colors hover:bg-surface-container-high">
-              عرض جميع الإشعارات
-            </a>
-          </div>
-        </div>
-        }
-      </div>
-
-      <div class="relative profile-container flex items-center gap-xs cursor-pointer h-full"
-        (click)="toggleProfileDropdown($event)">
-        <div
-          class="w-9 h-9 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-between overflow-hidden border border-outline">
-          @if (currentUser()?.profileImage) {
-          <img [src]="getProfileImageUrl()" alt="User Profile" class="w-full h-full object-cover" />
-          } @else {
-          <span class="m-auto font-medium text-sm">{{ currentUser()?.fName?.charAt(0) }}</span>
           }
         </div>
 
-        <div class="hidden sm:flex flex-col items-start leading-tight">
-          <div class="flex items-center gap-1">
-            <span class="font-body-md font-semibold text-on-surface">{{
-              currentUser()?.fName
-              }}</span>
-            @if (currentUser()?.isVerified) {
-            <svg class="w-4 h-4 text-secondary shrink-0" viewBox="0 0 24 24" fill="currentColor"
-              aria-label="حساب موثّق">
-              <path fill-rule="evenodd"
-                d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
-                clip-rule="evenodd" />
-            </svg>
-            } @else if (canAccessDashboard()) {
-            <svg class="w-4 h-4 text-[red] shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-label="حساب موثّق">
-              <path fill-rule="evenodd"
-                d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
-                clip-rule="evenodd" />
-            </svg>
+        <div
+          class="relative profile-container flex items-center gap-xs cursor-pointer h-full"
+          (click)="toggleProfileDropdown($event)"
+        >
+          <div
+            class="w-9 h-9 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-between overflow-hidden border border-outline"
+          >
+            @if (currentUser()?.profileImage) {
+              <img
+                [src]="getProfileImageUrl()"
+                alt="User Profile"
+                class="w-full h-full object-cover"
+              />
+            } @else {
+              <span class="m-auto font-medium text-sm">{{ currentUser()?.fName?.charAt(0) }}</span>
             }
           </div>
-        </div>
 
-        @if (isProfileDropdownOpen()) {
-        <div
-          class="absolute left-0 top-14 w-44 bg-surface-container border border-outline-variant rounded-xl shadow-lg z-50 animate-fade-in">
-          <a *hasPermission="Permissions.Cases.GetAll" routerLink="/admin"
-            class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl">لوحة التحكم</a>
-          <a routerLink="/profile"
-            class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl">حسابي</a>
-          <button (click)="logout()"
-            class="w-full text-right block px-md py-sm text-error hover:bg-error-container hover:text-on-error-container last:rounded-b-xl">
-            تسجيل الخروج
-          </button>
+          <div class="hidden sm:flex flex-col items-start leading-tight">
+            <div class="flex items-center gap-1">
+              <span class="font-body-md font-semibold text-on-surface">{{
+                currentUser()?.fName
+              }}</span>
+              @if (currentUser()?.isVerified) {
+                <svg
+                  class="w-4 h-4 text-secondary shrink-0"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-label="حساب موثّق"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              } @else if (canAccessDashboard()) {
+                <svg
+                  class="w-4 h-4 text-[red] shrink-0"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-label="حساب موثّق"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              }
+            </div>
+          </div>
+
+          @if (isProfileDropdownOpen()) {
+            <div
+              class="absolute left-0 top-14 w-44 bg-surface-container border border-outline-variant rounded-xl shadow-lg z-50 animate-fade-in"
+            >
+              <a
+                *hasPermission="Permissions.Cases.GetAll"
+                routerLink="/admin"
+                class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl"
+                >لوحة التحكم</a
+              >
+              <a
+                routerLink="/profile"
+                class="block px-md py-sm text-on-surface hover:bg-surface-container-high first:rounded-t-xl"
+                >حسابي</a
+              >
+              <button
+                (click)="logout()"
+                class="w-full text-right block px-md py-sm text-error hover:bg-error-container hover:text-on-error-container last:rounded-b-xl"
+              >
+                تسجيل الخروج
+              </button>
+            </div>
+          }
         </div>
-        }
-      </div>
       } @else {
-      <div class="flex items-center gap-2">
-        <a routerLink="/auth"
-          class="text-secondary hover:bg-surface-container-low px-3 md:px-md py-2 rounded-full font-label-md transition-all duration-200">تسجيل
-          الدخول</a>
-        <a routerLink="/auth/register"
-          class="bg-secondary text-on-secondary hover:bg-secondary-container px-3 md:px-md py-2 rounded-full font-label-md transition-all duration-200 shadow-sm text-center">إنشاء
-          حساب</a>
-      </div>
+        <div class="flex items-center gap-2">
+          <a
+            routerLink="/auth"
+            class="text-secondary hover:bg-surface-container-low px-3 md:px-md py-2 rounded-full font-label-md transition-all duration-200"
+            >تسجيل الدخول</a
+          >
+          <a
+            routerLink="/auth/register"
+            class="bg-secondary text-on-secondary hover:bg-secondary-container px-3 md:px-md py-2 rounded-full font-label-md transition-all duration-200 shadow-sm text-center"
+            >إنشاء حساب</a
+          >
+        </div>
       }
     </div>
   </div>
 
   @if (isMobileMenuOpen()) {
-  <div
-    class="lg:hidden absolute top-16 left-0 right-0 bg-surface border-b border-outline-variant shadow-lg z-40 mobile-menu-container flex flex-col animate-fade-in max-h-[calc(100vh-4rem)] overflow-y-auto">
-    <a routerLink="/home" routerLinkActive="bg-secondary/10 text-secondary font-semibold"
-      [routerLinkActiveOptions]="{ exact: true }" (click)="isMobileMenuOpen.set(false)"
-      class="px-margin-mobile py-4 border-b border-outline-variant text-on-surface hover:bg-surface-container-low font-medium">الرئيسية</a>
-    <div class="px-margin-mobile py-4 border-b border-outline-variant">
-      <span class="text-on-surface-variant font-bold text-sm mb-3 block">تصفح البلاغات</span>
-      <div class="flex flex-col gap-3 ps-4 border-r-2 border-outline-variant">
-        <a routerLink="/urgent" routerLinkActive="text-secondary font-semibold" (click)="onNavClick()"
-          class="text-on-surface hover:text-primary pr-2">حالات طارئة</a>
-        <a routerLink="/long-term" routerLinkActive="text-secondary font-semibold" (click)="onNavClick()"
-          class="text-on-surface hover:text-primary pr-2">حالات طويلة المدى</a>
-        <a routerLink="/unknown" routerLinkActive="text-secondary font-semibold" (click)="onNavClick()"
-          class="text-on-surface hover:text-primary pr-2">حالات غير معروفة</a>
+    <div
+      class="lg:hidden absolute top-16 left-0 right-0 bg-surface border-b border-outline-variant shadow-lg z-40 mobile-menu-container flex flex-col animate-fade-in max-h-[calc(100vh-4rem)] overflow-y-auto"
+    >
+      <a
+        routerLink="/home"
+        routerLinkActive="bg-secondary/10 text-secondary font-semibold"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="isMobileMenuOpen.set(false)"
+        class="px-margin-mobile py-4 border-b border-outline-variant text-on-surface hover:bg-surface-container-low font-medium"
+        >الرئيسية</a
+      >
+      <div class="px-margin-mobile py-4 border-b border-outline-variant">
+        <span class="text-on-surface-variant font-bold text-sm mb-3 block">تصفح البلاغات</span>
+        <div class="flex flex-col gap-3 ps-4 border-r-2 border-outline-variant">
+          <a
+            routerLink="/urgent"
+            routerLinkActive="text-secondary font-semibold"
+            (click)="onNavClick()"
+            class="text-on-surface hover:text-primary pr-2"
+            >حالات طارئة</a
+          >
+          <a
+            routerLink="/long-term"
+            routerLinkActive="text-secondary font-semibold"
+            (click)="onNavClick()"
+            class="text-on-surface hover:text-primary pr-2"
+            >حالات طويلة المدى</a
+          >
+          <a
+            routerLink="/unknown"
+            routerLinkActive="text-secondary font-semibold"
+            (click)="onNavClick()"
+            class="text-on-surface hover:text-primary pr-2"
+            >حالات غير معروفة</a
+          >
+        </div>
       </div>
+      <a
+        routerLink="/founded"
+        routerLinkActive="bg-secondary/10 text-secondary font-semibold"
+        (click)="onNavClick()"
+        class="px-margin-mobile py-4 border-b border-outline-variant text-on-surface hover:bg-surface-container-low font-medium"
+        >الحالات المعثور عليها</a
+      >
+      <a
+        routerLink="/aisearch"
+        routerLinkActive="bg-secondary/10 text-secondary font-semibold"
+        (click)="isMobileMenuOpen.set(false)"
+        class="px-margin-mobile py-4 border-b border-outline-variant text-on-surface hover:bg-surface-container-low font-medium"
+        >البحث الذكي بالصورة</a
+      >
+      <a
+        routerLink="/about"
+        routerLinkActive="bg-secondary/10 text-secondary font-semibold"
+        (click)="isMobileMenuOpen.set(false)"
+        class="px-margin-mobile py-4 text-on-surface hover:bg-surface-container-low font-medium"
+        >دليل المنصة</a
+      >
+      <a
+        routerLink="/donation"
+        routerLinkActive="bg-secondary/10 text-secondary font-semibold"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="isMobileMenuOpen.set(false)"
+        class="px-margin-mobile py-4 text-on-surface hover:bg-surface-container-low font-medium transition-colors duration-200"
+        >التبرع</a
+      >
     </div>
-    <a routerLink="/founded" routerLinkActive="bg-secondary/10 text-secondary font-semibold" (click)="onNavClick()"
-      class="px-margin-mobile py-4 border-b border-outline-variant text-on-surface hover:bg-surface-container-low font-medium">الحالات
-      المعثور عليها</a>
-    <a routerLink="/aisearch" routerLinkActive="bg-secondary/10 text-secondary font-semibold"
-      (click)="isMobileMenuOpen.set(false)"
-      class="px-margin-mobile py-4 border-b border-outline-variant text-on-surface hover:bg-surface-container-low font-medium">البحث
-      الذكي بالصورة</a>
-    <a routerLink="/about" routerLinkActive="bg-secondary/10 text-secondary font-semibold"
-      (click)="isMobileMenuOpen.set(false)"
-      class="px-margin-mobile py-4 text-on-surface hover:bg-surface-container-low font-medium">دليل المنصة</a>
-    <a routerLink="/donation" routerLinkActive="bg-secondary/10 text-secondary font-semibold"
-      [routerLinkActiveOptions]="{ exact: true }" (click)="isMobileMenuOpen.set(false)"
-      class="px-margin-mobile py-4 text-on-surface hover:bg-surface-container-low font-medium transition-colors duration-200">التبرع</a>
-  </div>
   }
 </nav>
 <app-case-notification-modal />
