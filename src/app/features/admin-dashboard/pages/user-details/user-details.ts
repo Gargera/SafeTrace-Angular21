@@ -19,7 +19,6 @@ import { VerificationStatus } from '../../../../shared/enums/verification-status
 import { VerificationBadgeDirective } from "../../../../shared/directives/verification-badge-directive";
 import { RoleBadgeDirective } from "../../../../shared/directives/role-badge-directive";
 import { BlockBadgeDirective } from "../../../../shared/directives/block-badge-directive";
-import Swal from 'sweetalert2';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { FormField } from '../../../../shared/components/form-field/form-field';
