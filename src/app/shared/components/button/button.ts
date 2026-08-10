@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, AfterContentInit, ElementRef, ChangeDetectorRef } from '@angular/core';
 
 export type ButtonVariant =
   'primary' | 'secondary' | 'text' | 'icon' | 'danger' | 'success' | 'outline';
@@ -7,6 +7,12 @@ export type ButtonVariant =
   selector: 'app-button',
   standalone: true,
   templateUrl: './button.html',
+  styles: [
+    `button.replace-icon-loading .material-symbols-outlined { display: none !important; }
+     button .spinner { display: inline-flex; }
+     button .spinner svg { display: inline-block; }
+    `,
+  ],
   host: {
     style: 'display: contents;',
   },
@@ -20,6 +26,23 @@ export class ButtonComponent {
   ariaLabel = input('');
 
   onClick = output<Event>();
+
+  private _hasIcon = false;
+
+  constructor(private host: ElementRef, private cd: ChangeDetectorRef) {}
+
+  hasIcon(): boolean {
+    return this._hasIcon;
+  }
+
+  ngAfterContentInit(): void {
+    try {
+      this._hasIcon = !!this.host.nativeElement.querySelector('.material-symbols-outlined');
+    } catch (e) {
+      this._hasIcon = false;
+    }
+    this.cd.detectChanges();
+  }
 
   get computedDisabled(): boolean {
     return this.disabled() || this.loading();
@@ -46,7 +69,7 @@ export class ButtonComponent {
     if (this.variant() === 'icon') {
       // Standardized small icon button: compact square with centered icon.
       // Use important (!) utilities to ensure size is applied when consumers pass extraClass overrides.
-      return `group inline-flex items-center justify-center transition-all duration-200 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 !w-8 !h-8 !p-0.5 !text-[16px] !leading-none rounded-full ${this.extraClass()}`;
+      return `group inline-flex items-center justify-center transition-all duration-200 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 !w-8 !h-8 !p-0.5 ms-icon-md !leading-none rounded-full ${this.extraClass()}`;
     }
 
     if (this.variant() === 'text') {

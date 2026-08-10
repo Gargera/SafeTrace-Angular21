@@ -5,7 +5,7 @@ import { BadgeRenderService } from '../services/badge-render.service';
 
 @Directive({
   selector: '[appVerificationBadgeDirective]',
-  standalone: true
+  standalone: true,
 })
 export class VerificationBadgeDirective {
   status = input.required<VerificationStatus>({ alias: 'appVerificationBadgeDirective' });
@@ -20,10 +20,13 @@ export class VerificationBadgeDirective {
     'rounded-lg',
     'text-sm',
     'font-bold',
-    'whitespace-nowrap'
+    'whitespace-nowrap',
   ];
 
-  constructor(private el: ElementRef, private badgeService: BadgeRenderService) {
+  constructor(
+    private el: ElementRef,
+    private badgeService: BadgeRenderService,
+  ) {
     effect(() => {
       const statusValue = this.status();
       const config = {
@@ -41,9 +44,9 @@ export class VerificationBadgeDirective {
         getContent: (value: VerificationStatus) => {
           const translation = getVerificationStatusTranslationAr(value) || 'غير موثق';
           const icon = this.getIcon(value);
-          return `<span class="material-symbols-outlined text-[16px] leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
+          return `<span class="material-symbols-outlined ms-icon-md leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
         },
-        useTextOnly: false
+        useTextOnly: false,
       };
       this.badgeService.updateBadge(this.el.nativeElement, statusValue, config);
     });

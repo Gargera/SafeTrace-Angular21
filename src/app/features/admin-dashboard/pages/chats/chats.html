@@ -1,95 +1,119 @@
 <!-- 1. Header المشترك لـ SafeTrace AI -->
 <div class="mb-xl">
-  <app-header title="إدارة المحادثات" subtitle="نظرة عامة ومراقبة شاملة لجميع المحادثات النشطة في النظام" />
+  <app-header
+    title="إدارة المحادثات"
+    subtitle="نظرة عامة ومراقبة شاملة لجميع المحادثات النشطة في النظام"
+  />
 </div>
 
 <!-- 2. Statistics Cards -->
 <ng-container *hasPermission="Permissions.Chat.GetChatStatistics">
   @if (isLoadingStats()) {
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-    @for (i of [1, 2, 3, 4, 5,6]; track i) {
-    <app-card
-      extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse">
-      <div class="h-4 bg-surface-container-high rounded w-3/4 mb-2"></div>
-      <div class="h-6 bg-surface-container-high rounded w-1/2"></div>
-    </app-card>
-    }
-  </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <app-card
+          extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse"
+        >
+          <div class="h-4 bg-surface-container-high rounded w-3/4 mb-2"></div>
+          <div class="h-6 bg-surface-container-high rounded w-1/2"></div>
+        </app-card>
+      }
+    </div>
   } @else {
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-  <app-card extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">الإجمالي</span>
-      <span class="material-symbols-outlined text-secondary">forum</span>
-    </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.totalChats ?? 0 }}</p>
-  </app-card>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+      <app-card
+        extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-medium text-on-surface-variant">الإجمالي</span>
+          <span class="material-symbols-outlined text-secondary">forum</span>
+        </div>
+        <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.totalChats ?? 0 }}</p>
+      </app-card>
 
-  <app-card extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">نشطة</span>
-      <span class="material-symbols-outlined text-green-500">mark_chat_read</span>
-    </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.activeChats ?? 0 }}</p>
-  </app-card>
+      <app-card
+        extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-medium text-on-surface-variant">نشطة</span>
+          <span class="material-symbols-outlined text-green-500">mark_chat_read</span>
+        </div>
+        <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.activeChats ?? 0 }}</p>
+      </app-card>
 
-  <app-card extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">حذف مرسل</span>
-      <span class="material-symbols-outlined text-orange-500">person_remove</span>
-    </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.deletedBySenderOnly ?? 0 }}</p>
-  </app-card>
+      <app-card
+        extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-medium text-on-surface-variant">حذف مرسل</span>
+          <span class="material-symbols-outlined text-orange-500">person_remove</span>
+        </div>
+        <p class="text-2xl font-bold text-on-surface mt-1">
+          {{ statistics()?.deletedBySenderOnly ?? 0 }}
+        </p>
+      </app-card>
 
-  <app-card extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">حذف مستقبل</span>
-      <span class="material-symbols-outlined text-indigo-500">person_off</span>
-    </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.deletedByReceiverOnly ?? 0 }}</p>
-  </app-card>
+      <app-card
+        extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-medium text-on-surface-variant">حذف مستقبل</span>
+          <span class="material-symbols-outlined text-indigo-500">person_off</span>
+        </div>
+        <p class="text-2xl font-bold text-on-surface mt-1">
+          {{ statistics()?.deletedByReceiverOnly ?? 0 }}
+        </p>
+      </app-card>
 
-  <app-card extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">حذف الطرفين</span>
-      <span class="material-symbols-outlined text-red-500">delete_forever</span>
-    </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.deletedByBoth ?? 0 }}</p>
-  </app-card>
-  
-  <app-card extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-error-container shadow-sm border border-outline-variant">
-  <div class="flex items-center justify-between gap-1">
-    <span class="text-sm font-medium text-on-error-container">
-      رسائل غير مقروءة 
-    </span>
-    <span class="material-symbols-outlined text-on-error-container shrink-0">
-      mark_chat_unread
-    </span>
-  </div>
+      <app-card
+        extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-medium text-on-surface-variant">حذف الطرفين</span>
+          <span class="material-symbols-outlined text-red-500">delete_forever</span>
+        </div>
+        <p class="text-2xl font-bold text-on-surface mt-1">
+          {{ statistics()?.deletedByBoth ?? 0 }}
+        </p>
+      </app-card>
 
-  <p class="mt-1 text-2xl font-bold text-on-error-container">
-    {{statistics()?.totalUnreadMessages ?? 0}}
-  </p>
-</app-card>
-</div>
+      <app-card
+        extraClass="h-full flex flex-col justify-between p-4 rounded-xl bg-error-container shadow-sm border border-outline-variant"
+      >
+        <div class="flex items-center justify-between gap-1">
+          <span class="text-sm font-medium text-on-error-container"> رسائل غير مقروءة </span>
+          <span class="material-symbols-outlined text-on-error-container shrink-0">
+            mark_chat_unread
+          </span>
+        </div>
+
+        <p class="mt-1 text-2xl font-bold text-on-error-container">
+          {{ statistics()?.totalUnreadMessages ?? 0 }}
+        </p>
+      </app-card>
+    </div>
   }
 </ng-container>
 
 <!-- 3. Filters Card -->
-<app-card extraClass="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg relative overflow-visible">
+<app-card
+  extraClass="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg relative overflow-visible"
+>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-md items-end">
     <!-- Search Input -->
     <div class="flex flex-col gap-xs md:col-span-2 relative">
-      <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">بحث في المحادثات</label>
+      <label class="mb-1.5 block text-sm font-medium text-on-surface-variant"
+        >بحث في المحادثات</label
+      >
       <div class="relative w-full">
         <span class="absolute inset-y-0 right-3 flex items-center text-on-surface-variant">
-          <span class="material-symbols-outlined text-[18px]">search</span>
+          <span class="material-symbols-outlined ms-icon-lg">search</span>
         </span>
         <app-form-field
-            type="search"
-            [ngModel]="searchTerm()"
-            (ngModelChange)="onSearch($event)"
-            placeholder= "ابحث باسم الحاله، اسم المستخدم ..."
+          type="search"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="onSearch($event)"
+          placeholder="ابحث باسم الحاله، اسم المستخدم ..."
         >
         </app-form-field>
       </div>
@@ -114,7 +138,10 @@
         (onClick)="resetFilters()"
         extraClass="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary"
       >
-        <span class="material-symbols-outlined transition-transform duration-200 group-hover:-rotate-90">refresh</span>
+        <span
+          class="material-symbols-outlined transition-transform duration-200 group-hover:-rotate-90"
+          >refresh</span
+        >
         <span>إعادة تعيين</span>
       </app-button>
 
@@ -139,39 +166,37 @@
           <app-form-field
             label="من تاريخ"
             type="date"
-            [max] = "today"
+            [max]="today"
             [ngModel]="fromDate()"
-            (ngModelChange)="fromDate.set($event)">
+            (ngModelChange)="fromDate.set($event)"
+          >
           </app-form-field>
           @if (fromDateError()) {
-          <p class="mt-1 text-xs text-error">
-            {{ fromDateError() }}
-          </p>
-        }
+            <p class="mt-1 text-xs text-error">
+              {{ fromDateError() }}
+            </p>
+          }
 
           <!-- التاريخ إلى -->
           <app-form-field
             label="إلى تاريخ"
             type="date"
-            [max] = "today"
+            [max]="today"
             [ngModel]="toDate()"
-            (ngModelChange)="toDate.set($event)">
+            (ngModelChange)="toDate.set($event)"
+          >
           </app-form-field>
           @if (toDateError()) {
-          <p class="mt-1 text-xs text-error">
-            {{ toDateError() }}
-          </p>
-        }
+            <p class="mt-1 text-xs text-error">
+              {{ toDateError() }}
+            </p>
+          }
           <!-- حذف من المرسل -->
           <app-form-field
             label="محذوفة من المرسل"
             type="select"
             [ngModel]="isDeletedBySender() === undefined ? '' : isDeletedBySender()"
-            (ngModelChange)="
-              isDeletedBySender.set(
-                $event === '' ? undefined : $event === 'true'
-              )
-            "
+            (ngModelChange)="isDeletedBySender.set($event === '' ? undefined : $event === 'true')"
           >
             <option value="">الكل</option>
             <option value="true">محذوفة</option>
@@ -183,11 +208,7 @@
             label="محذوفة من المستقبل"
             type="select"
             [ngModel]="isDeletedByReceiver() === undefined ? '' : isDeletedByReceiver()"
-            (ngModelChange)="
-              isDeletedByReceiver.set(
-                $event === '' ? undefined : $event === 'true'
-              )
-            "
+            (ngModelChange)="isDeletedByReceiver.set($event === '' ? undefined : $event === 'true')"
           >
             <option value="">الكل</option>
             <option value="true">محذوفة</option>
@@ -195,11 +216,18 @@
           </app-form-field>
 
           <div class="flex justify-end gap-2 pt-2 border-t border-outline-variant">
-            <app-button variant="text" (onClick)="resetFilters()" extraClass="px-3 py-1.5 text-sm cursor-pointer">
+            <app-button
+              variant="text"
+              (onClick)="resetFilters()"
+              extraClass="px-3 py-1.5 text-sm cursor-pointer"
+            >
               مسح الكل
             </app-button>
-            <app-button variant="primary" 
-             (onClick)="applyFilters()" extraClass="px-4 py-1.5 rounded-lg text-sm font-bold cursor-pointer">
+            <app-button
+              variant="primary"
+              (onClick)="applyFilters()"
+              extraClass="px-4 py-1.5 rounded-lg text-sm font-bold cursor-pointer"
+            >
               تطبيق
             </app-button>
           </div>
@@ -210,152 +238,168 @@
 </app-card>
 
 <!-- 4. Chats Table Container -->
-<section class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75">
-  
+<section
+  class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75"
+>
   @if (isLoading() && chats().length === 0) {
-    <app-table-skeleton
-      [rows]="10"
-    ></app-table-skeleton>
+    <app-table-skeleton [rows]="10"></app-table-skeleton>
   } @else {
-
-  <div class="w-full max-w-full overflow-x-auto" [class.opacity-50]="isLoading()" [class.pointer-events-none]="isLoading()">
-    <table class="w-full text-right border-collapse whitespace-nowrap">
-      <thead>
-        <tr class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant">
-          <th class="px-lg py-md text-center">#</th>
-          <th class="px-lg py-md">عنوان الحالة</th>
-          <th class="px-lg py-md">المرسل</th>
-          <th class="px-lg py-md">المستقبل</th>
-          <th class="px-lg py-md">آخر رسالة</th>
-          <th class="px-lg py-md">تاريخ الإنشاء</th>
-          <th class="px-lg py-md text-center">الرسائل</th>
-          <th class="px-lg py-md text-center">غير مقروءة</th>
-          <ng-container *hasPermission="chatActionPermissions">
-            <th class="px-lg py-md text-center">الإجراءات</th>
-          </ng-container>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
-        @for (chat of chats(); track chat.chatId; let i = $index) {
-          <tr 
-            class="hover:bg-surface-container-low transition-colors group cursor-pointer"
-            (click)="openChat(chat)"
+    <div
+      class="w-full max-w-full overflow-x-auto"
+      [class.opacity-50]="isLoading()"
+      [class.pointer-events-none]="isLoading()"
+    >
+      <table class="w-full text-right border-collapse whitespace-nowrap">
+        <thead>
+          <tr
+            class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant"
           >
-            <td class="px-lg py-md text-center font-bold text-on-surface-variant">
-              {{ (currentPage() - 1) * pageSize + i + 1 }}
-            </td>
-            <td class="px-lg py-md font-semibold text-primary">
-              {{ chat.caseTitle }}
-              <span [appCaseTypeBadgeDirective]="chat.caseType"></span>
-            </td>
-            <td class="px-lg py-md font-sans opacity-70">
-              <div class="flex flex-col">
-                <span>{{ chat.senderName }}</span>
-
-                @if (chat.isDeletedBySender) {
-                  <span
-                    class="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-700">
-                    <span class="material-symbols-outlined text-[12px]">delete</span>
-                    حذفها {{ getRelativeTime(chat.senderDeletedAt) }}
-                  </span>
-                }
-              </div>
-            </td>
-            <td class="px-lg py-md font-sans opacity-70">
-              <div class="flex flex-col">
-                <span>{{ chat.receiverName }}</span>
-
-                @if (chat.isDeletedByReceiver) {
-                  <span
-                    class="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-700">
-                    <span class="material-symbols-outlined text-[12px]">delete</span>
-                    حذفها {{ getRelativeTime(chat.receiverDeletedAt) }}
-                  </span>
-                }
-              </div>
-            </td>
-            <td class="px-lg py-md text-on-surface-variant max-w-50 truncate">
-              <div class="flex flex-col">
-                <span
-                [class.text-red-600]="chat.unreadMessagesCount > 0"
-                [class.font-semibold]="chat.unreadMessagesCount > 0">
-                {{ (chat.lastMessage || 'لا توجد رسائل') | truncate:20 }}
-              </span>       
-
-                @if (chat.lastMessage) {
-                  <span
-                    class="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-surface-container-high px-2 py-0.5 text-[10px] font-semibold text-on-surface-variant">
-                    <span class="material-symbols-outlined text-[12px]">
-                      schedule
-                    </span>
-
-                    آخر نشاط {{ getRelativeTime(chat.lastMessageAt) }}
-                  </span>
-                }
-              </div>
-            </td>
-            <td class="px-lg py-md text-on-surface-variant opacity-80">
-                  {{ chat.createdAt | date:'d MMMM y - h:mm a':'':'ar-EG' }}          
-            </td>
-            <td class="px-lg py-md text-center">
-                <span class="inline-flex items-center justify-center min-w-8 h-8 px-2 rounded-lg bg-surface-container text-primary font-semibold text-xs shadow-sm">
-                    {{ chat.messagesCount }}
-                </span>
-            </td>
-            <td class="px-lg py-md text-center">
-              @if (chat.unreadMessagesCount > 0) {
-                <span class="bg-error-container text-on-error-container px-2 py-0.5 rounded-full font-bold text-xs">
-                  {{ chat.unreadMessagesCount }}
-                </span>
-              } @else {
-                <span class="text-on-surface-variant/50">-</span>
-              }
-            </td>
+            <th class="px-lg py-md text-center">#</th>
+            <th class="px-lg py-md">عنوان الحالة</th>
+            <th class="px-lg py-md">المرسل</th>
+            <th class="px-lg py-md">المستقبل</th>
+            <th class="px-lg py-md">آخر رسالة</th>
+            <th class="px-lg py-md">تاريخ الإنشاء</th>
+            <th class="px-lg py-md text-center">الرسائل</th>
+            <th class="px-lg py-md text-center">غير مقروءة</th>
             <ng-container *hasPermission="chatActionPermissions">
-              <td class="px-lg py-md text-center" (click)="$event.stopPropagation()">
-                <div class="flex items-center justify-center gap-2">
-                  <app-button
-                    *hasPermission="Permissions.Chat.GetById"
-                    variant="primary"
-                    (onClick)="openChat(chat)"
-                    extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
-                  >
-                    <span class="material-symbols-outlined text-[16px]">visibility</span>
-                    عرض
-                  </app-button>
-                  
-                  <app-button
-                    *hasPermission="Permissions.Chat.HardDelete"
-                    variant="danger"
-                    (onClick)="openDeleteModal(chat, $event)"
-                    extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200"
-                  >
-                    <span class="material-symbols-outlined text-[16px]">delete</span>
-                    حذف
-                  </app-button>
-                </div>
-              </td>
+              <th class="px-lg py-md text-center">الإجراءات</th>
             </ng-container>
           </tr>
-        } @empty {
-          @if (!isLoading()) {
-            <tr>
-              <td colspan="9" class="py-xl">
-                <app-empty-state
-                  [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد محادثات'"
-                  [message]="hasActiveFilters() ? 'لم نتمكن من العثور على محادثات تطابق خيارات التصفية أو البحث الحالية.' : 'لا توجد محادثات مسجلة حالياً.'"
-                />
+        </thead>
+        <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
+          @for (chat of chats(); track chat.chatId; let i = $index) {
+            <tr
+              class="hover:bg-surface-container-low transition-colors group cursor-pointer"
+              (click)="openChat(chat)"
+            >
+              <td class="px-lg py-md text-center font-bold text-on-surface-variant">
+                {{ (currentPage() - 1) * pageSize + i + 1 }}
               </td>
+              <td class="px-lg py-md font-semibold text-primary">
+                {{ chat.caseTitle }}
+                <span [appCaseTypeBadgeDirective]="chat.caseType"></span>
+              </td>
+              <td class="px-lg py-md font-sans opacity-70">
+                <div class="flex flex-col">
+                  <span>{{ chat.senderName }}</span>
+
+                  @if (chat.isDeletedBySender) {
+                    <span
+                      class="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-700"
+                    >
+                      <span class="material-symbols-outlined ms-icon-sm">delete</span>
+                      حذفها {{ getRelativeTime(chat.senderDeletedAt) }}
+                    </span>
+                  }
+                </div>
+              </td>
+              <td class="px-lg py-md font-sans opacity-70">
+                <div class="flex flex-col">
+                  <span>{{ chat.receiverName }}</span>
+
+                  @if (chat.isDeletedByReceiver) {
+                    <span
+                      class="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-700"
+                    >
+                      <span class="material-symbols-outlined ms-icon-sm">delete</span>
+                      حذفها {{ getRelativeTime(chat.receiverDeletedAt) }}
+                    </span>
+                  }
+                </div>
+              </td>
+              <td class="px-lg py-md text-on-surface-variant max-w-50 truncate">
+                <div class="flex flex-col">
+                  <span
+                    [class.text-red-600]="chat.unreadMessagesCount > 0"
+                    [class.font-semibold]="chat.unreadMessagesCount > 0"
+                  >
+                    {{ chat.lastMessage || 'لا توجد رسائل' | truncate: 20 }}
+                  </span>
+
+                  @if (chat.lastMessage) {
+                    <span
+                      class="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-surface-container-high px-2 py-0.5 text-[10px] font-semibold text-on-surface-variant"
+                    >
+                      <span class="material-symbols-outlined ms-icon-sm"> schedule </span>
+
+                      آخر نشاط {{ getRelativeTime(chat.lastMessageAt) }}
+                    </span>
+                  }
+                </div>
+              </td>
+              <td class="px-lg py-md text-on-surface-variant opacity-80">
+                {{ chat.createdAt | date: 'd MMMM y - h:mm a' : '' : 'ar-EG' }}
+              </td>
+              <td class="px-lg py-md text-center">
+                <span
+                  class="inline-flex items-center justify-center min-w-8 h-8 px-2 rounded-lg bg-surface-container text-primary font-semibold text-xs shadow-sm"
+                >
+                  {{ chat.messagesCount }}
+                </span>
+              </td>
+              <td class="px-lg py-md text-center">
+                @if (chat.unreadMessagesCount > 0) {
+                  <span
+                    class="bg-error-container text-on-error-container px-2 py-0.5 rounded-full font-bold text-xs"
+                  >
+                    {{ chat.unreadMessagesCount }}
+                  </span>
+                } @else {
+                  <span class="text-on-surface-variant/50">-</span>
+                }
+              </td>
+              <ng-container *hasPermission="chatActionPermissions">
+                <td class="px-lg py-md text-center" (click)="$event.stopPropagation()">
+                  <div class="flex items-center justify-center gap-2">
+                    <app-button
+                      *hasPermission="Permissions.Chat.GetById"
+                      variant="primary"
+                      (onClick)="openChat(chat)"
+                      extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
+                    >
+                      <span class="material-symbols-outlined ms-icon-md">visibility</span>
+                      عرض
+                    </app-button>
+
+                    <app-button
+                      *hasPermission="Permissions.Chat.HardDelete"
+                      variant="danger"
+                      (onClick)="openDeleteModal(chat, $event)"
+                      extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200"
+                    >
+                      <span class="material-symbols-outlined ms-icon-md">delete</span>
+                      حذف
+                    </app-button>
+                  </div>
+                </td>
+              </ng-container>
             </tr>
+          } @empty {
+            @if (!isLoading()) {
+              <tr>
+                <td colspan="9" class="py-xl">
+                  <app-empty-state
+                    [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد محادثات'"
+                    [message]="
+                      hasActiveFilters()
+                        ? 'لم نتمكن من العثور على محادثات تطابق خيارات التصفية أو البحث الحالية.'
+                        : 'لا توجد محادثات مسجلة حالياً.'
+                    "
+                  />
+                </td>
+              </tr>
+            }
           }
-        }
-      </tbody>
-    </table>
-  </div>
+        </tbody>
+      </table>
+    </div>
   }
 
   @if (totalPages() > 1) {
-    <div class="p-md md:p-lg bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div
+      class="p-md md:p-lg bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-4"
+    >
       <span class="text-label-sm text-on-surface-variant font-medium">
         إجمالي عدد المحادثات: <span class="font-bold">{{ totalCount() }}</span>
       </span>

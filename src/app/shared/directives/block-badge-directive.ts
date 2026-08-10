@@ -3,15 +3,26 @@ import { BadgeRenderService } from '../services/badge-render.service';
 
 @Directive({
   selector: '[appBlockBadgeDirective]',
-  standalone: true
+  standalone: true,
 })
 export class BlockBadgeDirective {
   isBlocked = input.required<boolean>({ alias: 'appBlockBadgeDirective' });
-  private readonly baseClasses = ['inline-flex', 'items-center', 'justify-center', 'gap-1.5', 'px-3', 'py-1', 'rounded-lg', 'text-sm', 'font-bold', 'whitespace-nowrap'];
+  private readonly baseClasses = [
+    'inline-flex',
+    'items-center',
+    'justify-center',
+    'gap-1.5',
+    'px-3',
+    'py-1',
+    'rounded-lg',
+    'text-sm',
+    'font-bold',
+    'whitespace-nowrap',
+  ];
 
   constructor(
     private el: ElementRef,
-    private badgeRenderService: BadgeRenderService
+    private badgeRenderService: BadgeRenderService,
   ) {
     effect(() => {
       this.badgeRenderService.updateBadge(this.el.nativeElement, this.isBlocked(), {
@@ -23,9 +34,9 @@ export class BlockBadgeDirective {
         getContent: (blocked: boolean) => {
           const translation = blocked ? 'محظور' : 'نشط';
           const icon = blocked ? 'block' : 'check_circle';
-          return `<span class="material-symbols-outlined text-[16px] leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
+          return `<span class="material-symbols-outlined ms-icon-md leading-none shrink-0" style="font-variation-settings: 'FILL' 1">${icon}</span><span>${translation}</span>`;
         },
-        useTextOnly: false
+        useTextOnly: false,
       });
     });
   }

@@ -96,7 +96,7 @@
       (onClick)="downloadReport()"
     >
       @if (!isDownloading()) {
-        <span class="material-symbols-outlined text-[18px]">download</span>
+        <span class="material-symbols-outlined ms-icon-md">download</span>
       }
       <span>تحميل التقرير</span>
     </app-button>
@@ -153,7 +153,7 @@
                       variant="primary"
                       extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
                     >
-                      <span class="material-symbols-outlined text-[16px]">visibility</span>
+                      <span class="material-symbols-outlined ms-icon-md">visibility</span>
                       عرض
                     </app-button>
                     @if (caseItem.status !== CaseStatus.Found) {
@@ -163,7 +163,7 @@
                         (onClick)="requestDelete(caseItem.id)"
                         extraClass="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200"
                       >
-                        <span class="material-symbols-outlined text-[16px]">delete</span>
+                        <span class="material-symbols-outlined ms-icon-md">delete</span>
                         حذف
                       </app-button>
                     }

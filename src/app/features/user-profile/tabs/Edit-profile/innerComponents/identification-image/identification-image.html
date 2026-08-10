@@ -12,7 +12,7 @@
           (onClick)="toggleIdImageEdit(true)"
           extraClass="text-on-surface-variant hover:text-primary transition-colors p-1 rounded-lg hover:bg-surface-container-high border-none bg-transparent"
         >
-          <span class="material-symbols-outlined text-[20px]" aria-hidden="true">edit</span>
+          <span class="material-symbols-outlined ms-icon-md" aria-hidden="true">edit</span>
         </app-button>
       }
     } @else {
@@ -56,7 +56,7 @@
               class="w-24 h-24 rounded-lg border-2 border-dashed border-outline-variant flex items-center justify-center text-on-surface-variant"
               aria-hidden="true"
             >
-              <span class="material-symbols-outlined text-[32px]">badge</span>
+              <span class="material-symbols-outlined ms-icon-lg">badge</span>
             </div>
           }
         </div>
@@ -106,7 +106,7 @@
               class="w-24 h-24 rounded-lg border-2 border-dashed border-outline-variant flex items-center justify-center text-on-surface-variant"
               aria-hidden="true"
             >
-              <span class="material-symbols-outlined text-[32px]">credit_card</span>
+              <span class="material-symbols-outlined ms-icon-lg">credit_card</span>
             </div>
           }
         </div>
@@ -146,17 +146,17 @@
     <div class="flex-1 flex flex-col gap-xs justify-center mt-2">
       @if (isVerified) {
         <span class="text-label-sm font-semibold text-emerald-600 flex items-center gap-1">
-          <span class="material-symbols-outlined text-[18px]">verified</span>
+          <span class="material-symbols-outlined ms-icon-sm">verified</span>
           تم توثيق الهوية بنجاح
         </span>
       } @else if (isPending) {
         <span class="text-label-sm font-semibold text-amber-600 flex items-center gap-1">
-          <span class="material-symbols-outlined text-[18px]">hourglass_empty</span>
+          <span class="material-symbols-outlined ms-icon-sm">hourglass_empty</span>
           هوية المستخدم قيد المراجعة
         </span>
       } @else if (!idImageFrontPreview() || !idImageBackPreview()) {
         <span class="text-label-sm text-on-surface-variant flex items-center gap-1">
-          <span class="material-symbols-outlined text-[18px]">info</span>
+          <span class="material-symbols-outlined ms-icon-sm">info</span>
           قم برفع صورتي الهوية (الأمامي والخلفي)
         </span>
       }

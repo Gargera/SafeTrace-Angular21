@@ -1,11 +1,12 @@
 @if (loading()) {
   <app-start-chat-skeleton></app-start-chat-skeleton>
 } @else if (chat(); as c) {
-<div class="mx-auto w-full max-w-6xl py-lg px-md flex flex-col gap-lg" dir="rtl">
-      <!-- Case summary card -->
-<div class="w-full bg-surface-container-lowest border border-outline-variant rounded-3xl shadow-sm p-md 
-            flex flex-col sm:flex-row items-center sm:items-center justify-between gap-md">
-    <div class="p-0.5 bg-primary-container rounded-xl shrink-0 border border-primary/10">
+  <div class="mx-auto w-full max-w-6xl py-lg px-md flex flex-col gap-lg" dir="rtl">
+    <!-- Case summary card -->
+    <div
+      class="w-full bg-surface-container-lowest border border-outline-variant rounded-3xl shadow-sm p-md flex flex-col sm:flex-row items-center sm:items-center justify-between gap-md"
+    >
+      <div class="p-0.5 bg-primary-container rounded-xl shrink-0 border border-primary/10">
         <img
           [src]="chatService.getImageUrl(c.caseImage)"
           [alt]="c.participantName"
@@ -13,53 +14,64 @@
         />
       </div>
       <div class="flex-1 min-w-0 text-center sm:text-right">
-         @if (c.caseType === 'Urgent') {
-    <span class="inline-flex items-center gap-1 bg-error-container text-on-error-container text-xs font-semibold rounded-full px-sm py-2xs mb-xs">
-      حالة نشطة طارئة
-      <span class="w-1.5 h-1.5 rounded-full bg-error"></span>
-    </span>
-  } @else if (c.caseType === 'LongTerm') {
-    <span class="inline-flex items-center gap-1 bg-surface-container-high text-on-surface text-xs font-semibold rounded-full px-sm py-2xs mb-xs">
-      غياب طويل المدى
-      <span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
-    </span>
-  } @else {
-    <span class="inline-flex items-center gap-1 bg-surface-container-high text-on-surface text-xs font-semibold rounded-full px-sm py-2xs mb-xs">
-      غير معروف
-      <span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
-    </span>
-  }
+        @if (c.caseType === 'Urgent') {
+          <span
+            class="inline-flex items-center gap-1 bg-error-container text-on-error-container text-xs font-semibold rounded-full px-sm py-2xs mb-xs"
+          >
+            حالة نشطة طارئة
+            <span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+          </span>
+        } @else if (c.caseType === 'LongTerm') {
+          <span
+            class="inline-flex items-center gap-1 bg-surface-container-high text-on-surface text-xs font-semibold rounded-full px-sm py-2xs mb-xs"
+          >
+            غياب طويل المدى
+            <span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+          </span>
+        } @else {
+          <span
+            class="inline-flex items-center gap-1 bg-surface-container-high text-on-surface text-xs font-semibold rounded-full px-sm py-2xs mb-xs"
+          >
+            غير معروف
+            <span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+          </span>
+        }
         <h1 class="font-extrabold text-on-surface text-lg leading-snug">{{ c.caseTitle }}</h1>
         <p class="text-sm text-on-surface-variant mt-2xs">بواسطة: {{ c.participantName }}</p>
       </div>
     </div>
 
     <!-- Start / continue conversation card -->
-    <div class="mx-auto w-full max-w-112.5 bg-surface-container-lowest border border-outline-variant rounded-full shadow-sm p-lg flex flex-col items-center text-center gap-md">
+    <div
+      class="mx-auto w-full max-w-112.5 bg-surface-container-lowest border border-outline-variant rounded-full shadow-sm p-lg flex flex-col items-center text-center gap-md"
+    >
       <div class="relative w-14 h-14 rounded-full shrink-0">
-  
-  @if (c.participantImage) {
-    <img 
-      [src]="chatService.getImageUrl(c.participantImage)" 
-      [alt]="c.participantName"
-      class="w-full h-full rounded-full object-cover border border-outline-variant"
-    />
-  } @else {
-    <div class="w-full h-full rounded-full bg-primary text-on-primary flex items-center justify-center">
-      <span class="material-symbols-outlined text-[24px]">person</span>
-    </div>
-  }
+        @if (c.participantImage) {
+          <img
+            [src]="chatService.getImageUrl(c.participantImage)"
+            [alt]="c.participantName"
+            class="w-full h-full rounded-full object-cover border border-outline-variant"
+          />
+        } @else {
+          <div
+            class="w-full h-full rounded-full bg-primary text-on-primary flex items-center justify-center"
+          >
+            <span class="material-symbols-outlined ms-icon-lg">person</span>
+          </div>
+        }
 
-  <span class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center border-2 border-surface-container-lowest shadow-sm">
-    <span class="material-symbols-outlined text-[14px]">chat</span>
-  </span>
-
-</div>
+        <span
+          class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center border-2 border-surface-container-lowest shadow-sm"
+        >
+          <span class="material-symbols-outlined ms-icon-sm">chat</span>
+        </span>
+      </div>
 
       <div>
         <p class="font-extrabold text-on-surface">{{ c.participantName }} - مقدم البلاغ</p>
         <p class="text-sm text-on-surface-variant mt-xs leading-relaxed max-w-70 mx-auto">
-          هذه المحادثة تتعلق بحالة المفقود "{{ c.caseTitle }}". سيتمكن الطرف الآخر من رؤية تفاصيل الحالة المرتبطة.
+          هذه المحادثة تتعلق بحالة المفقود "{{ c.caseTitle }}". سيتمكن الطرف الآخر من رؤية تفاصيل
+          الحالة المرتبطة.
         </p>
       </div>
 
@@ -73,7 +85,7 @@
           (onClick)="startOrContinueChat()"
         >
           متابعة المحادثة
-          <span class="material-symbols-outlined text-[18px]">chat</span>
+          <span class="material-symbols-outlined ms-icon-md">chat</span>
         </app-button>
       } @else {
         <app-button
@@ -84,14 +96,19 @@
           (onClick)="startOrContinueChat()"
         >
           بدء المحادثة
-          <span class="material-symbols-outlined text-[18px] rtl:rotate-180">send</span>
+          <span class="material-symbols-outlined ms-icon-md rtl:rotate-180">send</span>
         </app-button>
       }
 
-      <span class="inline-flex items-center justify-center gap-xs text-sm font-bold text-on-tertiary-container bg-surface-container-low rounded-xl px-md py-sm" dir="rtl">
-  <span class="material-symbols-outlined text-[18px] text-on-tertiary-container">verified_user</span>
-  محادثة آمنة ومشفرة تماماً لضمان الخصوصية
-</span>
+      <span
+        class="inline-flex items-center justify-center gap-xs text-sm font-bold text-on-tertiary-container bg-surface-container-low rounded-xl px-md py-sm"
+        dir="rtl"
+      >
+        <span class="material-symbols-outlined ms-icon-md text-on-tertiary-container"
+          >verified_user</span
+        >
+        محادثة آمنة ومشفرة تماماً لضمان الخصوصية
+      </span>
     </div>
   </div>
 } @else {

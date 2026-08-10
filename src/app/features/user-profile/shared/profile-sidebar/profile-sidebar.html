@@ -18,7 +18,7 @@
       <div
         class="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all pointer-events-none"
       >
-        <span class="material-symbols-outlined text-white text-3xl"> zoom_in </span>
+        <span class="material-symbols-outlined ms-icon-lg text-white"> zoom_in </span>
       </div>
     </div>
     @if (selectedZoomImage()) {
@@ -65,7 +65,7 @@
       <!-- Email -->
       @if (userInfo()?.email) {
         <div class="flex items-center gap-sm text-on-surface-variant">
-          <span class="material-symbols-outlined text-secondary shrink-0">mail</span>
+          <span class="material-symbols-outlined ms-icon-md text-secondary shrink-0">mail</span>
           <span dir="ltr" class="block truncate text-left">
             {{ userInfo()!.email }}
           </span>
@@ -73,14 +73,16 @@
       }
       @if (userInfo()?.phoneNumber) {
         <div class="flex items-center gap-sm text-on-surface-variant">
-          <span class="material-symbols-outlined text-secondary shrink-0">phone</span>
+          <span class="material-symbols-outlined ms-icon-md text-secondary shrink-0">phone</span>
           <span dir="ltr" class="block truncate text-left"> {{ userInfo()!.phoneNumber }}</span>
         </div>
       }
       <!-- Address (resolved from lat/lng via Geocoding API) -->
       @if (userInfo()?.homeLatitude && userInfo()?.homeLongitude) {
         <div class="flex items-start gap-sm text-on-surface-variant">
-          <span class="material-symbols-outlined text-secondary shrink-0 mt-0.5">location_on</span>
+          <span class="material-symbols-outlined ms-icon-md text-secondary shrink-0 mt-0.5"
+            >location_on</span
+          >
 
           @if (isResolvingAddress()) {
             <!-- Skeleton loader while geocoding -->

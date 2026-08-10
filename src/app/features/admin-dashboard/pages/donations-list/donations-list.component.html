@@ -8,59 +8,77 @@
 <!-- Statistics Cards -->
 <ng-container *hasPermission="Permissions.Donations.GetDonationStatistics">
   @if (isLoadingStats()) {
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-  @for (i of [1, 2, 3, 4, 5]; track i) {
-  <app-card
-    [extraClass]="i === 1 ? 'xl:col-span-2 p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse' : 'p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse'"
-  >
-    <div class="h-4 bg-surface-container-high rounded w-3/4 mb-2"></div>
-    <div class="h-6 bg-surface-container-high rounded w-1/2"></div>
-  </app-card>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <app-card
+          [extraClass]="
+            i === 1
+              ? 'xl:col-span-2 p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse'
+              : 'p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse'
+          "
+        >
+          <div class="h-4 bg-surface-container-high rounded w-3/4 mb-2"></div>
+          <div class="h-6 bg-surface-container-high rounded w-1/2"></div>
+        </app-card>
+      }
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <app-card
+        extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-medium text-on-surface-variant">المبلغ (الناجح)</span>
+          <span class="material-symbols-outlined text-green-500">attach_money</span>
+        </div>
+        <p class="text-2xl font-bold text-on-surface mt-1">
+          {{ formatAmount(statistics()?.totalAmount) }} ج.م
+        </p>
+      </app-card>
+
+      <app-card
+        extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-medium text-on-surface-variant">إجمالي العمليات</span>
+          <span class="material-symbols-outlined text-secondary">receipt_long</span>
+        </div>
+        <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.totalCount ?? 0 }}</p>
+      </app-card>
+
+      <app-card
+        extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-medium text-on-surface-variant">عمليات ناجحة</span>
+          <span class="material-symbols-outlined text-green-500">check_circle</span>
+        </div>
+        <p class="text-2xl font-bold text-on-surface mt-1">
+          {{ statistics()?.succeededCount ?? 0 }}
+        </p>
+      </app-card>
+
+      <app-card
+        extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-medium text-on-surface-variant">قيد الانتظار</span>
+          <span class="material-symbols-outlined text-yellow-500">hourglass_empty</span>
+        </div>
+        <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.pendingCount ?? 0 }}</p>
+      </app-card>
+
+      <app-card
+        extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-medium text-on-surface-variant">مرفوضة / ملغاة</span>
+          <span class="material-symbols-outlined text-red-500">cancel</span>
+        </div>
+        <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.failedCount ?? 0 }}</p>
+      </app-card>
+    </div>
   }
-</div>
-} @else {
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">المبلغ (الناجح)</span>
-      <span class="material-symbols-outlined text-green-500">attach_money</span>
-    </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">{{ formatAmount(statistics()?.totalAmount) }} ج.م</p>
-  </app-card>
-
-  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">إجمالي العمليات</span>
-      <span class="material-symbols-outlined text-secondary">receipt_long</span>
-    </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.totalCount ?? 0 }}</p>
-  </app-card>
-
-  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">عمليات ناجحة</span>
-      <span class="material-symbols-outlined text-green-500">check_circle</span>
-    </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.succeededCount ?? 0 }}</p>
-  </app-card>
-
-  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">قيد الانتظار</span>
-      <span class="material-symbols-outlined text-yellow-500">hourglass_empty</span>
-    </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.pendingCount ?? 0 }}</p>
-  </app-card>
-
-  <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
-    <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-on-surface-variant">مرفوضة / ملغاة</span>
-      <span class="material-symbols-outlined text-red-500">cancel</span>
-    </div>
-    <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.failedCount ?? 0 }}</p>
-  </app-card>
-</div>
-}
 </ng-container>
 
 <!-- Filters Section like user-list -->
@@ -100,7 +118,7 @@
       (onClick)="downloadReport()"
     >
       @if (!isDownloading()) {
-        <span class="material-symbols-outlined text-[18px]">download</span>
+        <span class="material-symbols-outlined ms-icon-lg">download</span>
       }
       <span>تحميل التقرير</span>
     </app-button>
@@ -110,157 +128,197 @@
       (onClick)="resetFilters()"
       extraClass="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary"
     >
-      <span class="material-symbols-outlined transition-transform duration-200 group-hover:-rotate-90">refresh</span>
+      <span
+        class="material-symbols-outlined transition-transform duration-200 group-hover:-rotate-90"
+        >refresh</span
+      >
       <span>إعادة تعيين</span>
     </app-button>
   </div>
 </app-card>
 
-
-
 <!-- Table -->
-<section class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75">
+<section
+  class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75"
+>
   @if (loading() && donations().length === 0) {
     <app-table-skeleton [rows]="10"></app-table-skeleton>
   } @else {
-
-  <div class="w-full max-w-full overflow-x-auto" [class.opacity-50]="loading()" [class.pointer-events-none]="loading()">
-    <table class="w-full text-right border-collapse whitespace-nowrap">
-      <thead>
-        <tr class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant">
-          <th class="px-lg py-md text-center">#</th>
-          <th class="px-lg py-md">البريد الإلكتروني</th>
-          <th class="px-lg py-md">المبلغ</th>
-          <th class="px-lg py-md">الحالة</th>
-          <th class="px-lg py-md text-center">تاريخ الإنشاء</th>
-          <th class="px-lg py-md text-center">تاريخ الدفع</th>
-          <th class="px-lg py-md">الرسالة</th>
-          <ng-container *hasPermission="Permissions.Donations.GetDonations">
-            <th class="px-lg py-md text-center">الإجراءات</th>
-          </ng-container>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
-        @for (donation of donations(); track donation.userEmail + donation.createAt; let i = $index) {
-        <tr class="hover:bg-surface-container-low transition-colors group">
-          <td class="px-lg py-md text-center font-bold text-on-surface-variant">
-            {{ (pageNumber() - 1) * pageSize + i + 1 }}
-          </td>
-          <td class="px-lg py-md">
-            <span class="font-semibold text-primary">{{ donation.userEmail }}</span>
-          </td>
-          <td class="px-lg py-md font-bold text-on-surface">
-            {{ donation.amount | number: '1.2-2' }} <span class="text-xs text-on-surface-variant font-normal">ج.م</span>
-          </td>
-          <td class="px-lg py-md">
-            <span [appPaymentStatusBadge]="donation.paymentStatus"></span>
-          </td>
-          <td class="px-lg py-md text-on-surface-variant text-center" dir="ltr">
-            <span class="inline-block whitespace-nowrap">{{ donation.createAt | date: 'dd MMM yyyy, hh:mm a' }}</span>
-          </td>
-          <td class="px-lg py-md text-on-surface-variant text-center" dir="ltr">
-            <span class="inline-block whitespace-nowrap">{{ donation.paidAt ? (donation.paidAt | date: 'dd MMM yyyy, hh:mm a') : '—' }}</span>
-          </td>
-          <td class="px-lg py-md text-on-surface-variant max-w-37.5">
-            @if (donation.message) {
-              <span class="truncate block" [title]="donation.message">{{ donation.message | truncate: 20 }}</span>
-            } @else {
-              <span class="text-outline">—</span>
-            }
-          </td>
-          <ng-container *hasPermission="Permissions.Donations.GetDonations">
-            <td class="px-lg py-md text-center">
-              @if (donation.message) {
-                <app-button
-                  (onClick)="openMessage(donation)"
-                  variant="primary"
-                  extraClass="flex items-center justify-center gap-1.5 px-6 py-2 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
-                >
-                  <span class="material-symbols-outlined text-[18px]">visibility</span>
-                  عرض
-                </app-button>
-              } @else {
-                <span class="text-outline text-sm">—</span>
-              }
-            </td>
-          </ng-container>
-        </tr>
-        } @empty {
-          @if (!loading()) {
-            <tr>
-              <td colspan="8" class="py-xl">
-                <app-empty-state
-                  [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد تبرعات'"
-                  [message]="hasActiveFilters() ? 'لم نتمكن من العثور على تبرعات تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم تقديم أي تبرعات حتى الآن.'"
-                >
-                </app-empty-state>
+    <div
+      class="w-full max-w-full overflow-x-auto"
+      [class.opacity-50]="loading()"
+      [class.pointer-events-none]="loading()"
+    >
+      <table class="w-full text-right border-collapse whitespace-nowrap">
+        <thead>
+          <tr
+            class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant"
+          >
+            <th class="px-lg py-md text-center">#</th>
+            <th class="px-lg py-md">البريد الإلكتروني</th>
+            <th class="px-lg py-md">المبلغ</th>
+            <th class="px-lg py-md">الحالة</th>
+            <th class="px-lg py-md text-center">تاريخ الإنشاء</th>
+            <th class="px-lg py-md text-center">تاريخ الدفع</th>
+            <th class="px-lg py-md">الرسالة</th>
+            <ng-container *hasPermission="Permissions.Donations.GetDonations">
+              <th class="px-lg py-md text-center">الإجراءات</th>
+            </ng-container>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
+          @for (
+            donation of donations();
+            track donation.userEmail + donation.createAt;
+            let i = $index
+          ) {
+            <tr class="hover:bg-surface-container-low transition-colors group">
+              <td class="px-lg py-md text-center font-bold text-on-surface-variant">
+                {{ (pageNumber() - 1) * pageSize + i + 1 }}
               </td>
+              <td class="px-lg py-md">
+                <span class="font-semibold text-primary">{{ donation.userEmail }}</span>
+              </td>
+              <td class="px-lg py-md font-bold text-on-surface">
+                {{ donation.amount | number: '1.2-2' }}
+                <span class="text-xs text-on-surface-variant font-normal">ج.م</span>
+              </td>
+              <td class="px-lg py-md">
+                <span [appPaymentStatusBadge]="donation.paymentStatus"></span>
+              </td>
+              <td class="px-lg py-md text-on-surface-variant text-center" dir="ltr">
+                <span class="inline-block whitespace-nowrap">{{
+                  donation.createAt | date: 'dd MMM yyyy, hh:mm a'
+                }}</span>
+              </td>
+              <td class="px-lg py-md text-on-surface-variant text-center" dir="ltr">
+                <span class="inline-block whitespace-nowrap">{{
+                  donation.paidAt ? (donation.paidAt | date: 'dd MMM yyyy, hh:mm a') : '—'
+                }}</span>
+              </td>
+              <td class="px-lg py-md text-on-surface-variant max-w-37.5">
+                @if (donation.message) {
+                  <span class="truncate block" [title]="donation.message">{{
+                    donation.message | truncate: 20
+                  }}</span>
+                } @else {
+                  <span class="text-outline">—</span>
+                }
+              </td>
+              <ng-container *hasPermission="Permissions.Donations.GetDonations">
+                <td class="px-lg py-md text-center">
+                  @if (donation.message) {
+                    <app-button
+                      (onClick)="openMessage(donation)"
+                      variant="primary"
+                      extraClass="flex items-center justify-center gap-1.5 px-6 py-2 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
+                    >
+                      <span class="material-symbols-outlined ms-icon-lg">visibility</span>
+                      عرض
+                    </app-button>
+                  } @else {
+                    <span class="text-outline text-sm">—</span>
+                  }
+                </td>
+              </ng-container>
             </tr>
+          } @empty {
+            @if (!loading()) {
+              <tr>
+                <td colspan="8" class="py-xl">
+                  <app-empty-state
+                    [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد تبرعات'"
+                    [message]="
+                      hasActiveFilters()
+                        ? 'لم نتمكن من العثور على تبرعات تطابق خيارات التصفية أو البحث الحالية.'
+                        : 'لم يتم تقديم أي تبرعات حتى الآن.'
+                    "
+                  >
+                  </app-empty-state>
+                </td>
+              </tr>
+            }
           }
-        }
-      </tbody>
-    </table>
-  </div>
+        </tbody>
+      </table>
+    </div>
   }
 
   <!-- Pagination -->
   @if (totalPages() > 1) {
-  <div class="p-md md:p-lg bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-4">
-    <span class="text-label-sm text-on-surface-variant font-medium">
-      إجمالي التبرعات: <span class="font-bold text-primary">{{ totalCount() }}</span>
-    </span>
+    <div
+      class="p-md md:p-lg bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-4"
+    >
+      <span class="text-label-sm text-on-surface-variant font-medium">
+        إجمالي التبرعات: <span class="font-bold text-primary">{{ totalCount() }}</span>
+      </span>
 
-    <app-pagination
-      [currentPage]="pageNumber()"
-      [totalPages]="totalPages()"
-      (pageChange)="changePage($event)"
-    />
-  </div>
+      <app-pagination
+        [currentPage]="pageNumber()"
+        [totalPages]="totalPages()"
+        (pageChange)="changePage($event)"
+      />
+    </div>
   }
 </section>
 
 <!-- Message Modal -->
 @if (selectedMessage(); as msg) {
-<div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" (click)="closeMessage()">
-  <div class="w-full max-w-120 rounded-3xl border border-outline-variant/20 bg-surface shadow-2xl animate-scale-in flex flex-col overflow-hidden" (click)="$event.stopPropagation()">
-    
-    <div class="px-6 pt-10 pb-8 flex flex-col items-center text-center">
-      <div class="w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-primary/10 text-primary">
-        <span class="material-symbols-outlined text-[40px]">chat_bubble</span>
-      </div>
-      
-      <h2 class="text-2xl font-bold text-on-surface mb-3">
-        رسالة المتبرع
-      </h2>
-      
-      <p class="text-base text-on-surface-variant font-medium px-4 mb-4">
-        {{ msg.userEmail }}
-      </p>
+  <div
+    role="dialog"
+    aria-modal="true"
+    aria-label="نافذة منبثقة"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
+    (click)="closeMessage()"
+  >
+    <div
+      class="w-full max-w-120 rounded-3xl border border-outline-variant/20 bg-surface shadow-2xl animate-scale-in flex flex-col overflow-hidden"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="px-6 pt-10 pb-8 flex flex-col items-center text-center">
+        <div
+          class="w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-primary/10 text-primary"
+        >
+          <span class="material-symbols-outlined ms-icon-lg">chat_bubble</span>
+        </div>
 
-      <div class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 text-on-surface leading-relaxed text-sm whitespace-pre-wrap max-h-[40vh] overflow-y-auto text-right">
-        {{ msg.message }}
+        <h2 class="text-2xl font-bold text-on-surface mb-3">رسالة المتبرع</h2>
+
+        <p class="text-base text-on-surface-variant font-medium px-4 mb-4">
+          {{ msg.userEmail }}
+        </p>
+
+        <div
+          class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 text-on-surface leading-relaxed text-sm whitespace-pre-wrap max-h-[40vh] overflow-y-auto text-right"
+        >
+          {{ msg.message }}
+        </div>
+
+        <div class="w-full mt-6 flex flex-wrap items-center justify-between px-2 text-sm gap-4">
+          <div class="flex flex-col text-right">
+            <span class="text-on-surface-variant text-xs mb-1">المبلغ</span>
+            <span class="font-bold text-on-surface">{{ msg.amount | number: '1.2-2' }} ج.م</span>
+          </div>
+          <div class="flex flex-col text-right">
+            <span class="text-on-surface-variant text-xs mb-1">تاريخ الدفع</span>
+            <span class="font-medium text-on-surface" dir="ltr">
+              {{ msg.paidAt ? (msg.paidAt | date: 'dd MMM yyyy, hh:mm a') : '—' }}
+            </span>
+          </div>
+        </div>
       </div>
-      
-      <div class="w-full mt-6 flex flex-wrap items-center justify-between px-2 text-sm gap-4">
-        <div class="flex flex-col text-right">
-          <span class="text-on-surface-variant text-xs mb-1">المبلغ</span>
-          <span class="font-bold text-on-surface">{{ msg.amount | number: '1.2-2' }} ج.م</span>
-        </div>
-        <div class="flex flex-col text-right">
-          <span class="text-on-surface-variant text-xs mb-1">تاريخ الدفع</span>
-          <span class="font-medium text-on-surface" dir="ltr">
-            {{ msg.paidAt ? (msg.paidAt | date: 'dd MMM yyyy, hh:mm a') : '—' }}
-          </span>
-        </div>
+
+      <div
+        class="flex justify-center items-center bg-surface-container-lowest px-6 py-6 border-t border-outline-variant/10"
+      >
+        <app-button
+          variant="secondary"
+          extraClass="min-w-[140px] px-6 h-13 rounded-xl flex items-center justify-center font-bold text-base shadow-sm"
+          (onClick)="closeMessage()"
+        >
+          إغلاق
+        </app-button>
       </div>
     </div>
-
-    <div class="flex justify-center items-center bg-surface-container-lowest px-6 py-6 border-t border-outline-variant/10">
-      <app-button variant="secondary" extraClass="min-w-[140px] px-6 h-13 rounded-xl flex items-center justify-center font-bold text-base shadow-sm" (onClick)="closeMessage()">
-        إغلاق
-      </app-button>
-    </div>
-    
   </div>
-</div>
 }
