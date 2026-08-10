@@ -162,8 +162,7 @@ export class LongTermDetails implements OnInit {
   isAdminPage = signal(false);
   isMyCasePage = signal(false);
 
-  constructor() {
-  }
+  constructor() {}
 
   ngOnInit(): void {
     this.isAdminPage.set(this.route.snapshot.data['mode'] === 'dashboard');
@@ -234,9 +233,7 @@ export class LongTermDetails implements OnInit {
 
   changeMedia(media: CasePhotoResponse): void {
     this.selectedMedia.set(media);
-    const index = this.mediaList().findIndex(
-      (x) => x.id === media.id && x.type === media.type,
-    );
+    const index = this.mediaList().findIndex((x) => x.id === media.id && x.type === media.type);
     this.currentIndex.set(index >= 0 ? index : 0);
   }
 
@@ -332,6 +329,11 @@ export class LongTermDetails implements OnInit {
   }
 
   deleteCase(): void {
+    if (this.caseDetails()?.status === CaseStatus.Found) {
+      this.snackbar.error('لا يمكن حذف حالة تم العثور عليها');
+      return;
+    }
+
     this.showDeleteConfirmation.set(true);
   }
 
@@ -343,6 +345,12 @@ export class LongTermDetails implements OnInit {
     if (this.deleting()) return;
     const id = this.caseDetails()?.id;
     if (!id) return;
+
+    if (this.caseDetails()?.status === CaseStatus.Found) {
+      this.snackbar.error('لا يمكن حذف حالة تم العثور عليها');
+      this.showDeleteConfirmation.set(false);
+      return;
+    }
 
     this.deleting.set(true);
 
@@ -468,6 +476,11 @@ export class LongTermDetails implements OnInit {
   }
 
   openPermanentDeleteConfirmation(): void {
+    if (this.caseDetails()?.status === CaseStatus.Found) {
+      this.snackbar.error('لا يمكن حذف حالة تم العثور عليها');
+      return;
+    }
+
     this.showPermanentDeleteConfirmation.set(true);
   }
 
@@ -479,6 +492,12 @@ export class LongTermDetails implements OnInit {
     if (this.isPermanentDeleting()) return;
     const id = this.caseDetails()?.id;
     if (!id) return;
+
+    if (this.caseDetails()?.status === CaseStatus.Found) {
+      this.snackbar.error('لا يمكن حذف حالة تم العثور عليها');
+      this.showPermanentDeleteConfirmation.set(false);
+      return;
+    }
 
     this.isPermanentDeleting.set(true);
     this.longTermCaseService

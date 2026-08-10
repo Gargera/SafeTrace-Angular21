@@ -34,7 +34,6 @@ import { FoundedPopupComponent } from '../../../../shared/components/cases-compo
 
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
-
 const UI_STATE_CACHE_KEY = PROFILE_CACHE_KEYS.UI_MY_CASES;
 
 @Component({
@@ -55,7 +54,6 @@ const UI_STATE_CACHE_KEY = PROFILE_CACHE_KEYS.UI_MY_CASES;
   styleUrls: ['./cases-tab.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-
 export class MyCasesTab implements OnInit, OnDestroy {
   protected readonly CaseType = CaseType;
   protected readonly CaseStatus = CaseStatus;
@@ -100,14 +98,16 @@ export class MyCasesTab implements OnInit, OnDestroy {
   markAsFoundCaseId = signal<number | null>(null);
   markAsFoundCaseType = signal<CaseType | null>(null);
 
-
   // Computed
   // No local filtering – all filtering is done by the backend.
   filteredCases = computed(() => this.allCases());
 
   hasActiveFilters = computed(() => {
     const req = this.filterRequest();
-    return !!req && !!(req.fullName || req.caseCode || req.caseType !== undefined || req.status !== undefined);
+    return (
+      !!req &&
+      !!(req.fullName || req.caseCode || req.caseType !== undefined || req.status !== undefined)
+    );
   });
 
   // Whether the current filtered list has results
@@ -123,7 +123,7 @@ export class MyCasesTab implements OnInit, OnDestroy {
       const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return dateB - dateA;
-    })
+    }),
   );
 
   constructor() {
@@ -132,21 +132,18 @@ export class MyCasesTab implements OnInit, OnDestroy {
         filterRequest: this.filterRequest(),
         currentPage: this.currentPage(),
       };
-      
+
       if (this.showMarkAsFoundModal() && this.markAsFoundCaseId()) {
-        const hasDraft = this.cacheService.has(`${PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND}_${this.markAsFoundCaseId()}`);
+        const hasDraft = this.cacheService.has(
+          `${PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND}_${this.markAsFoundCaseId()}`,
+        );
         if (hasDraft) {
           state.markAsFoundCaseId = this.markAsFoundCaseId();
           state.markAsFoundCaseType = this.markAsFoundCaseType();
         }
       }
 
-      this.cacheService.set(
-        UI_STATE_CACHE_KEY,
-        state,
-        CACHE_TTL.UI_STATE,
-        [CACHE_TAGS.UI_STATE]
-      );
+      this.cacheService.set(UI_STATE_CACHE_KEY, state, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
     });
   }
 
@@ -155,9 +152,13 @@ export class MyCasesTab implements OnInit, OnDestroy {
     if (cachedState) {
       if (cachedState.filterRequest) this.filterRequest.set(cachedState.filterRequest);
       if (cachedState.currentPage) this.currentPage.set(cachedState.currentPage);
-      
+
       if (cachedState.markAsFoundCaseId && cachedState.markAsFoundCaseType) {
-        if (this.cacheService.has(`${PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND}_${cachedState.markAsFoundCaseId}`)) {
+        if (
+          this.cacheService.has(
+            `${PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND}_${cachedState.markAsFoundCaseId}`,
+          )
+        ) {
           this.markAsFoundCaseId.set(cachedState.markAsFoundCaseId);
           this.markAsFoundCaseType.set(cachedState.markAsFoundCaseType);
           this.showMarkAsFoundModal.set(true);
@@ -168,7 +169,7 @@ export class MyCasesTab implements OnInit, OnDestroy {
     this.loadCases();
   }
 
-  ngOnDestroy(): void { }
+  ngOnDestroy(): void {}
 
   onFilterChange(request: CasesFilterRequest) {
     const myCasesFilter: MyCasesFilterRequest = {
@@ -299,6 +300,12 @@ export class MyCasesTab implements OnInit, OnDestroy {
       return;
     }
 
+    const caseItem = this.allCases().find((item) => item.id === caseId);
+    if (caseItem?.status === CaseStatus.Found) {
+      this.toast.error('لا يمكن حذف حالة تم العثور عليها');
+      return;
+    }
+
     this.modalConfig.set({
       title: 'حذف الحالة',
       message: 'هل أنت متأكد من حذف هذه الحالة؟',
@@ -354,14 +361,14 @@ export class MyCasesTab implements OnInit, OnDestroy {
           items.map((item) =>
             item.id === id
               ? {
-                ...item,
-                status: CaseStatus.Found,
-              }
+                  ...item,
+                  status: CaseStatus.Found,
+                }
               : item,
           ),
         );
         this.toast.success('تم تحديث الحالة بنجاح');
-        
+
         this.cacheService.remove(`FoundedPopup_Profile_${id}`);
         this.showMarkAsFoundModal.set(false);
         this.markAsFoundCaseId.set(null);
@@ -376,7 +383,9 @@ export class MyCasesTab implements OnInit, OnDestroy {
 
   closeMarkAsFoundModal(): void {
     if (this.markAsFoundCaseId()) {
-      this.cacheService.remove(`${PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND}_${this.markAsFoundCaseId()}`);
+      this.cacheService.remove(
+        `${PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND}_${this.markAsFoundCaseId()}`,
+      );
     }
     this.showMarkAsFoundModal.set(false);
     this.markAsFoundCaseId.set(null);
@@ -400,6 +409,12 @@ export class MyCasesTab implements OnInit, OnDestroy {
 
   private executeDelete(caseId: number, caseType: CaseType): void {
     if (this.isSubmitting()) return;
+
+    const caseItem = this.allCases().find((item) => item.id === caseId);
+    if (caseItem?.status === CaseStatus.Found) {
+      this.toast.error('لا يمكن حذف حالة تم العثور عليها');
+      return;
+    }
 
     let deleteRequest;
     switch (caseType) {

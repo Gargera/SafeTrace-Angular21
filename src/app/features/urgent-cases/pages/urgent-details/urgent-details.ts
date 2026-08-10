@@ -154,13 +154,10 @@ export class UrgentDetails implements OnInit {
             if (hasFounded) this.showFoundedPopup.set(true);
 
             if (apiRes.data.photos?.length) {
-              const primary =
-                apiRes.data.photos.find((x) => x.isPrimary) ?? apiRes.data.photos[0];
+              const primary = apiRes.data.photos.find((x) => x.isPrimary) ?? apiRes.data.photos[0];
 
               this.selectedMedia.set(primary);
-              this.currentIndex.set(
-                apiRes.data.photos.findIndex((x) => x.id === primary.id),
-              );
+              this.currentIndex.set(apiRes.data.photos.findIndex((x) => x.id === primary.id));
             }
           }
           this.loading.set(false);
@@ -180,8 +177,7 @@ export class UrgentDetails implements OnInit {
 
   changeMedia(media: CasePhotoResponse): void {
     this.selectedMedia.set(media);
-    const index =
-      this.caseDetails()?.photos.findIndex((x) => x.id === media.id) ?? 0;
+    const index = this.caseDetails()?.photos.findIndex((x) => x.id === media.id) ?? 0;
     this.currentIndex.set(index);
   }
 
@@ -275,6 +271,11 @@ export class UrgentDetails implements OnInit {
   }
 
   deleteCase(): void {
+    if (this.caseDetails()?.status === CaseStatus.Found) {
+      this.snackbar.error('لا يمكن حذف حالة تم العثور عليها');
+      return;
+    }
+
     this.showDeleteConfirmation.set(true);
   }
 
@@ -286,6 +287,12 @@ export class UrgentDetails implements OnInit {
     if (this.deleting()) return;
     const id = this.caseDetails()?.id;
     if (!id) return;
+
+    if (this.caseDetails()?.status === CaseStatus.Found) {
+      this.snackbar.error('لا يمكن حذف حالة تم العثور عليها');
+      this.showDeleteConfirmation.set(false);
+      return;
+    }
 
     this.deleting.set(true);
 
@@ -312,6 +319,11 @@ export class UrgentDetails implements OnInit {
   }
 
   openPermanentDeleteConfirmation(): void {
+    if (this.caseDetails()?.status === CaseStatus.Found) {
+      this.snackbar.error('لا يمكن حذف حالة تم العثور عليها');
+      return;
+    }
+
     this.showPermanentDeleteConfirmation.set(true);
   }
 

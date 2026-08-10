@@ -14,10 +14,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
-import {
-  CaseListItemResponse,
-  CasesFilterRequest,
-} from '../../../../core/models/cases.model';
+import { CaseListItemResponse, CasesFilterRequest } from '../../../../core/models/cases.model';
 
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
@@ -36,9 +33,7 @@ import { CaseStatusBadgeDirective } from '../../../../shared/directives/case-sta
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { DashboardService } from '../../services/dashboard.service';
 
-import {
-  CasesStatisticsDto as DashboardStatistics,
-} from '../../models/Dashboard/responses/CasesStatisticsDto';
+import { CasesStatisticsDto as DashboardStatistics } from '../../models/Dashboard/responses/CasesStatisticsDto';
 
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { CasesManagementService } from '../../services/cases-management.service';
@@ -50,10 +45,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
 
 import { CacheService } from '../../../../core/cache/cache.service';
-import {
-  CACHE_TAGS,
-  CACHE_TTL,
-} from '../../../../core/cache/cache.constants';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { CasesFilterState } from '../../../../shared/helper/cases-filter-state';
@@ -161,13 +153,9 @@ export class CasesManagement implements OnInit, OnDestroy {
 
   hasResults = computed(() => this.cases().length > 0);
 
-  hasNextPage = computed(
-    () => this.currentPage() < this.totalPages()
-  );
+  hasNextPage = computed(() => this.currentPage() < this.totalPages());
 
-  hasAnyCases = computed(
-    () => this.totalCount() > 0
-  );
+  hasAnyCases = computed(() => this.totalCount() > 0);
 
   hasActiveFilters = computed(() => {
     const f = this.baseFilter();
@@ -203,7 +191,7 @@ export class CasesManagement implements OnInit, OnDestroy {
           page: this.currentPage(),
         },
         CACHE_TTL.UI_STATE,
-        [CACHE_TAGS.UI_STATE]
+        [CACHE_TAGS.UI_STATE],
       );
     });
   }
@@ -213,11 +201,10 @@ export class CasesManagement implements OnInit, OnDestroy {
   // =========================================================
 
   ngOnInit(): void {
-    const cachedState =
-      this.cacheService.get<{
-        filter: CasesFilterRequest;
-        page: number;
-      }>(UI_STATE_CACHE_KEY);
+    const cachedState = this.cacheService.get<{
+      filter: CasesFilterRequest;
+      page: number;
+    }>(UI_STATE_CACHE_KEY);
 
     if (cachedState) {
       this.filterState.restoreState(cachedState.filter);
@@ -233,40 +220,28 @@ export class CasesManagement implements OnInit, OnDestroy {
     this.loadCases();
   }
 
-  ngOnDestroy(): void { }
+  ngOnDestroy(): void {}
 
   // =========================================================
   // Event Handlers
   // =========================================================
 
   onFilterChange(filter: CasesFilterRequest): void {
-    this.filterState.onFilterChange(
-      filter,
-      () => this.loadCases()
-    );
+    this.filterState.onFilterChange(filter, () => this.loadCases());
   }
 
   resetFilters(): void {
     this.cacheService.remove(UI_STATE_CACHE_KEY);
 
-    this.filterState.onFilterReset(
-      () => this.loadCases()
-    );
+    this.filterState.onFilterReset(() => this.loadCases());
   }
 
   changePage(page: number): void {
-    if (
-      page < 1 ||
-      page > this.totalPages() ||
-      page === this.currentPage()
-    ) {
+    if (page < 1 || page > this.totalPages() || page === this.currentPage()) {
       return;
     }
 
-    this.filterState.onPageChange(
-      page,
-      () => this.loadCases()
-    );
+    this.filterState.onPageChange(page, () => this.loadCases());
   }
 
   goToPage(page: number): void {
@@ -278,25 +253,13 @@ export class CasesManagement implements OnInit, OnDestroy {
   // =========================================================
 
   getFullName(item: CaseListItemResponse): string {
-    const parts = [
-      item.fName,
-      item.sName,
-      item.tName,
-      item.lName,
-    ].filter(Boolean);
+    const parts = [item.fName, item.sName, item.tName, item.lName].filter(Boolean);
 
-    return parts.length
-      ? parts.join(' ')
-      : 'غير معروف';
+    return parts.length ? parts.join(' ') : 'غير معروف';
   }
 
   getLocation(item: CaseListItemResponse): string {
-    return (
-      [item.city, item.government]
-        .filter(Boolean)
-        .join(' ، ') ||
-      'غير محدد'
-    );
+    return [item.city, item.government].filter(Boolean).join(' ، ') || 'غير محدد';
   }
 
   // =========================================================
@@ -311,21 +274,14 @@ export class CasesManagement implements OnInit, OnDestroy {
         if (res.success && res.data) {
           this.statistics.set(res.data);
         } else {
-          this.toast.error(
-            res.message || 'فشل تحميل الإحصائيات'
-          );
+          this.toast.error(res.message || 'فشل تحميل الإحصائيات');
         }
 
         this.loadingStats.set(false);
       },
 
       error: (err) => {
-        this.toast.error(
-          extractErrorMessage(
-            err,
-            'تعذر الاتصال بالخادم لتحميل الإحصائيات'
-          )
-        );
+        this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتحميل الإحصائيات'));
 
         this.loadingStats.set(false);
       },
@@ -349,34 +305,23 @@ export class CasesManagement implements OnInit, OnDestroy {
         }),
 
         switchMap(() =>
-          this.casesService
-            .getCases(
-              this.baseFilter(),
-              this.currentPage(),
-              this.pageSize()
-            )
-            .pipe(
-              catchError((err) => {
-                this.loading.set(false);
-                this.filterState.hasError.set(true);
+          this.casesService.getCases(this.baseFilter(), this.currentPage(), this.pageSize()).pipe(
+            catchError((err) => {
+              this.loading.set(false);
+              this.filterState.hasError.set(true);
 
-                this.toast.error(
-                  extractErrorMessage(
-                    err,
-                    'تعذر الاتصال بالخادم'
-                  )
-                );
+              this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم'));
 
-                this.cases.set([]);
-                this.totalCount.set(0);
-                this.filterState.totalPages.set(0);
+              this.cases.set([]);
+              this.totalCount.set(0);
+              this.filterState.totalPages.set(0);
 
-                return EMPTY;
-              })
-            )
+              return EMPTY;
+            }),
+          ),
         ),
 
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
         next: (result) => {
@@ -397,19 +342,21 @@ export class CasesManagement implements OnInit, OnDestroy {
   // =========================================================
 
   requestDelete(caseId: number): void {
-    const caseItem = this.cases().find(
-      (c) => c.id === caseId
-    );
+    const caseItem = this.cases().find((c) => c.id === caseId);
 
     if (!caseItem) {
       this.toast.error('الحالة غير موجودة');
       return;
     }
 
+    if (caseItem.status === CaseStatus.Found) {
+      this.toast.error('لا يمكن حذف حالة تم العثور عليها');
+      return;
+    }
+
     this.modalConfig.set({
       title: 'حذف الحالة',
-      message:
-        'هل أنت متأكد من حذف هذه الحالة؟ لا يمكن التراجع عن هذا الإجراء.',
+      message: 'هل أنت متأكد من حذف هذه الحالة؟ لا يمكن التراجع عن هذا الإجراء.',
       confirmText: 'حذف',
       cancelText: 'إلغاء',
       action: 'delete',
@@ -423,81 +370,58 @@ export class CasesManagement implements OnInit, OnDestroy {
   confirmAction(): void {
     const config = this.modalConfig();
 
-    if (
-      !config ||
-      !config.caseId ||
-      !config.caseType ||
-      this.isDeleting()
-    ) {
+    if (!config || !config.caseId || !config.caseType || this.isDeleting()) {
       return;
     }
 
     this.isDeleting.set(true);
 
-    this.casesService
-      .deleteCase(
-        config.caseId,
-        config.caseType
-      )
-      .subscribe({
-        // =====================================================
-        // SUCCESS
-        // =====================================================
+    this.casesService.deleteCase(config.caseId, config.caseType).subscribe({
+      // =====================================================
+      // SUCCESS
+      // =====================================================
 
-        next: () => {
-          this.isDeleting.set(false);
+      next: () => {
+        this.isDeleting.set(false);
 
-          this.cases.update((items) =>
-            items.filter(
-              (item) => item.id !== config.caseId
-            )
-          );
+        this.cases.update((items) => items.filter((item) => item.id !== config.caseId));
 
-          this.totalCount.update((count) =>
-            Math.max(0, count - 1)
-          );
+        this.totalCount.update((count) => Math.max(0, count - 1));
 
-          if (this.totalCount() === 0) {
-            this.filterState.totalPages.set(0);
-          }
+        if (this.totalCount() === 0) {
+          this.filterState.totalPages.set(0);
+        }
 
-          this.toast.success(
-            'تم حذف الحالة بنجاح'
-          );
+        this.toast.success('تم حذف الحالة بنجاح');
 
-          // Close ONLY after successful request.
-          this.closeModal();
-        },
+        // Close ONLY after successful request.
+        this.closeModal();
+      },
 
-        // =====================================================
-        // ERROR
-        // =====================================================
+      // =====================================================
+      // ERROR
+      // =====================================================
 
-        error: (err) => {
-          this.isDeleting.set(false);
+      error: (err) => {
+        this.isDeleting.set(false);
 
-          this.toast.error(
-            extractErrorMessage(
-              err,
-              'فشل حذف الحالة'
-            )
-          );
+        this.toast.error(extractErrorMessage(err, 'فشل حذف الحالة'));
 
-          // IMPORTANT:
-          // Do NOT close the modal.
-          // Do NOT clear modalConfig.
-          //
-          // Keeping modalConfig preserves:
-          // - title
-          // - message
-          // - confirm text
-          // - cancel text
-          // - caseId
-          // - caseType
-          //
-          // The user can retry the same operation.
-        },
-      });
+        // IMPORTANT:
+        // Do NOT close the modal.
+        // Do NOT clear modalConfig.
+        //
+        // Keeping modalConfig preserves:
+        // - title
+        // - message
+        // - confirm text
+        // - cancel text
+        // - caseId
+        // - caseType
+        //
+        // The user can retry the same operation.
+      },
+    });
   }
 
   // =========================================================
@@ -527,33 +451,20 @@ export class CasesManagement implements OnInit, OnDestroy {
   getDetailsRoute(caseItem: CaseListItemResponse) {
     switch (caseItem.caseType) {
       case CaseType.LongTerm:
-        return [
-          '/admin/long-term',
-          caseItem.id,
-        ];
+        return ['/admin/long-term', caseItem.id];
 
       case CaseType.Unknown:
-        return [
-          '/admin/unknown',
-          caseItem.id,
-        ];
+        return ['/admin/unknown', caseItem.id];
 
       case CaseType.Urgent:
-        return [
-          '/admin/urgent',
-          caseItem.id,
-        ];
+        return ['/admin/urgent', caseItem.id];
 
       default:
-        return [
-          '/admin/cases-management',
-        ];
+        return ['/admin/cases-management'];
     }
   }
 
-  getDeletePermission(
-    caseType: CaseType
-  ): string {
+  getDeletePermission(caseType: CaseType): string {
     switch (caseType) {
       case CaseType.LongTerm:
         return Permissions.LongTermCases.HardDelete;
@@ -569,9 +480,7 @@ export class CasesManagement implements OnInit, OnDestroy {
     }
   }
 
-  getViewPermission(
-    caseType: CaseType
-  ): string {
+  getViewPermission(caseType: CaseType): string {
     switch (caseType) {
       case CaseType.LongTerm:
         return Permissions.LongTermCases.GetById;
@@ -598,25 +507,18 @@ export class CasesManagement implements OnInit, OnDestroy {
 
     this.isDownloading.set(true);
 
-    this.reportService
-      .generateCasesPdfReport(this.baseFilter())
-      .subscribe({
-        next: (response) => {
-          this.isDownloading.set(false);
+    this.reportService.generateCasesPdfReport(this.baseFilter()).subscribe({
+      next: (response) => {
+        this.isDownloading.set(false);
 
-          this.reportService.download(response);
-        },
+        this.reportService.download(response);
+      },
 
-        error: (err) => {
-          this.isDownloading.set(false);
+      error: (err) => {
+        this.isDownloading.set(false);
 
-          this.toast.error(
-            extractErrorMessage(
-              err,
-              'تعذر الاتصال بالخادم لتنزيل تقرير الحالات'
-            )
-          );
-        },
-      });
+        this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتنزيل تقرير الحالات'));
+      },
+    });
   }
 }
