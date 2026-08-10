@@ -71,9 +71,8 @@ export class UserService extends ApiService {
 
   toggleBlockStatus(userId: string, reason?: string): Observable<ApiResponse<string>> {
     return this.post<ApiResponse<string>>(
-      `${this.baseUrl}/ToggleBlock/${userId}`,
-      JSON.stringify(reason || ''),
-      { headers: { 'Content-Type': 'application/json' } }
+      `${this.baseUrl}/toggle-block/${userId}`,
+      { reason: reason?.trim() || null },
     ).pipe(
       tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS]))
     );

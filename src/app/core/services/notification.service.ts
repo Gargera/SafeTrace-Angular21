@@ -54,6 +54,7 @@ export class NotificationService implements OnDestroy {
   readonly hasNextPage = computed(() => this.#currentPage() < this.#totalPages());
 
   #hubConnection: signalR.HubConnection | null = null;
+  #connectionStart: Promise<void> | null = null;
 
   // ─── SignalR Connection ───────────────────────────────────────────────────
 
@@ -71,40 +72,42 @@ export class NotificationService implements OnDestroy {
   }
 
   startConnection(): void {
-    if (this.#hubConnection) return;
+    if (
+      !this.#authService.isLoggedIn() ||
+      this.#hubConnection?.state === signalR.HubConnectionState.Connected ||
+      this.#connectionStart
+    ) {
+      return;
+    }
 
-    this.#hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(environment.signalRHubUrl, {
-        // Cookie-based auth: credentials are sent automatically.
-        // If you switch to bearer token in the future, provide it here:
-        // accessTokenFactory: () => tokenService.getToken()
-        accessTokenFactory: () => this.#authService.getToken() ?? '',
-        // withCredentials: true,
-      })
-      .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
-      .configureLogging(
-        environment.production ? signalR.LogLevel.Error : signalR.LogLevel.Information,
-      )
-      .build();
+    if (!this.#hubConnection) {
+      this.#hubConnection = new signalR.HubConnectionBuilder()
+        .withUrl(environment.signalRHubUrl, {
+          accessTokenFactory: async () => (await this.#authService.ensureValidAccessToken()) ?? '',
+        })
+        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+        .configureLogging(
+          environment.production ? signalR.LogLevel.Error : signalR.LogLevel.Information,
+        )
+        .build();
 
-    this.#registerHubEvents();
-    this.#connect();
+      this.#registerHubEvents();
+    }
+
+    this.#connectionStart = this.#connect().finally(() => {
+      this.#connectionStart = null;
+    });
   }
 
-  #connect(): void {
-    this.#hubConnection
-      ?.start()
-      .then(() => {
-        this.#isConnected.set(true);
-        // Load notifications via SignalR after connection
-
-        this.#hubConnection?.invoke('GetMyNotifications', 1, DEFAULT_PAGE_SIZE);
-      })
-      .catch((err) => {
-        console.error('SignalR connection error:', err);
-
-        this.#isConnected.set(false);
-      });
+  async #connect(): Promise<void> {
+    try {
+      await this.#hubConnection?.start();
+      this.#isConnected.set(true);
+      await this.#hubConnection?.invoke('GetMyNotifications', 1, DEFAULT_PAGE_SIZE);
+    } catch (err) {
+      console.error('SignalR connection error:', err);
+      this.#isConnected.set(false);
+    }
   }
 
   #registerHubEvents(): void {
@@ -286,6 +289,7 @@ export class NotificationService implements OnDestroy {
   stopConnection(): void {
     this.#hubConnection?.stop().catch(console.error);
     this.#hubConnection = null;
+    this.#connectionStart = null;
     this.#isConnected.set(false);
   }
 
