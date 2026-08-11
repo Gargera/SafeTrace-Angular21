@@ -1,72 +1,98 @@
 <!-- Header (Always Visible) -->
 <div class="flex justify-between items-center">
   <div class="flex items-center gap-sm">
-    <h3 class="text-label-md font-bold text-on-surface">حالاتي</h3>
+    <h3 class="text-label-md font-bold text-on-surface">الحالات</h3>
     @if (totalCases() > 0) {
-      <span class="text-label-sm text-on-surface-variant">
-        ({{ totalCases() }})
-      </span>
+      <span class="text-label-sm text-on-surface-variant"> ({{ totalCases() }}) </span>
     }
   </div>
 </div>
 
 <!-- Filters Card (Always Visible) -->
 <section class="overflow-hidden rounded-xl border border-outline-variant bg-surface shadow-sm my-6">
-  <app-case-filters [initialFilter]="filterRequest()" [showSearch]="true" [showCaseType]="true" [showCaseStatus]="true" [showGender]="false"
-    [showAgeCategory]="false" [showGovernment]="false" [showCity]="false" [showFromDate]="false" [showToDate]="false"
-    [showAgeSort]="false" [showDateSort]="false" (filterChange)="onFilterChange($event)"
-    (reset)="onFilterReset()"></app-case-filters>
+  <app-case-filters
+    [initialFilter]="filterRequest()"
+    [showSearch]="true"
+    [showCaseType]="true"
+    [showCaseStatus]="true"
+    [showGender]="false"
+    [showAgeCategory]="false"
+    [showGovernment]="false"
+    [showCity]="false"
+    [showFromDate]="false"
+    [showToDate]="false"
+    [showAgeSort]="false"
+    [showDateSort]="false"
+    (filterChange)="onFilterChange($event)"
+    (reset)="onFilterReset()"
+  ></app-case-filters>
 </section>
 
 <!-- Content Area -->
-<div class="relative min-h-[350px]">
+<div class="relative min-h-87.5">
   @if (loading()) {
     <!-- Skeleton always in content area only, header/filters stay visible -->
     <app-card-skeleton [items]="4" layout="case-card-compact"></app-card-skeleton>
   } @else {
-  <!-- Content -->
-  @if (hasResults()) {
-  <!-- Scrollable Cases Container -->
-  <div class="cases-scroll-container space-y-3" (scroll)="onScroll($event)">
-    @for (caseItem of sortedCases(); track caseItem.id) {
-      <app-case-card-compact [caseItem]="caseItem" [isMyCase]="true"
-        (onDelete)="requestDelete($event, caseItem.caseType)"
-        (onMarkAsFound)="requestMarkAsFound($event, caseItem.caseType)">
-      </app-case-card-compact>
-    }
+    <!-- Content -->
+    @if (hasResults()) {
+      <!-- Scrollable Cases Container -->
+      <div class="cases-scroll-container space-y-3" (scroll)="onScroll($event)">
+        @for (caseItem of sortedCases(); track caseItem.id) {
+          <app-case-card-compact
+            [caseItem]="caseItem"
+            [isMyCase]="true"
+            (onDelete)="requestDelete($event, caseItem.caseType)"
+            (onMarkAsFound)="requestMarkAsFound($event, caseItem.caseType)"
+          >
+          </app-case-card-compact>
+        }
 
-    @if (loadingMore()) {
-      <div class="my-4">
-        <app-card-skeleton [items]="2" layout="case-card-compact"></app-card-skeleton>
+        @if (loadingMore()) {
+          <div class="my-4">
+            <app-card-skeleton [items]="2" layout="case-card-compact"></app-card-skeleton>
+          </div>
+        }
       </div>
-    }
-
-  </div>
-  } @else {
-  <!-- Empty State: either no cases at all OR no results for the applied filters -->
-  <app-empty-state icon="images/empty.png" [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات'" [message]="
+    } @else {
+      <!-- Empty State: either no cases at all OR no results for the applied filters -->
+      <app-empty-state
+        icon="images/empty.png"
+        [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات'"
+        [message]="
           hasActiveFilters()
             ? 'لم نتمكن من العثور على حالات تطابق خيارات التصفية أو البحث الحالية.'
             : 'لم تقم بإنشاء أي حالات حتى الآن.'
-        " containerClass="py-16">
-  </app-empty-state>
-  }
+        "
+        containerClass="py-16"
+      >
+      </app-empty-state>
+    }
   }
 </div>
 
-
-
 <!-- Confirmation Modal -->
 @if (showConfirmModal() && modalConfig(); as config) {
-<app-confirmation-modal [title]="config.title" [message]="config.message" [confirmText]="config.confirmText"
-  [cancelText]="config.cancelText" [variant]="config.variant ?? 'primary'" [icon]="config.icon ?? 'help_outline'"
-  [confirmLoading]="isSubmitting()"
-  (confirm)="confirmAction()" (cancel)="closeModal()" />
+  <app-confirmation-modal
+    [title]="config.title"
+    [message]="config.message"
+    [confirmText]="config.confirmText"
+    [cancelText]="config.cancelText"
+    [variant]="config.variant ?? 'primary'"
+    [icon]="config.icon ?? 'help_outline'"
+    [confirmLoading]="isSubmitting()"
+    (confirm)="confirmAction()"
+    (cancel)="closeModal()"
+  />
 }
 
 <!-- Mark as Found Modal -->
 @if (showMarkAsFoundModal()) {
-<app-founded-popup [caseId]="markAsFoundCaseId()!" [isSubmitting]="isSubmitting()" [contextKey]="PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND + '_' + markAsFoundCaseId()"
-  (confirmed)="handleMarkAsFoundConfirm($event)"
-  (cancel)="closeMarkAsFoundModal()" />
+  <app-founded-popup
+    [caseId]="markAsFoundCaseId()!"
+    [isSubmitting]="isSubmitting()"
+    [contextKey]="PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND + '_' + markAsFoundCaseId()"
+    (confirmed)="handleMarkAsFoundConfirm($event)"
+    (cancel)="closeMarkAsFoundModal()"
+  />
 }
