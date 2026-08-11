@@ -1,6 +1,6 @@
-<div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 z-[1100] bg-[#091426]/70 backdrop-blur-md flex items-center justify-center p-4"
+<div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 z-1100 bg-primary/70 backdrop-blur-md flex items-center justify-center p-4"
   (click)="onBackdropClick($event)">
-  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-[720px] max-h-[90vh] overflow-y-auto flex flex-col dir-rtl"
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-180 max-h-[90vh] overflow-y-auto flex flex-col dir-rtl"
     (click)="$event.stopPropagation()">
 
     <!-- Header -->
@@ -34,7 +34,7 @@
         <!-- Photo -->
         <div
           class="relative w-full sm:w-45 h-45 rounded-xl overflow-hidden shrink-0 bg-[#f4f7fa] border border-slate-200">
-          <img [src]="m.mainPhoto ? (baseUrl + '/' + m.mainPhoto) : placeholderImg" width="180" height="180"
+          <img [src]="m.mainPhoto ? (filesBaseUrl + '/' + m.mainPhoto) : placeholderImg" width="180" height="180"
             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             [alt]="'صورة ' + getFullName(m)" />
           @if (formatSimilarity(m) > 0) {
@@ -66,8 +66,8 @@
             <div class="col-span-2 flex flex-col gap-1 mt-1">
               <span class="text-[10px] text-slate-400 font-medium">كود الحالة</span>
               <div class="flex items-center gap-2">
-                <div class="flex items-center gap-1.5 bg-[#f0f4ff] border border-[#c7d7f8] rounded-lg px-2.5 py-1.5 font-mono text-[13px] font-bold text-[#0058be] select-all tracking-wide">
-                  <span class="material-symbols-outlined text-[15px] text-[#0058be]">qr_code</span>
+                <div class="flex items-center gap-1.5 bg-[#f0f4ff] border border-[#c7d7f8] rounded-lg px-2.5 py-1.5 font-mono text-[13px] font-bold text-secondary select-all tracking-wide">
+                  <span class="material-symbols-outlined text-[15px] text-secondary">qr_code</span>
                   {{ m.caseCode }}
                 </div>
                 <app-button

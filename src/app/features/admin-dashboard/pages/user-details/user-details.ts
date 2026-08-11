@@ -472,9 +472,13 @@ export class UserDetails implements OnInit {
     return getRoleTranslationAr(roleName);
   }
 
-  getImageUrl(path: string | undefined): string {
-    if (!path) return '';
-    return path.startsWith('http') ? path : `${environment.baseUrl}/${path.replace(/^\//, '')}`;
+  getImageUrl(imgPath: string | undefined): string {
+    if (!imgPath) return '';
+
+    if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+      return imgPath;
+    }
+    return `${environment.filesBaseUrl}/${imgPath.replace(/^\//, '')}`;
   }
 
   private generateEmptyPermissions(): UserPermissionDto[] {

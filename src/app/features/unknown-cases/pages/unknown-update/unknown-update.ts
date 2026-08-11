@@ -165,7 +165,7 @@ export class UnknownUpdate implements OnInit {
   private resolveMediaUrl(path: string | null | undefined): string | null {
     if (!path) return null;
     if (/^https?:\/\//i.test(path)) return path;
-    return `${environment.baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+    return `${environment.filesBaseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
   }
 
   private loadCase(): void {
