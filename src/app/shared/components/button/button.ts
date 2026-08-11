@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 
 export type ButtonVariant =
   'primary' | 'secondary' | 'text' | 'icon' | 'danger' | 'success' | 'outline';
@@ -21,6 +21,8 @@ export class ButtonComponent {
   icon = input('');
   iconClass = input('text-[20px]');
   ariaLabel = input('');
+
+  readonly isNumericIcon = computed(() => /^\d+$/.test(this.icon()));
 
   onClick = output<Event>();
 
@@ -47,8 +49,6 @@ export class ButtonComponent {
     };
 
     if (this.variant() === 'icon') {
-      // Standardized small icon button: compact square with centered icon.
-      // Use important (!) utilities to ensure size is applied when consumers pass extraClass overrides.
       return `group inline-flex h-8 w-8 items-center justify-center rounded-full p-0.5 leading-none transition-all duration-200 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 ${this.extraClass()}`;
     }
 
