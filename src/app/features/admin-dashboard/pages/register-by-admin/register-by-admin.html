@@ -132,15 +132,11 @@
       <app-button
         type="submit"
         [loading]="isLoading()"
+        icon="save"
         variant="primary"
         extraClass="gap-sm px-10 h-14 rounded-full font-bold shadow-md hover:bg-secondary-container transition-all duration-200"
       >
-        @if (!isLoading()) {
-          <span class="material-symbols-outlined">save</span>
-          <span>إنشاء الحساب</span>
-        } @else {
-          <span>جاري الإنشاء...</span>
-        }
+        <span>إنشاء الحساب</span>
       </app-button>
     </div>
   </form>

@@ -1,40 +1,40 @@
 <div class="flex gap-xs" dir="ltr">
   <!-- Previous Button -->
-  <button
-    type="button"
-    [disabled]="currentPage() === 1"
-    (click)="changePage(currentPage() - 1)"
-    class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-  >
-    <span class="material-symbols-outlined text-md">chevron_left</span>
-  </button>
+  <app-button
+    variant="icon"
+    icon="chevron_left"
+    ariaLabel="الصفحة السابقة"
+    [disabled]="loading() || currentPage() === 1"
+    [loading]="loading() && pendingPage() === currentPage() - 1"
+    (onClick)="changePage(currentPage() - 1)"
+    extraClass="w-8 h-8 rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white disabled:cursor-not-allowed cursor-pointer"
+  />
 
   <!-- Page Numbers and Ellipsis -->
   @for (page of pagesArray(); track $index) {
     @if (page === '...') {
       <span class="w-8 h-8 flex items-center justify-center font-bold text-label-sm text-on-surface-variant">...</span>
     } @else {
-      <button
-        type="button"
+      <app-button
+        variant="icon"
+        [icon]="page.toString()"
+        [ariaLabel]="'الصفحة ' + page"
+        [loading]="loading() && pendingPage() === page"
+        [disabled]="loading() || page === currentPage()"
         (click)="changePage(page)"
-        class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant font-bold text-label-sm hover:bg-secondary-fixed-dim transition-all cursor-pointer"
-        [ngClass]="{
-          'bg-secondary text-white': page === currentPage(),
-          'bg-white text-primary': page !== currentPage()
-        }"
-      >
-        {{ page }}
-      </button>
+        [extraClass]="'w-8 h-8 rounded-lg border border-outline-variant font-bold text-label-sm hover:bg-secondary-fixed-dim cursor-pointer ' + (page === currentPage() ? 'bg-secondary text-white' : 'bg-white text-primary')"
+      />
     }
   }
 
   <!-- Next Button -->
-  <button
-    type="button"
-    [disabled]="currentPage() === totalPages()"
-    (click)="changePage(currentPage() + 1)"
-    class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-  >
-    <span class="material-symbols-outlined text-md">chevron_right</span>
-  </button>
+  <app-button
+    variant="icon"
+    icon="chevron_right"
+    ariaLabel="الصفحة التالية"
+    [disabled]="loading() || currentPage() === totalPages()"
+    [loading]="loading() && pendingPage() === currentPage() + 1"
+    (onClick)="changePage(currentPage() + 1)"
+    extraClass="w-8 h-8 rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white disabled:cursor-not-allowed cursor-pointer"
+  />
 </div>

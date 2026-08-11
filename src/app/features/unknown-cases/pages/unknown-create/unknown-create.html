@@ -398,7 +398,7 @@
                     <button
                       type="button"
                       (click)="confirmCrop()"
-                      class="px-5 py-2 text-sm rounded-lg bg-secondary text-on-secondary shadow-sm hover:bg-secondary/90"
+                      class="inline-flex items-center gap-2 px-5 py-2 text-sm rounded-lg bg-secondary text-on-secondary shadow-sm hover:bg-secondary/90"
                     >
                       <span class="material-symbols-outlined text-base">check</span> اعتماد الصورة
                     </button>
@@ -597,9 +597,9 @@
           type="button"
           [disabled]="isSubmitting()"
           [loading]="isSubmitting()"
+          icon="check_circle"
           (onClick)="onSubmit()"
         >
-          <span class="material-symbols-outlined text-lg">check_circle</span>
           <span>إرسال البلاغ</span>
         </app-button>
       }

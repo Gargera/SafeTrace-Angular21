@@ -352,9 +352,11 @@
                     variant="icon"
                     ariaLabel="حذف الرسالة"
                     (onClick)="onDeleteMessage(message)"
+                    icon="delete"
+                    [loading]="deletingMessageId() === message.id"
+                    [disabled]="deletingMessageId() !== null"
                     extraClass="text-on-surface-variant hover:text-error transition-opacity cursor-pointer border-none bg-transparent p-0"
                   >
-                    <span class="material-symbols-outlined"> delete </span>
                   </app-button>
                 }
 
@@ -468,11 +470,11 @@
               variant="primary"
               [disabled]="(!draft().trim() && !selectedFile()) || sending()"
               [loading]="sending()"
+              icon="send"
               (onClick)="onSend()"
               ariaLabel="إرسال"
               extraClass="w-9 h-9 rounded-full flex items-center justify-center shrink-0 disabled:opacity-50 cursor-pointer p-0"
             >
-              <span class="material-symbols-outlined rtl:rotate-180"> send </span>
             </app-button>
           </div>
 

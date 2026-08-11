@@ -106,6 +106,8 @@ export class AiSearch implements OnInit {
   }
 
   startSearch() {
+    if (this.isLoading()) return;
+
     const file = this.selectedImage();
     if (!file) {
       this.toast.warning('الرجاء اختيار صورة أولاً');

@@ -405,6 +405,7 @@
       </span>
       <app-pagination
         [currentPage]="currentPage()"
+        [loading]="isLoading()"
         [totalPages]="totalPages()"
         (pageChange)="changePage($event)"
       />

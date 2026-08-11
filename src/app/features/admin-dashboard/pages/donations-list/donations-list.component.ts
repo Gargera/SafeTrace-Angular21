@@ -2,7 +2,15 @@ import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, catchError, EMPTY, tap } from 'rxjs';
+import {
+  Subject,
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  catchError,
+  EMPTY,
+  tap,
+} from 'rxjs';
 
 import { DonationService } from '../../../donations/services/donations.service';
 import { DonationAdminListDto } from '../../../donations/models/responses/donation-admin-list.dto';
@@ -12,7 +20,6 @@ import { TruncatePipe } from '../../../../shared/pipes/truncate-pipe';
 import { CardComponent } from '../../../../shared/components/card/card';
 
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
@@ -44,7 +51,7 @@ const UI_STATE_CACHE_KEY = 'DonationsList_UI_State';
     PaymentStatusBadgeDirective,
     HasPermissionDirective,
     PaginationComponent,
-    TableSkeletonComponent
+    TableSkeletonComponent,
   ],
   templateUrl: './donations-list.component.html',
 })
@@ -95,10 +102,10 @@ export class DonationsListComponent implements OnInit {
         {
           search: this.search(),
           selectedStatus: this.selectedStatus(),
-          pageNumber: this.pageNumber()
+          pageNumber: this.pageNumber(),
         },
         CACHE_TTL.UI_STATE,
-        [CACHE_TAGS.UI_STATE]
+        [CACHE_TAGS.UI_STATE],
       );
     });
   }
@@ -161,10 +168,10 @@ export class DonationsListComponent implements OnInit {
                 this.donations.set([]);
                 this.totalCount.set(0);
                 return EMPTY;
-              })
-            )
+              }),
+            ),
         ),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((res) => {
         if (res) {
@@ -241,7 +248,7 @@ export class DonationsListComponent implements OnInit {
         error: (err) => {
           this.isDownloading.set(false);
           this.toast.error(extractErrorMessage(err, 'حدث خطأ أثناء تحميل التقرير.'));
-        }
+        },
       });
   }
 }

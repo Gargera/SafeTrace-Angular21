@@ -1,8 +1,24 @@
-import { Component, computed, inject, signal, ChangeDetectionStrategy, OnInit, DestroyRef } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+  OnInit,
+  DestroyRef,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, catchError, EMPTY, tap } from 'rxjs';
+import {
+  Subject,
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  catchError,
+  EMPTY,
+  tap,
+} from 'rxjs';
 import { ComplaintsService } from '../../services/complaints.service';
 import { ComplaintResponseDto } from '../../models/responses/complaint.model';
 import { ComplaintFilterDto } from '../../models/requests/complaint-filter.model';
@@ -15,7 +31,6 @@ import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
@@ -46,7 +61,7 @@ const UI_STATE_CACHE_KEY = 'ComplaintsList_UI_State';
     ConfirmationModalComponent,
     HasPermissionDirective,
     PaginationComponent,
-    TableSkeletonComponent
+    TableSkeletonComponent,
   ],
   templateUrl: './complaints-list.html',
   styleUrl: './complaints-list.css',
@@ -57,10 +72,7 @@ export class ComplaintsList implements OnInit {
   private readonly cacheService = inject(CacheService);
   private readonly destroyRef = inject(DestroyRef);
   Permissions = Permissions;
-  complaintActionPermissions = [
-    Permissions.Complaints.GetById,
-    Permissions.Complaints.HardDelete
-  ];
+  complaintActionPermissions = [Permissions.Complaints.GetById, Permissions.Complaints.HardDelete];
   private toast = inject(SnackbarService);
   private reportService = inject(ReportService);
 
@@ -87,7 +99,7 @@ export class ComplaintsList implements OnInit {
     pageSize: 10,
     search: '',
     status: '' as any,
-    contactType: ''
+    contactType: '',
   });
 
   readonly hasActiveFilters = computed(() => {
@@ -101,7 +113,7 @@ export class ComplaintsList implements OnInit {
       pageSize: 10,
       search: '',
       status: '' as any,
-      contactType: ''
+      contactType: '',
     });
     this.loadComplaints();
   }
@@ -112,7 +124,7 @@ export class ComplaintsList implements OnInit {
     'محتوى غير لائق',
     'مشكلة فنية',
     'اقتراح لتحسين المنصة',
-    'أخرى'
+    'أخرى',
   ];
 
   ComplaintStatusEnum = ComplaintStatus;
@@ -122,22 +134,19 @@ export class ComplaintsList implements OnInit {
   constructor() {
     this.destroyRef.onDestroy(() => {
       const state: any = {
-        filter: this.filter()
+        filter: this.filter(),
       };
-      
+
       const complaint = this.selectedComplaint();
       const msg = this.solutionMessage();
       if (this.showDetailsModal() && complaint && msg) {
         state.activeComplaintId = complaint.id;
-        this.cacheService.set(`ComplaintSolution_Draft_${complaint.id}`, msg, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+        this.cacheService.set(`ComplaintSolution_Draft_${complaint.id}`, msg, CACHE_TTL.UI_STATE, [
+          CACHE_TAGS.UI_STATE,
+        ]);
       }
 
-      this.cacheService.set(
-        UI_STATE_CACHE_KEY,
-        state,
-        CACHE_TTL.UI_STATE,
-        [CACHE_TAGS.UI_STATE]
-      );
+      this.cacheService.set(UI_STATE_CACHE_KEY, state, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
     });
   }
 
@@ -145,9 +154,11 @@ export class ComplaintsList implements OnInit {
     const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY);
     if (cachedState) {
       if (cachedState.filter) this.filter.set(cachedState.filter);
-      
+
       if (cachedState.activeComplaintId) {
-        const msg = this.cacheService.get<string>(`ComplaintSolution_Draft_${cachedState.activeComplaintId}`);
+        const msg = this.cacheService.get<string>(
+          `ComplaintSolution_Draft_${cachedState.activeComplaintId}`,
+        );
         if (msg) {
           this.activeComplaintDraftId = cachedState.activeComplaintId;
           this.activeComplaintDraftMsg = msg;
@@ -180,7 +191,7 @@ export class ComplaintsList implements OnInit {
       error: (err) => {
         this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتحميل الإحصائيات'));
         this.loadingStats.set(false);
-      }
+      },
     });
   }
 
@@ -200,17 +211,19 @@ export class ComplaintsList implements OnInit {
               this.complaints.set([]);
               this.totalCount.set(0);
               return EMPTY;
-            })
-          )
+            }),
+          ),
         ),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((res) => {
         if (res && res.success && res.data) {
           this.complaints.set(res.data.items);
           this.totalCount.set(res.data.totalCount);
-          this.totalPages.set(res.data.totalPages ?? Math.ceil(res.data.totalCount / this.filter().pageSize));
-          
+          this.totalPages.set(
+            res.data.totalPages ?? Math.ceil(res.data.totalCount / this.filter().pageSize),
+          );
+
           if (this.activeComplaintDraftId) {
             const found = res.data.items.find((c: any) => c.id === this.activeComplaintDraftId);
             if (found) {
@@ -262,6 +275,8 @@ export class ComplaintsList implements OnInit {
   }
 
   resolveComplaint() {
+    if (this.isResolving()) return;
+
     const complaint = this.selectedComplaint();
     const msg = this.solutionMessage().trim();
     if (!complaint || !msg) {
@@ -278,7 +293,9 @@ export class ComplaintsList implements OnInit {
           this.cacheService.remove(`ComplaintSolution_Draft_${complaint.id}`);
 
           const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
-          this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+          this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [
+            CACHE_TAGS.UI_STATE,
+          ]);
 
           this.closeDetailsModal();
           this.loadComplaints();
@@ -291,7 +308,7 @@ export class ComplaintsList implements OnInit {
       error: (err) => {
         this.toast.error(extractErrorMessage(err, 'حدث خطأ أثناء حل الشكوى'));
         this.isResolving.set(false);
-      }
+      },
     });
   }
 
@@ -319,7 +336,9 @@ export class ComplaintsList implements OnInit {
           this.toast.success('تم حذف الشكوى بنجاح');
 
           const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
-          this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+          this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [
+            CACHE_TAGS.UI_STATE,
+          ]);
 
           this.closeDeleteModal();
           this.loadComplaints();
@@ -331,7 +350,7 @@ export class ComplaintsList implements OnInit {
       error: (err) => {
         this.isDeleting.set(false);
         this.toast.error(extractErrorMessage(err, 'حدث خطأ أثناء الحذف'));
-      }
+      },
     });
   }
   isDownloading = signal<boolean>(false);
@@ -341,21 +360,18 @@ export class ComplaintsList implements OnInit {
     this.isDownloading.set(true);
     const filter = {
       ...this.filter(),
-      status: this.filter().status || null
+      status: this.filter().status || null,
     };
-    this.reportService
-      .generateComplaintPdfReport(filter)
-      .subscribe({
-        next: (response) => {
-          this.isDownloading.set(false);
-          this.reportService.download(response);
-        },
-        error: (err) => {
-          this.isDownloading.set(false);
-          const message = extractErrorMessage(err, 'حدث خطأ أثناء تنزيل التقرير');
-          this.toast.error(message);
-        }
-      });
+    this.reportService.generateComplaintPdfReport(filter).subscribe({
+      next: (response) => {
+        this.isDownloading.set(false);
+        this.reportService.download(response);
+      },
+      error: (err) => {
+        this.isDownloading.set(false);
+        const message = extractErrorMessage(err, 'حدث خطأ أثناء تنزيل التقرير');
+        this.toast.error(message);
+      },
+    });
   }
-
 }
