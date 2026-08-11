@@ -7,13 +7,22 @@
   (click)="onClick.emit($event)"
 >
   @if (loading()) {
-    <span class="material-symbols-outlined animate-spin text-[18px]" aria-hidden="true">
+    <span class="material-symbols-outlined animate-spin text-[18px]!" aria-hidden="true">
       progress_activity
     </span>
   } @else if (icon()) {
-    <span class="material-symbols-outlined leading-none" [class]="iconClass()" aria-hidden="true">
-      {{ icon() }}
-    </span>
+    @if (isNumericIcon()) {
+      <span
+        class="inline-flex items-center justify-center font-sans text-[14px]! font-semibold leading-none tabular-nums"
+        aria-hidden="true"
+      >
+        {{ icon() }}
+      </span>
+    } @else {
+      <span class="material-symbols-outlined leading-none" [class]="iconClass()" aria-hidden="true">
+        {{ icon() }}
+      </span>
+    }
   }
 
   <span class="button-content inline-flex items-center justify-center gap-2">
