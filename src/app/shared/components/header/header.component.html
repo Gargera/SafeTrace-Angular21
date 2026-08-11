@@ -1,12 +1,8 @@
 <div class="flex flex-col gap-6 transition-all duration-200 sm:flex-row sm:items-center sm:justify-between">
   <div class="flex min-w-0 flex-1 items-start gap-4">
     @if (showBackButton()) {
-    <app-button variant="icon" [ariaLabel]="backButtonLabel()" (onClick)="backAction.emit()"
+    <app-button variant="icon" icon="arrow_back" [ariaLabel]="backButtonLabel()" (onClick)="backAction.emit()"
       extraClass="h-11 w-11 rounded-full border-0 border-none bg-surface-container-low hover:bg-surface-container transition-all duration-200 hover:shadow-sm flex items-center justify-center">
-      <span
-        class="material-symbols-outlined text-xl text-on-surface-variant transition-transform duration-200 rtl:rotate-180">
-        arrow_back
-      </span>
     </app-button>
     }
 
@@ -62,26 +58,16 @@
 
     @if (secondaryActionLabel() && showSecondary()) {
     <app-button variant="secondary" [disabled]="loading() || readonly() || secondaryDisabled()"
+      [icon]="secondaryActionIcon()"
       [extraClass]="'gap-2 ' + secondaryButtonClass()" (onClick)="secondaryAction.emit()">
-      @if (secondaryActionIcon()) {
-      <span class="material-symbols-outlined text-[20px]">
-        {{ secondaryActionIcon() }}
-      </span>
-      }
-
       <span>{{ secondaryActionLabel() }}</span>
     </app-button>
     }
 
     @if (primaryActionLabel() && showPrimary()) {
     <app-button variant="primary" [disabled]="loading() || readonly() || primaryDisabled()"
+      [icon]="primaryActionIcon()"
       [extraClass]="'gap-2 ' + primaryButtonClass()" (onClick)="primaryAction.emit()">
-      @if (primaryActionIcon()) {
-      <span class="material-symbols-outlined text-[20px]">
-        {{ primaryActionIcon() }}
-      </span>
-      }
-
       <span>{{ primaryActionLabel() }}</span>
     </app-button>
     }

@@ -438,8 +438,7 @@
         التالي <span class="material-symbols-outlined text-lg">arrow_back</span>
       </app-button>
       } @else {
-      <app-button variant="primary" type="button" [disabled]="isSubmitting()" [loading]="isSubmitting()" (onClick)="onSubmit()">
-        <span class="material-symbols-outlined text-lg">check_circle</span>
+      <app-button variant="primary" type="button" icon="check_circle" [disabled]="isSubmitting()" [loading]="isSubmitting()" (onClick)="onSubmit()">
         <span>حفظ التعديلات</span>
       </app-button>
       }

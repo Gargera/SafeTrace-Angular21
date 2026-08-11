@@ -80,7 +80,7 @@ export class ResetPassword implements OnDestroy {
   }
 
   onResendOtp() {
-    if (this.countdown() > 0) return;
+    if (this.countdown() > 0 || this.isResending()) return;
 
     this.apiErrorMessage.set('');
     this.isResending.set(true);

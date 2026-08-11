@@ -99,6 +99,7 @@
                     (onClick)="onChangeRole(selectedRole())"
                     [disabled]="loadingAction() !== null"
                     [loading]="loadingAction() === 'changeRole'"
+                    icon="manage_accounts"
                     variant="primary"
                     extraClass="w-full py-2.5 rounded-lg text-label-md font-bold justify-center"
                   >
@@ -213,10 +214,10 @@
                       (onClick)="onApprove()"
                       [disabled]="loadingAction() !== null"
                       [loading]="loadingAction() === 'approve'"
+                      icon="check_circle"
                       variant="primary"
                       extraClass="flex-1 px-4 py-2.5 rounded-xl text-label-md font-bold !bg-[#006b5f] !text-white hover:!bg-[#008f81] border-none justify-center gap-2 transition-all"
                     >
-                      <span class="material-symbols-outlined">check_circle</span>
                       قبول
                     </app-button>
 
@@ -225,10 +226,10 @@
                       (onClick)="onReject()"
                       [disabled]="loadingAction() !== null"
                       [loading]="loadingAction() === 'reject'"
+                      icon="cancel"
                       variant="primary"
                       extraClass="flex-1 px-4 py-2.5 rounded-xl text-label-md font-bold !bg-error !text-white hover:!bg-error/90 border-none justify-center gap-2 transition-all"
                     >
-                      <span class="material-symbols-outlined">cancel</span>
                       رفض
                     </app-button>
                   }
@@ -238,6 +239,7 @@
                     (onClick)="onToggleBlock()"
                     [disabled]="loadingAction() !== null"
                     [loading]="loadingAction() === 'block'"
+                    [icon]="user()?.isBlocked ? 'lock_open_right' : 'block'"
                     variant="primary"
                     [extraClass]="
                       'w-full px-4 py-2.5 rounded-xl text-label-md font-bold border-none justify-center gap-2 transition-all ' +
@@ -246,9 +248,6 @@
                         : '!bg-error !text-white hover:!bg-error/90')
                     "
                   >
-                    <span class="material-symbols-outlined">{{
-                      user()?.isBlocked ? 'lock_open_right' : 'block'
-                    }}</span>
                     {{ user()?.isBlocked ? 'فك الحظر عن المستخدم' : 'حظر المستخدم' }}
                   </app-button>
                 </div>
@@ -451,15 +450,11 @@
                   (onClick)="savePermissions()"
                   [disabled]="isSavingPerms() || !hasChanges()"
                   [loading]="isSavingPerms()"
+                  icon="save"
                   variant="primary"
                   extraClass="gap-sm px-10 h-14 rounded-full font-bold shadow-md hover:bg-secondary-container transition-all duration-200"
                 >
-                  @if (!isSavingPerms()) {
-                    <span class="material-symbols-outlined">save</span>
-                    <span>حفظ الصلاحيات الفردية</span>
-                  } @else {
-                    <span>جاري الحفظ...</span>
-                  }
+                  <span>حفظ الصلاحيات الفردية</span>
                 </app-button>
               </div>
             </ng-container>

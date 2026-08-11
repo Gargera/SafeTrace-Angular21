@@ -106,8 +106,7 @@
       </app-button>
 
       @if (canForceCreate()) {
-      <app-button variant="primary" (onClick)="forceCreate.emit()" [loading]="isSubmitting()" [disabled]="isSubmitting()">
-        <span class="material-symbols-outlined text-[20px]">add_circle</span>
+      <app-button variant="primary" icon="add_circle" (onClick)="forceCreate.emit()" [loading]="isSubmitting()" [disabled]="isSubmitting()">
         تجاهل وإنشاء البلاغ
       </app-button>
       }

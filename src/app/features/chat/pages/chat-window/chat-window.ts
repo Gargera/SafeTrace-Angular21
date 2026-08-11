@@ -65,6 +65,7 @@ export class ChatWindow implements OnInit {
   selectedFile = signal<File | null>(null);
   fileError = signal<string | null>(null);
   sending = signal<boolean>(false);
+  deletingMessageId = signal<number | null>(null);
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
 
@@ -418,11 +419,16 @@ private handleMessageDeletedForEveryone = (
   }
 
  async onDeleteMessage(message: MessageDto): Promise<void> {
+  if (this.deletingMessageId() !== null) return;
+
   const choice = await this.chatAlertsService.confirmDeleteMessage(message.isMine);
 
   if (choice === 'cancel') {
     return;
   }
+
+  if (this.deletingMessageId() !== null) return;
+  this.deletingMessageId.set(message.id);
 
   const request$ = choice === 'everyone'
     ? this.messageService.deleteMessageForEveryone(message.id)
@@ -442,10 +448,12 @@ private handleMessageDeletedForEveryone = (
       // لا نعدل هنا
       // SignalR event هو اللي هيحدث الرسالة عند الطرفين
 
+    this.deletingMessageId.set(null);
     this.snackbarService.success(res.message);
     },
 
     error: (err) => {
+      this.deletingMessageId.set(null);
       this.snackbarService.error(
         extractErrorMessage(err, 'تعذر حذف الرسالة، حاول مرة أخرى')
       );

@@ -93,11 +93,9 @@
       *hasPermission="Permissions.Dashboard.GenerateCasesPdfReport"
       variant="outline"
       [loading]="isDownloading()"
+      icon="download"
       (onClick)="downloadReport()"
     >
-      @if (!isDownloading()) {
-        <span class="material-symbols-outlined">download</span>
-      }
       <span>تحميل التقرير</span>
     </app-button>
   </app-case-filters>
@@ -203,6 +201,7 @@
       </span>
       <app-pagination
         [currentPage]="currentPage()"
+        [loading]="loading()"
         [totalPages]="totalPages()"
         (pageChange)="changePage($event)"
       />

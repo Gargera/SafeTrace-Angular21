@@ -353,11 +353,9 @@
                     (onClick)="useCurrentLocation()"
                     [disabled]="isLocating()"
                     [loading]="isLocating()"
+                    icon="my_location"
                   >
-                    @if (!isLocating()) {
-                      <span class="material-symbols-outlined text-lg">my_location</span> استخدام
-                      موقعي الحالي
-                    }
+                    استخدام موقعي الحالي
                   </app-button>
                 </div>
 
@@ -733,9 +731,9 @@
             type="button"
             [disabled]="isSubmitting()"
             [loading]="isSubmitting()"
+            icon="check_circle"
             (onClick)="onSubmit()"
           >
-            <span class="material-symbols-outlined text-lg">check_circle</span>
             <span>حفظ التعديلات</span>
           </app-button>
         }

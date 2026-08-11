@@ -115,11 +115,9 @@
       *hasPermission="Permissions.Donations.GenerateDonationsPdfReport"
       variant="outline"
       [loading]="isDownloading()"
+      icon="download"
       (onClick)="downloadReport()"
     >
-      @if (!isDownloading()) {
-        <span class="material-symbols-outlined">download</span>
-      }
       <span>تحميل التقرير</span>
     </app-button>
 
@@ -255,6 +253,7 @@
 
       <app-pagination
         [currentPage]="pageNumber()"
+        [loading]="loading()"
         [totalPages]="totalPages()"
         (pageChange)="changePage($event)"
       />

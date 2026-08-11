@@ -128,10 +128,10 @@
         ariaLabel="موقعي الحالي"
         [disabled]="state.isLocatingModal()"
         [loading]="state.isLocatingModal()"
+        icon="my_location"
         (onClick)="facade.useCurrentLocation()"
         extraClass="absolute bottom-5 right-5 z-[500] flex h-12 w-12 items-center justify-center rounded-full bg-white text-secondary shadow-xl border border-outline-variant/30 transition-all hover:bg-surface-bright hover:scale-105 active:scale-95 disabled:opacity-60 disabled:pointer-events-none pointer-events-auto p-0"
       >
-        <span class="material-symbols-outlined text-2xl">my_location</span>
       </app-button>
       }
     </div>

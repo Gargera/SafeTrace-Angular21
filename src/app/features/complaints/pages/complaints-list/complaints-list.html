@@ -101,9 +101,9 @@
       variant="outline"
       [disabled]="isDownloading()"
       [loading]="isDownloading()"
+      icon="download"
       (onClick)="downloadReport()"
     >
-      <span class="material-symbols-outlined text-[18px]">download</span>
       <span>تحميل التقرير</span>
     </app-button>
 
@@ -231,6 +231,7 @@
 
       <app-pagination
         [currentPage]="filter().pageNumber"
+        [loading]="isLoading()"
         [totalPages]="totalPages()"
         (pageChange)="changePage($event)"
       />
@@ -337,9 +338,9 @@
             (onClick)="resolveComplaint()"
             [disabled]="isResolving()"
             [loading]="isResolving()"
+            icon="check_circle"
             extraClass="w-full sm:w-auto min-w-[140px]"
           >
-            <span class="material-symbols-outlined text-[18px]">check_circle</span>
             {{ isResolving() ? 'جاري الحل...' : 'اعتماد الحل' }}
           </app-button>
         }

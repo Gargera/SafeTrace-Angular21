@@ -2,16 +2,21 @@
   [type]="type()"
   [disabled]="computedDisabled"
   [class]="baseClasses"
-  [attr.aria-label]="ariaLabel()"
+  [attr.aria-busy]="loading() ? 'true' : null"
+  [attr.aria-label]="ariaLabel() || null"
   (click)="onClick.emit($event)"
 >
-  <span class="inline-flex items-center justify-center gap-2">
-    @if (loading()) {
-      <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-        <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-      </svg>
-    }
+  @if (loading()) {
+    <span class="material-symbols-outlined animate-spin text-[18px]" aria-hidden="true">
+      progress_activity
+    </span>
+  } @else if (icon()) {
+    <span class="material-symbols-outlined leading-none" [class]="iconClass()" aria-hidden="true">
+      {{ icon() }}
+    </span>
+  }
+
+  <span class="button-content inline-flex items-center justify-center gap-2">
     <ng-content></ng-content>
   </span>
 </button>

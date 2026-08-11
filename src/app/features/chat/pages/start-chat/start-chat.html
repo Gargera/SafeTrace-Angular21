@@ -81,22 +81,22 @@
           variant="secondary"
           [loading]="isSubmitting()"
           [disabled]="isSubmitting()"
+          icon="chat"
           extraClass="w-full rounded-full py-sm font-bold inline-flex items-center justify-center gap-2"
           (onClick)="startOrContinueChat()"
         >
           متابعة المحادثة
-          <span class="material-symbols-outlined">chat</span>
         </app-button>
       } @else {
         <app-button
           variant="secondary"
           [loading]="isSubmitting()"
           [disabled]="isSubmitting()"
+          icon="send"
           extraClass="w-full rounded-full py-sm font-bold inline-flex items-center justify-center gap-2"
           (onClick)="startOrContinueChat()"
         >
           بدء المحادثة
-          <span class="material-symbols-outlined rtl:rotate-180">send</span>
         </app-button>
       }
 

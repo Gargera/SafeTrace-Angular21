@@ -75,6 +75,7 @@ export class UserList {
   totalCount = signal<number>(0);
   totalPages = signal<number>(0);
   isLoading = signal<boolean>(false);
+  isDownloading = signal<boolean>(false);
   loadingStats = signal<boolean>(true);
   statistics = signal<UserStatisticsDto | null>(null);
 
@@ -233,6 +234,9 @@ export class UserList {
   }
 
   downloadReport(): void {
+    if (this.isDownloading()) return;
+    this.isDownloading.set(true);
+
     const reportFilter = {
       pageNumber: this.filter().pageNumber,
       pageSize: this.filter().pageSize,
@@ -247,8 +251,10 @@ export class UserList {
       .subscribe({
         next: (response) => {
           this.reportService.download(response);
+          this.isDownloading.set(false);
         },
         error: (err) => {
+          this.isDownloading.set(false);
           this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتنزيل تقرير المستخدمين'));
         }
       });

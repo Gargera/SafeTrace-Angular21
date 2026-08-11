@@ -59,13 +59,11 @@
         type="button"
         (click)="useCurrentLocation()"
         [disabled]="isLocating() || isSavingLocation()"
-        [loading]="isLocating()"
+        [loading]="isLocating() || isSavingLocation()"
+        icon="my_location"
         extraClass="text-label-sm text-secondary hover:underline font-bold"
       >
-        @if (!isLocating()) {
-          <span class="material-symbols-outlined" aria-hidden="true">my_location</span>
-          استخدام موقعي الحالي
-        }
+        استخدام موقعي الحالي
       </app-button>
     </div>
 

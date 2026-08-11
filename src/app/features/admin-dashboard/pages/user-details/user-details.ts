@@ -351,6 +351,7 @@ export class UserDetails implements OnInit {
   }
 
   private executeAction(observable: any, successMessage: string, actionName: string) {
+    if (this.loadingAction() !== null) return;
     this.loadingAction.set(actionName);
 
     observable.subscribe({
@@ -383,7 +384,7 @@ export class UserDetails implements OnInit {
   }
 
   savePermissions() {
-    if (!this.hasChanges()) return;
+    if (!this.hasChanges() || this.isSavingPerms()) return;
 
     this.openConfirmModal(
       'حفظ الصلاحيات',

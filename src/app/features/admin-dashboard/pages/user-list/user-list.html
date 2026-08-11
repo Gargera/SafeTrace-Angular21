@@ -148,9 +148,10 @@
     <app-button
       *hasPermission="Permissions.Users.GenerateUsersPdfReport"
       variant="outline"
+      icon="download"
+      [loading]="isDownloading()"
       (onClick)="downloadReport()"
     >
-      <span class="material-symbols-outlined">download</span>
       <span>تحميل التقرير</span>
     </app-button>
 
@@ -265,6 +266,7 @@
 
       <app-pagination
         [currentPage]="filter().pageNumber"
+        [loading]="isLoading()"
         [totalPages]="totalPages()"
         (pageChange)="changePage($event)"
       />

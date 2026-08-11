@@ -344,10 +344,10 @@
             (onClick)="submitComplaint()"
             [disabled]="isSendingComplaint()"
             [loading]="isSendingComplaint()"
+            icon="send"
             variant="primary"
             extraClass="w-full justify-center py-4 font-bold text-[18px] rounded-xl gap-2 shadow-md"
           >
-            <span class="material-symbols-outlined">send</span>
             {{ isSendingComplaint() ? 'جاري الإرسال...' : 'إرسال الشكوى' }}
           </app-button>
         </form>

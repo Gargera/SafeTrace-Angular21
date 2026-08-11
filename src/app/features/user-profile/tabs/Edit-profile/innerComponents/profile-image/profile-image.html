@@ -29,6 +29,7 @@
           variant="success"
           (click)="saveProfileImage()"
           [loading]="isUploadingProfileImage()"
+          icon="upload"
         >
           حفظ
         </app-button>
@@ -102,16 +103,10 @@
           variant="danger"
           [disabled]="isUploadingProfileImage() || isRemovingProfileImage()"
           [loading]="isRemovingProfileImage()"
+          icon="delete"
           (onClick)="requestRemoveProfilePhoto()"
           extraClass="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold"
         >
-          <span
-            class="material-symbols-outlined"
-            style="font-variation-settings: 'FILL' 1"
-            aria-hidden="true"
-          >
-            delete
-          </span>
           <span>حذف الصورة الشخصية</span>
         </app-button>
       }
