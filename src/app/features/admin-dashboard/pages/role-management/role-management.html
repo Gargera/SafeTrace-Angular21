@@ -1,20 +1,30 @@
 <div class="max-w-5xl mx-auto space-y-lg pb-12">
   <section class="space-y-3 pb-2">
     <app-header title="إدارة الأدوار والصلاحيات"></app-header>
-    <p class="text-body-md text-on-surface-variant">قم بإنشاء الأدوار وتخصيص الصلاحيات لمختلف مستويات المستخدمين في النظام.</p>
+    <p class="text-body-md text-on-surface-variant">
+      قم بإنشاء الأدوار وتخصيص الصلاحيات لمختلف مستويات المستخدمين في النظام.
+    </p>
   </section>
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-lg">
-    <app-card extraClass="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant flex flex-col gap-4 h-full">
+    <app-card
+      extraClass="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant flex flex-col gap-4 h-full"
+    >
       <div class="flex items-center gap-2 text-primary mb-2">
         <span class="material-symbols-outlined">badge</span>
         <h2 class="text-headline-sm font-bold">تعديل صلاحيات دور قائم</h2>
       </div>
-      <p class="text-body-sm text-on-surface-variant">اختر دوراً من القائمة لعرض وتعديل الصلاحيات الممنوحة له.</p>
-      
+      <p class="text-body-sm text-on-surface-variant">
+        اختر دوراً من القائمة لعرض وتعديل الصلاحيات الممنوحة له.
+      </p>
+
       <div class="flex gap-2">
         <div class="flex-1">
-          <app-form-field type="select" [ngModel]="selectedRoleId()" (ngModelChange)="onRoleSelected($event)">
+          <app-form-field
+            type="select"
+            [ngModel]="selectedRoleId()"
+            (ngModelChange)="onRoleSelected($event)"
+          >
             <option value="">-- عرض كل صلاحيات النظام (للاطلاع فقط) --</option>
             @for (role of roles(); track role.id) {
               <option [value]="role.id">{{ getRoleName(role.name) }}</option>
@@ -23,170 +33,249 @@
         </div>
 
         @if (selectedRoleId() && isDeletableRole()) {
-          <app-button *hasPermission="Permissions.Roles.Delete" (onClick)="onDeleteRole()" [disabled]="isDeleting()" [loading]="isDeleting()" variant="icon" extraClass="w-11 h-11 !border-none bg-error-container text-error hover:bg-error hover:text-white shrink-0 transition-colors" ariaLabel="حذف الدور">
-            @if (!isDeleting()) {
-              <span class="material-symbols-outlined text-[24px]">delete</span>
-            }
+          <app-button
+            *hasPermission="Permissions.Roles.Delete"
+            (onClick)="onDeleteRole()"
+            [disabled]="isDeleting()"
+            [loading]="isDeleting()"
+            icon="delete"
+            variant="icon"
+            extraClass="w-11 h-11 !border-none bg-error-container text-error hover:bg-error hover:text-white shrink-0 transition-colors"
+            ariaLabel="حذف الدور"
+          >
           </app-button>
         }
       </div>
     </app-card>
 
     <ng-container *hasPermission="Permissions.Roles.Create">
-    <app-card extraClass="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant flex flex-col gap-4 h-full">
-      <div class="flex items-center gap-2 text-primary mb-2">
-        <span class="material-symbols-outlined">add_moderator</span>
-        <h2 class="text-headline-sm font-bold">إنشاء دور جديد</h2>
-      </div>
-      
-      @if (apiErrorMessage()) {
-        <div class="bg-error-container text-on-error-container p-3 rounded-lg text-sm flex items-start gap-2">
-          <span class="material-symbols-outlined text-[20px]">error</span>
-          <span>{{ apiErrorMessage() }}</span>
+      <app-card
+        extraClass="bg-white p-6 rounded-2xl shadow-sm border border-outline-variant flex flex-col gap-4 h-full"
+      >
+        <div class="flex items-center gap-2 text-primary mb-2">
+          <span class="material-symbols-outlined">add_moderator</span>
+          <h2 class="text-headline-sm font-bold">إنشاء دور جديد</h2>
         </div>
-      }
 
-      <form [formGroup]="createRoleForm" (ngSubmit)="onCreateRole()" class="flex flex-col gap-2">
-        <div class="flex gap-2">
-          <div class="flex-1">
-            <app-form-field formControlName="roleName" placeholder="مثال: متطوع"></app-form-field>
+        @if (apiErrorMessage()) {
+          <div
+            class="bg-error-container text-on-error-container p-3 rounded-lg text-sm flex items-start gap-2"
+          >
+            <span class="material-symbols-outlined">error</span>
+            <span>{{ apiErrorMessage() }}</span>
           </div>
-          <app-button type="submit" [disabled]="isCreating()" [loading]="isCreating()" variant="primary" extraClass="px-6 rounded-xl font-bold shrink-0">
-            إنشاء
-          </app-button>
-        </div>
-        
-        @if (createRoleForm.get('roleName')?.touched && createRoleForm.get('roleName')?.invalid) {
-          <span class="text-error text-xs font-medium px-2">
-            @if (createRoleForm.get('roleName')?.errors?.['pattern']) {
-              يجب كتابة اسم الدور باللغة العربية فقط (بدون مسافات، أرقام، أو رموز خاصة).
-            } @else {
-              اسم الدور مطلوب ولا يجب أن يقل عن حرفين أو يتجاوز 50 حرف.
-            }
-          </span>
         }
-      </form>
-    </app-card>
+
+        <form [formGroup]="createRoleForm" (ngSubmit)="onCreateRole()" class="flex flex-col gap-2">
+          <div class="flex gap-2">
+            <div class="flex-1">
+              <app-form-field formControlName="roleName" placeholder="مثال: متطوع"></app-form-field>
+            </div>
+            <app-button
+              type="submit"
+              [disabled]="isCreating()"
+              [loading]="isCreating()"
+              icon="add"
+              variant="primary"
+              extraClass="px-6 rounded-xl font-bold shrink-0"
+            >
+              إنشاء
+            </app-button>
+          </div>
+
+          @if (createRoleForm.get('roleName')?.touched && createRoleForm.get('roleName')?.invalid) {
+            <span class="text-error text-xs font-medium px-2">
+              @if (createRoleForm.get('roleName')?.errors?.['pattern']) {
+                يجب كتابة اسم الدور باللغة العربية فقط (بدون مسافات، أرقام، أو رموز خاصة).
+              } @else {
+                اسم الدور مطلوب ولا يجب أن يقل عن حرفين أو يتجاوز 50 حرف.
+              }
+            </span>
+          }
+        </form>
+      </app-card>
     </ng-container>
   </div>
 
   <ng-container *hasPermission="Permissions.Roles.GetPermissionsByRoleId">
-  <section class="space-y-md mt-xl">
-    <div class="flex justify-between items-end flex-wrap gap-4">
-      <div class="flex flex-col gap-2">
-        <h2 class="text-headline-sm font-bold text-primary flex items-center gap-sm">
-          <span class="material-symbols-outlined text-secondary">account_tree</span>
-          هيكل صلاحيات {{ selectedRoleId() ? 'الدور المختار' : 'النظام بالكامل' }}
-        </h2>
-        @if (isReadOnly()) {
-          <span class="inline-flex items-center gap-1.5 text-error font-medium text-label-sm bg-error-container/30 px-3 py-1 rounded-full w-fit">
-            <span class="material-symbols-outlined text-[16px]">lock</span>
-            صلاحيات هذا الدور أساسية في النظام ومحمية من التعديل
-          </span>
-        }
-      </div>
-      <div class="bg-primary text-white px-lg py-sm rounded-xl shadow-sm flex items-center gap-md">
-        <div class="flex flex-col">
-          <span class="text-[10px] font-bold opacity-70 uppercase">إجمالي الصلاحيات المختارة</span>
-          <span class="text-headline-sm font-bold">{{ totalSelected() }}/{{ totalPermissions() }}</span>
+    <section class="space-y-md mt-xl">
+      <div class="flex justify-between items-end flex-wrap gap-4">
+        <div class="flex flex-col gap-2">
+          <h2 class="text-headline-sm font-bold text-primary flex items-center gap-sm">
+            <span class="material-symbols-outlined text-secondary">account_tree</span>
+            هيكل صلاحيات {{ selectedRoleId() ? 'الدور المختار' : 'النظام بالكامل' }}
+          </h2>
+          @if (isReadOnly()) {
+            <span
+              class="inline-flex items-center gap-1.5 text-error font-medium text-label-sm bg-error-container/30 px-3 py-1 rounded-full w-fit"
+            >
+              <span class="material-symbols-outlined">lock</span>
+              صلاحيات هذا الدور أساسية في النظام ومحمية من التعديل
+            </span>
+          }
         </div>
-        <span class="material-symbols-outlined text-tertiary-fixed-dim">shield_person</span>
-      </div>
-    </div>
-
-    <div class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-50">
-      
-      @if (isLoadingTree()) {
-        <app-table-skeleton [rows]="10"></app-table-skeleton>
-      } @else {
-      <div class="divide-y divide-outline-variant">
-        
-        <div class="bg-surface-variant/30 p-md">
-          <div class="flex items-center gap-md">
-            <app-button variant="icon" (onClick)="toggleRootExpanded()" extraClass="w-8 h-8 rounded-full border-none hover:bg-surface-container-highest transition-all">
-              <span class="material-symbols-outlined transition-transform duration-300" [class.rotate-180]="isRootExpanded()">expand_more</span>
-            </app-button>
-            <div class="flex items-center gap-3">
-              @if (selectedRoleId()) {
-                <input type="checkbox" 
-                       class="w-5 h-5 rounded border-outline-variant text-secondary focus:ring-secondary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                       [checked]="isAllChecked()"
-                       [indeterminate]="isAllIndeterminate()"
-                       [disabled]="isReadOnly()"
-                       (change)="toggleAllPermissions($event)">
-              }
-              <span class="material-symbols-outlined text-secondary text-[22px]">hub</span>
-              <span class="text-body-lg font-bold text-primary">نظام منصة لقاء</span>
-              
-              @if (selectedRoleId() && !isReadOnly() && hasChanges()) {
-                <app-button variant="text" (onClick)="resetAll()" extraClass="mr-4 text-error bg-error-container/30 hover:bg-error hover:text-white px-3 py-1 rounded-lg transition-colors flex items-center gap-1 text-label-sm font-bold border border-error/20" title="إلغاء كل التعديلات">
-                  <span class="material-symbols-outlined text-[16px]">undo</span>
-                  إلغاء التعديلات
-                </app-button>
-              }
-            </div>
+        <div
+          class="bg-primary text-white px-lg py-sm rounded-xl shadow-sm flex items-center gap-md"
+        >
+          <div class="flex flex-col">
+            <span class="text-[10px] font-bold opacity-70 uppercase"
+              >إجمالي الصلاحيات المختارة</span
+            >
+            <span class="text-headline-sm font-bold"
+              >{{ totalSelected() }}/{{ totalPermissions() }}</span
+            >
           </div>
+          <span class="material-symbols-outlined text-tertiary-fixed-dim">shield_person</span>
         </div>
+      </div>
 
-        @if (isRootExpanded()) {
-          <div class="divide-y divide-outline-variant pr-8 bg-white">
-            @for (group of groupedPermissions(); track group.groupName) {
-              <div class="tree-group">
-                <div class="flex items-center justify-between p-md bg-surface-container-low hover:bg-surface-container transition-colors">
-                  <div class="flex items-center gap-md">
-                    <app-button variant="icon" (onClick)="toggleGroupExpanded(group.groupName)" extraClass="w-8 h-8 rounded-full border-none hover:bg-surface-container-highest transition-all">
-                      <span class="material-symbols-outlined transition-transform duration-300" [class.rotate-180]="expandedGroups()[group.groupName]">expand_more</span>
+      <div
+        class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-50"
+      >
+        @if (isLoadingTree()) {
+          <app-table-skeleton [rows]="10"></app-table-skeleton>
+        } @else {
+          <div class="divide-y divide-outline-variant">
+            <div class="bg-surface-variant/30 p-md">
+              <div class="flex items-center gap-md">
+                <app-button
+                  variant="icon"
+                  (onClick)="toggleRootExpanded()"
+                  extraClass="w-8 h-8 rounded-full border-none hover:bg-surface-container-highest transition-all"
+                >
+                  <span
+                    class="material-symbols-outlined transition-transform duration-300"
+                    [class.rotate-180]="isRootExpanded()"
+                    >expand_more</span
+                  >
+                </app-button>
+                <div class="flex items-center gap-3">
+                  @if (selectedRoleId()) {
+                    <input
+                      type="checkbox"
+                      class="w-5 h-5 rounded border-outline-variant text-secondary focus:ring-secondary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      [checked]="isAllChecked()"
+                      [indeterminate]="isAllIndeterminate()"
+                      [disabled]="isReadOnly()"
+                      (change)="toggleAllPermissions($event)"
+                    />
+                  }
+                  <span class="material-symbols-outlined text-secondary">hub</span>
+                  <span class="text-body-lg font-bold text-primary">نظام منصة لقاء</span>
+
+                  @if (selectedRoleId() && !isReadOnly() && hasChanges()) {
+                    <app-button
+                      variant="text"
+                      (onClick)="resetAll()"
+                      extraClass="mr-4 text-error bg-error-container/30 hover:bg-error hover:text-white px-3 py-1 rounded-lg transition-colors flex items-center gap-1 text-label-sm font-bold border border-error/20"
+                      title="إلغاء كل التعديلات"
+                    >
+                      <span class="material-symbols-outlined">undo</span>
+                      إلغاء التعديلات
                     </app-button>
-                    
-                    <div class="flex items-center gap-3">
-                      @if (selectedRoleId()) {
-                        <input type="checkbox" 
-                               class="w-5 h-5 rounded border-outline-variant text-secondary focus:ring-secondary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                               [checked]="isGroupChecked(group.groupName)"
-                               [indeterminate]="isGroupIndeterminate(group.groupName)"
-                               [disabled]="isReadOnly()"
-                               (change)="toggleGroupCheckbox(group.groupName, $event)">
-                      }
-                      <span class="material-symbols-outlined text-secondary text-[22px]">{{ group.icon }}</span>
-                      <span class="text-body-md font-bold text-primary">{{ group.groupTitle }}</span>
-
-                      @if (selectedRoleId() && !isReadOnly() && dirtyGroups()[group.groupName]) {
-                        <app-button variant="icon" (onClick)="resetGroup(group.groupName)" extraClass="mr-2 text-error bg-error-container/30 hover:bg-error hover:text-white p-1 rounded-full transition-colors flex items-center justify-center border border-error/20" title="تراجع عن تعديلات هذه المجموعة">
-                          <span class="material-symbols-outlined text-[16px]">undo</span>
-                        </app-button>
-                      }
-                    </div>
-                  </div>
-                  <span class="text-label-sm text-on-surface-variant opacity-70 bg-white px-2 py-1 rounded-md border border-outline-variant">
-                    {{ group.permissions.length }}
-                  </span>
+                  }
                 </div>
+              </div>
+            </div>
 
-                @if (expandedGroups()[group.groupName]) {
-                  <div class="bg-white p-md pr-16 animate-fade-in border-t border-outline-variant/50">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-3 gap-x-6">
-                      @for (perm of group.permissions; track perm.permissionValue) {
-                        
-                        @if (selectedRoleId()) {
-                          <label class="flex items-center gap-3 group/item hover:bg-surface-container-lowest p-1 rounded-lg transition-colors" [ngClass]="isReadOnly() ? 'cursor-not-allowed' : 'cursor-pointer'">
-                            <input type="checkbox" 
-                                   class="w-4 h-4 rounded border-outline-variant text-secondary focus:ring-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                                   [checked]="perm.isSelected"
-                                   [disabled]="isReadOnly()"
-                                   (change)="togglePermission(perm.permissionValue)">
-                            <span class="text-body-sm text-on-surface font-medium transition-colors" [class.group-hover/item:text-secondary]="!isReadOnly()">
-                              {{ getActionName(perm.permissionValue) }}
-                            </span>
-                          </label>
-                        } @else {
-                          <div class="flex items-center gap-2 text-on-surface-variant opacity-80">
-                            <span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
-                            <span class="text-body-sm">{{ getActionName(perm.permissionValue) }}</span>
-                          </div>
-                        }
+            @if (isRootExpanded()) {
+              <div class="divide-y divide-outline-variant pr-8 bg-white">
+                @for (group of groupedPermissions(); track group.groupName) {
+                  <div class="tree-group">
+                    <div
+                      class="flex items-center justify-between p-md bg-surface-container-low hover:bg-surface-container transition-colors"
+                    >
+                      <div class="flex items-center gap-md">
+                        <app-button
+                          variant="icon"
+                          (onClick)="toggleGroupExpanded(group.groupName)"
+                          extraClass="w-8 h-8 rounded-full border-none hover:bg-surface-container-highest transition-all"
+                        >
+                          <span
+                            class="material-symbols-outlined transition-transform duration-300"
+                            [class.rotate-180]="expandedGroups()[group.groupName]"
+                            >expand_more</span
+                          >
+                        </app-button>
 
-                      }
+                        <div class="flex items-center gap-3">
+                          @if (selectedRoleId()) {
+                            <input
+                              type="checkbox"
+                              class="w-5 h-5 rounded border-outline-variant text-secondary focus:ring-secondary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                              [checked]="isGroupChecked(group.groupName)"
+                              [indeterminate]="isGroupIndeterminate(group.groupName)"
+                              [disabled]="isReadOnly()"
+                              (change)="toggleGroupCheckbox(group.groupName, $event)"
+                            />
+                          }
+                          <span class="material-symbols-outlined text-secondary text-[22px]">{{
+                            group.icon
+                          }}</span>
+                          <span class="text-body-md font-bold text-primary">{{
+                            group.groupTitle
+                          }}</span>
+
+                          @if (
+                            selectedRoleId() && !isReadOnly() && dirtyGroups()[group.groupName]
+                          ) {
+                            <app-button
+                              variant="icon"
+                              (onClick)="resetGroup(group.groupName)"
+                              extraClass="mr-2 text-error bg-error-container/30 hover:bg-error hover:text-white p-1 rounded-full transition-colors flex items-center justify-center border border-error/20"
+                              title="تراجع عن تعديلات هذه المجموعة"
+                            >
+                              <span class="material-symbols-outlined">undo</span>
+                            </app-button>
+                          }
+                        </div>
+                      </div>
+                      <span
+                        class="text-label-sm text-on-surface-variant opacity-70 bg-white px-2 py-1 rounded-md border border-outline-variant"
+                      >
+                        {{ group.permissions.length }}
+                      </span>
                     </div>
+
+                    @if (expandedGroups()[group.groupName]) {
+                      <div
+                        class="bg-white p-md pr-16 animate-fade-in border-t border-outline-variant/50"
+                      >
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-3 gap-x-6">
+                          @for (perm of group.permissions; track perm.permissionValue) {
+                            @if (selectedRoleId()) {
+                              <label
+                                class="flex items-center gap-3 group/item hover:bg-surface-container-lowest p-1 rounded-lg transition-colors"
+                                [ngClass]="isReadOnly() ? 'cursor-not-allowed' : 'cursor-pointer'"
+                              >
+                                <input
+                                  type="checkbox"
+                                  class="w-4 h-4 rounded border-outline-variant text-secondary focus:ring-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                                  [checked]="perm.isSelected"
+                                  [disabled]="isReadOnly()"
+                                  (change)="togglePermission(perm.permissionValue)"
+                                />
+                                <span
+                                  class="text-body-sm text-on-surface font-medium transition-colors"
+                                  [class.group-hover/item:text-secondary]="!isReadOnly()"
+                                >
+                                  {{ getActionName(perm.permissionValue) }}
+                                </span>
+                              </label>
+                            } @else {
+                              <div
+                                class="flex items-center gap-2 text-on-surface-variant opacity-80"
+                              >
+                                <span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
+                                <span class="text-body-sm">{{
+                                  getActionName(perm.permissionValue)
+                                }}</span>
+                              </div>
+                            }
+                          }
+                        </div>
+                      </div>
+                    }
                   </div>
                 }
               </div>
@@ -194,26 +283,22 @@
           </div>
         }
       </div>
-      }
-    </div>
-  </section>
+    </section>
   </ng-container>
 
   <ng-container *hasPermission="Permissions.Roles.UpdateRolePermissions">
-  <div class="flex justify-end mt-lg">
-    <app-button (onClick)="savePermissions()" 
-            [disabled]="!selectedRoleId() || isSaving() || isReadOnly() || !hasChanges()"
-            [loading]="isSaving()"
-            variant="primary"
-            extraClass="gap-sm px-10 h-14 rounded-full font-bold shadow-md hover:bg-secondary-container transition-all duration-200">
-      @if (!isSaving()) {
-        <span class="material-symbols-outlined">save</span>
+    <div class="flex justify-end mt-lg">
+      <app-button
+        (onClick)="savePermissions()"
+        [disabled]="!selectedRoleId() || isSaving() || isReadOnly() || !hasChanges()"
+        [loading]="isSaving()"
+        icon="save"
+        variant="primary"
+        extraClass="gap-sm px-10 h-14 rounded-full font-bold shadow-md hover:bg-secondary-container transition-all duration-200"
+      >
         <span>حفظ التعديلات</span>
-      } @else {
-        <span>جاري الحفظ...</span>
-      }
-    </app-button>
-  </div>
+      </app-button>
+    </div>
   </ng-container>
 </div>
 
@@ -224,6 +309,7 @@
     [confirmText]="modalConfig().confirmText"
     [icon]="modalConfig().icon"
     [variant]="modalConfig().variant"
+    [confirmLoading]="isCreating() || isDeleting() || isSaving()"
     (confirm)="onConfirmModal()"
     (cancel)="onCancelModal()"
   ></app-confirmation-modal>

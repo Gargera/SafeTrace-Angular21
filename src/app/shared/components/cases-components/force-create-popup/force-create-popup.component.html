@@ -1,6 +1,6 @@
-<div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 z-[1100] bg-[#091426]/70 backdrop-blur-md flex items-center justify-center p-4"
+<div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 z-1100 bg-primary/70 backdrop-blur-md flex items-center justify-center p-4"
   (click)="onBackdropClick($event)">
-  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-[720px] max-h-[90vh] overflow-y-auto flex flex-col dir-rtl"
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-180 max-h-[90vh] overflow-y-auto flex flex-col dir-rtl"
     (click)="$event.stopPropagation()">
 
     <!-- Header -->
@@ -33,8 +33,8 @@
 
         <!-- Photo -->
         <div
-          class="relative w-full sm:w-[180px] h-[180px] rounded-xl overflow-hidden shrink-0 bg-[#f4f7fa] border border-slate-200">
-          <img [src]="m.mainPhoto ? (baseUrl + '/' + m.mainPhoto) : placeholderImg"
+          class="relative w-full sm:w-45 h-45 rounded-xl overflow-hidden shrink-0 bg-[#f4f7fa] border border-slate-200">
+          <img [src]="m.mainPhoto ? (filesBaseUrl + '/' + m.mainPhoto) : placeholderImg" width="180" height="180"
             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             [alt]="'صورة ' + getFullName(m)" />
           @if (formatSimilarity(m) > 0) {
@@ -66,27 +66,24 @@
             <div class="col-span-2 flex flex-col gap-1 mt-1">
               <span class="text-[10px] text-slate-400 font-medium">كود الحالة</span>
               <div class="flex items-center gap-2">
-                <div class="flex items-center gap-1.5 bg-[#f0f4ff] border border-[#c7d7f8] rounded-lg px-2.5 py-1.5 font-mono text-[13px] font-bold text-[#0058be] select-all tracking-wide">
-                  <span class="material-symbols-outlined text-[15px] text-[#0058be]">qr_code</span>
+                <div class="flex items-center gap-1.5 bg-[#f0f4ff] border border-[#c7d7f8] rounded-lg px-2.5 py-1.5 font-mono text-[13px] font-bold text-secondary select-all tracking-wide">
+                  <span class="material-symbols-outlined text-[15px] text-secondary">qr_code</span>
                   {{ m.caseCode }}
                 </div>
-                <button
-                  type="button"
-                  (click)="copyCode($event, m.caseCode)"
-                  [title]="copiedCode() === m.caseCode ? 'تم النسخ!' : 'نسخ الكود'"
-                  class="flex items-center justify-center h-7 w-7 rounded-md border transition-all duration-150"
-                  [class.bg-green-50]="copiedCode() === m.caseCode"
-                  [class.border-green-400]="copiedCode() === m.caseCode"
-                  [class.text-green-600]="copiedCode() === m.caseCode"
-                  [class.bg-slate-100]="copiedCode() !== m.caseCode"
-                  [class.border-slate-300]="copiedCode() !== m.caseCode"
-                  [class.text-slate-500]="copiedCode() !== m.caseCode"
-                  [class.hover:bg-blue-50]="copiedCode() !== m.caseCode"
-                  aria-label="نسخ كود الحالة">
-                  <span class="material-symbols-outlined text-[16px]">
+                <app-button
+                  variant="icon"
+                  (onClick)="copyCode($event, m.caseCode)"
+                  [ariaLabel]="copiedCode() === m.caseCode ? 'تم النسخ!' : 'نسخ الكود'"
+                  extraClass="flex items-center justify-center h-7 w-7 rounded-md border transition-all duration-150 p-0"
+                  [ngClass]="{
+                    'bg-green-50 border-green-400 text-green-600': copiedCode() === m.caseCode,
+                    'border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700': copiedCode() !== m.caseCode
+                  }"
+                >
+                  <span class="material-symbols-outlined text-[15px]">
                     {{ copiedCode() === m.caseCode ? 'check' : 'content_copy' }}
                   </span>
-                </button>
+                </app-button>
               </div>
             </div>
           </div>
@@ -104,13 +101,12 @@
 
     <!-- Footer -->
     <div class="flex justify-end gap-3 p-5 md:px-8 border-t border-slate-200 sticky bottom-0 bg-white z-10">
-      <app-button variant="outline" (onClick)="cancel.emit()">
+      <app-button variant="outline" (onClick)="cancel.emit()" [disabled]="isSubmitting()">
         {{ cancelLabel() }}
       </app-button>
 
       @if (canForceCreate()) {
-      <app-button variant="primary" (onClick)="forceCreate.emit()">
-        <span class="material-symbols-outlined text-[20px]">add_circle</span>
+      <app-button variant="primary" icon="add_circle" (onClick)="forceCreate.emit()" [loading]="isSubmitting()" [disabled]="isSubmitting()">
         تجاهل وإنشاء البلاغ
       </app-button>
       }

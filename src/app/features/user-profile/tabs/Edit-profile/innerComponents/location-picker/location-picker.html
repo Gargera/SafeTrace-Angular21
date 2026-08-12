@@ -7,14 +7,12 @@
       id="location-heading"
       class="text-headline-sm font-bold text-primary flex items-center gap-sm"
     >
-      <span class="material-symbols-outlined text-[24px]" aria-hidden="true">location_on</span>
+      <span class="material-symbols-outlined" aria-hidden="true">location_on</span>
       الموقع الجغرافي
     </h3>
 
     <div (click)="openMapModal()" class="flex items-center cursor-pointer gap-1">
-      <span class="material-symbols-outlined text-[12px] cursor-pointer" aria-hidden="true"
-        >location_on</span
-      >
+      <span class="material-symbols-outlined cursor-pointer" aria-hidden="true">location_on</span>
       <span class="truncate">فتح الخريطة</span>
     </div>
   </div>
@@ -36,14 +34,14 @@
       />
       @if (isResolvingAddress() || isSavingLocation()) {
         <span
-          class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-secondary animate-spin"
+          class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-secondary animate-spin"
           aria-hidden="true"
         >
           progress_activity
         </span>
       } @else if (resolvedAddress()) {
         <span
-          class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-emerald-600"
+          class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-emerald-600"
           style="font-variation-settings: 'FILL' 1"
           aria-hidden="true"
         >
@@ -56,20 +54,17 @@
   <!-- Action Bar & Coordinates display -->
   <div class="flex flex-wrap items-center justify-between gap-md pt-xs">
     <div class="flex items-center gap-sm">
-      <button
+      <app-button
+        variant="text"
         type="button"
         (click)="useCurrentLocation()"
         [disabled]="isLocating() || isSavingLocation()"
-        class="text-label-sm text-secondary hover:underline flex items-center gap-xs font-bold cursor-pointer disabled:opacity-50"
+        [loading]="isLocating() || isSavingLocation()"
+        icon="my_location"
+        extraClass="text-label-sm text-secondary hover:underline font-bold"
       >
-        @if (isLocating()) {
-          <span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
-          جاري التحديد...
-        } @else {
-          <span class="material-symbols-outlined text-[16px]" aria-hidden="true">my_location</span>
-          استخدام موقعي الحالي
-        }
-      </button>
+        استخدام موقعي الحالي
+      </app-button>
     </div>
 
     @if (selectedLat() !== null && selectedLng() !== null) {

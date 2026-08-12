@@ -23,10 +23,12 @@ import { ImageCroppedEvent, ImageCropperComponent, LoadedImage } from 'ngx-image
  * `saved` when the user clicks "حفظ". The parent decides what to do with
  * it (in edit-profile.ts: upload immediately via FormData).
  */
+import { ButtonComponent } from '../../../../shared/components/button/button';
+
 @Component({
   selector: 'app-image-crop-dialog',
   standalone: true,
-  imports: [ImageCropperComponent],
+  imports: [ImageCropperComponent, ButtonComponent],
   templateUrl: './image-crop-dialog.html',
 })
 export class ImageCropDialog {

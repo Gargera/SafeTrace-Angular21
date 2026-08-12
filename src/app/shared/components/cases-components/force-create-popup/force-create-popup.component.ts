@@ -19,10 +19,12 @@ import { CardComponent } from '../../card/card';
  *   • Join Group additionally shown when canJoinGroup=true (Unknown creates only)
  *     and all matches are Unknown  → Unknown + Unknown scenario.
  */
+import { NgClass } from '@angular/common';
+
 @Component({
   selector: 'app-force-create-popup',
   standalone: true,
-  imports: [CaseTypeBadgeDirective, ButtonComponent, CardComponent],
+  imports: [CaseTypeBadgeDirective, ButtonComponent, CardComponent, NgClass],
   templateUrl: './force-create-popup.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -31,6 +33,7 @@ export class ForceCreatePopupComponent {
   readonly matches = input.required<MatchedCaseResponse[]>();
   readonly isBlocked = input(false);
   readonly readOnly = input(false);
+  readonly isSubmitting = input(false);
   readonly duplicateDecision = input<DuplicateDecision>(DuplicateDecision.None);
 
   // ── Outputs ───────────────────────────────────────────────────────────────
@@ -44,6 +47,7 @@ export class ForceCreatePopupComponent {
   copiedCode = signal<string | null>(null);
 
   readonly baseUrl = environment.baseUrl;
+  readonly filesBaseUrl = environment.filesBaseUrl;
   readonly placeholderImg = 'assets/images/no-photo-placeholder.png';
 
   // ── Computed state (drives the template declaratively) ────────────────────
@@ -117,7 +121,7 @@ export class ForceCreatePopupComponent {
    * Copy case code to clipboard and show brief toast confirmation.
    * Stops click propagation so it does not trigger the card click.
    */
-  copyCode(event: MouseEvent, code: string): void {
+  copyCode(event: Event, code: string): void {
     event.stopPropagation();
     navigator.clipboard.writeText(code).then(() => {
       this.copiedCode.set(code);

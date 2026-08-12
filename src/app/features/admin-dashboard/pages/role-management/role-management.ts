@@ -89,8 +89,6 @@ export class RoleManagement implements OnInit {
   }
 
   onConfirmModal() {
-    this.showConfirmModal.set(false);
-    this.currentOpenModal.set(null);
     this.modalConfig().action();
   }
 
@@ -216,6 +214,7 @@ export class RoleManagement implements OnInit {
             this.cacheService.remove('RoleManagement_State');
             this.loadRoles();
             this.snackbar.success('تم إنشاء الدور بنجاح');
+            this.onCancelModal();
           },
           error: (err) => {
             this.isCreating.set(false);
@@ -247,6 +246,7 @@ export class RoleManagement implements OnInit {
             this.originalPermissionsList.set(emptyPerms.map((p) => ({ ...p })));
             this.loadRoles();
             this.snackbar.success('تم حذف الدور بنجاح');
+            this.onCancelModal();
           },
           error: (err) => {
             this.isDeleting.set(false);
@@ -318,6 +318,7 @@ export class RoleManagement implements OnInit {
               this.isSaving.set(false);
               this.originalPermissionsList.set(this.permissionsList().map((p) => ({ ...p })));
               this.snackbar.success('تم حفظ الصلاحيات');
+              this.onCancelModal();
             },
             error: (err) => {
               this.isSaving.set(false);

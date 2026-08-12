@@ -90,7 +90,7 @@ export class CaseCardComponent {
     if (this.imageError() || !item.mainPhoto) {
       return this.fallbackImage;
     }
-    return `${this.baseUrl}${item.mainPhoto}`;
+    return `${environment.filesBaseUrl}/${item.mainPhoto}`;
   });
 
   readonly fullName = computed(() => {
@@ -159,7 +159,7 @@ export class CaseCardComponent {
   readonly publisherImageSrc = computed(() => {
     const u = this.caseItem().user;
     if (u?.profileImage && !this.publisherImageError()) {
-      return `${this.baseUrl}${u.profileImage}`;
+      return `${environment.filesBaseUrl}/${u.profileImage}`;
     }
     return null;
   });

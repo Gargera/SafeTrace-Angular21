@@ -128,6 +128,8 @@ export class Home implements OnInit {
   }
 
   submitComplaint() {
+    if (this.isSendingComplaint()) return;
+
     if (this.complaintForm.invalid) {
       this.complaintForm.markAllAsTouched();
       return;

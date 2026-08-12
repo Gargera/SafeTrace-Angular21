@@ -18,32 +18,16 @@
   <div class="flex flex-wrap items-center justify-center gap-2">
 
     <!-- First Page -->
-    <button
-      type="button"
-      (click)="firstPage()"
-      [disabled]="currentPage() === 1"
-      aria-label="الصفحة الأولى"
-      class="hidden h-10 w-10 items-center justify-center rounded-full border border-outline-variant text-on-surface-variant transition-all hover:border-secondary hover:bg-surface-container hover:text-secondary disabled:cursor-not-allowed disabled:opacity-40 sm:flex">
-
-      <span class="material-symbols-outlined text-xl">
-        last_page
-      </span>
-
-    </button>
+    <app-button variant="icon" icon="last_page" ariaLabel="الصفحة الأولى"
+      [disabled]="loading() || currentPage() === 1" [loading]="loading() && pendingPage() === 1"
+      (onClick)="firstPage()"
+      extraClass="hidden h-10 w-10 rounded-full border border-outline-variant text-on-surface-variant hover:border-secondary hover:bg-surface-container hover:text-secondary disabled:cursor-not-allowed disabled:opacity-40 sm:inline-flex" />
 
     <!-- Previous -->
-    <button
-      type="button"
-      (click)="prevPage()"
-      [disabled]="currentPage() === 1"
-      aria-label="الصفحة السابقة"
-      class="flex h-10 w-10 items-center justify-center rounded-full border border-outline-variant text-on-surface-variant transition-all hover:border-secondary hover:bg-surface-container hover:text-secondary disabled:cursor-not-allowed disabled:opacity-40">
-
-      <span class="material-symbols-outlined text-xl">
-        chevron_right
-      </span>
-
-    </button>
+    <app-button variant="icon" icon="chevron_right" ariaLabel="الصفحة السابقة"
+      [disabled]="loading() || currentPage() === 1"
+      [loading]="loading() && pendingPage() === currentPage() - 1" (onClick)="prevPage()"
+      extraClass="h-10 w-10 rounded-full border border-outline-variant text-on-surface-variant hover:border-secondary hover:bg-surface-container hover:text-secondary disabled:cursor-not-allowed disabled:opacity-40" />
 
     <!-- Page Numbers -->
     <div class="flex items-center gap-1">
@@ -59,27 +43,15 @@
 
         } @else {
 
-          <button
-            type="button"
+          <app-button
+            variant="icon"
+            [icon]="page.toString()"
             (click)="goToPage(page)"
-            [attr.aria-current]="page === currentPage() ? 'page' : null"
-            [attr.aria-label]="'الصفحة ' + page"
-            class="flex h-10 w-10 items-center justify-center rounded-full border text-sm font-medium transition-all duration-200"
-            [class.border-outline-variant]="page !== currentPage()"
-            [class.text-on-surface]="page !== currentPage()"
-            [class.hover:border-secondary]="page !== currentPage()"
-            [class.hover:bg-surface-container]="page !== currentPage()"
-            [class.hover:text-secondary]="page !== currentPage()"
-            [class.border-secondary]="page === currentPage()"
-            [class.bg-secondary]="page === currentPage()"
-            [class.text-on-secondary]="page === currentPage()"
-            [class.font-bold]="page === currentPage()"
-            [class.shadow-sm]="page === currentPage()"
-            [class.scale-105]="page === currentPage()">
-
-            {{ page }}
-
-          </button>
+            [ariaLabel]="'الصفحة ' + page"
+            [disabled]="loading() || page === currentPage()"
+            [loading]="loading() && pendingPage() === page"
+            [extraClass]="'h-10 w-10 rounded-full border text-sm font-medium ' + (page === currentPage() ? 'border-secondary bg-secondary text-on-secondary font-bold shadow-sm scale-105' : 'border-outline-variant text-on-surface hover:border-secondary hover:bg-surface-container hover:text-secondary')"
+          />
 
         }
 
@@ -88,32 +60,16 @@
     </div>
 
     <!-- Next -->
-    <button
-      type="button"
-      (click)="nextPage()"
-      [disabled]="currentPage() === totalPages()"
-      aria-label="الصفحة التالية"
-      class="flex h-10 w-10 items-center justify-center rounded-full border border-outline-variant text-on-surface-variant transition-all hover:border-secondary hover:bg-surface-container hover:text-secondary disabled:cursor-not-allowed disabled:opacity-40">
-
-      <span class="material-symbols-outlined text-xl">
-        chevron_left
-      </span>
-
-    </button>
+    <app-button variant="icon" icon="chevron_left" ariaLabel="الصفحة التالية"
+      [disabled]="loading() || currentPage() === totalPages()"
+      [loading]="loading() && pendingPage() === currentPage() + 1" (onClick)="nextPage()"
+      extraClass="h-10 w-10 rounded-full border border-outline-variant text-on-surface-variant hover:border-secondary hover:bg-surface-container hover:text-secondary disabled:cursor-not-allowed disabled:opacity-40" />
 
     <!-- Last Page -->
-    <button
-      type="button"
-      (click)="lastPage()"
-      [disabled]="currentPage() === totalPages()"
-      aria-label="الصفحة الأخيرة"
-      class="hidden h-10 w-10 items-center justify-center rounded-full border border-outline-variant text-on-surface-variant transition-all hover:border-secondary hover:bg-surface-container hover:text-secondary disabled:cursor-not-allowed disabled:opacity-40 sm:flex">
-
-      <span class="material-symbols-outlined text-xl">
-        first_page
-      </span>
-
-    </button>
+    <app-button variant="icon" icon="first_page" ariaLabel="الصفحة الأخيرة"
+      [disabled]="loading() || currentPage() === totalPages()"
+      [loading]="loading() && pendingPage() === totalPages()" (onClick)="lastPage()"
+      extraClass="hidden h-10 w-10 rounded-full border border-outline-variant text-on-surface-variant hover:border-secondary hover:bg-surface-container hover:text-secondary disabled:cursor-not-allowed disabled:opacity-40 sm:inline-flex" />
 
   </div>
 

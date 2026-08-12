@@ -21,6 +21,7 @@ import { ChatService } from '../../../features/chat/services/chat.service';
 import { ROLE_TRANSLATIONS_AR } from '../../../core/constants/dictionaries/roles.dictionary';
 import { RoleBadgeDirective } from '../../directives/role-badge-directive';
 import { VerificationBadgeDirective } from '../../directives/verification-badge-directive';
+import { ButtonComponent } from '../button/button';
 
 export interface VisitUserDTO {
   fullName: string;
@@ -36,7 +37,7 @@ export interface VisitUserDTO {
 @Component({
   selector: 'app-view-profile-popup',
   standalone: true,
-  imports: [CommonModule, RoleBadgeDirective],
+  imports: [CommonModule, RoleBadgeDirective, ButtonComponent],
   templateUrl: './view-profile-popup.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {

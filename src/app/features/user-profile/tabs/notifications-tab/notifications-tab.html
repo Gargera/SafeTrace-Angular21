@@ -10,12 +10,13 @@
       }
     </div>
     @if (notificationService.hasUnread()) {
-      <button
-        (click)="notificationService.markAllAsRead()"
-        class="text-label-sm text-secondary hover:underline transition-colors"
+      <app-button
+        variant="text"
+        extraClass="!p-0 text-label-sm text-secondary hover:underline transition-colors"
+        (onClick)="notificationService.markAllAsRead()"
       >
         تحديد الكل كمقروء
-      </button>
+      </app-button>
     }
   </div>
 
@@ -76,27 +77,30 @@
               <!-- Actions row -->
               <div class="flex items-center gap-md flex-wrap">
                 @if (!n.isRead) {
-                  <button
-                    (click)="$event.stopPropagation(); notificationService.markAsRead(n.id)"
-                    class="text-label-sm text-secondary hover:underline cursor-pointer"
+                  <app-button
+                    variant="text"
+                    extraClass="!p-0 text-label-sm text-secondary hover:underline cursor-pointer"
+                    (onClick)="$event.stopPropagation(); notificationService.markAsRead(n.id)"
                   >
                     تحديد كمقروء
-                  </button>
+                  </app-button>
                 }
                 @if (n.notificationDirectLink) {
-                  <button
-                    (click)="onNotificationClick(n, $event)"
-                    class="text-label-sm text-secondary hover:underline cursor-pointer bg-transparent border-0 p-0 font-inherit"
+                  <app-button
+                    variant="text"
+                    extraClass="!p-0 text-label-sm text-secondary hover:underline cursor-pointer"
+                    (onClick)="onNotificationClick(n, $event)"
                   >
                     عرض التفاصيل
-                  </button>
+                  </app-button>
                 }
-                <button
-                  (click)="$event.stopPropagation(); notificationService.removeNotification(n.id)"
-                  class="text-label-sm text-error hover:underline mr-auto cursor-pointer"
+                <app-button
+                  variant="text"
+                  extraClass="!p-0 text-label-sm text-error hover:underline mr-auto cursor-pointer"
+                  (onClick)="$event.stopPropagation(); notificationService.removeNotification(n.id)"
                 >
                   حذف
-                </button>
+                </app-button>
               </div>
             </div>
 

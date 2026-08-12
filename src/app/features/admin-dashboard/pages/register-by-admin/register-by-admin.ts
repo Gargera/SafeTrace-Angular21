@@ -52,7 +52,6 @@ export class RegisterByAdmin implements OnInit {
   }
 
   onConfirmModal() {
-    this.showConfirmModal.set(false);
     this.modalConfig().action();
   }
 
@@ -128,6 +127,7 @@ export class RegisterByAdmin implements OnInit {
             this.isLoading.set(false);
             this.cacheService.remove('RegisterByAdmin_State');
             this.snackbar.success('تمت إضافة المستخدم وتعيين الصلاحيات الخاصة به في النظام.');
+            this.onCancelModal();
             this.router.navigate(['/admin/users']);
           },
           error: (err) => {

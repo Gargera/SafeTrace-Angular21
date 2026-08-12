@@ -15,7 +15,9 @@
   @if (loadingStats()) {
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
       @for (i of [1, 2, 3, 4, 5, 6]; track i) {
-        <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse">
+        <app-card
+          extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20 animate-pulse"
+        >
           <div class="h-4 bg-surface-container-high rounded w-3/4 mb-2"></div>
           <div class="h-6 bg-surface-container-high rounded w-1/2"></div>
         </app-card>
@@ -23,52 +25,69 @@
     </div>
   } @else {
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-      <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <app-card
+        extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
+      >
         <div class="flex items-center justify-between">
           <span class="text-sm font-medium text-on-surface-variant">الإجمالي</span>
           <span class="material-symbols-outlined text-secondary">group</span>
         </div>
         <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.totalUsers ?? 0 }}</p>
       </app-card>
-      <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <app-card
+        extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
+      >
         <div class="flex items-center justify-between">
           <span class="text-sm font-medium text-on-surface-variant">نشط</span>
           <span class="material-symbols-outlined text-green-500">check_circle</span>
         </div>
         <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.activeUsers ?? 0 }}</p>
       </app-card>
-      <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <app-card
+        extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
+      >
         <div class="flex items-center justify-between">
           <span class="text-sm font-medium text-on-surface-variant">محظور</span>
           <span class="material-symbols-outlined text-red-500">block</span>
         </div>
         <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.bannedUsers ?? 0 }}</p>
       </app-card>
-      <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <app-card
+        extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
+      >
         <div class="flex items-center justify-between">
           <span class="text-sm font-medium text-on-surface-variant">موثق</span>
           <span class="material-symbols-outlined text-blue-500">verified</span>
         </div>
-        <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.verifiedUsers ?? 0 }}</p>
+        <p class="text-2xl font-bold text-on-surface mt-1">
+          {{ statistics()?.verifiedUsers ?? 0 }}
+        </p>
       </app-card>
-      <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <app-card
+        extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
+      >
         <div class="flex items-center justify-between">
           <span class="text-sm font-medium text-on-surface-variant">قيد التوثيق</span>
           <span class="material-symbols-outlined text-orange-500">pending_actions</span>
         </div>
-        <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.pendingVerificationUsers ?? 0 }}</p>
+        <p class="text-2xl font-bold text-on-surface mt-1">
+          {{ statistics()?.pendingVerificationUsers ?? 0 }}
+        </p>
       </app-card>
-      <app-card extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20">
+      <app-card
+        extraClass="p-4 rounded-xl bg-surface-container-lowest shadow-sm border border-outline-variant/20"
+      >
         <div class="flex items-center justify-between">
           <span class="text-sm font-medium text-on-surface-variant">غير موثق</span>
           <span class="material-symbols-outlined text-gray-500">help</span>
         </div>
-        <p class="text-2xl font-bold text-on-surface mt-1">{{ statistics()?.unverifiedUsers ?? 0 }}</p>
+        <p class="text-2xl font-bold text-on-surface mt-1">
+          {{ statistics()?.unverifiedUsers ?? 0 }}
+        </p>
       </app-card>
     </div>
   }
 </ng-container>
-
 
 <app-card extraClass="bg-white p-lg rounded-2xl shadow-sm border border-outline-variant mb-lg">
   <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-md items-end">
@@ -129,9 +148,10 @@
     <app-button
       *hasPermission="Permissions.Users.GenerateUsersPdfReport"
       variant="outline"
+      icon="download"
+      [loading]="isDownloading()"
       (onClick)="downloadReport()"
     >
-      <span class="material-symbols-outlined text-[18px]">download</span>
       <span>تحميل التقرير</span>
     </app-button>
 
@@ -149,82 +169,91 @@
   </div>
 </app-card>
 
-
-
 <section
   class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75"
 >
   @if (isLoading() && users().length === 0) {
     <app-table-skeleton [rows]="10"></app-table-skeleton>
   } @else {
-
-  <div class="w-full max-w-full overflow-x-auto" [class.opacity-50]="isLoading()" [class.pointer-events-none]="isLoading()">
-    <table class="w-full text-right border-collapse whitespace-nowrap">
-      <thead>
-        <tr class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant">
-          <th class="px-lg py-md text-center">#</th>
-          <th class="px-lg py-md">المستخدم</th>
-          <th class="px-lg py-md">البريد الإلكتروني</th>
-          <th class="px-lg py-md">رقم الهاتف</th>
-          <th class="px-lg py-md">حالة التوثيق</th>
-          <th class="px-lg py-md">الدور</th>
-          <th class="px-lg py-md">حالة الحظر</th>
-          <ng-container *hasPermission="Permissions.Users.GetById">
-            <th class="px-lg py-md text-center">الإجراءات</th>
-          </ng-container>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
-        @for (user of users(); track user.id; let i = $index) {
-          <tr class="hover:bg-surface-container-low transition-colors group">
-            <td class="px-lg py-md text-center font-bold text-on-surface-variant">
-              {{ (filter().pageNumber - 1) * filter().pageSize + i + 1 }}
-            </td>
-            <td class="px-lg py-md">
-              <div class="flex items-center gap-md">
-                <span class="font-semibold text-primary">{{ user.fName }} {{ user.lName }}</span>
-              </div>
-            </td>
-            <td class="px-lg py-md font-sans opacity-70">{{ user.email }}</td>
-            <td class="px-lg py-md font-sans opacity-70" dir="ltr">{{ user.phoneNumber || '—' }}</td>
-            <td class="px-lg py-md">
-              <span [appVerificationBadgeDirective]="user.verificationStatus"></span>
-            </td>
-            <td class="px-lg py-md">
-              <span [appRoleBadgeDirective]="user.role || ''"></span>
-            </td>
-            <td class="px-lg py-md">
-              <span [appBlockBadgeDirective]="user.isBlocked"></span>
-            </td>
+    <div
+      class="w-full max-w-full overflow-x-auto"
+      [class.opacity-50]="isLoading()"
+      [class.pointer-events-none]="isLoading()"
+    >
+      <table class="w-full text-right border-collapse whitespace-nowrap">
+        <thead>
+          <tr
+            class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant"
+          >
+            <th class="px-lg py-md text-center">#</th>
+            <th class="px-lg py-md">المستخدم</th>
+            <th class="px-lg py-md">البريد الإلكتروني</th>
+            <th class="px-lg py-md">رقم الهاتف</th>
+            <th class="px-lg py-md">حالة التوثيق</th>
+            <th class="px-lg py-md">الدور</th>
+            <th class="px-lg py-md">حالة الحظر</th>
             <ng-container *hasPermission="Permissions.Users.GetById">
-              <td class="px-lg py-md text-center">
-                <app-button
-                  routerLink="/admin/users/{{ user.id }}"
-                  variant="primary"
-                  extraClass="flex items-center justify-center gap-1.5 px-6 py-2 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
-                >
-                  <span class="material-symbols-outlined text-[18px]">visibility</span>
-                  عرض
-                </app-button>
-              </td>
+              <th class="px-lg py-md text-center">الإجراءات</th>
             </ng-container>
           </tr>
-        } @empty {
-          @if (!isLoading()) {
-            <tr>
-              <td colspan="8" class="py-xl">
-                <app-empty-state
-                  [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا يوجد مستخدمين'"
-                  [message]="hasActiveFilters() ? 'لم نتمكن من العثور على مستخدمين تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم تسجيل أي مستخدمين حتى الآن.'"
-                >
-                </app-empty-state>
+        </thead>
+        <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
+          @for (user of users(); track user.id; let i = $index) {
+            <tr class="hover:bg-surface-container-low transition-colors group">
+              <td class="px-lg py-md text-center font-bold text-on-surface-variant">
+                {{ (filter().pageNumber - 1) * filter().pageSize + i + 1 }}
               </td>
+              <td class="px-lg py-md">
+                <div class="flex items-center gap-md">
+                  <span class="font-semibold text-primary">{{ user.fName }} {{ user.lName }}</span>
+                </div>
+              </td>
+              <td class="px-lg py-md font-sans opacity-70">{{ user.email }}</td>
+              <td class="px-lg py-md font-sans opacity-70" dir="ltr">
+                {{ user.phoneNumber || '—' }}
+              </td>
+              <td class="px-lg py-md">
+                <span [appVerificationBadgeDirective]="user.verificationStatus"></span>
+              </td>
+              <td class="px-lg py-md">
+                <span [appRoleBadgeDirective]="user.role || ''"></span>
+              </td>
+              <td class="px-lg py-md">
+                <span [appBlockBadgeDirective]="user.isBlocked"></span>
+              </td>
+              <ng-container *hasPermission="Permissions.Users.GetById">
+                <td class="px-lg py-md text-center">
+                  <app-button
+                    routerLink="/admin/users/{{ user.id }}"
+                    variant="primary"
+                    extraClass="flex items-center justify-center gap-1.5 px-6 py-2 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
+                  >
+                    <span class="material-symbols-outlined">visibility</span>
+                    عرض
+                  </app-button>
+                </td>
+              </ng-container>
             </tr>
+          } @empty {
+            @if (!isLoading()) {
+              <tr>
+                <td colspan="8" class="py-xl">
+                  <app-empty-state
+                    [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا يوجد مستخدمين'"
+                    [message]="
+                      hasActiveFilters()
+                        ? 'لم نتمكن من العثور على مستخدمين تطابق خيارات التصفية أو البحث الحالية.'
+                        : 'لم يتم تسجيل أي مستخدمين حتى الآن.'
+                    "
+                  >
+                  </app-empty-state>
+                </td>
+              </tr>
+            }
           }
-        }
-      </tbody>
-    </table>
-  </div>
+        </tbody>
+      </table>
+    </div>
   }
 
   @if (totalPages() > 1) {
@@ -237,6 +266,7 @@
 
       <app-pagination
         [currentPage]="filter().pageNumber"
+        [loading]="isLoading()"
         [totalPages]="totalPages()"
         (pageChange)="changePage($event)"
       />
