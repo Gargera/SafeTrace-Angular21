@@ -29,7 +29,7 @@
             <!-- Tabs nav bar -->
             <div class="border-b border-outline-variant px-4 pt-3 flex gap-2">
               @for (i of [1,2,3,4,5]; track i) {
-                <div class="h-9 bg-surface-container-high rounded-t-lg flex-1 min-w-[60px]"></div>
+                <div class="h-9 bg-surface-container-high rounded-t-lg flex-1 min-w-15"></div>
               }
             </div>
             <!-- Tab content area -->
@@ -38,7 +38,7 @@
               <div class="h-10 bg-surface-container-high rounded-xl w-full"></div>
               @for (i of [1,2,3]; track i) {
                 <div class="flex flex-col lg:flex-row overflow-hidden rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-sm">
-                  <div class="w-full lg:w-44 aspect-[4/3] lg:aspect-auto bg-surface-container-high shrink-0"></div>
+                  <div class="w-full lg:w-44 aspect-4/3 lg:aspect-auto bg-surface-container-high shrink-0"></div>
                   <div class="flex-1 p-4 flex flex-col gap-3 justify-between">
                     <div class="h-4 bg-surface-container-high rounded w-2/3"></div>
                     <div class="grid grid-cols-4 gap-2"><div class="h-3 bg-surface-container-high rounded"></div><div class="h-3 bg-surface-container-high rounded"></div><div class="h-3 bg-surface-container-high rounded"></div><div class="h-3 bg-surface-container-high rounded"></div></div>

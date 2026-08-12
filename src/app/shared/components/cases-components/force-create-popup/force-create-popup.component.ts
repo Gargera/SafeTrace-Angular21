@@ -47,6 +47,7 @@ export class ForceCreatePopupComponent {
   copiedCode = signal<string | null>(null);
 
   readonly baseUrl = environment.baseUrl;
+  readonly filesBaseUrl = environment.filesBaseUrl;
   readonly placeholderImg = 'assets/images/no-photo-placeholder.png';
 
   // ── Computed state (drives the template declaratively) ────────────────────

@@ -228,7 +228,7 @@ export class LongTermDetails implements OnInit {
     if (path.startsWith('http')) {
       return path;
     }
-    return `${this.apiUrl}${path}`;
+    return `${environment.filesBaseUrl}/${path}`;
   }
 
   changeMedia(media: CasePhotoResponse): void {

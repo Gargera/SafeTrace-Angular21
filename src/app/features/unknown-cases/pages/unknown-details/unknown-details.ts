@@ -227,7 +227,7 @@ export class UnknownDetails implements OnInit {
       return path;
     }
 
-    return `${this.apiUrl}${path}`;
+    return `${environment.filesBaseUrl}/${path}`;
   }
 
   changeMedia(media: CasePhotoResponse): void {

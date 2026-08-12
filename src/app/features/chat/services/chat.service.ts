@@ -119,7 +119,7 @@ getAllChatsForAdmin(
       return path;
     }
 
-    return `${environment.baseUrl}${path}`;
+    return `${environment.filesBaseUrl}/${path}`;
   }
   
 }

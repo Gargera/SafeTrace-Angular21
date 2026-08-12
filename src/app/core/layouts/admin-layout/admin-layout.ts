@@ -72,7 +72,7 @@ export class AdminLayoutComponent implements OnInit, AfterViewInit {
     if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
       return imgPath;
     }
-    return `${environment.baseUrl}/${imgPath.replace(/^\//, '')}`;
+    return `${environment.filesBaseUrl}/${imgPath.replace(/^\//, '')}`;
   }
 
   logout(): void {

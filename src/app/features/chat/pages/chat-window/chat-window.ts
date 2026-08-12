@@ -305,7 +305,7 @@ private handleMessageDeletedForEveryone = (
 
   attachmentUrl(message: MessageDto): string | null {
     if(!message.filePath) return null;
-    const fileBaseUrl = environment.baseUrl;
+    const fileBaseUrl = environment.filesBaseUrl;
     return `${fileBaseUrl}/${message.filePath}`;
   }
 

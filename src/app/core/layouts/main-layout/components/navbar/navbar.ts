@@ -101,7 +101,7 @@ export class Navbar implements OnInit {
     if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
       return imgPath;
     }
-    return `${environment.baseUrl}/${imgPath.replace(/^\//, '')}`;
+    return `${environment.filesBaseUrl}/${imgPath.replace(/^\//, '')}`;
   }
 
   canAccessDashboard(): boolean {
