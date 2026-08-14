@@ -1,30 +1,42 @@
-import { Component, inject, signal, ChangeDetectionStrategy, DestroyRef, OnInit } from '@angular/core';
+import { ImageService } from '../../../../shared/services/image.service';
+import { CacheService } from '../../../../core/cache/cache.service';
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  DestroyRef,
+  OnInit,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+import { debounceTime, Observable } from 'rxjs';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
-import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
+import { CaseMediaPayload, CaseMediaUploaderComponent } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader';
+import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container';
 import { LongTermCaseService } from '../../services/long-term-case.service';
 import { LongTermCaseCreateRequest } from '../../models/request/LongTermCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/dictionaries/relation.type.dictionary';
-import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
-import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
+import {
+  EGYPT_GOVERNORATES,
+  getCitiesForGovernorate,
+} from '../../../../core/constants/governorates';
+import {
+  getFormFieldError,
+  isFieldInvalid,
+} from '../../../../shared/helper/form-validation.helper';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { MatchedCaseResponse } from '../../../../core/models/cases.model';
 import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
 import { DuplicateInfoDialogComponent } from '../../../../shared/components/cases-components/duplicate-info-dialog/duplicate-info-dialog.component';
-import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
-import { CardComponent } from '../../../../shared/components/card/card';
-import { HeaderComponent } from '../../../../shared/components/header/header.component';
-import { CacheService } from '../../../../core/cache/cache.service';
-import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 // Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
@@ -33,26 +45,34 @@ import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
 import { validCity } from '../../../../shared/validators/city.validator';
 import { validGovernorate } from '../../../../shared/validators/governorate.validator';
-import { ImageService } from '../../../../shared/services/image.service';
+import {
+  CaseFormStep,
+  localDateInputValue,
+  nextCaseFormStep,
+  previousCaseFormStep,
+  validateStepControls,
+  validateCaseSubmission,
+} from '../../../../shared/helper/case-form.helper';
+import { executeCaseSubmissionFlow, CaseSubmissionResponse } from '../../../../shared/helper/case-submission-flow.helper';
+import { saveCreateDraft, restoreCreateDraft } from '../../../../shared/helper/case-cache.helper';
+import { handleDuplicateDecision } from '../../../../shared/helper/case-duplicate.helper';
+import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data";
+import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data";
 
-type Step = 1 | 2 | 3;
+type Step = CaseFormStep;
 
 const DRAFT_CACHE_KEY = 'LongTermCreate_Draft';
 
-interface LongTermCreateDraft {
-  formValue: any;
-  currentStep: Step;
+interface LongTermCreateCustomData {
   showForceCreatePopup: boolean;
   showDuplicateInfoDialog: boolean;
   currentDuplicateDecision: DuplicateDecision;
   isBlockedDuplicate: boolean;
   matchedCases: MatchedCaseResponse[];
   existingCaseType: CaseType | null;
-  primaryPhotoFile?: File | null;
-  additionalPhotos?: File[];
-  policeReportFile?: File | null;
-  videoFile?: File | null;
+  policeReportFile: File | null;
 }
+
 
 @Component({
   selector: 'app-long-term-create',
@@ -61,12 +81,12 @@ interface LongTermCreateDraft {
     CommonModule,
     ReactiveFormsModule,
     ForceCreatePopupComponent,
+    ForceCreatePopupComponent,
     DuplicateInfoDialogComponent,
-    ButtonComponent,
-    FormField,
-    ImageCropperComponent,
-    CardComponent,
-    HeaderComponent,
+    CaseMediaUploaderComponent,
+    CaseFormContainerComponent,
+    CaseLocationDataComponent,
+    CasePersonDataComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./long-term-create.css'],
@@ -74,35 +94,47 @@ interface LongTermCreateDraft {
 })
 export class LongTermCreate implements OnInit {
   private fb = inject(FormBuilder);
-  private imageService = inject(ImageService);
-  private service = inject(LongTermCaseService);
   private router = inject(Router);
   private snackbar = inject(SnackbarService);
   private destroyRef = inject(DestroyRef);
+  private service = inject(LongTermCaseService);
   private cacheService = inject(CacheService);
+  private imageService = inject(ImageService);
 
-  currentStep: Step = 1;
+  mediaUploader = viewChild<CaseMediaUploaderComponent>(CaseMediaUploaderComponent);
+
+  currentStep = signal<Step>(1);
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
 
-  // Cropper & primary photo
-  cropImageEvent = signal<Event | null>(null);
-  croppedPrimaryImagePreview = signal<string | null>(null);
-  tempCroppedBlob = signal<Blob | null>(null);
-  primaryPhotoFile = signal<File | null>(null);
-  primaryPhotoError = signal<string | null>(null);
+  // Initial media state (for Cache restoration)
+  initialPrimary = signal<File | null>(null);
+  initialAdditional = signal<File[]>([]);
+  initialVideo = signal<File | null>(null);
 
-  // Additional photos
-  additionalPhotos = signal<File[]>([]);
-  additionalPhotoPreviews = signal<string[]>([]);
-  additionalPhotosError = signal<string | null>(null);
+  policeReport = signal<File | null>(null);
 
-  // Police report (optional — JPG/JPEG/PNG/WebP, max 10 MB)
-  policeReportFile = signal<File | null>(null);
-  policeReportError = signal<string | null>(null);
+  // Active media state from the uploader
+  mediaPayload = signal<CaseMediaPayload>({
+    primaryImage: null,
+    additionalImages: [],
+    video: null,
+    deletedImageIds: [],
+    primaryPhotoId: null,
+  });
 
-  videoFile = signal<File | null>(null);
-  videoError = signal<string | null>(null);
+  // Media validation errors from backend
+  mediaErrors = signal<{
+    primary?: string | null;
+    additional?: string | null;
+    video?: string | null;
+    policeReport?: string | null;
+  }>({});
+
+  onMediaChange(payload: CaseMediaPayload): void {
+    this.mediaPayload.set(payload);
+    this.saveDraft();
+  }
 
   showForceCreatePopup = signal(false);
   showDuplicateInfoDialog = signal(false);
@@ -110,13 +142,14 @@ export class LongTermCreate implements OnInit {
   isBlockedDuplicate = signal(false);
   matchedCases = signal<MatchedCaseResponse[]>([]);
   existingCaseType = signal<CaseType | null>(null);
-  private pendingRequest: LongTermCaseCreateRequest | null = null;
+  pendingRequest = signal<LongTermCaseCreateRequest | null>(null);
+  private submittedSuccessfully = signal(false);
 
   readonly genders = Gender;
   readonly relationOptions = RELATION_TYPE_OPTIONS;
   readonly caseTypes = CaseType;
   readonly governorates = EGYPT_GOVERNORATES;
-  readonly today = new Date().toISOString().split('T')[0];
+  readonly today = localDateInputValue();
 
   readonly steps = [
     { num: 1, label: 'بيانات الشخص' },
@@ -124,24 +157,58 @@ export class LongTermCreate implements OnInit {
     { num: 3, label: 'مستندات وصور' },
   ];
 
-  get stepTitle(): string {
-    return ['بيانات الشخص المفقود', 'آخر موقع معروف', 'مستندات وصور'][this.currentStep - 1];
-  }
+  stepTitle = computed(() => {
+    return ['بيانات الشخص المفقود', 'آخر موقع معروف', 'مستندات وصور'][this.currentStep() - 1];
+  });
+
+  stepHeader = computed(() => {
+    switch (this.currentStep()) {
+      case 1:
+        return {
+          icon: 'person',
+          title: 'بيانات الشخص المفقود',
+          description: 'أدخل البيانات الأساسية للشخص المفقود للمساعدة في التعرف عليه.',
+        };
+      case 2:
+        return {
+          icon: 'location_on',
+          title: 'موقع وتفاصيل الحادث',
+          description: 'يجب تحديد الموقع والتاريخ بدقة عالية.',
+        };
+      case 3:
+        return {
+          icon: 'photo_library',
+          title: 'صور وفيديو',
+          description: 'ارفع الصور والمستندات ومقاطع الفيديو المتاحة.',
+        };
+      default:
+        return null;
+    }
+  });
 
   // ─────────────────────────────────────────────────────────────
-  // Form definition — validators match backend exactly
+  // Form definition
   // ─────────────────────────────────────────────────────────────
   form = this.fb.group({
-    fName: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    fName: [
+      '',
+      [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)],
+    ],
     sName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
     tName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
-    lName: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    lName: [
+      '',
+      [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)],
+    ],
     age: [null as number | null, [Validators.required, Validators.min(1), Validators.max(120)]],
     gender: ['' as Gender | '', [Validators.required, validEnum(Gender)]],
     relation: [null as RelationType | null, [Validators.required, validEnum(RelationType)]],
     communicationPhone: ['', [egyptianPhone(), Validators.maxLength(15)]],
     description: ['', [Validators.maxLength(2000)]],
-    government: ['', [Validators.required, validGovernorate(), Validators.minLength(2), Validators.maxLength(100)]],
+    government: [
+      '',
+      [Validators.required, validGovernorate(), Validators.minLength(2), Validators.maxLength(100)],
+    ],
     city: ['', [Validators.required]],
     street: ['', [Validators.required, Validators.maxLength(200)]],
     eventDate: ['', [Validators.required, pastDate()]],
@@ -158,37 +225,52 @@ export class LongTermCreate implements OnInit {
     return isFieldInvalid(this.form, field);
   }
 
+  readonly isInvalidFn = this.isInvalid.bind(this);
+  readonly getErrorFn = this.getFieldError.bind(this);
+
   availableCities = signal<string[]>([]);
 
   constructor() {
-    this.destroyRef.onDestroy(() => {
-      // Only cache if we didn't just submit successfully
-      if (this.form.dirty || this.currentStep > 1 || this.matchedCases().length > 0 || this.primaryPhotoFile()) {
-        const draft: LongTermCreateDraft = {
-          formValue: this.form.getRawValue(),
-          currentStep: this.currentStep,
-          showForceCreatePopup: this.showForceCreatePopup(),
-          showDuplicateInfoDialog: this.showDuplicateInfoDialog(),
-          currentDuplicateDecision: this.currentDuplicateDecision(),
-          isBlockedDuplicate: this.isBlockedDuplicate(),
-          matchedCases: this.matchedCases(),
-          existingCaseType: this.existingCaseType(),
-          primaryPhotoFile: this.primaryPhotoFile(),
-          additionalPhotos: this.additionalPhotos(),
-          policeReportFile: this.policeReportFile(),
-          videoFile: this.videoFile()
-        };
-        this.cacheService.set(DRAFT_CACHE_KEY, draft, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+    this.form.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef), debounceTime(500))
+      .subscribe(() => {
+        this.saveDraft();
+      });
+  }
+
+  private saveDraft(media?: CaseMediaPayload): void {
+    if (this.submittedSuccessfully()) return;
+
+    saveCreateDraft<any, LongTermCreateCustomData>(
+      this.cacheService,
+      DRAFT_CACHE_KEY,
+      this.form,
+      this.currentStep(),
+      media ?? this.mediaPayload(),
+      {
+        showForceCreatePopup: this.showForceCreatePopup(),
+        showDuplicateInfoDialog: this.showDuplicateInfoDialog(),
+        currentDuplicateDecision: this.currentDuplicateDecision(),
+        isBlockedDuplicate: this.isBlockedDuplicate(),
+        matchedCases: this.matchedCases(),
+        existingCaseType: this.existingCaseType(),
+        policeReportFile: this.policeReport() ?? null,
       }
-    });
+    );
   }
 
   ngOnInit(): void {
-    this.form.get('city')?.setValidators([Validators.required, validCity(() => this.form.get('government')?.value ?? null)]);
+    this.form
+      .get('city')
+      ?.setValidators([
+        Validators.required,
+        validCity(() => this.form.get('government')?.value ?? null),
+      ]);
     this.form.get('city')?.updateValueAndValidity();
 
-    this.form.get('government')?.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
+    this.form
+      .get('government')
+      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((gov) => {
         const cities = getCitiesForGovernorate(gov);
         this.availableCities.set(cities);
@@ -199,194 +281,132 @@ export class LongTermCreate implements OnInit {
         this.form.get('city')?.updateValueAndValidity();
       });
 
-    const draft = this.cacheService.get<LongTermCreateDraft>(DRAFT_CACHE_KEY);
+    const draft = restoreCreateDraft<any, LongTermCreateCustomData>(
+      this.cacheService,
+      DRAFT_CACHE_KEY,
+      this.form,
+      (s) => this.currentStep.set(s),
+      {
+        primary: (f) => this.initialPrimary.set(f),
+        additional: (fs) => this.initialAdditional.set(fs),
+        video: (f) => this.initialVideo.set(f),
+      }
+    );
+
     if (draft) {
-      this.form.patchValue(draft.formValue);
-      this.currentStep = draft.currentStep;
       this.showForceCreatePopup.set(draft.showForceCreatePopup);
       this.showDuplicateInfoDialog.set(draft.showDuplicateInfoDialog);
-      this.currentDuplicateDecision.set(draft.currentDuplicateDecision);
+      this.currentDuplicateDecision.set(draft.currentDuplicateDecision || DuplicateDecision.None);
       this.isBlockedDuplicate.set(draft.isBlockedDuplicate);
       this.matchedCases.set(draft.matchedCases);
       this.existingCaseType.set(draft.existingCaseType);
 
-      if (draft.primaryPhotoFile) {
-        this.primaryPhotoFile.set(draft.primaryPhotoFile);
-        this.croppedPrimaryImagePreview.set(URL.createObjectURL(draft.primaryPhotoFile));
-      }
-      if (draft.additionalPhotos && draft.additionalPhotos.length > 0) {
-        this.additionalPhotos.set(draft.additionalPhotos);
-        this.additionalPhotoPreviews.set(draft.additionalPhotos.map(f => URL.createObjectURL(f)));
-      }
       if (draft.policeReportFile) {
-        this.policeReportFile.set(draft.policeReportFile);
-      }
-      if (draft.videoFile) {
-        this.videoFile.set(draft.videoFile);
+        this.policeReport.set(draft.policeReportFile);
       }
 
+      this.mediaPayload.set({
+        primaryImage: draft.newPrimaryImage ?? null,
+        additionalImages: draft.newAdditionalImages ?? [],
+        video: draft.newVideo ?? null,
+        deletedImageIds: [],
+        primaryPhotoId: null,
+      });
     }
   }
 
-  nextStep(): void {
-    const stepFields: Record<number, string[]> = {
-      1: ['fName', 'lName', 'age', 'gender', 'relation'],
-      2: ['government', 'city', 'street', 'eventDate'],
-    };
-    const fields = stepFields[this.currentStep] ?? [];
-    fields.forEach((f) => this.form.get(f)?.markAsTouched());
-    if (fields.some((f) => this.form.get(f)?.invalid)) return;
-    this.currentStep = (this.currentStep + 1) as Step;
-    this.errorMsg.set(null);
-  }
+  private readonly stepControls: Record<1 | 2, string[]> = {
+    1: [
+      'fName',
+      'sName',
+      'tName',
+      'lName',
+      'age',
+      'gender',
+      'relation',
+      'communicationPhone',
+      'description',
+    ],
+    2: ['government', 'city', 'street', 'eventDate'],
+  };
 
-  prevStep(): void {
-    if (this.currentStep > 1) this.currentStep = (this.currentStep - 1) as Step;
-  }
-
-  // ─────────────────────────────────────────────────────────────
-  // ─────────────────────────────────────────────────────────────
-  // Primary photo with Cropper
-  // ─────────────────────────────────────────────────────────────
-  onPrimaryPhotoSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-
-    const validation = this.imageService.validate(file, 5);
-    if (!validation.valid) {
-      this.primaryPhotoError.set(validation.errorMessage ?? null);
-      return;
-    }
-
-    this.primaryPhotoError.set(null);
-    this.cropImageEvent.set(event);
-  }
-
-  onImageCropped(event: ImageCroppedEvent): void {
-    if (event.blob) {
-      this.tempCroppedBlob.set(event.blob);
-    }
-  }
-
-  confirmCrop(): void {
-    const blob = this.tempCroppedBlob();
-    if (!blob) return;
-    const croppedFile = new File([blob], 'primary_image.jpg', { type: 'image/jpeg' });
-    this.primaryPhotoFile.set(croppedFile);
-    this.croppedPrimaryImagePreview.set(URL.createObjectURL(croppedFile));
-    this.cropImageEvent.set(null);
-    this.errorMsg.set(null);
-  }
-
-  cancelCrop(): void {
-    this.cropImageEvent.set(null);
-  }
-
-  reCropPhoto(): void {
-    this.croppedPrimaryImagePreview.set(null);
-    this.cropImageEvent.set(null);
-    this.primaryPhotoFile.set(null);
-  }
-
-  // ─────────────────────────────────────────────────────────────
-  // Additional photos — max 4, JPG/JPEG/PNG/WebP, max 5 MB each
-  // ─────────────────────────────────────────────────────────────
-  onAdditionalPhotosSelected(event: Event): void {
-    const files = Array.from((event.target as HTMLInputElement).files ?? []);
-    for (const f of files) {
-      const validation = this.imageService.validate(f, 5);
-      if (!validation.valid) {
-        this.additionalPhotosError.set(validation.errorMessage ?? null);
-        return;
-      }
-    }
-    this.additionalPhotosError.set(null);
-    this.additionalPhotos.update((p) => [...p, ...files].slice(0, 4));
-    this.refreshAdditionalPreviews();
-  }
-
-  private refreshAdditionalPreviews(): void {
-    this.additionalPhotoPreviews.set(this.additionalPhotos().map((f) => URL.createObjectURL(f)));
-  }
-
-  removeAdditionalPhoto(index: number): void {
-    this.additionalPhotos.update((p) => p.filter((_, i) => i !== index));
-    this.refreshAdditionalPreviews();
-  }
-
-  // ─────────────────────────────────────────────────────────────
-  // Police report — optional, JPG/JPEG/PNG/WebP, max 10 MB
-  // ─────────────────────────────────────────────────────────────
   onPoliceReportSelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
     if (!file) return;
 
     const validation = this.imageService.validate(file, 10);
     if (!validation.valid) {
-      this.policeReportError.set(validation.errorMessage ?? null);
+      this.mediaErrors.update(errs => ({ ...errs, policeReport: validation.errorMessage ?? null }));
+      input.value = '';
       return;
     }
 
-    this.policeReportError.set(null);
-    this.policeReportFile.set(file);
+    this.mediaErrors.update(errs => ({ ...errs, policeReport: null }));
+    this.policeReport.set(file);
+    this.saveDraft();
   }
 
-onVideoSelected(event: Event): void {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0] ?? null;
-
-  if (!file) {
-    this.videoFile.set(null);
-    return;
+  nextStep(): void {
+    const current = this.currentStep();
+    const fields = this.stepControls[current as 1 | 2] ?? [];
+    if (validateStepControls(this.form, fields)) return;
+    this.currentStep.set(nextCaseFormStep(current));
+    this.errorMsg.set(null);
   }
 
-  const validation = validateVideoFile(file, 50);
-
-  if (!validation.valid) {
-    this.videoFile.set(null);
-    this.videoError.set(validation.errorMessage ?? 'الملف غير صالح.');
-
-    // مهم عشان لو اختار نفس الملف تاني بعد الرفض
-    input.value = '';
-
-    return;
+  prevStep(): void {
+    this.currentStep.set(previousCaseFormStep(this.currentStep()));
   }
-
-  this.videoError.set(null);
-  this.videoFile.set(file);
-}
 
   // ─────────────────────────────────────────────────────────────
   // Submit
   // ─────────────────────────────────────────────────────────────
   onSubmit(forceCreate = false): void {
     if (this.isSubmitting()) return;
-    const primaryImg = this.primaryPhotoFile();
+    const primaryImg = this.mediaPayload().primaryImage;
 
-    if (forceCreate && !this.pendingRequest && !primaryImg) {
+    const pending = this.pendingRequest();
+    if (forceCreate && !pending && !primaryImg) {
       this.errorMsg.set('يرجى إعادة إرفاق الصورة الأساسية قبل المتابعة.');
       this.showForceCreatePopup.set(false);
       this.showDuplicateInfoDialog.set(false);
       return;
     }
 
-    if (!forceCreate && (this.form.invalid || !primaryImg)) {
-      this.form.markAllAsTouched();
-      if (!primaryImg) {
-        this.errorMsg.set('برجاء إضافة الصورة الأساسية للشخص وتحديد الوجه.');
+    if (!forceCreate) {
+      let valid = true;
+      let validationMessage = 'يرجى مراجعة الأخطاء وتصحيحها.';
+
+      const uploader = this.mediaUploader();
+      if (uploader) {
+        const validation = validateCaseSubmission(this.form, uploader);
+        if (!validation.valid) {
+          valid = false;
+          validationMessage = validation.message || validationMessage;
+        }
       }
-      return;
+
+      if (!this.policeReport()) {
+        this.mediaErrors.update(errs => ({ ...errs, policeReport: 'برجاء إرفاق محضر الشرطة.' }));
+        valid = false;
+      }
+
+      if (!valid) {
+        this.errorMsg.set(validationMessage);
+        return;
+      }
     }
 
     this.isSubmitting.set(true);
     this.errorMsg.set(null);
 
     let request: LongTermCaseCreateRequest;
-    if (forceCreate && this.pendingRequest) {
-      request = this.pendingRequest;
+    if (forceCreate && pending) {
+      request = pending;
     } else {
       const v = this.form.getRawValue();
+      const media = this.mediaPayload();
 
       request = {
         fName: v.fName!,
@@ -394,7 +414,7 @@ onVideoSelected(event: Event): void {
         sName: v.sName || null,
         tName: v.tName || null,
         gender: v.gender as Gender,
-        age: v.age!,
+        age: Number(v.age ?? 0),
         relation: v.relation!,
         communicationPhone: v.communicationPhone || null,
         description: v.description || null,
@@ -402,83 +422,57 @@ onVideoSelected(event: Event): void {
         city: v.city!,
         street: v.street!,
         eventDate: v.eventDate!,
-        primaryImage: primaryImg!,
-        additionalImages: this.additionalPhotos().length ? this.additionalPhotos() : null,
-        video: this.videoFile(),
-        policeReportImage: this.policeReportFile(),
+        primaryImage: media.primaryImage!,
+        additionalImages: media.additionalImages.length ? media.additionalImages : null,
+        video: media.video || null,
+        policeReportImage: this.policeReport() || null,
       };
-      this.pendingRequest = request;
+      this.pendingRequest.set(request);
     }
 
-    this.service
-      .createCase(request, forceCreate)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (res) => {
-          this.isSubmitting.set(false);
-          const data = res.data;
-
-          if (data && !data.isCreated) {
-            this.currentDuplicateDecision.set(data.duplicateDecision);
-            this.isBlockedDuplicate.set(data.isBlocked);
-            this.matchedCases.set(data.matchedCases ?? []);
-            this.existingCaseType.set(data.existingCaseType ?? null);
-
-            if (data.duplicateDecision === DuplicateDecision.SameUserDuplicate || 
-                data.duplicateDecision === DuplicateDecision.PendingOwnerCase ||
-                data.duplicateDecision === DuplicateDecision.PendingUnknownCase) {
-              this.showDuplicateInfoDialog.set(true);
-            } else if (data.duplicateDecision === DuplicateDecision.ActiveOwnerCase ||
-                       data.duplicateDecision === DuplicateDecision.ActiveUnknownCase) {
-              this.showForceCreatePopup.set(true);
-            }
-            return;
-          }
-
-          this.cacheService.remove(DRAFT_CACHE_KEY);
+    executeCaseSubmissionFlow(
+      this.service.createCase(request, forceCreate) as unknown as Observable<CaseSubmissionResponse<any>>,
+      {
+        isSubmitting: this.isSubmitting,
+        errorMsg: this.errorMsg,
+        mediaErrors: this.mediaErrors,
+        form: this.form,
+        cacheService: this.cacheService,
+        draftKey: DRAFT_CACHE_KEY,
+        snackbar: this.snackbar,
+        router: this.router,
+        successRoute: ['/long-term'],
+        successMessage: 'تم إضافة الحالة بنجاح وبانتظار المراجعة.',
+        onSuccess: () => {
+          this.submittedSuccessfully.set(true);
+        },
+        closeDialogs: () => {
           this.showForceCreatePopup.set(false);
           this.showDuplicateInfoDialog.set(false);
-          this.snackbar.success('تم إرسال البلاغ بنجاح، هيتم مراجعته من الإدارة قريبًا.');
-          this.router.navigate(['/long-term']);
         },
-        error: (err: unknown) => {
-          this.isSubmitting.set(false);
-          const msg = extractErrorMessage(err, 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.');
-          
-          if (err && typeof err === 'object' && 'status' in err && (err as any).status === 400) {
-            if (msg.includes('يجب أن تكون لنفس الشخص') || msg.includes('لا تبدو لنفس الشخص')) {
-               this.additionalPhotosError.set(msg);
-               return;
-            }
-
-            const errorObj = (err as any).error;
-            if (errorObj?.errors) {
-              let hasUnmappedErrors = false;
-              for (const key in errorObj.errors) {
-                const controlName = key.charAt(0).toLowerCase() + key.slice(1);
-                const control = this.form.get(controlName);
-                if (control) {
-                  control.setErrors({ serverError: errorObj.errors[key][0] });
-                } else {
-                  hasUnmappedErrors = true;
-                  this.errorMsg.set(errorObj.errors[key][0]);
-                }
-              }
-              if (!hasUnmappedErrors) {
-                this.errorMsg.set(null);
-              }
-            } else {
-              this.errorMsg.set(msg);
-            }
-          } else {
-            this.snackbar.error(msg);
-          }
+        handleDuplicate: (data) => {
+          handleDuplicateDecision(data as any, {
+            setDecision: (d: DuplicateDecision) => this.currentDuplicateDecision.set(d),
+            setBlocked: (b: boolean) => this.isBlockedDuplicate.set(b),
+            setMatchedCases: (m: MatchedCaseResponse[]) => this.matchedCases.set(m),
+            setExistingCaseType: (t: CaseType | null) => this.existingCaseType.set(t),
+            showInfoDialog: () => this.showDuplicateInfoDialog.set(true),
+            showForceCreatePopup: () => this.showForceCreatePopup.set(true)
+          });
+          this.saveDraft();
         },
-      });
+        onComplete: () => {
+          this.pendingRequest.set(null);
+        },
+        defaultErrorMessage: 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.'
+      }
+    );
   }
 
   onForceCreateCancel(): void {
     this.showForceCreatePopup.set(false);
+    this.pendingRequest.set(null);
+    this.saveDraft();
   }
 
   onForceCreateConfirm(): void {
@@ -491,6 +485,8 @@ onVideoSelected(event: Event): void {
 
   onPendingDialogClose(): void {
     this.showDuplicateInfoDialog.set(false);
+    this.pendingRequest.set(null);
+    this.saveDraft();
   }
 
   onPendingDialogContinueCreate(): void {

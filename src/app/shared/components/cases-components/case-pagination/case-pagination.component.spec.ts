@@ -1,6 +1,7 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CaseFiltersComponent } from './case-filters.component';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { CaseFiltersComponent } from '../case-filters/case-filters.component';
+
 
 describe('CaseFiltersComponent', () => {
   let component: CaseFiltersComponent;
@@ -8,9 +9,10 @@ describe('CaseFiltersComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CaseFiltersComponent]
+      imports: [CaseFiltersComponent],
+
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(CaseFiltersComponent);
     component = fixture.componentInstance;

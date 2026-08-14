@@ -1,12 +1,24 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { shareReplay, tap, finalize } from 'rxjs/operators';
 import { CacheEntry } from './cache-entry.model';
 
 @Injectable({ providedIn: 'root' })
-export class CacheService {
-  private cache = new Map<string, CacheEntry<any>>();
+export class CacheService implements OnDestroy {
+  private cache = new Map<string, CacheEntry<unknown>>();
   private ongoingRequests = new Map<string, Observable<any>>();
+  private cleanupInterval: ReturnType<typeof setInterval>;
+
+  constructor() {
+    this.cleanupInterval = setInterval(() => {
+      this.clearExpiredEntries();
+    }, 5 * 60 * 1000);
+  }
+
+  ngOnDestroy(): void {
+    clearInterval(this.cleanupInterval);
+    this.clear();
+  }
 
   get<T>(key: string): T | null {
     const entry = this.cache.get(key);
@@ -15,7 +27,7 @@ export class CacheService {
       this.cache.delete(key);
       return null;
     }
-    return entry.value;
+    return entry.value as T;
   }
 
   has(key: string): boolean {
@@ -38,6 +50,15 @@ export class CacheService {
 
   clear(): void {
     this.cache.clear();
+  }
+
+  clearExpiredEntries(): void {
+    const now = Date.now();
+    for (const [key, entry] of this.cache.entries()) {
+      if (now > entry.expiry) {
+        this.cache.delete(key);
+      }
+    }
   }
 
   invalidateByTags(tagsToInvalidate: string[]): void {
@@ -63,7 +84,7 @@ export class CacheService {
     tags: string[] = []
   ): Observable<T> {
     const cached = this.get<T>(key);
-    if (cached) {
+    if (cached !== null) {
       return of(cached);
     }
 

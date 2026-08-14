@@ -9,6 +9,8 @@ describe('AiSearch', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AiSearch],
+
+
     }).compileComponents();
 
     fixture = TestBed.createComponent(AiSearch);

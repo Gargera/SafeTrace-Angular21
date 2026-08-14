@@ -1,17 +1,37 @@
-import { Component, inject, signal, ChangeDetectionStrategy, OnInit, DestroyRef } from '@angular/core';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TTL, CACHE_TAGS } from '../../../../core/cache/cache.constants';
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  OnInit,
+  DestroyRef,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime, Observable } from 'rxjs';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
+import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container';
+import { CasePersonDataComponent } from '../../../../shared/components/cases-components/case-person-data/case-person-data';
+import { CaseLocationDataComponent } from '../../../../shared/components/cases-components/case-location-data/case-location-data';
 import { UnknownCaseService } from '../../services/unknown-case.service';
 import { UnknownCaseUpdateRequest } from '../../models/request/UnknownCaseUpdateRequest';
 import { Gender } from '../../../../shared/enums/gender';
-import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
-import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
+import {
+  EGYPT_GOVERNORATES,
+  getCitiesForGovernorate,
+} from '../../../../core/constants/governorates';
+import {
+  getFormFieldError,
+  isFieldInvalid,
+} from '../../../../shared/helper/form-validation.helper';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { CaseFileResponse } from '../../../../core/models/cases.model';
-import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
 
@@ -22,15 +42,26 @@ import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
 import { validCity } from '../../../../shared/validators/city.validator';
 import { validGovernorate } from '../../../../shared/validators/governorate.validator';
-import { ImageService } from '../../../../shared/services/image.service';
 
 import { CommonModule } from '@angular/common';
-import { HeaderComponent } from '../../../../shared/components/header/header.component';
-import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
-import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
 import { UpdateFormSkeletonComponent } from '../../../../shared/components/skeletons/update-form-skeleton/update-form-skeleton.component';
+import { CaseMediaUploaderComponent, CaseMediaPayload } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader';
+import {
+  CaseFormStep,
+  localDateInputValue,
+  nextCaseFormStep,
+  previousCaseFormStep,
+  validateStepControls,
+  validateCaseSubmission,
+} from '../../../../shared/helper/case-form.helper';
+import { executeCaseSubmissionFlow, CaseSubmissionResponse } from '../../../../shared/helper/case-submission-flow.helper';
+import { saveUpdateDraft, restoreUpdateDraft } from '../../../../shared/helper/case-cache.helper';
 
-type Step = 1 | 2 | 3;
+type Step = CaseFormStep;
+
+interface UnknownUpdateCustomData {
+  primaryPhotoId: number | null;
+}
 
 @Component({
   selector: 'app-unknown-update',
@@ -38,11 +69,11 @@ type Step = 1 | 2 | 3;
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    ButtonComponent,
-    FormField,
+    CaseMediaUploaderComponent,
+    CaseFormContainerComponent,
+    CasePersonDataComponent,
+    CaseLocationDataComponent,
     CardComponent,
-    HeaderComponent,
-    ConfirmationModalComponent,
     UpdateFormSkeletonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,40 +82,59 @@ type Step = 1 | 2 | 3;
 })
 export class UnknownUpdate implements OnInit {
   private fb = inject(FormBuilder);
-  private imageService = inject(ImageService);
   private service = inject(UnknownCaseService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private snackbar = inject(SnackbarService);
   private destroyRef = inject(DestroyRef);
+  private cacheService = inject(CacheService);
+
+  mediaUploader = viewChild<CaseMediaUploaderComponent>(CaseMediaUploaderComponent);
 
   caseId!: number;
-  currentStep: Step = 1;
+  currentStep = signal<Step>(1);
   isLoading = signal(true);
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
 
-  showDeleteImageConfirm = signal(false);
-  photoToDelete = signal<CaseFileResponse | null>(null);
+  private submittedSuccessfully = signal(false);
 
   existingPhotos = signal<CaseFileResponse[]>([]);
-  deletedPhotoIds = signal<number[]>([]);
-  primaryPhotoId = signal<number | null>(null);
-
-  newPhotos = signal<File[]>([]);
-  newPhotoPreviews = signal<string[]>([]);
-  newPrimaryImage = signal<File | null>(null);
-  newPrimaryPreview = signal<string | null>(null);
-  newPrimaryError = signal<string | null>(null);
-  newPhotosError = signal<string | null>(null);
-
   existingVideoUrl = signal<string | null>(null);
-  videoFile = signal<File | null>(null);
-  videoError = signal<string | null>(null);
+
+  // Initial media state (for Cache restoration in Update mode)
+  initialPrimary = signal<File | null>(null);
+  initialAdditional = signal<File[]>([]);
+  initialVideo = signal<File | null>(null);
+  initialDeletedPhotoIds = signal<number[]>([]);
+  initialPrimaryPhotoId = signal<number | null>(null);
+
+  mediaPayload = signal<CaseMediaPayload>({
+    primaryImage: null,
+    additionalImages: [],
+    video: null,
+    deletedImageIds: [],
+    primaryPhotoId: null,
+  });
+
+  mediaErrors = signal<{
+    primary?: string | null;
+    additional?: string | null;
+    video?: string | null;
+  }>({});
+
+  onMediaChange(payload: CaseMediaPayload): void {
+    this.mediaPayload.set(payload);
+    this.saveDraft();
+  }
+
+  get draftKey() {
+    return `UnknownUpdate_Draft_${this.caseId}`;
+  }
 
   readonly genders = Gender;
   readonly governorates = EGYPT_GOVERNORATES;
-  readonly today = new Date().toISOString().split('T')[0];
+  readonly today = localDateInputValue();
 
   readonly steps = [
     { num: 1, label: 'بيانات الشخص' },
@@ -92,39 +142,56 @@ export class UnknownUpdate implements OnInit {
     { num: 3, label: 'صور' },
   ];
 
-  get stepTitle(): string {
-    return ['بيانات الشخص (إن وُجدت)', 'موقع العثور عليه', 'صور'][this.currentStep - 1];
-  }
+  stepTitle = computed(() => {
+    return ['بيانات الشخص (إن وُجدت)', 'موقع العثور عليه', 'صور'][this.currentStep() - 1];
+  });
 
-  // ─────────────────────────────────────────────────────────────
-  // Form definition — validators match backend exactly (UnknownCase Update)
-  // ─────────────────────────────────────────────────────────────
-  form = this.fb.group({
-    // Optional — Arabic only when provided, 2-60 chars
-    fName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
-    sName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
-    tName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
-    lName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
-    // Age — required, 0-120
-    age: [null as number | null, [Validators.required, Validators.min(1), Validators.max(120)]],
-    // Gender — required, valid enum
-    gender: ['' as Gender | '', [Validators.required, validEnum(Gender)]],
-    // Phone — optional, Egyptian format, max 15
-    communicationPhone: ['', [egyptianPhone(), Validators.maxLength(15)]],
-    // Description — optional, max 2000
-    description: ['', [Validators.maxLength(2000)]],
-    // Location — required, Arabic only, 2-100
-    government: ['', [Validators.required, validGovernorate(), Validators.minLength(2), Validators.maxLength(100)]],
-    city: ['', [Validators.required]],
-    // Street — required, NOT Arabic-only, max 200
-    street: ['', [Validators.required, Validators.maxLength(200)]],
-    // EventDate — required, cannot be future
-    eventDate: ['', [Validators.required, pastDate()]],
+  stepHeader = computed(() => {
+    switch (this.currentStep()) {
+      case 1:
+        return {
+          icon: 'person',
+          title: 'بيانات الشخص المفقود',
+          description: 'أدخل البيانات الأساسية للشخص المفقود للمساعدة في التعرف عليه.',
+        };
+      case 2:
+        return {
+          icon: 'location_on',
+          title: 'موقع وتفاصيل الحادث',
+          description: 'يجب تحديد الموقع والتاريخ بدقة عالية.',
+        };
+      case 3:
+        return {
+          icon: 'photo_library',
+          title: 'صور وفيديو',
+          description: 'ارفع الصور والمستندات ومقاطع الفيديو المتاحة.',
+        };
+      default:
+        return null;
+    }
   });
 
   // ─────────────────────────────────────────────────────────────
-  // Error message helper
+  // Form definition
   // ─────────────────────────────────────────────────────────────
+  form = this.fb.nonNullable.group({
+    fName: this.fb.control<string | null>(null, [arabicText(), Validators.minLength(2), Validators.maxLength(60)]),
+    sName: this.fb.control<string | null>(null, [arabicText(), Validators.minLength(2), Validators.maxLength(60)]),
+    tName: this.fb.control<string | null>(null, [arabicText(), Validators.minLength(2), Validators.maxLength(60)]),
+    lName: this.fb.control<string | null>(null, [arabicText(), Validators.minLength(2), Validators.maxLength(60)]),
+    age: this.fb.control<number | null>(null, [Validators.required, Validators.min(1), Validators.max(120)]),
+    gender: this.fb.control<Gender | null>(null, [Validators.required, validEnum(Gender)]),
+    communicationPhone: this.fb.control<string | null>(null, [egyptianPhone(), Validators.maxLength(15)]),
+    description: this.fb.control<string | null>(null, [Validators.maxLength(2000)]),
+    government: [
+      '',
+      [Validators.required, validGovernorate(), Validators.minLength(2), Validators.maxLength(100)],
+    ],
+    city: ['', [Validators.required]],
+    street: ['', [Validators.required, Validators.maxLength(200)]],
+    eventDate: ['', [Validators.required, pastDate()]],
+  });
+
   getFieldError(field: string): string | null {
     return getFormFieldError(this.form, field);
   }
@@ -133,16 +200,25 @@ export class UnknownUpdate implements OnInit {
     return isFieldInvalid(this.form, field);
   }
 
+  readonly isInvalidFn = this.isInvalid.bind(this);
+  readonly getErrorFn = this.getFieldError.bind(this);
+
   availableCities = signal<string[]>([]);
 
   ngOnInit(): void {
     this.caseId = Number(this.route.snapshot.paramMap.get('id'));
 
-    this.form.get('city')?.setValidators([Validators.required, validCity(() => this.form.get('government')?.value ?? null)]);
+    this.form
+      .get('city')
+      ?.setValidators([
+        Validators.required,
+        validCity(() => this.form.get('government')?.value ?? null),
+      ]);
     this.form.get('city')?.updateValueAndValidity();
 
-    this.form.get('government')?.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
+    this.form
+      .get('government')
+      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((gov) => {
         const cities = getCitiesForGovernorate(gov);
         this.availableCities.set(cities);
@@ -153,14 +229,39 @@ export class UnknownUpdate implements OnInit {
         this.form.get('city')?.updateValueAndValidity();
       });
 
+    this.form.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef), debounceTime(500))
+      .subscribe(() => {
+        this.saveDraft();
+      });
+
     this.loadCase();
   }
 
+  private saveDraft(media?: CaseMediaPayload): void {
+    if (this.isLoading() || this.submittedSuccessfully()) return;
+
+    const payload = media ?? this.mediaPayload();
+
+    saveUpdateDraft<any, UnknownUpdateCustomData>(
+      this.cacheService,
+      this.draftKey,
+      this.form,
+      this.currentStep(),
+      {
+        primaryImage: payload.primaryImage,
+        additionalImages: payload.additionalImages,
+        deletedImageIds: payload.deletedImageIds,
+        video: payload.video,
+      },
+      {
+        primaryPhotoId: payload.primaryPhotoId,
+      }
+    );
+  }
+
   /**
-   * The backend (local FileStorageService) returns RELATIVE paths only
-   * (e.g. "/Images/UnknownCase/xxx.jpg"). Without prefixing environment.baseUrl,
-   * <img src> resolves against the Angular app's own origin instead of the API.
-   * Kept forward-compatible: an already-absolute URL (e.g. future S3) passes through.
+   * The backend returns RELATIVE paths only.
    */
   private resolveMediaUrl(path: string | null | undefined): string | null {
     if (!path) return null;
@@ -182,19 +283,20 @@ export class UnknownUpdate implements OnInit {
           }
           const gov = c.government ?? '';
           this.availableCities.set(getCitiesForGovernorate(gov));
+
           this.form.patchValue({
-            fName: c.fName ?? '',
-            sName: c.sName ?? '',
-            tName: c.tName ?? '',
-            lName: c.lName ?? '',
-            age: c.age ?? null,
-            gender: c.gender ?? '',
-            communicationPhone: c.communicationPhone ?? '',
-            description: c.description ?? '',
-            government: c.government ?? '',
-            city: c.city ?? '',
-            street: c.street ?? '',
-            eventDate: c.eventDate ? String(c.eventDate).split('T')[0] : '',
+            fName: c.fName || '',
+            sName: c.sName || '',
+            tName: c.tName || '',
+            lName: c.lName || '',
+            age: c.age,
+            gender: c.gender as Gender,
+            communicationPhone: c.communicationPhone,
+            description: c.description,
+            government: c.government,
+            city: c.city,
+            street: c.street,
+            eventDate: c.eventDate ? c.eventDate.substring(0, 10) : '',
           });
 
           const rawFiles: CaseFileResponse[] = c.photos ?? [];
@@ -202,9 +304,42 @@ export class UnknownUpdate implements OnInit {
             ...f,
             imagePath: this.resolveMediaUrl(f.imagePath) ?? f.imagePath,
           }));
+          const primary = files.find((f) => f.isPrimary);
+
           this.existingPhotos.set(files);
-          this.primaryPhotoId.set(files.find((f) => f.isPrimary)?.id ?? null);
           this.existingVideoUrl.set(this.resolveMediaUrl(c.video ?? null));
+
+          const draft = restoreUpdateDraft<any, UnknownUpdateCustomData>(
+            this.cacheService,
+            this.draftKey,
+            this.form,
+            (s) => this.currentStep.set(s),
+            {
+              primary: (f) => this.initialPrimary.set(f),
+              additional: (fs) => this.initialAdditional.set(fs),
+              deletedPhotoIds: (ids) => this.initialDeletedPhotoIds.set(ids),
+              video: (f) => this.initialVideo.set(f)
+            }
+          );
+
+          if (draft) {
+            const pId = draft.primaryPhotoId ?? (primary ? primary.id : (files[0]?.id ?? null));
+            this.mediaPayload.set({
+              primaryImage: draft.newPrimaryImage ?? null,
+              additionalImages: draft.newAdditionalImages ?? [],
+              deletedImageIds: draft.deletedPhotoIds ?? [],
+              video: draft.newVideo ?? null,
+              primaryPhotoId: pId,
+            });
+            this.initialPrimaryPhotoId.set(pId);
+          } else {
+            const pId = primary ? primary.id : (files[0]?.id ?? null);
+            this.mediaPayload.update(p => ({
+              ...p,
+              primaryPhotoId: pId
+            }));
+            this.initialPrimaryPhotoId.set(pId);
+          }
 
           this.isLoading.set(false);
         },
@@ -216,132 +351,41 @@ export class UnknownUpdate implements OnInit {
       });
   }
 
-
+  private readonly stepControls: Record<1 | 2, string[]> = {
+    1: ['fName', 'sName', 'tName', 'lName', 'age', 'gender', 'communicationPhone', 'description'],
+    2: ['government', 'city', 'street', 'eventDate'],
+  };
 
   nextStep(): void {
-    const stepFields: Record<number, string[]> = {
-      1: ['age', 'gender'],
-      2: ['government', 'city', 'street', 'eventDate'],
-    };
-    const fields = stepFields[this.currentStep] ?? [];
-    fields.forEach((f) => this.form.get(f)?.markAsTouched());
-    if (fields.some((f) => this.form.get(f)?.invalid)) return;
-    this.currentStep = (this.currentStep + 1) as Step;
+    const current = this.currentStep();
+    const fields = this.stepControls[current as 1 | 2] ?? [];
+    if (validateStepControls(this.form, fields)) return;
+    this.currentStep.set(nextCaseFormStep(current));
     this.errorMsg.set(null);
   }
 
   prevStep(): void {
-    if (this.currentStep > 1) this.currentStep = (this.currentStep - 1) as Step;
+    this.currentStep.set(previousCaseFormStep(this.currentStep()));
   }
-
-  confirmRemoveExistingPhoto(photo: CaseFileResponse): void {
-    this.photoToDelete.set(photo);
-    this.showDeleteImageConfirm.set(true);
-  }
-
-  executeRemoveExistingPhoto(): void {
-    const photo = this.photoToDelete();
-    if (photo) {
-      this.existingPhotos.update((list) => list.filter((p) => p.id !== photo.id));
-      this.deletedPhotoIds.update((ids) => [...ids, photo.id]);
-      if (this.primaryPhotoId() === photo.id) {
-        const next = this.existingPhotos()[0];
-        this.primaryPhotoId.set(next ? next.id : null);
-      }
-    }
-    this.showDeleteImageConfirm.set(false);
-    this.photoToDelete.set(null);
-  }
-
-  removeExistingPhoto(photo: CaseFileResponse): void {
-    this.existingPhotos.update((list) => list.filter((p) => p.id !== photo.id));
-    this.deletedPhotoIds.update((ids) => [...ids, photo.id]);
-    if (this.primaryPhotoId() === photo.id) {
-      const next = this.existingPhotos()[0];
-      this.primaryPhotoId.set(next ? next.id : null);
-    }
-  }
-
-  setExistingAsPrimary(photo: CaseFileResponse): void {
-    this.primaryPhotoId.set(photo.id);
-    this.newPrimaryImage.set(null);
-    this.newPrimaryPreview.set(null);
-  }
-
-  onNewPrimarySelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
-    if (!file) return;
-
-    const validation = this.imageService.validate(file, 5);
-    if (!validation.valid) {
-      this.newPrimaryError.set(validation.errorMessage ?? null);
-      return;
-    }
-
-    this.newPrimaryError.set(null);
-    this.newPrimaryImage.set(file);
-    this.newPrimaryPreview.set(URL.createObjectURL(file));
-    this.primaryPhotoId.set(null);
-  }
-
-  clearNewPrimary(): void {
-    this.newPrimaryImage.set(null);
-    this.newPrimaryPreview.set(null);
-  }
-
-  onNewPhotosSelected(event: Event): void {
-    const files = Array.from((event.target as HTMLInputElement).files ?? []);
-    for (const f of files) {
-      const validation = this.imageService.validate(f, 5);
-      if (!validation.valid) {
-        this.newPhotosError.set(validation.errorMessage ?? null);
-        return;
-      }
-    }
-    this.newPhotosError.set(null);
-    this.newPhotos.update((p) => [...p, ...files].slice(0, 5));
-    this.newPhotoPreviews.set(this.newPhotos().map((f) => URL.createObjectURL(f)));
-  }
-
-  removeNewPhoto(index: number): void {
-    this.newPhotos.update((p) => p.filter((_, i) => i !== index));
-    this.newPhotoPreviews.update((p) => p.filter((_, i) => i !== index));
-  }
-
-  
-onVideoSelected(event: Event): void {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0] ?? null;
-
-  if (!file) {
-    return;
-  }
-
-  const validation = validateVideoFile(file, 50);
-
-  if (!validation.valid) {
-    this.videoFile.set(null);
-    this.videoError.set(
-      validation.errorMessage ?? 'الفيديو غير صالح.'
-    );
-
-    input.value = '';
-    return;
-  }
-
-  this.videoError.set(null);
-  this.videoFile.set(file);
-}
-
 
   onSubmit(): void {
     if (this.isSubmitting()) return;
-    if (this.form.invalid || (this.existingPhotos().length === 0 && !this.newPrimaryImage() && this.newPhotos().length === 0)) {
-      this.form.markAllAsTouched();
-      if (this.existingPhotos().length === 0 && !this.newPrimaryImage() && this.newPhotos().length === 0) {
-        this.errorMsg.set('لازم يفضل في صورة واحدة على الأقل للحالة.');
+    const media = this.mediaPayload();
+    const currentRemainingPhotos = this.existingPhotos().length - media.deletedImageIds.length;
+    const hasAtLeastOnePhoto =
+      currentRemainingPhotos > 0 || !!media.primaryImage || media.additionalImages.length > 0;
+
+    const uploader = this.mediaUploader();
+    if (uploader) {
+      const validation = validateCaseSubmission(this.form, uploader);
+      if (!validation.valid || !hasAtLeastOnePhoto) {
+        if (!hasAtLeastOnePhoto) {
+          this.errorMsg.set('لازم يفضل في صورة واحدة على الأقل للحالة.');
+        } else {
+          this.errorMsg.set(validation.message!);
+        }
+        return;
       }
-      return;
     }
 
     this.isSubmitting.set(true);
@@ -349,70 +393,50 @@ onVideoSelected(event: Event): void {
 
     const v = this.form.getRawValue();
 
+    let fName: string | null = v.fName || null;
+    let sName: string | null = v.sName || null;
+    let tName: string | null = v.tName || null;
+    let lName: string | null = v.lName || null;
+
     const request: UnknownCaseUpdateRequest = {
-      fName: v.fName || null,
-      lName: v.lName || null,
-      sName: v.sName || null,
-      tName: v.tName || null,
+      fName: fName,
+      lName: lName,
+      sName: sName,
+      tName: tName,
       gender: v.gender as Gender,
-      age: v.age!,
+      age: Number(v.age ?? 0),
       communicationPhone: v.communicationPhone || null,
       description: v.description || null,
-      government: v.government!,
-      city: v.city!,
-      street: v.street!,
-      eventDate: v.eventDate!,
-      primaryImage: this.newPrimaryImage(),
-      newPhotos: this.newPhotos().length ? this.newPhotos() : null,
-      deletedPhotoIds: this.deletedPhotoIds().length ? this.deletedPhotoIds() : null,
-      primaryPhotoId: this.primaryPhotoId(),
-      video: this.videoFile(),
+      government: v.government ?? '',
+      city: v.city ?? '',
+      street: v.street ?? '',
+      eventDate: v.eventDate ?? '',
+      primaryImage: media.primaryImage ?? undefined,
+      newPhotos: media.additionalImages.length ? media.additionalImages : null,
+      deletedPhotoIds: media.deletedImageIds.length ? media.deletedImageIds : null,
+      primaryPhotoId: media.primaryPhotoId,
+      video: media.video,
     };
 
-    this.service
-      .updateCase(this.caseId, request)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.isSubmitting.set(false);
-          this.snackbar.success('تم تحديث بيانات الحالة بنجاح.');
-          this.router.navigate(['/unknown']);
+    executeCaseSubmissionFlow(
+      this.service.updateCase(this.caseId, request) as unknown as Observable<CaseSubmissionResponse<any>>,
+      {
+        isSubmitting: this.isSubmitting,
+        errorMsg: this.errorMsg,
+        mediaErrors: this.mediaErrors,
+        form: this.form,
+        cacheService: this.cacheService,
+        draftKey: this.draftKey,
+        snackbar: this.snackbar,
+        router: this.router,
+        successRoute: ['/unknown-cases', String(this.caseId)],
+        successMessage: 'تم تحديث بيانات الحالة بنجاح.',
+        onSuccess: () => {
+          this.submittedSuccessfully.set(true);
         },
-        error: (err: unknown) => {
-          this.isSubmitting.set(false);
-          const msg = extractErrorMessage(err, 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.');
-          
-          if (msg.includes('يجب أن تكون لنفس الشخص') || msg.includes('لا تبدو لنفس الشخص')) {
-            this.newPrimaryError.set(msg);
-            this.newPhotosError.set(msg);
-            return;
-          }
-
-          if (err && typeof err === 'object' && 'status' in err && (err as any).status === 400) {
-            const errorObj = (err as any).error;
-            if (errorObj?.errors) {
-              let hasUnmappedErrors = false;
-              for (const key in errorObj.errors) {
-                const controlName = key.charAt(0).toLowerCase() + key.slice(1);
-                const control = this.form.get(controlName);
-                if (control) {
-                  control.setErrors({ serverError: errorObj.errors[key][0] });
-                } else {
-                  hasUnmappedErrors = true;
-                  this.errorMsg.set(errorObj.errors[key][0]);
-                }
-              }
-              if (!hasUnmappedErrors) {
-                this.errorMsg.set(null);
-              }
-            } else {
-              this.errorMsg.set(msg);
-            }
-          } else {
-            this.snackbar.error(msg);
-          }
-        },
-      });
+        defaultErrorMessage: 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.'
+      }
+    );
   }
 
   goBack(): void {

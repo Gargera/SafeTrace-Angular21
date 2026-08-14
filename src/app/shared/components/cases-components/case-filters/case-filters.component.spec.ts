@@ -1,3 +1,7 @@
+
+import "zone.js";
+import "zone.js/testing";
+
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 
 import { CaseFiltersComponent } from './case-filters.component';
@@ -9,6 +13,7 @@ describe('CaseFiltersComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CaseFiltersComponent],
+
     }).compileComponents();
 
     fixture = TestBed.createComponent(CaseFiltersComponent);

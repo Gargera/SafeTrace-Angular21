@@ -9,6 +9,7 @@ describe('RegisterByAdmin', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [RegisterByAdmin],
+
     }).compileComponents();
 
     fixture = TestBed.createComponent(RegisterByAdmin);

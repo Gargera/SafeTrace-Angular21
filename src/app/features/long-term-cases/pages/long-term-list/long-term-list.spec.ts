@@ -9,6 +9,8 @@ describe('LongTermList', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [LongTermList],
+
+
     }).compileComponents();
 
     fixture = TestBed.createComponent(LongTermList);
