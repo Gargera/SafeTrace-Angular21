@@ -169,107 +169,113 @@
   </div>
 </app-card>
 
-<section
-  class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75"
->
-  @if (isLoading() && users().length === 0) {
-    <app-table-skeleton [rows]="10"></app-table-skeleton>
-  } @else {
-    <div
-      class="w-full max-w-full overflow-x-auto"
-      [class.opacity-50]="isLoading()"
-      [class.pointer-events-none]="isLoading()"
-    >
-      <table class="w-full text-right border-collapse whitespace-nowrap">
-        <thead>
-          <tr
-            class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant"
-          >
-            <th class="px-lg py-md text-center">#</th>
-            <th class="px-lg py-md">المستخدم</th>
-            <th class="px-lg py-md">البريد الإلكتروني</th>
-            <th class="px-lg py-md">رقم الهاتف</th>
-            <th class="px-lg py-md">حالة التوثيق</th>
-            <th class="px-lg py-md">الدور</th>
-            <th class="px-lg py-md">حالة الحظر</th>
-            <ng-container *hasPermission="Permissions.Users.GetById">
-              <th class="px-lg py-md text-center">الإجراءات</th>
-            </ng-container>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
-          @for (user of users(); track user.id; let i = $index) {
-            <tr class="hover:bg-surface-container-low transition-colors group">
-              <td class="px-lg py-md text-center font-bold text-on-surface-variant">
-                {{ (filter().pageNumber - 1) * filter().pageSize + i + 1 }}
-              </td>
-              <td class="px-lg py-md">
-                <div class="flex items-center gap-md">
-                  <span class="font-semibold text-primary">{{ user.fName }} {{ user.lName }}</span>
-                </div>
-              </td>
-              <td class="px-lg py-md font-sans opacity-70">{{ user.email }}</td>
-              <td class="px-lg py-md font-sans opacity-70" dir="ltr">
-                {{ user.phoneNumber || '—' }}
-              </td>
-              <td class="px-lg py-md">
-                <span [appVerificationBadgeDirective]="user.verificationStatus"></span>
-              </td>
-              <td class="px-lg py-md">
-                <span [appRoleBadgeDirective]="user.role || ''"></span>
-              </td>
-              <td class="px-lg py-md">
-                <span [appBlockBadgeDirective]="user.isBlocked"></span>
-              </td>
+@defer (on viewport) {
+  <section
+    class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75"
+  >
+    @if (isLoading() && users().length === 0) {
+      <app-table-skeleton [rows]="10"></app-table-skeleton>
+    } @else {
+      <div
+        class="w-full max-w-full overflow-x-auto"
+        [class.opacity-50]="isLoading()"
+        [class.pointer-events-none]="isLoading()"
+      >
+        <table class="w-full text-right border-collapse whitespace-nowrap">
+          <thead>
+            <tr
+              class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant"
+            >
+              <th class="px-lg py-md text-center">#</th>
+              <th class="px-lg py-md">المستخدم</th>
+              <th class="px-lg py-md">البريد الإلكتروني</th>
+              <th class="px-lg py-md">رقم الهاتف</th>
+              <th class="px-lg py-md">حالة التوثيق</th>
+              <th class="px-lg py-md">الدور</th>
+              <th class="px-lg py-md">حالة الحظر</th>
               <ng-container *hasPermission="Permissions.Users.GetById">
-                <td class="px-lg py-md text-center">
-                  <app-button
-                    routerLink="/admin/users/{{ user.id }}"
-                    variant="primary"
-                    extraClass="flex items-center justify-center gap-1.5 px-6 py-2 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
-                  >
-                    <span class="material-symbols-outlined">visibility</span>
-                    عرض
-                  </app-button>
-                </td>
+                <th class="px-lg py-md text-center">الإجراءات</th>
               </ng-container>
             </tr>
-          } @empty {
-            @if (!isLoading()) {
-              <tr>
-                <td colspan="8" class="py-xl">
-                  <app-empty-state
-                    [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا يوجد مستخدمين'"
-                    [message]="
-                      hasActiveFilters()
-                        ? 'لم نتمكن من العثور على مستخدمين تطابق خيارات التصفية أو البحث الحالية.'
-                        : 'لم يتم تسجيل أي مستخدمين حتى الآن.'
-                    "
-                  >
-                  </app-empty-state>
+          </thead>
+          <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
+            @for (user of users(); track user.id; let i = $index) {
+              <tr class="hover:bg-surface-container-low transition-colors group">
+                <td class="px-lg py-md text-center font-bold text-on-surface-variant">
+                  {{ (filter().pageNumber - 1) * filter().pageSize + i + 1 }}
                 </td>
+                <td class="px-lg py-md">
+                  <div class="flex items-center gap-md">
+                    <span class="font-semibold text-primary">{{ user.fName }} {{ user.lName }}</span>
+                  </div>
+                </td>
+                <td class="px-lg py-md font-sans opacity-70">{{ user.email }}</td>
+                <td class="px-lg py-md font-sans opacity-70" dir="ltr">
+                  {{ user.phoneNumber || '—' }}
+                </td>
+                <td class="px-lg py-md">
+                  <span [appVerificationBadgeDirective]="user.verificationStatus"></span>
+                </td>
+                <td class="px-lg py-md">
+                  <span [appRoleBadgeDirective]="user.role || ''"></span>
+                </td>
+                <td class="px-lg py-md">
+                  <span [appBlockBadgeDirective]="user.isBlocked"></span>
+                </td>
+                <ng-container *hasPermission="Permissions.Users.GetById">
+                  <td class="px-lg py-md text-center">
+                    <app-button
+                      routerLink="/admin/users/{{ user.id }}"
+                      variant="primary"
+                      extraClass="flex items-center justify-center gap-1.5 px-6 py-2 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
+                    >
+                      <span class="material-symbols-outlined">visibility</span>
+                      عرض
+                    </app-button>
+                  </td>
+                </ng-container>
               </tr>
+            } @empty {
+              @if (!isLoading()) {
+                <tr>
+                  <td colspan="8" class="py-xl">
+                    <app-empty-state
+                      [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا يوجد مستخدمين'"
+                      [message]="
+                        hasActiveFilters()
+                          ? 'لم نتمكن من العثور على مستخدمين تطابق خيارات التصفية أو البحث الحالية.'
+                          : 'لم يتم تسجيل أي مستخدمين حتى الآن.'
+                      "
+                    >
+                    </app-empty-state>
+                  </td>
+                </tr>
+              }
             }
-          }
-        </tbody>
-      </table>
-    </div>
-  }
+          </tbody>
+        </table>
+      </div>
+    }
 
-  @if (totalPages() > 1) {
-    <div
-      class="p-md md:p-lg bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-4"
-    >
-      <span class="text-label-sm text-on-surface-variant font-medium">
-        إجمالي عدد المستخدمين: <span class="font-bold">{{ totalCount() }}</span>
-      </span>
+    @if (totalPages() > 1) {
+      <div
+        class="p-md md:p-lg bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-4"
+      >
+        <span class="text-label-sm text-on-surface-variant font-medium">
+          إجمالي عدد المستخدمين: <span class="font-bold">{{ totalCount() }}</span>
+        </span>
 
-      <app-pagination
-        [currentPage]="filter().pageNumber"
-        [loading]="isLoading()"
-        [totalPages]="totalPages()"
-        (pageChange)="changePage($event)"
-      />
-    </div>
-  }
-</section>
+        <app-pagination
+          [currentPage]="filter().pageNumber"
+          [loading]="isLoading()"
+          [totalPages]="totalPages()"
+          (pageChange)="changePage($event)"
+        />
+      </div>
+    }
+  </section>
+} @placeholder {
+  <section class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75">
+    <app-table-skeleton [rows]="10"></app-table-skeleton>
+  </section>
+}
