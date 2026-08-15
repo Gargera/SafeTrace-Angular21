@@ -176,7 +176,7 @@ describe('LongTermUpdate', () => {
       expect(mockService.updateCaseArgs.length).toBe(1);
       expect(mockCache.removeCalled).toBe(true);
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/long-term', '1']);
-      expect(mockSnackbar.successArgs).toContain('تم تحديث بيانات الحالة بنجاح.');
+      expect(mockSnackbar.successArgs).toContain('تم تعديل بيانات الحالة بنجاح، وسيتم مراجعتها مرة أخرى من قِبَل الإدارة قبل النشر.');
     });
 
     it('handles API errors', () => {

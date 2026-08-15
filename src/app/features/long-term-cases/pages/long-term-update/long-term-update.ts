@@ -89,12 +89,12 @@ interface LongTermUpdateCustomData {
 export class LongTermUpdate implements OnInit {
   mediaState = useCaseMediaState({
     onSaveDraft: () => {
-       const self = this as any;
-       if (typeof self.saveDraft === 'function') {
-          self.saveDraft();
-       } else if (typeof self.saveDraftToCache === 'function') {
-          self.saveDraftToCache(self.mediaPayload());
-       }
+      const self = this as any;
+      if (typeof self.saveDraft === 'function') {
+        self.saveDraft();
+      } else if (typeof self.saveDraftToCache === 'function') {
+        self.saveDraftToCache(self.mediaPayload());
+      }
     }
   });
 
@@ -122,6 +122,8 @@ export class LongTermUpdate implements OnInit {
   isLoading = signal(true);
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
+
+  private submittedSuccessfully = signal(false);
 
   showDeleteImageConfirm = signal(false);
   photoToDelete = signal<CaseFileResponse | null>(null);
@@ -239,7 +241,7 @@ export class LongTermUpdate implements OnInit {
   }
 
   private saveDraft(media?: CaseMediaPayload): void {
-    if (this.isLoading()) return;
+    if (this.isLoading() || this.submittedSuccessfully()) return;
 
     const payload = media ?? this.mediaPayload();
 
@@ -424,11 +426,6 @@ export class LongTermUpdate implements OnInit {
     const validation = validateCaseSubmission(this.form, this.mediaUploader);
     let valid = validation.valid;
 
-    if (!this.policeReport() && !this.existingPoliceReportUrl()) {
-      this.mediaErrors.update((errs: Record<string, string | null>) => ({ ...errs, policeReport: 'برجاء إرفاق محضر الشرطة.' }));
-      valid = false;
-    }
-
     if (!valid || !hasAtLeastOnePhoto) {
       if (!hasAtLeastOnePhoto) {
         this.errorMsg.set('لازم يفضل في صورة واحدة على الأقل للحالة.');
@@ -486,12 +483,15 @@ export class LongTermUpdate implements OnInit {
       snackbar: this.snackbar,
       router: this.router,
       successRoute: ['/long-term', String(this.caseId)],
-      successMessage: 'تم تحديث بيانات الحالة بنجاح.',
+      successMessage: 'تم تعديل بيانات الحالة بنجاح، وسيتم مراجعتها مرة أخرى من قِبَل الإدارة قبل النشر.',
+      onSuccess: () => {
+        this.submittedSuccessfully.set(true);
+      },
       defaultErrorMessage: 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.'
     };
   }
 
   goBack(): void {
-    this.router.navigate(['/long-term']);
+    this.router.navigate(['/long-term', this.caseId]);
   }
 }

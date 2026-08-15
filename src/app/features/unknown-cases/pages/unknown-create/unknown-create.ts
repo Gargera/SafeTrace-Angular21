@@ -1,5 +1,3 @@
-import { useCaseMediaState } from '../../../../shared/helper/cases-helper/case-media.helper';
-import { CacheService } from '../../../../core/cache/cache.service';
 import {
   Component,
   inject,
@@ -11,39 +9,39 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CaseType } from '../../../../shared/enums/case-type';
-import { CaseMediaUploaderComponent, CaseMediaPayload } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader';
+
+import { debounceTime } from 'rxjs';
+
+import { UnknownCaseService } from '../../services/unknown-case.service';
+import { SnackbarService } from '../../../../shared/services/toast.service';
+import { CacheService } from '../../../../core/cache/cache.service';
+
 import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container';
 import { CasePersonDataComponent } from '../../../../shared/components/cases-components/case-person-data/case-person-data';
 import { CaseLocationDataComponent } from '../../../../shared/components/cases-components/case-location-data/case-location-data';
-import { UnknownCaseService } from '../../services/unknown-case.service';
-import { UnknownCaseCreateRequest } from '../../models/request/UnknownCaseCreateRequest';
-import { Gender } from '../../../../shared/enums/gender';
-import {
-  EGYPT_GOVERNORATES,
-  getCitiesForGovernorate,
-} from '../../../../core/constants/governorates';
-import { SnackbarService } from '../../../../shared/services/toast.service';
+import { CaseMediaUploaderComponent } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
-import { MatchedCaseResponse } from '../../../../core/models/cases.model';
-import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
 import { DuplicateInfoDialogComponent } from '../../../../shared/components/cases-components/duplicate-info-dialog/duplicate-info-dialog.component';
 
-import { debounceTime, Observable } from 'rxjs';
-import { handleDuplicateDecision, DuplicateDecisionPayload } from '../../../../shared/helper/cases-helper/case-duplicate.helper';
-import { useCaseDuplicateHandler } from '../../../../shared/helper/cases-helper/case-duplicate-handler.helper';
+import { UnknownCaseCreateRequest } from '../../models/request/UnknownCaseCreateRequest';
+import { MatchedCaseResponse } from '../../../../core/models/cases.model';
 
-// Shared validators
+import { CaseType } from '../../../../shared/enums/case-type';
+import { Gender } from '../../../../shared/enums/gender';
+import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
+
+import { EGYPT_GOVERNORATES } from '../../../../core/constants/governorates';
+
+import { useCaseMediaState } from '../../../../shared/helper/cases-helper/case-media.helper';
 import { useCaseFormErrors } from '../../../../shared/helper/cases-helper/case-form-errors.helper';
 import { bindGovernorateCityValidation } from '../../../../shared/helper/cases-helper/case-location-sync.helper';
-import { arabicText } from '../../../../shared/validators/arabic-text.validator';
-import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
-import { pastDate } from '../../../../shared/validators/past-date.validator';
-import { validEnum } from '../../../../shared/validators/enum.validator';
-import { validCity } from '../../../../shared/validators/city.validator';
-import { validGovernorate } from '../../../../shared/validators/governorate.validator';
+import { useCaseDuplicateHandler } from '../../../../shared/helper/cases-helper/case-duplicate-handler.helper';
+import { DuplicateDecisionPayload } from '../../../../shared/helper/cases-helper/case-duplicate.helper';
+import { executeCaseSubmissionFlow, CaseSubmissionFlowDeps } from '../../../../shared/helper/cases-helper/case-submission-flow.helper';
+import { saveCreateDraft, restoreCreateDraft, CreateDraft } from '../../../../shared/helper/cases-helper/case-cache.helper';
 import {
   CaseFormStep,
   localDateInputValue,
@@ -52,8 +50,12 @@ import {
   validateStepControls,
   validateCaseSubmission,
 } from '../../../../shared/helper/cases-helper/case-form.helper';
-import { executeCaseSubmissionFlow, CaseSubmissionResponse, CaseSubmissionFlowDeps } from '../../../../shared/helper/cases-helper/case-submission-flow.helper';
-import { saveCreateDraft, restoreCreateDraft } from '../../../../shared/helper/cases-helper/case-cache.helper';
+
+import { arabicText } from '../../../../shared/validators/arabic-text.validator';
+import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
+import { pastDate } from '../../../../shared/validators/past-date.validator';
+import { validEnum } from '../../../../shared/validators/enum.validator';
+import { validGovernorate } from '../../../../shared/validators/governorate.validator';
 
 type Step = CaseFormStep;
 
@@ -68,10 +70,26 @@ interface UnknownCreateCustomData {
   existingCaseType: CaseType | null;
 }
 
+interface UnknownCreateFormValue {
+  fName: string | null;
+  sName: string | null;
+  tName: string | null;
+  lName: string | null;
+  age: number | null;
+  gender: Gender | null;
+  communicationPhone: string | null;
+  description: string | null;
+  government: string;
+  city: string;
+  street: string;
+  eventDate: string;
+}
+
 @Component({
   selector: 'app-unknown-create',
   standalone: true,
   imports: [
+    CommonModule,
     ReactiveFormsModule,
     CaseMediaUploaderComponent,
     CaseFormContainerComponent,
@@ -200,14 +218,7 @@ export class UnknownCreate implements OnInit {
   availableCities = signal<string[]>([]);
 
   mediaState = useCaseMediaState({
-    onSaveDraft: () => {
-       const self = this as any;
-       if (typeof self.saveDraft === 'function') {
-          self.saveDraft();
-       } else if (typeof self.saveDraftToCache === 'function') {
-          self.saveDraftToCache(self.mediaPayload());
-       }
-    }
+    onSaveDraft: () => this.saveDraft()
   });
 
   initialPrimary = this.mediaState.initialPrimary;
@@ -231,7 +242,7 @@ export class UnknownCreate implements OnInit {
   // ─────────────────────────────────────────────────────────────
   saveDraft(): void {
     if (this.submittedSuccessfully()) return;
-    saveCreateDraft<any, UnknownCreateCustomData>(
+    saveCreateDraft<UnknownCreateFormValue, UnknownCreateCustomData>(
       this.cacheService,
       UNKNOWN_CREATE_DRAFT_KEY,
       this.form,
@@ -251,44 +262,59 @@ export class UnknownCreate implements OnInit {
   ngOnInit(): void {
     bindGovernorateCityValidation(this.form, this.destroyRef, this.availableCities);
 
-    const draft = restoreCreateDraft<any, UnknownCreateCustomData>(
+    const draft = restoreCreateDraft<UnknownCreateFormValue, UnknownCreateCustomData>(
       this.cacheService,
       UNKNOWN_CREATE_DRAFT_KEY,
       this.form,
       (s) => this.currentStep.set(s),
       {
         primary: (f) => this.initialPrimary.set(f),
+        originalPrimary: (f) => this.initialOriginalPrimary.set(f),
         additional: (fs) => this.initialAdditional.set(fs),
         video: (f) => this.initialVideo.set(f)
       }
     );
 
     if (draft) {
-      this.showForceCreatePopup.set(draft.showForceCreatePopup);
-      this.showDuplicateInfoDialog.set(draft.showDuplicateInfoDialog);
-      this.currentDuplicateDecision.set(draft.currentDuplicateDecision || DuplicateDecision.None);
-      this.isBlockedDuplicate.set(draft.isBlockedDuplicate);
-      this.matchedCases.set(draft.matchedCases);
-      this.existingCaseType.set(draft.existingCaseType);
+      this.showForceCreatePopup.set(draft.showForceCreatePopup ?? false);
+      this.showDuplicateInfoDialog.set(draft.showDuplicateInfoDialog ?? false);
+      this.currentDuplicateDecision.set(draft.currentDuplicateDecision ?? DuplicateDecision.None);
+      this.isBlockedDuplicate.set(draft.isBlockedDuplicate ?? false);
+      this.matchedCases.set(draft.matchedCases ?? []);
+      this.existingCaseType.set(draft.existingCaseType ?? null);
 
-      this.mediaPayload.set({
-        primaryImage: draft.newPrimaryImage ?? null,
-        additionalImages: draft.newAdditionalImages ?? [],
-        video: draft.newVideo ?? null,
-        deletedImageIds: [],
-        primaryPhotoId: null,
-      });
+      this.restoreMediaFromDraft(draft);
     }
   }
 
-  private readonly stepControls: Record<1 | 2, string[]> = {
-    1: ['isNameKnown', 'name', 'age', 'gender', 'communicationPhone', 'description'],
+  private restoreMediaFromDraft(draft: CreateDraft<UnknownCreateFormValue> & UnknownCreateCustomData): void {
+    this.mediaPayload.set({
+      primaryImage: draft.newPrimaryImage ?? null,
+      additionalImages: draft.newAdditionalImages ?? [],
+      video: draft.newVideo ?? null,
+      deletedImageIds: [],
+      primaryPhotoId: null,
+      originalPrimaryImage: draft.originalPrimaryImage ?? null
+    });
+  }
+
+  private readonly stepControls: Partial<Record<CaseFormStep, string[]>> = {
+    1: [
+      'fName',
+      'sName',
+      'tName',
+      'lName',
+      'age',
+      'gender',
+      'communicationPhone',
+      'description',
+    ],
     2: ['government', 'city', 'street', 'eventDate'],
   };
 
   nextStep(): void {
     const current = this.currentStep();
-    const fields = this.stepControls[current as 1 | 2] ?? [];
+    const fields = this.stepControls[current] ?? [];
     if (validateStepControls(this.form, fields)) return;
     this.currentStep.set(nextCaseFormStep(current));
     this.errorMsg.set(null);
@@ -339,7 +365,7 @@ export class UnknownCreate implements OnInit {
     this.mediaErrors.set({});
 
     executeCaseSubmissionFlow(
-      this.service.createCase(request, forceCreate) as unknown as Observable<CaseSubmissionResponse<any>>,
+      this.service.createCase(request, forceCreate),
       this.getSubmissionDependencies()
     );
   }
@@ -355,7 +381,7 @@ export class UnknownCreate implements OnInit {
       snackbar: this.snackbar,
       router: this.router,
       successRoute: ['/unknown'],
-      successMessage: 'تم إنشاء البلاغ بنجاح.',
+      successMessage: 'تم إنشاء البلاغ بنجاح، وسيتم مراجعته من قِبَل الإدارة قبل النشر.',
       onSuccess: () => {
         this.submittedSuccessfully.set(true);
       },

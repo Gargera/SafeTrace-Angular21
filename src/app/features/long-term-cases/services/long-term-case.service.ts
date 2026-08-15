@@ -12,6 +12,9 @@ import { environment } from '../../../../environments/environment';
 import { LongTermCaseFilterRequest } from '../models/request/LongTermCaseFilterRequest';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
+import { CaseSubmissionResponse } from '../../../shared/helper/cases-helper/case-submission-flow.helper';
+import { DuplicateDecisionPayload } from '../../../shared/helper/cases-helper/case-duplicate.helper';
+import { map } from 'rxjs/operators';
 import { CacheService } from '../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../core/cache/cache.constants';
 
@@ -100,14 +103,19 @@ export class LongTermCaseService extends ApiService {
   createCase(
     request: LongTermCaseCreateRequest,
     forceCreate = false,
-  ): Observable<ApiResponse<LongTermCreateCaseResponse>> {
+  ): Observable<CaseSubmissionResponse<DuplicateDecisionPayload>> {
     const formData = this.buildFormData(request);
     return this.postFormData<ApiResponse<LongTermCreateCaseResponse>>(
       `${this.baseUrl}/CreateCase`,
       formData,
       { forceCreate },
     ).pipe(
-      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.LONG_TERM_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.LONG_TERM_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD])),
+      map(response => ({
+        isSuccess: response.success,
+        message: response.message,
+        data: response.data as unknown as DuplicateDecisionPayload
+      }))
     );
   }
 

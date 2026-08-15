@@ -375,7 +375,7 @@ describe('UrgentUpdate', () => {
       expect(mockService.updateCaseArgs.length).toBe(1);
       expect(mockCache.removeCalled).toBe(true);
       expect(mockSnackbar.successArgs.length).toBe(1);
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/urgent', '1']);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/urgent', 1]);
     });
   });
 
@@ -419,7 +419,7 @@ describe('UrgentUpdate', () => {
   describe('10) Refactor Safety Tests', () => {
     it('getSubmissionDependencies returns exact flow config', () => {
       const deps = (component as any).getSubmissionDependencies();
-      expect(deps.successRoute).toEqual(['/urgent', '1']);
+      expect(deps.successRoute).toEqual(['/urgent', 1]);
       expect(deps.successMessage).toBeTruthy();
       expect(deps.draftKey).toBe(`${URGENT_UPDATE_DRAFT_KEY_PREFIX}1`);
       expect(deps.isSubmitting).toBe(component.isSubmitting);

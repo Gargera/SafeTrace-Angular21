@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, map } from 'rxjs/operators';
 import { ApiService } from '../../../shared/services/api.service';
 import { UrgentCaseListItemResponse } from '../models/response/UrgentCaseListItemResponse';
 import { UrgentCaseDetailResponse } from '../models/response/UrgentCaseDetailResponse';
@@ -10,7 +10,6 @@ import { UrgentCaseUpdateRequest } from '../models/request/UrgentCaseUpdateReque
 import { FoundPersonInfoRequest } from '../../../core/models/cases.model';
 import { CaseSubmissionResponse } from '../../../shared/helper/cases-helper/case-submission-flow.helper';
 import { DuplicateDecisionPayload } from '../../../shared/helper/cases-helper/case-duplicate.helper';
-import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { UrgentCasesFilterRequest } from '../models/request/UrgentCaseFilterRequest';
 import { UrgentCreationStatusResponse } from '../models/response/UrgentCreationStatusResponse';

@@ -15,7 +15,7 @@ import { debounceTime } from 'rxjs';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { CaseMediaPayload, CaseMediaUploaderComponent } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader';
+import { CaseMediaUploaderComponent } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader';
 import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container';
 import { UrgentCaseService } from '../../services/urgent-case.service';
 import { UrgentCaseCreateRequest } from '../../models/request/UrgentCaseCreateRequest';
@@ -25,7 +25,6 @@ import { CaseType } from '../../../../shared/enums/case-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/dictionaries/relation.type.dictionary';
 import {
   EGYPT_GOVERNORATES,
-  getCitiesForGovernorate,
 } from '../../../../core/constants/governorates';
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { SnackbarService } from '../../../../shared/services/toast.service';
@@ -45,7 +44,6 @@ import {
   URGENT_EVENT_MAX_AGE_HOURS,
 } from '../../../../shared/validators/urgent-event-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
-import { validCity } from '../../../../shared/validators/city.validator';
 import { validGovernorate } from '../../../../shared/validators/governorate.validator';
 import {
   CaseFormStep,
@@ -54,9 +52,8 @@ import {
   previousCaseFormStep,
   validateStepControls,
   validateCaseSubmission,
-  CaseMediaErrors
 } from '../../../../shared/helper/cases-helper/case-form.helper';
-import { handleDuplicateDecision, DuplicateDecisionPayload } from '../../../../shared/helper/cases-helper/case-duplicate.helper';
+import { DuplicateDecisionPayload } from '../../../../shared/helper/cases-helper/case-duplicate.helper';
 import { useCaseDuplicateHandler } from '../../../../shared/helper/cases-helper/case-duplicate-handler.helper';
 import { executeCaseSubmissionFlow, CaseSubmissionFlowDeps } from '../../../../shared/helper/cases-helper/case-submission-flow.helper';
 import { saveCreateDraft, restoreCreateDraft, CreateDraft } from '../../../../shared/helper/cases-helper/case-cache.helper';
@@ -187,11 +184,11 @@ export class UrgentCreate implements OnInit {
   readonly steps = [
     { num: 1, label: 'بيانات الشخص' },
     { num: 2, label: 'موقع الحادث' },
-    { num: 3, label: 'صور' },
+    { num: 3, label: 'مستندات وصور' },
   ];
 
   stepTitle = computed(() => {
-    return ['بيانات الشخص المفقود', 'موقع الحادث على الخريطة', 'صور'][this.currentStep() - 1];
+    return ['بيانات الشخص المفقود', 'موقع الحادث على الخريطة', 'مستندات وصور'][this.currentStep() - 1];
   });
 
   stepHeader = computed(() => {
@@ -211,7 +208,7 @@ export class UrgentCreate implements OnInit {
       case 3:
         return {
           icon: 'photo_library',
-          title: 'صور وفيديو',
+          title: 'مستندات وصور',
           description: 'ارفع الصور والمستندات ومقاطع الفيديو المتاحة.',
         };
       default:
@@ -274,12 +271,12 @@ export class UrgentCreate implements OnInit {
 
   mediaState = useCaseMediaState({
     onSaveDraft: () => {
-       const self = this as any;
-       if (typeof self.saveDraft === 'function') {
-          self.saveDraft();
-       } else if (typeof self.saveDraftToCache === 'function') {
-          self.saveDraftToCache(self.mediaPayload());
-       }
+      const self = this as any;
+      if (typeof self.saveDraft === 'function') {
+        self.saveDraft();
+      } else if (typeof self.saveDraftToCache === 'function') {
+        self.saveDraftToCache(self.mediaPayload());
+      }
     }
   });
 
@@ -546,7 +543,7 @@ export class UrgentCreate implements OnInit {
       snackbar: this.snackbar,
       router: this.router,
       successRoute: ['/urgent'],
-      successMessage: 'تم إرسال البلاغ العاجل ونشره فورًا دون الحاجة لمراجعة الإدارة.',
+      successMessage: 'تم إنشاء بلاغك العاجل.',
       onSuccess: () => {
         this.submittedSuccessfully.set(true);
       },

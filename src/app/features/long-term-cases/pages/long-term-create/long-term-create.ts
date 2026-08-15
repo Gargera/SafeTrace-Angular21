@@ -26,14 +26,12 @@ import { CaseType } from '../../../../shared/enums/case-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/dictionaries/relation.type.dictionary';
 import {
   EGYPT_GOVERNORATES,
-  getCitiesForGovernorate,
 } from '../../../../core/constants/governorates';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { MatchedCaseResponse } from '../../../../core/models/cases.model';
 import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
 import { DuplicateInfoDialogComponent } from '../../../../shared/components/cases-components/duplicate-info-dialog/duplicate-info-dialog.component';
-import { FormField } from '../../../../shared/components/form-field/form-field';
 
 // Shared validators
 import { useCaseFormErrors } from '../../../../shared/helper/cases-helper/case-form-errors.helper';
@@ -42,7 +40,6 @@ import { arabicText } from '../../../../shared/validators/arabic-text.validator'
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
-import { validCity } from '../../../../shared/validators/city.validator';
 import { validGovernorate } from '../../../../shared/validators/governorate.validator';
 import {
   CaseFormStep,
@@ -54,7 +51,7 @@ import {
 } from '../../../../shared/helper/cases-helper/case-form.helper';
 import { executeCaseSubmissionFlow, CaseSubmissionResponse, CaseSubmissionFlowDeps } from '../../../../shared/helper/cases-helper/case-submission-flow.helper';
 import { saveCreateDraft, restoreCreateDraft } from '../../../../shared/helper/cases-helper/case-cache.helper';
-import { handleDuplicateDecision, DuplicateDecisionPayload } from '../../../../shared/helper/cases-helper/case-duplicate.helper';
+import { DuplicateDecisionPayload } from '../../../../shared/helper/cases-helper/case-duplicate.helper';
 import { useCaseDuplicateHandler } from '../../../../shared/helper/cases-helper/case-duplicate-handler.helper';
 import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data";
 import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data";
@@ -73,13 +70,28 @@ interface LongTermCreateCustomData {
   policeReportFile: File | null;
 }
 
+interface LongTermCreateFormValue {
+  fName: string;
+  sName: string | null;
+  tName: string | null;
+  lName: string;
+  age: number | null;
+  gender: Gender | null;
+  relation: RelationType | null;
+  communicationPhone: string | null;
+  description: string | null;
+  government: string;
+  city: string;
+  street: string;
+  eventDate: string;
+}
+
 @Component({
   selector: 'app-long-term-create',
   standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    ForceCreatePopupComponent,
     ForceCreatePopupComponent,
     DuplicateInfoDialogComponent,
     CaseMediaUploaderComponent,
@@ -218,12 +230,12 @@ export class LongTermCreate implements OnInit {
 
   mediaState = useCaseMediaState({
     onSaveDraft: () => {
-       const self = this as any;
-       if (typeof self.saveDraft === 'function') {
-          self.saveDraft();
-       } else if (typeof self.saveDraftToCache === 'function') {
-          self.saveDraftToCache(self.mediaPayload());
-       }
+      const self = this as any;
+      if (typeof self.saveDraft === 'function') {
+        self.saveDraft();
+      } else if (typeof self.saveDraftToCache === 'function') {
+        self.saveDraftToCache(self.mediaPayload());
+      }
     }
   });
 
@@ -246,7 +258,7 @@ export class LongTermCreate implements OnInit {
   private saveDraft(media?: CaseMediaPayload): void {
     if (this.submittedSuccessfully()) return;
 
-    saveCreateDraft<any, LongTermCreateCustomData>(
+    saveCreateDraft<LongTermCreateFormValue, LongTermCreateCustomData>(
       this.cacheService,
       LONG_TERM_CREATE_DRAFT_KEY,
       this.form,
@@ -267,13 +279,14 @@ export class LongTermCreate implements OnInit {
   ngOnInit(): void {
     bindGovernorateCityValidation(this.form, this.destroyRef, this.availableCities);
 
-    const draft = restoreCreateDraft<any, LongTermCreateCustomData>(
+    const draft = restoreCreateDraft<LongTermCreateFormValue, LongTermCreateCustomData>(
       this.cacheService,
       LONG_TERM_CREATE_DRAFT_KEY,
       this.form,
       (s) => this.currentStep.set(s),
       {
         primary: (f) => this.initialPrimary.set(f),
+        originalPrimary: (f) => this.initialOriginalPrimary.set(f),
         additional: (fs) => this.initialAdditional.set(fs),
         video: (f) => this.initialVideo.set(f),
       }
@@ -297,6 +310,7 @@ export class LongTermCreate implements OnInit {
         video: draft.newVideo ?? null,
         deletedImageIds: [],
         primaryPhotoId: null,
+        originalPrimaryImage: draft.originalPrimaryImage ?? null
       });
     }
   }
@@ -370,11 +384,6 @@ export class LongTermCreate implements OnInit {
         }
       }
 
-      if (!this.policeReport()) {
-        this.mediaErrors.update((errs: Record<string, string | null>) => ({ ...errs, policeReport: 'برجاء إرفاق محضر الشرطة.' }));
-        valid = false;
-      }
-
       if (!valid) {
         this.errorMsg.set(validationMessage);
         return;
@@ -393,7 +402,7 @@ export class LongTermCreate implements OnInit {
     this.mediaErrors.set({});
 
     executeCaseSubmissionFlow(
-      this.service.createCase(request, forceCreate) as unknown as Observable<CaseSubmissionResponse<any>>,
+      this.service.createCase(request, forceCreate),
       this.getSubmissionDependencies()
     );
   }
@@ -435,7 +444,7 @@ export class LongTermCreate implements OnInit {
       snackbar: this.snackbar,
       router: this.router,
       successRoute: ['/long-term'],
-      successMessage: 'تم إنشاء البلاغ بنجاح.',
+      successMessage: 'تم إنشاء البلاغ بنجاح، وسيتم مراجعته من قِبَل الإدارة قبل النشر.',
       onSuccess: () => {
         this.submittedSuccessfully.set(true);
       },

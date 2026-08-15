@@ -4,12 +4,12 @@ import {
   output,
   inject,
   signal,
-  effect,
   DestroyRef,
   OnInit,
   OnChanges,
   SimpleChanges,
   ChangeDetectionStrategy,
+  computed,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
@@ -81,6 +81,16 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
 
   newPhotos = signal<File[]>([]);
   newPhotoPreviews = signal<string[]>([]);
+
+  existingPrimaryPhoto = computed(() => {
+    const id = this.primaryPhotoId();
+    return this.localExistingPhotos().find((p) => p.id === id) || null;
+  });
+
+  existingAdditionalPhotos = computed(() => {
+    const id = this.primaryPhotoId();
+    return this.localExistingPhotos().filter((p) => p.id !== id);
+  });
 
   videoFile = signal<File | null>(null);
 
@@ -181,13 +191,13 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
     this.deletedPhotoIds.update((ids) => [...ids, photo.id]);
 
     if (this.primaryPhotoId() === photo.id) {
-      const next = this.localExistingPhotos()[0];
-      this.primaryPhotoId.set(next ? next.id : null);
+      this.primaryPhotoId.set(null);
     }
     this.emitChange();
   }
 
   setExistingAsPrimary(photo: CaseFileResponse): void {
+    if (this.mode() === 'update') return;
     this.primaryPhotoId.set(photo.id);
     this.newPrimaryImage.set(null);
     this.newPrimaryPreview.set(null);
@@ -306,7 +316,7 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
     this.cropTargetExistingId.set(null);
     this.pendingCropSource.set(source);
     this.tempCroppedBlob.set(null);
-    
+
     const dt = new DataTransfer();
     dt.items.add(source);
     this.cropImageEvent.set({ target: { files: dt.files } } as unknown as Event);

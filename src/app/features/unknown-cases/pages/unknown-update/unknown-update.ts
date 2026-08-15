@@ -413,7 +413,7 @@ export class UnknownUpdate implements OnInit {
       snackbar: this.snackbar,
       router: this.router,
       successRoute: ['/unknown', String(this.caseId)],
-      successMessage: 'تم تحديث بيانات الحالة بنجاح.',
+      successMessage: 'تم تعديل بيانات الحالة بنجاح، وسيتم مراجعتها مرة أخرى من قِبَل الإدارة قبل النشر.',
       onSuccess: () => {
         this.submittedSuccessfully.set(true);
       },
@@ -422,6 +422,6 @@ export class UnknownUpdate implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/unknown']);
+    this.router.navigate(['/unknown', this.caseId]);
   }
 }

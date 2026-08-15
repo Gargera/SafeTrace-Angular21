@@ -91,12 +91,12 @@ interface UrgentUpdateCustomData {
 export class UrgentUpdate implements OnInit {
   mediaState = useCaseMediaState({
     onSaveDraft: () => {
-       const self = this as any;
-       if (typeof self.saveDraft === 'function') {
-          self.saveDraft();
-       } else if (typeof self.saveDraftToCache === 'function') {
-          self.saveDraftToCache(self.mediaPayload());
-       }
+      const self = this as any;
+      if (typeof self.saveDraft === 'function') {
+        self.saveDraft();
+      } else if (typeof self.saveDraftToCache === 'function') {
+        self.saveDraftToCache(self.mediaPayload());
+      }
     }
   });
 
@@ -131,7 +131,6 @@ export class UrgentUpdate implements OnInit {
   existingPhotos = signal<CaseFileResponse[]>([]);
   existingVideoUrl = signal<string | null>(null);
 
-  // Initial media state (for Cache restoration in Update mode)
   initialDeletedPhotoIds = signal<number[]>([]);
   initialPrimaryPhotoId = signal<number | null>(null);
 
@@ -142,7 +141,6 @@ export class UrgentUpdate implements OnInit {
   selectedLat = signal<number | null>(null);
   selectedLng = signal<number | null>(null);
   selectedAddress = signal<string>('');
-  /** initial coords passed to the map picker so it centers on the existing location */
   initialMapCenter = signal<{ lat: number; lng: number } | null>(null);
   isMapModalOpen = signal(false);
   private originalEventDate = signal<string>('');
@@ -207,9 +205,7 @@ export class UrgentUpdate implements OnInit {
     ],
     age: [null as number | null, [Validators.required, Validators.min(1), Validators.max(120)]],
     gender: ['' as Gender | '', [Validators.required, validEnum(Gender)]],
-    // Relation is optional on Update
-    relation: [null as RelationType | null, [validEnum(RelationType)]],
-    // Phone — optional, Egyptian format, max 15
+    relation: [null as RelationType | null, [Validators.required, validEnum(RelationType)]],
     communicationPhone: ['', [egyptianPhone(), Validators.maxLength(15)]],
     description: ['', [Validators.maxLength(2000)]],
     government: [
@@ -571,8 +567,8 @@ export class UrgentUpdate implements OnInit {
       draftKey: this.draftKey,
       snackbar: this.snackbar,
       router: this.router,
-      successRoute: ['/urgent', String(this.caseId)],
-      successMessage: 'تم تحديث بيانات الحالة بنجاح.',
+      successRoute: ['/urgent', this.caseId],
+      successMessage: 'تم تعديل بيانات الحالة بنجاح.',
       onSuccess: () => {
         this.submittedSuccessfully.set(true);
       },
