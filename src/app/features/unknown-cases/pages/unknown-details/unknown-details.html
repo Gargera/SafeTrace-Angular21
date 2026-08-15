@@ -210,11 +210,11 @@
                 </app-button>
                 <app-button
                   *hasPermission="Permissions.LongTermCases.SoftDelete"
-                  (onClick)="openPermanentDeleteConfirmation()"
+                  (onClick)="deleteCase()"
                   variant="primary"
                   extraClass="flex items-center gap-1.5 rounded-xl !bg-[#C61A1A] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#a11313]"
                 >
-                  <span class="material-symbols-outlined">delete_forever</span>
+                 <span class="material-symbols-outlined">delete</span>
                   <span>حذف </span>
                 </app-button>
               }
