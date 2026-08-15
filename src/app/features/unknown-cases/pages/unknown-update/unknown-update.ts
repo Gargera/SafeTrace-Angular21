@@ -1,5 +1,4 @@
 import { CacheService } from '../../../../core/cache/cache.service';
-import { CACHE_TTL, CACHE_TAGS } from '../../../../core/cache/cache.constants';
 import {
   Component,
   inject,
@@ -32,7 +31,6 @@ import {
 } from '../../../../shared/helper/form-validation.helper';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { CaseFileResponse } from '../../../../core/models/cases.model';
-import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
 
 // Shared validators
@@ -54,10 +52,11 @@ import {
   validateStepControls,
   validateCaseSubmission,
 } from '../../../../shared/helper/case-form.helper';
-import { executeCaseSubmissionFlow, CaseSubmissionResponse } from '../../../../shared/helper/case-submission-flow.helper';
+import { executeCaseSubmissionFlow, CaseSubmissionResponse, CaseSubmissionFlowDeps } from '../../../../shared/helper/case-submission-flow.helper';
 import { saveUpdateDraft, restoreUpdateDraft } from '../../../../shared/helper/case-cache.helper';
 
 type Step = CaseFormStep;
+export const UNKNOWN_UPDATE_DRAFT_KEY_PREFIX = 'UnknownUpdate_Draft_';
 
 interface UnknownUpdateCustomData {
   primaryPhotoId: number | null;
@@ -125,11 +124,12 @@ export class UnknownUpdate implements OnInit {
 
   onMediaChange(payload: CaseMediaPayload): void {
     this.mediaPayload.set(payload);
+    this.mediaErrors.set({});
     this.saveDraft();
   }
 
   get draftKey() {
-    return `UnknownUpdate_Draft_${this.caseId}`;
+    return `${UNKNOWN_UPDATE_DRAFT_KEY_PREFIX}${this.caseId}`;
   }
 
   readonly genders = Gender;
@@ -151,7 +151,7 @@ export class UnknownUpdate implements OnInit {
       case 1:
         return {
           icon: 'person',
-          title: 'بيانات الشخص المفقود',
+          title: 'تحديث بيانات المفقود',
           description: 'أدخل البيانات الأساسية للشخص المفقود للمساعدة في التعرف عليه.',
         };
       case 2:
@@ -388,17 +388,26 @@ export class UnknownUpdate implements OnInit {
       }
     }
 
-    this.isSubmitting.set(true);
-    this.errorMsg.set(null);
+    const request = this.buildUpdateRequest();
 
+    this.mediaErrors.set({});
+
+    executeCaseSubmissionFlow(
+      this.service.updateCase(this.caseId, request) as unknown as Observable<CaseSubmissionResponse<any>>,
+      this.getSubmissionDependencies()
+    );
+  }
+
+  private buildUpdateRequest(): UnknownCaseUpdateRequest {
     const v = this.form.getRawValue();
+    const media = this.mediaPayload();
 
     let fName: string | null = v.fName || null;
     let sName: string | null = v.sName || null;
     let tName: string | null = v.tName || null;
     let lName: string | null = v.lName || null;
 
-    const request: UnknownCaseUpdateRequest = {
+    return {
       fName: fName,
       lName: lName,
       sName: sName,
@@ -413,30 +422,29 @@ export class UnknownUpdate implements OnInit {
       eventDate: v.eventDate ?? '',
       primaryImage: media.primaryImage ?? undefined,
       newPhotos: media.additionalImages.length ? media.additionalImages : null,
-      deletedPhotoIds: media.deletedImageIds.length ? media.deletedImageIds : null,
+      deletedPhotosIds: media.deletedImageIds.length ? media.deletedImageIds : null,
       primaryPhotoId: media.primaryPhotoId,
       video: media.video,
     };
+  }
 
-    executeCaseSubmissionFlow(
-      this.service.updateCase(this.caseId, request) as unknown as Observable<CaseSubmissionResponse<any>>,
-      {
-        isSubmitting: this.isSubmitting,
-        errorMsg: this.errorMsg,
-        mediaErrors: this.mediaErrors,
-        form: this.form,
-        cacheService: this.cacheService,
-        draftKey: this.draftKey,
-        snackbar: this.snackbar,
-        router: this.router,
-        successRoute: ['/unknown-cases', String(this.caseId)],
-        successMessage: 'تم تحديث بيانات الحالة بنجاح.',
-        onSuccess: () => {
-          this.submittedSuccessfully.set(true);
-        },
-        defaultErrorMessage: 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.'
-      }
-    );
+  private getSubmissionDependencies(): CaseSubmissionFlowDeps<any> {
+    return {
+      isSubmitting: this.isSubmitting,
+      errorMsg: this.errorMsg,
+      mediaErrors: this.mediaErrors,
+      form: this.form,
+      cacheService: this.cacheService,
+      draftKey: this.draftKey,
+      snackbar: this.snackbar,
+      router: this.router,
+      successRoute: ['/unknown', String(this.caseId)],
+      successMessage: 'تم تحديث بيانات الحالة بنجاح.',
+      onSuccess: () => {
+        this.submittedSuccessfully.set(true);
+      },
+      defaultErrorMessage: 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.'
+    };
   }
 
   goBack(): void {

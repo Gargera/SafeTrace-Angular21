@@ -169,7 +169,7 @@ export interface UpdateCaseBaseRequest extends CaseUpsertBaseRequest {
   primaryImage?: File | null;
 
   newPhotos: File[] | null;
-  deletedPhotoIds: number[] | null;
+  deletedPhotosIds: number[] | null;
   primaryPhotoId: number | null;
 }
 

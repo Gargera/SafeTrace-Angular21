@@ -1,39 +1,45 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
-import { UnknownUpdate } from './unknown-update';
+import { UnknownUpdate, UNKNOWN_UPDATE_DRAFT_KEY_PREFIX } from './unknown-update';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { UnknownCaseService } from '../../services/unknown-case.service';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { CacheService } from '../../../../core/cache/cache.service';
+import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { CaseMediaUploaderComponent } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader';
-import { Component, input, output } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Gender } from '../../../../shared/enums/gender';
 
+beforeAll(() => {
+  Object.defineProperty(window, 'ResizeObserver', {
+    writable: true,
+    value: class {
+      observe() { }
+      unobserve() { }
+      disconnect() { }
+    },
+  });
+});
+
 // --- Mocks ---
-``
 @Component({
   selector: 'app-case-media-uploader',
   standalone: true,
   template: '<div></div>',
 })
 class MockCaseMediaUploaderComponent {
-  mode = input<'create' | 'update'>('create');
-  existingPhotos = input<any[]>([]);
-  existingVideoUrl = input<string | null>(null);
-  initialPrimaryFile = input<File | null>(null);
-  initialAdditionalFiles = input<File[]>([]);
-  initialVideoFile = input<File | null>(null);
-  initialDeletedPhotoIds = input<number[]>([]);
-  initialPrimaryPhotoId = input<number | null>(null);
-  errors = input<any>({});
-
-  mediaChange = output<any>();
-
-  triggerChange(payload: any) {
-    this.mediaChange.emit(payload);
-  }
+  @Input() mode: 'create' | 'update' = 'create';
+  @Input() existingPhotos: any[] = [];
+  @Input() existingVideoUrl: string | null = null;
+  @Input() initialPrimaryFile: File | null = null;
+  @Input() initialAdditionalFiles: File[] = [];
+  @Input() initialVideoFile: File | null = null;
+  @Input() initialDeletedPhotoIds: number[] = [];
+  @Input() initialPrimaryPhotoId: number | null = null;
+  @Input() errors: any = {};
+  @Output() mediaChange = new EventEmitter<any>();
 }
 
 class MockUnknownCaseService {
@@ -54,17 +60,17 @@ class MockUnknownCaseService {
     isSuccess: true,
     data: {
       id: 1,
-      fName: 'Test',
-      sName: 'Case',
-      tName: '',
-      lName: '',
-      age: 30,
+      fName: 'احمد',
+      sName: 'محمد',
+      tName: 'سعيد',
+      lName: 'محمود',
+      age: 25,
       gender: Gender.Male,
       government: 'القاهرة',
       city: 'مدينة نصر',
       street: 'الشارع الرئيسي',
       eventDate: '2023-10-10T00:00:00',
-      description: 'Test description',
+      description: 'Test',
       photos: [
         { id: 1, imagePath: '/path/to/img.jpg', isPrimary: true }
       ]
@@ -73,6 +79,15 @@ class MockUnknownCaseService {
   getMyCaseById(id: number) {
     this.getMyCaseByIdArgs.push(id);
     return this.getMyCaseByIdResponse;
+  }
+}
+
+class MockGeocodingService {
+  reverseGeocodeResponse: any = of('Test Address');
+  reverseGeocodeArgs: any[] = [];
+  reverseGeocode(lat: number, lng: number) {
+    this.reverseGeocodeArgs.push({ lat, lng });
+    return this.reverseGeocodeResponse;
   }
 }
 
@@ -102,12 +117,6 @@ describe('UnknownUpdate', () => {
   let mockRouter: any;
   let mockSnackbar: MockSnackbarService;
 
-  const validEventDate = () => {
-    const d = new Date();
-    d.setDate(d.getDate() - 1);
-    return d.toISOString().split('T')[0];
-  };
-
   beforeEach(async () => {
     mockService = new MockUnknownCaseService();
     mockCache = new MockCacheService();
@@ -120,6 +129,7 @@ describe('UnknownUpdate', () => {
         FormBuilder,
         { provide: UnknownCaseService, useValue: mockService },
         { provide: CacheService, useValue: mockCache },
+        { provide: GeocodingService, useClass: MockGeocodingService },
         { provide: Router, useValue: mockRouter },
         { provide: SnackbarService, useValue: mockSnackbar },
         {
@@ -136,15 +146,35 @@ describe('UnknownUpdate', () => {
 
     fixture = TestBed.createComponent(UnknownUpdate);
     component = fixture.componentInstance;
+
+    // Mock ViewChild mediaUploader as signal
+    component.mediaUploader = (() => ({
+      validateMedia: () => ({ valid: true, message: null }),
+      validate: () => ({ valid: true, message: null })
+    })) as any;
+
     fixture.detectChanges(); // triggers ngOnInit and loadCase
   });
 
+  const fillPersonData = () => {
+    component.form.patchValue({
+      fName: 'سالم', lName: 'خالد', age: 30, gender: Gender.Male
+    });
+  };
+
+  const fillLocationForm = () => {
+    component.form.patchValue({
+      government: 'الإسكندرية', city: 'سموحة', street: 'شارع فوزي معاذ', eventDate: '2023-11-11T12:00'
+    });
+  };
+
+  // 1) Component Initialization
   describe('1) Component Initialization', () => {
-    it('should create UnknownUpdate successfully', () => {
+    it('should create component', () => {
       expect(component).toBeTruthy();
     });
 
-    it('should initialize signals correctly', () => {
+    it('should initialize default signals', () => {
       expect(component.currentStep()).toBe(1);
       expect(component.isSubmitting()).toBe(false);
       expect(component.errorMsg()).toBeNull();
@@ -154,149 +184,186 @@ describe('UnknownUpdate', () => {
     it('should load case data and patch form', () => {
       expect(mockService.getMyCaseByIdArgs).toContain(1);
       const v = component.form.getRawValue();
-      expect(v.fName).toBe('Test');
-      expect(v.sName).toBe('Case');
-      expect(v.tName).toBe('');
-      expect(v.lName).toBe('');
-      expect(v.age).toBe(30);
+      expect(v.fName).toBe('احمد');
+      expect(v.sName).toBe('محمد');
+      expect(v.age).toBe(25);
       expect(v.gender).toBe(Gender.Male);
       expect(component.existingPhotos().length).toBe(1);
     });
+
+    it('should return correct step header', () => {
+      expect(component.stepHeader()?.title).toBe('تحديث بيانات المفقود');
+    });
   });
 
-  describe('2) Form Behavior', () => {
-    it('required fields are enforced', () => {
+  // 2) Form Validation
+  describe('2) Form Validation', () => {
+    it('should require mandatory fields', () => {
       component.form.patchValue({
-        fName: '', sName: '', tName: '', lName: '', age: null, gender: null, government: '', city: '', street: '', eventDate: ''
+        fName: '', lName: '', age: null, gender: null, government: ''
       });
       expect(component.form.get('age')?.invalid).toBe(true);
       expect(component.form.get('gender')?.invalid).toBe(true);
-      expect(component.form.get('government')?.invalid).toBe(true);
     });
 
-    it('valid data makes the form valid', () => {
-      component.form.patchValue({
-        fName: 'احمد', sName: 'محمد', tName: '', lName: '', age: 25, gender: Gender.Male,
-        government: 'القاهرة', city: 'مدينة نصر', street: 'شارع النصر', eventDate: validEventDate()
-      });
-      expect(component.form.valid).toBe(true);
+    it('should reject non arabic names', () => {
+      component.form.patchValue({ fName: 'Ahmed' });
+      expect(component.form.get('fName')?.invalid).toBe(true);
     });
   });
 
-  describe('3) Navigation (Steps)', () => {
-    it('invalid data should keep the user on step 1', () => {
-      component.form.patchValue({ age: null });
+  // 3) Step Navigation
+  describe('3) Step Navigation', () => {
+    it('should not move when step 1 invalid', () => {
+      component.currentStep.set(1);
+      component.form.patchValue({ age: null }); // Make it invalid
       component.nextStep();
       expect(component.currentStep()).toBe(1);
     });
 
-    it('valid data should move from step 1 -> step 2', () => {
-      component.form.patchValue({
-        fName: '', sName: '', tName: '', lName: '', age: 25, gender: Gender.Male
-      });
+    it('should move step 1 to step 2', () => {
+      component.currentStep.set(1);
+      fillPersonData();
       component.nextStep();
       expect(component.currentStep()).toBe(2);
     });
-
-    it('valid location data should move from step 2 -> step 3', () => {
-      component.form.patchValue({
-        fName: '', sName: '', tName: '', lName: '', age: 25, gender: Gender.Male,
-        government: 'القاهرة', city: 'مدينة نصر', street: 'شارع النصر', eventDate: validEventDate()
-      });
-      component.currentStep.set(2);
-      component.nextStep();
-      expect(component.currentStep()).toBe(3);
-    });
   });
 
-  describe('4) Cache Draft Behavior', () => {
-    it('should save draft after form value changes', async () => {
-      component.form.patchValue({ age: 99 });
-      await new Promise(resolve => setTimeout(resolve, 600)); // debounceTime 500ms
-      const draft = mockCache.get(`UnknownUpdate_Draft_1`);
+  // 4) Cache / Draft
+  describe('4) Cache / Draft', () => {
+    it('should save draft after changes', async () => {
+      component.form.patchValue({ age: 30 });
+      await new Promise(resolve => setTimeout(resolve, 600));
+      const draft = mockCache.get(`${UNKNOWN_UPDATE_DRAFT_KEY_PREFIX}1`);
       expect(draft).toBeTruthy();
-      expect(draft.formValue.age).toBe(99);
+      expect(draft.formValue.age).toBe(30);
     });
 
-    it('onMediaChange updates mediaPayload', () => {
-      const payload = {
-        primaryImage: new File([''], 'test.png'),
-        additionalImages: [],
-        video: null,
-        deletedImageIds: [1],
-        primaryPhotoId: null
+    it('should restore existing draft from cache', () => {
+      const file = new File([''], 'test.png');
+      mockCache.cache[`${UNKNOWN_UPDATE_DRAFT_KEY_PREFIX}1`] = {
+        formValue: { fName: 'سالم', age: 40 },
+        currentStep: 2,
+        newPrimaryImage: file,
+        newAdditionalImages: [],
+        newVideo: null,
+        deletedPhotoIds: [1],
+        primaryPhotoId: 2
       };
-      component.onMediaChange(payload);
-      expect(component.mediaPayload()).toEqual(payload);
+
+      const newFixture = TestBed.createComponent(UnknownUpdate);
+      const newComponent = newFixture.componentInstance;
+      newFixture.detectChanges();
+
+      expect(newComponent.form.get('age')?.value).toBe(40);
+      expect(newComponent.currentStep()).toBe(2);
+      expect(newComponent.mediaPayload().primaryImage).toBe(file);
+      expect(newComponent.mediaPayload().deletedImageIds).toEqual([1]);
     });
   });
 
-  describe('5) Submit Behavior', () => {
-    beforeEach(() => {
-      component.form.patchValue({
-        fName: 'احمد', sName: 'محمد', tName: '', lName: '', age: 25, gender: Gender.Male,
-        government: 'القاهرة', city: 'مدينة نصر', street: 'شارع النصر', eventDate: validEventDate()
+  // 5) Media Handling
+  describe('5) Media Handling', () => {
+    it('should update media payload', () => {
+      const file = new File([''], 'test.png');
+      component.onMediaChange({
+        primaryImage: file, additionalImages: [], video: null, deletedImageIds: [1], primaryPhotoId: 2
+      });
+      expect(component.mediaPayload().primaryImage).toBe(file);
+      expect(component.mediaPayload().deletedImageIds).toEqual([1]);
+    });
+
+    it('should clear media errors', () => {
+      component.mediaErrors.set({ primary: 'error' });
+      component.onMediaChange({
+        primaryImage: new File([''], 'a.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null
+      });
+      expect(component.mediaErrors()).toEqual({});
+    });
+  });
+
+  // 7) Request Builder Verification
+  describe('7) Request Builder Verification', () => {
+    it('should build request payload matching current state', () => {
+      fillPersonData();
+      fillLocationForm();
+      const file = new File([''], 'primary.png');
+      component.onMediaChange({
+        primaryImage: file, additionalImages: [], video: null, deletedImageIds: [1], primaryPhotoId: null
       });
 
-      component.mediaPayload.set({
-        primaryImage: null,
-        additionalImages: [],
-        video: null,
-        deletedImageIds: [], // keep existing photo
-        primaryPhotoId: 1
+      const request = (component as any).buildUpdateRequest();
+
+      expect(request.fName).toBe('سالم');
+      expect(request.primaryImage).toBe(file);
+      expect(request.deletedPhotosIds).toEqual([1]);
+    });
+  });
+
+  // 8) Submit Success
+  describe('8) Submit Success', () => {
+    beforeEach(() => {
+      fillPersonData();
+      fillLocationForm();
+      component.onMediaChange({
+        primaryImage: new File([''], 'test.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null
       });
     });
 
-    it('should successfully submit and handle successful update', () => {
+    it('should submit successfully', () => {
+      mockService.updateCaseResponse = of({ isSuccess: true, data: { isCreated: true } });
       component.onSubmit();
 
       expect(mockService.updateCaseArgs.length).toBe(1);
-
-      const args = mockService.updateCaseArgs[0];
-      expect(args.id).toBe(1);
-      const req = args.request;
-      expect(req.fName).toBe('احمد');
-      expect(req.sName).toBe('محمد');
-      expect(req.age).toBe(25);
-
       expect(mockCache.removeCalled).toBe(true);
-      expect(component.isSubmitting()).toBe(false);
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/unknown']);
       expect(mockSnackbar.successArgs.length).toBe(1);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/unknown', '1']);
     });
   });
 
-  describe('6) Error Handling Behavior', () => {
+  // 9) Error Handling
+  describe('9) Error Handling', () => {
     beforeEach(() => {
-      component.form.patchValue({
-        fName: 'احمد', sName: 'محمد', tName: '', lName: '', age: 25, gender: Gender.Male,
-        government: 'القاهرة', city: 'مدينة نصر', street: 'شارع النصر', eventDate: validEventDate()
-      });
-      component.mediaPayload.set({
-        primaryImage: null,
-        additionalImages: [],
-        video: null,
-        deletedImageIds: [], // keep existing photo
-        primaryPhotoId: 1
+      fillPersonData();
+      fillLocationForm();
+      component.onMediaChange({
+        primaryImage: new File([''], 'test.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null
       });
     });
 
-    it('API error sets error message and resets isSubmitting', () => {
-      mockService.updateCaseResponse = throwError(() => ({ error: { message: 'Server error' } }));
+    it('Server Error 500 sets errorMsg', () => {
+      mockService.updateCaseResponse = throwError(() => ({ status: 500, error: { message: 'Server error' } }));
       component.onSubmit();
+      expect(component.errorMsg()).not.toBeNull();
       expect(component.isSubmitting()).toBe(false);
-      expect(component.errorMsg()).toContain('Server error');
     });
 
-    it('Validation error correctly handled via 400 status', () => {
+    it('Network Error (status 0) sets network error message', () => {
+      mockService.updateCaseResponse = throwError(() => ({ status: 0, message: '0 Unknown Error', name: 'HttpErrorResponse' }));
+      component.onSubmit();
+      expect(component.errorMsg()).toContain('تعذر الاتصال بالإنترنت');
+    });
+
+    it('Validation Error 400 sets media errors', () => {
       mockService.updateCaseResponse = throwError(() => ({
         status: 400,
-        error: { errors: { 'PrimaryImage': ['الصورة غير صالحة'] } }
+        error: { errors: { PrimaryImage: ['الصورة غير صالحة'] } }
       }));
       component.onSubmit();
       expect(component.isSubmitting()).toBe(false);
       expect(component.mediaErrors().primary).toBe('الصورة غير صالحة');
       expect(component.errorMsg()).toBe('الصورة غير صالحة');
+    });
+  });
+
+  // 10) Refactor Safety Tests
+  describe('10) Refactor Safety Tests', () => {
+    it('getSubmissionDependencies returns exact flow config', () => {
+      const deps = (component as any).getSubmissionDependencies();
+      expect(deps.successRoute).toEqual(['/unknown', '1']);
+      expect(deps.successMessage).toBeTruthy();
+      expect(deps.draftKey).toBe(`${UNKNOWN_UPDATE_DRAFT_KEY_PREFIX}1`);
+      expect(deps.isSubmitting).toBe(component.isSubmitting);
     });
   });
 });

@@ -53,13 +53,15 @@ import {
   validateStepControls,
   validateCaseSubmission,
 } from '../../../../shared/helper/case-form.helper';
-import { executeCaseSubmissionFlow, CaseSubmissionResponse } from '../../../../shared/helper/case-submission-flow.helper';
+import { executeCaseSubmissionFlow, CaseSubmissionResponse, CaseSubmissionFlowDeps } from '../../../../shared/helper/case-submission-flow.helper';
 import { saveUpdateDraft, restoreUpdateDraft } from '../../../../shared/helper/case-cache.helper';
 import { toDatetimeLocalString } from '../../../../shared/validators/urgent-event-date.validator';
 import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data";
 import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data";
 
 type Step = CaseFormStep;
+
+export const URGENT_UPDATE_DRAFT_KEY_PREFIX = 'UrgentUpdate_Draft_';
 
 interface UrgentUpdateCustomData {
   primaryPhotoId: number | null;
@@ -134,11 +136,12 @@ export class UrgentUpdate implements OnInit {
 
   onMediaChange(payload: CaseMediaPayload): void {
     this.mediaPayload.set(payload);
+    this.mediaErrors.set({});
     this.saveDraftToCache(payload);
   }
 
   get draftKey() {
-    return `UrgentUpdate_Draft_${this.caseId}`;
+    return `${URGENT_UPDATE_DRAFT_KEY_PREFIX}${this.caseId}`;
   }
 
   selectedLat = signal<number | null>(null);
@@ -173,7 +176,7 @@ export class UrgentUpdate implements OnInit {
       case 1:
         return {
           icon: 'person',
-          title: 'بيانات الشخص المفقود',
+          title: 'تحديث بيانات المفقود',
           description: 'أدخل البيانات الأساسية للشخص المفقود للمساعدة في التعرف عليه.',
         };
       case 2:
@@ -424,6 +427,7 @@ export class UrgentUpdate implements OnInit {
     this.selectedLat.set(loc.lat);
     this.selectedLng.set(loc.lng);
     this.selectedAddress.set(loc.address);
+    this.errorMsg.set(null);
     this.saveDraftToCache();
   }
 
@@ -548,12 +552,21 @@ export class UrgentUpdate implements OnInit {
       }
     }
 
-    this.isSubmitting.set(true);
-    this.errorMsg.set(null);
+    const request = this.buildUpdateRequest();
 
+    this.mediaErrors.set({});
+
+    executeCaseSubmissionFlow(
+      this.service.updateCase(this.caseId, request) as unknown as Observable<CaseSubmissionResponse<any>>,
+      this.getSubmissionDependencies()
+    );
+  }
+
+  private buildUpdateRequest(): UrgentCaseUpdateRequest {
     const v = this.form.getRawValue();
+    const media = this.mediaPayload();
 
-    const request: UrgentCaseUpdateRequest = {
+    return {
       fName: v.fName!,
       lName: v.lName!,
       sName: v.sName || null,
@@ -569,32 +582,31 @@ export class UrgentUpdate implements OnInit {
       eventDate: this.originalEventDate(),
       primaryImage: media.primaryImage ?? undefined,
       newPhotos: media.additionalImages.length ? media.additionalImages : null,
-      deletedPhotoIds: media.deletedImageIds.length ? media.deletedImageIds : null,
+      deletedPhotosIds: media.deletedImageIds.length ? media.deletedImageIds : null,
       primaryPhotoId: media.primaryPhotoId,
       video: media.video,
       latitude: this.selectedLat()!,
       longitude: this.selectedLng()!,
     };
+  }
 
-    executeCaseSubmissionFlow(
-      this.service.updateCase(this.caseId, request) as unknown as Observable<CaseSubmissionResponse<any>>,
-      {
-        isSubmitting: this.isSubmitting,
-        errorMsg: this.errorMsg,
-        mediaErrors: this.mediaErrors,
-        form: this.form,
-        cacheService: this.cacheService,
-        draftKey: this.draftKey,
-        snackbar: this.snackbar,
-        router: this.router,
-        successRoute: ['/urgent', String(this.caseId)],
-        successMessage: 'تم تحديث بيانات الحالة بنجاح.',
-        onSuccess: () => {
-          this.submittedSuccessfully.set(true);
-        },
-        defaultErrorMessage: 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.'
-      }
-    );
+  private getSubmissionDependencies(): CaseSubmissionFlowDeps<any> {
+    return {
+      isSubmitting: this.isSubmitting,
+      errorMsg: this.errorMsg,
+      mediaErrors: this.mediaErrors,
+      form: this.form,
+      cacheService: this.cacheService,
+      draftKey: this.draftKey,
+      snackbar: this.snackbar,
+      router: this.router,
+      successRoute: ['/urgent', String(this.caseId)],
+      successMessage: 'تم تحديث بيانات الحالة بنجاح.',
+      onSuccess: () => {
+        this.submittedSuccessfully.set(true);
+      },
+      defaultErrorMessage: 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.'
+    };
   }
 
   goBack(): void {

@@ -1,6 +1,5 @@
 import { ImageService } from '../../../../shared/services/image.service';
 import { CacheService } from '../../../../core/cache/cache.service';
-import { CACHE_TTL, CACHE_TAGS } from '../../../../core/cache/cache.constants';
 import {
   Component,
   inject,
@@ -38,7 +37,6 @@ import { SnackbarService } from '../../../../shared/services/toast.service';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container';
-import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 
 // Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
@@ -48,25 +46,23 @@ import { validEnum } from '../../../../shared/validators/enum.validator';
 import { validCity } from '../../../../shared/validators/city.validator';
 import { validGovernorate } from '../../../../shared/validators/governorate.validator';
 import { CaseFileResponse } from '../../../../core/models/cases.model';
-import { validateVideoFile } from '../../../../shared/validators/video-validation.validator';
 import { UpdateFormSkeletonComponent } from '../../../../shared/components/skeletons/update-form-skeleton/update-form-skeleton.component';
 import {
-  applyCaseValidationErrors,
   CaseFormStep,
   localDateInputValue,
   nextCaseFormStep,
   previousCaseFormStep,
   validateStepControls,
   validateCaseSubmission,
-  UpdateDraft,
 } from '../../../../shared/helper/case-form.helper';
-import { executeCaseSubmissionFlow, CaseSubmissionResponse } from '../../../../shared/helper/case-submission-flow.helper';
+import { executeCaseSubmissionFlow, CaseSubmissionResponse, CaseSubmissionFlowDeps } from '../../../../shared/helper/case-submission-flow.helper';
 import { saveUpdateDraft, restoreUpdateDraft } from '../../../../shared/helper/case-cache.helper';
 import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data";
 import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data";
 
 
 type Step = CaseFormStep;
+export const LONG_TERM_UPDATE_DRAFT_KEY_PREFIX = 'LongTermUpdate_Draft_';
 
 interface LongTermUpdateCustomData {
   primaryPhotoId: number | null;
@@ -145,11 +141,12 @@ export class LongTermUpdate implements OnInit {
 
   onMediaChange(payload: CaseMediaPayload): void {
     this.mediaPayload.set(payload);
+    this.mediaErrors.set({});
     this.saveDraft();
   }
 
   get draftKey() {
-    return `LongTermUpdate_Draft_${this.caseId}`;
+    return `${LONG_TERM_UPDATE_DRAFT_KEY_PREFIX}${this.caseId}`;
   }
 
   readonly genders = Gender;
@@ -469,12 +466,21 @@ export class LongTermUpdate implements OnInit {
       return;
     }
 
-    this.isSubmitting.set(true);
-    this.errorMsg.set(null);
+    const request = this.buildUpdateRequest();
 
+    this.mediaErrors.set({});
+
+    executeCaseSubmissionFlow(
+      this.service.updateCase(this.caseId, request) as unknown as Observable<CaseSubmissionResponse<any>>,
+      this.getSubmissionDependencies()
+    );
+  }
+
+  private buildUpdateRequest(): LongTermCaseUpdateRequest {
     const v = this.form.getRawValue();
+    const media = this.mediaPayload();
 
-    const request: LongTermCaseUpdateRequest = {
+    return {
       fName: v.fName!,
       lName: v.lName!,
       sName: v.sName || null,
@@ -490,28 +496,27 @@ export class LongTermUpdate implements OnInit {
       eventDate: v.eventDate!,
       primaryImage: media.primaryImage ?? undefined,
       newPhotos: media.additionalImages.length ? media.additionalImages : null,
-      deletedPhotoIds: media.deletedImageIds.length ? media.deletedImageIds : null,
+      deletedPhotosIds: media.deletedImageIds.length ? media.deletedImageIds : null,
       primaryPhotoId: media.primaryPhotoId,
       video: media.video,
       policeReportImage: this.policeReport(),
     };
+  }
 
-    executeCaseSubmissionFlow(
-      this.service.updateCase(this.caseId, request) as unknown as Observable<CaseSubmissionResponse<any>>,
-      {
-        isSubmitting: this.isSubmitting,
-        errorMsg: this.errorMsg,
-        mediaErrors: this.mediaErrors as any,
-        form: this.form,
-        cacheService: this.cacheService,
-        draftKey: this.draftKey,
-        snackbar: this.snackbar,
-        router: this.router,
-        successRoute: ['/long-term', String(this.caseId)],
-        successMessage: 'تم تحديث بيانات الحالة بنجاح.',
-        defaultErrorMessage: 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.'
-      }
-    );
+  private getSubmissionDependencies(): CaseSubmissionFlowDeps<any> {
+    return {
+      isSubmitting: this.isSubmitting,
+      errorMsg: this.errorMsg,
+      mediaErrors: this.mediaErrors as any,
+      form: this.form,
+      cacheService: this.cacheService,
+      draftKey: this.draftKey,
+      snackbar: this.snackbar,
+      router: this.router,
+      successRoute: ['/long-term', String(this.caseId)],
+      successMessage: 'تم تحديث بيانات الحالة بنجاح.',
+      defaultErrorMessage: 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.'
+    };
   }
 
   goBack(): void {

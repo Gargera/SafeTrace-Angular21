@@ -37,8 +37,6 @@ import { MatchedCaseResponse } from '../../../../core/models/cases.model';
 import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
 import { DuplicateInfoDialogComponent } from '../../../../shared/components/cases-components/duplicate-info-dialog/duplicate-info-dialog.component';
 import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
-import { FormField } from '../../../../shared/components/form-field/form-field';
-
 
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
@@ -62,12 +60,12 @@ import {
 import { handleDuplicateDecision, DuplicateDecisionPayload } from '../../../../shared/helper/case-duplicate.helper';
 import { executeCaseSubmissionFlow, CaseSubmissionFlowDeps } from '../../../../shared/helper/case-submission-flow.helper';
 import { saveCreateDraft, restoreCreateDraft, CreateDraft } from '../../../../shared/helper/case-cache.helper';
-import { URGENT_CREATE_DRAFT_KEY } from '../../../../core/cache/cache.constants';
-import { ButtonComponent } from "../../../../shared/components/button/button";
 import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data";
 import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data";
 
 type Step = CaseFormStep;
+
+export const URGENT_CREATE_DRAFT_KEY = 'UrgentCreate_Draft';
 
 interface UrgentCreateCustomData {
   showForceCreatePopup: boolean;

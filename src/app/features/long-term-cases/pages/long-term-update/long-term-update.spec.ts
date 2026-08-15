@@ -175,7 +175,7 @@ describe('LongTermUpdate', () => {
       component.onSubmit();
       expect(mockService.updateCaseArgs.length).toBe(1);
       expect(mockCache.removeCalled).toBe(true);
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/long-term']);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/long-term', '1']);
       expect(mockSnackbar.successArgs).toContain('تم تحديث بيانات الحالة بنجاح.');
     });
 

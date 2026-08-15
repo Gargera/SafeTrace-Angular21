@@ -53,15 +53,15 @@ import {
   validateStepControls,
   validateCaseSubmission,
 } from '../../../../shared/helper/case-form.helper';
-import { executeCaseSubmissionFlow, CaseSubmissionResponse } from '../../../../shared/helper/case-submission-flow.helper';
+import { executeCaseSubmissionFlow, CaseSubmissionResponse, CaseSubmissionFlowDeps } from '../../../../shared/helper/case-submission-flow.helper';
 import { saveCreateDraft, restoreCreateDraft } from '../../../../shared/helper/case-cache.helper';
-import { handleDuplicateDecision } from '../../../../shared/helper/case-duplicate.helper';
+import { handleDuplicateDecision, DuplicateDecisionPayload } from '../../../../shared/helper/case-duplicate.helper';
 import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data";
 import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data";
 
 type Step = CaseFormStep;
 
-const DRAFT_CACHE_KEY = 'LongTermCreate_Draft';
+export const LONG_TERM_CREATE_DRAFT_KEY = 'LongTermCreate_Draft';
 
 interface LongTermCreateCustomData {
   showForceCreatePopup: boolean;
@@ -133,6 +133,7 @@ export class LongTermCreate implements OnInit {
 
   onMediaChange(payload: CaseMediaPayload): void {
     this.mediaPayload.set(payload);
+    this.mediaErrors.set({});
     this.saveDraft();
   }
 
@@ -243,7 +244,7 @@ export class LongTermCreate implements OnInit {
 
     saveCreateDraft<any, LongTermCreateCustomData>(
       this.cacheService,
-      DRAFT_CACHE_KEY,
+      LONG_TERM_CREATE_DRAFT_KEY,
       this.form,
       this.currentStep(),
       media ?? this.mediaPayload(),
@@ -283,7 +284,7 @@ export class LongTermCreate implements OnInit {
 
     const draft = restoreCreateDraft<any, LongTermCreateCustomData>(
       this.cacheService,
-      DRAFT_CACHE_KEY,
+      LONG_TERM_CREATE_DRAFT_KEY,
       this.form,
       (s) => this.currentStep.set(s),
       {
@@ -359,9 +360,6 @@ export class LongTermCreate implements OnInit {
     this.currentStep.set(previousCaseFormStep(this.currentStep()));
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // Submit
-  // ─────────────────────────────────────────────────────────────
   onSubmit(forceCreate = false): void {
     if (this.isSubmitting()) return;
     const primaryImg = this.mediaPayload().primaryImage;
@@ -398,75 +396,102 @@ export class LongTermCreate implements OnInit {
       }
     }
 
-    this.isSubmitting.set(true);
-    this.errorMsg.set(null);
-
     let request: LongTermCaseCreateRequest;
     if (forceCreate && pending) {
       request = pending;
     } else {
-      const v = this.form.getRawValue();
-      const media = this.mediaPayload();
-
-      request = {
-        fName: v.fName!,
-        lName: v.lName!,
-        sName: v.sName || null,
-        tName: v.tName || null,
-        gender: v.gender as Gender,
-        age: Number(v.age ?? 0),
-        relation: v.relation!,
-        communicationPhone: v.communicationPhone || null,
-        description: v.description || null,
-        government: v.government!,
-        city: v.city!,
-        street: v.street!,
-        eventDate: v.eventDate!,
-        primaryImage: media.primaryImage!,
-        additionalImages: media.additionalImages.length ? media.additionalImages : null,
-        video: media.video || null,
-        policeReportImage: this.policeReport() || null,
-      };
+      const builtRequest = this.buildCreateRequest();
+      request = builtRequest;
       this.pendingRequest.set(request);
     }
 
+    this.mediaErrors.set({});
+
     executeCaseSubmissionFlow(
       this.service.createCase(request, forceCreate) as unknown as Observable<CaseSubmissionResponse<any>>,
-      {
-        isSubmitting: this.isSubmitting,
-        errorMsg: this.errorMsg,
-        mediaErrors: this.mediaErrors,
-        form: this.form,
-        cacheService: this.cacheService,
-        draftKey: DRAFT_CACHE_KEY,
-        snackbar: this.snackbar,
-        router: this.router,
-        successRoute: ['/long-term'],
-        successMessage: 'تم إضافة الحالة بنجاح وبانتظار المراجعة.',
-        onSuccess: () => {
-          this.submittedSuccessfully.set(true);
-        },
-        closeDialogs: () => {
-          this.showForceCreatePopup.set(false);
-          this.showDuplicateInfoDialog.set(false);
-        },
-        handleDuplicate: (data) => {
-          handleDuplicateDecision(data as any, {
-            setDecision: (d: DuplicateDecision) => this.currentDuplicateDecision.set(d),
-            setBlocked: (b: boolean) => this.isBlockedDuplicate.set(b),
-            setMatchedCases: (m: MatchedCaseResponse[]) => this.matchedCases.set(m),
-            setExistingCaseType: (t: CaseType | null) => this.existingCaseType.set(t),
-            showInfoDialog: () => this.showDuplicateInfoDialog.set(true),
-            showForceCreatePopup: () => this.showForceCreatePopup.set(true)
-          });
-          this.saveDraft();
-        },
-        onComplete: () => {
-          this.pendingRequest.set(null);
-        },
-        defaultErrorMessage: 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.'
-      }
+      this.getSubmissionDependencies()
     );
+  }
+
+  private buildCreateRequest(): LongTermCaseCreateRequest {
+    const v = this.form.getRawValue();
+    const media = this.mediaPayload();
+
+    return {
+      fName: v.fName!,
+      lName: v.lName!,
+      sName: v.sName || null,
+      tName: v.tName || null,
+      gender: v.gender as Gender,
+      age: Number(v.age ?? 0),
+      relation: v.relation!,
+      communicationPhone: v.communicationPhone || null,
+      description: v.description || null,
+      government: v.government!,
+      city: v.city!,
+      street: v.street!,
+      eventDate: v.eventDate!,
+      primaryImage: media.primaryImage!,
+      additionalImages: media.additionalImages.length ? media.additionalImages : null,
+      video: media.video || null,
+      policeReportImage: this.policeReport() || null,
+    };
+  }
+
+  private handleDuplicate(data: DuplicateDecisionPayload): void {
+    handleDuplicateDecision(data, {
+      setDecision: (d: DuplicateDecision) => {
+        this.currentDuplicateDecision.set(d);
+        this.saveDraft();
+      },
+      setBlocked: (b: boolean) => {
+        this.isBlockedDuplicate.set(b);
+        this.saveDraft();
+      },
+      setMatchedCases: (m: MatchedCaseResponse[]) => {
+        this.matchedCases.set(m);
+        this.saveDraft();
+      },
+      setExistingCaseType: (t: CaseType | null) => {
+        this.existingCaseType.set(t);
+        this.saveDraft();
+      },
+      showInfoDialog: () => {
+        this.showDuplicateInfoDialog.set(true);
+        this.saveDraft();
+      },
+      showForceCreatePopup: () => {
+        this.showForceCreatePopup.set(true);
+        this.saveDraft();
+      }
+    });
+  }
+
+  private getSubmissionDependencies(): CaseSubmissionFlowDeps<DuplicateDecisionPayload> {
+    return {
+      isSubmitting: this.isSubmitting,
+      errorMsg: this.errorMsg,
+      mediaErrors: this.mediaErrors,
+      form: this.form,
+      cacheService: this.cacheService,
+      draftKey: LONG_TERM_CREATE_DRAFT_KEY,
+      snackbar: this.snackbar,
+      router: this.router,
+      successRoute: ['/long-term'],
+      successMessage: 'تم إضافة الحالة بنجاح وبانتظار المراجعة.',
+      onSuccess: () => {
+        this.submittedSuccessfully.set(true);
+      },
+      closeDialogs: () => {
+        this.showForceCreatePopup.set(false);
+        this.showDuplicateInfoDialog.set(false);
+      },
+      handleDuplicate: (data: DuplicateDecisionPayload) => this.handleDuplicate(data),
+      onComplete: () => {
+        this.pendingRequest.set(null);
+      },
+      defaultErrorMessage: 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.'
+    };
   }
 
   onForceCreateCancel(): void {

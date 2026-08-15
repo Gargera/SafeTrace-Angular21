@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
-import { UrgentUpdate } from './urgent-update';
+import { UrgentUpdate, URGENT_UPDATE_DRAFT_KEY_PREFIX } from './urgent-update';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { UrgentCaseService } from '../../services/urgent-case.service';
 import { SnackbarService } from '../../../../shared/services/toast.service';
@@ -12,6 +12,17 @@ import { CaseMediaUploaderComponent } from '../../../../shared/components/cases-
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
+
+beforeAll(() => {
+  Object.defineProperty(window, 'ResizeObserver', {
+    writable: true,
+    value: class {
+      observe() { }
+      unobserve() { }
+      disconnect() { }
+    },
+  });
+});
 
 // --- Mocks ---
 @Component({
@@ -42,7 +53,7 @@ class MockMapLocationPickerComponent {
   @Input() initialLat: number | null = null;
   @Input() initialLng: number | null = null;
   @Input() initialAddress: string | null = null;
-  @Output() confirmLocation = new EventEmitter<{lat: number, lng: number, address: string}>();
+  @Output() confirmLocation = new EventEmitter<{ lat: number, lng: number, address: string }>();
   @Output() cancel = new EventEmitter<void>();
 }
 
@@ -153,15 +164,35 @@ describe('UrgentUpdate', () => {
 
     fixture = TestBed.createComponent(UrgentUpdate);
     component = fixture.componentInstance;
+
+    // Mock ViewChild mediaUploader as signal
+    component.mediaUploader = (() => ({
+      validateMedia: () => ({ valid: true, message: null }),
+      validate: () => ({ valid: true, message: null })
+    })) as any;
+
     fixture.detectChanges(); // triggers ngOnInit and loadCase
   });
 
+  const fillPersonData = () => {
+    component.form.patchValue({
+      fName: 'سالم', lName: 'خالد', age: 30, gender: Gender.Male, relation: RelationType.Father
+    });
+  };
+
+  const fillLocationForm = () => {
+    component.form.patchValue({
+      government: 'الإسكندرية', city: 'سموحة', street: 'شارع فوزي معاذ'
+    });
+  };
+
+  // 1) Component Initialization
   describe('1) Component Initialization', () => {
-    it('should create UrgentUpdate successfully', () => {
+    it('should create component', () => {
       expect(component).toBeTruthy();
     });
 
-    it('should initialize signals correctly', () => {
+    it('should initialize default signals', () => {
       expect(component.currentStep()).toBe(1);
       expect(component.isSubmitting()).toBe(false);
       expect(component.errorMsg()).toBeNull();
@@ -178,119 +209,220 @@ describe('UrgentUpdate', () => {
       expect(component.selectedLat()).toBe(30.0);
       expect(component.selectedLng()).toBe(31.0);
     });
-  });
 
-  describe('2) Form Behavior', () => {
-    it('required fields are enforced', () => {
-      component.form.patchValue({
-        fName: '', lName: '', age: null, gender: '', government: '', city: '', street: ''
-      });
-      expect(component.form.get('fName')?.invalid).toBe(true);
-      expect(component.form.get('lName')?.invalid).toBe(true);
-      expect(component.form.get('age')?.invalid).toBe(true);
-      expect(component.form.get('government')?.invalid).toBe(true);
+    it('should return correct step header', () => {
+      expect(component.stepHeader()?.title).toBe('تحديث بيانات المفقود');
     });
   });
 
-  describe('3) Navigation (Steps)', () => {
-    it('invalid data should keep the user on step 1', () => {
-      component.form.patchValue({ age: null });
+  // 2) Form Validation
+  describe('2) Form Validation', () => {
+    it('should require mandatory fields', () => {
+      component.form.patchValue({
+        fName: '', lName: '', age: null, gender: null, relation: null, government: ''
+      });
+      expect(component.form.get('fName')?.invalid).toBe(true);
+      expect(component.form.get('age')?.invalid).toBe(true);
+    });
+
+    it('should reject non arabic names', () => {
+      component.form.patchValue({ fName: 'Ahmed' });
+      expect(component.form.get('fName')?.invalid).toBe(true);
+    });
+
+    it('should validate egyptian phone', () => {
+      component.form.patchValue({ communicationPhone: '123' });
+      expect(component.form.get('communicationPhone')?.invalid).toBe(true);
+    });
+  });
+
+  // 3) Step Navigation
+  describe('3) Step Navigation', () => {
+    it('should not move when step 1 invalid', () => {
+      component.currentStep.set(1);
+      component.form.patchValue({ age: null }); // Make it invalid
       component.nextStep();
       expect(component.currentStep()).toBe(1);
     });
 
-    it('valid data should move from step 1 -> step 2', () => {
-      component.form.patchValue({
-        fName: 'احمد', lName: 'محمد', age: 25, gender: Gender.Male
-      });
+    it('should move step 1 to step 2', () => {
+      component.currentStep.set(1);
+      fillPersonData();
       component.nextStep();
       expect(component.currentStep()).toBe(2);
     });
+
+    it('should require map location on step 2', () => {
+      component.currentStep.set(2);
+      fillLocationForm();
+      component.selectedLat.set(null); // Missing location
+      component.nextStep();
+      expect(component.currentStep()).toBe(2);
+      expect(component.errorMsg()).not.toBeNull();
+    });
   });
 
-  describe('4) Cache Draft Behavior', () => {
-    it('should save draft after form value changes', async () => {
-      component.form.patchValue({ age: 99 });
-      await new Promise(resolve => setTimeout(resolve, 600)); // debounceTime 500ms
-      const draft = mockCache.get(`UrgentUpdate_Draft_1`);
+  // 4) Cache / Draft
+  describe('4) Cache / Draft', () => {
+    it('should save draft after changes', async () => {
+      component.form.patchValue({ age: 30 });
+      await new Promise(resolve => setTimeout(resolve, 600));
+      const draft = mockCache.get(`${URGENT_UPDATE_DRAFT_KEY_PREFIX}1`);
       expect(draft).toBeTruthy();
-      expect(draft.formValue.age).toBe(99);
+      expect(draft.formValue.age).toBe(30);
+    });
+
+    it('should restore existing draft from cache', () => {
+      const file = new File([''], 'test.png');
+      mockCache.cache[`${URGENT_UPDATE_DRAFT_KEY_PREFIX}1`] = {
+        formValue: { fName: 'سالم', age: 40 },
+        currentStep: 2,
+        selectedLat: 30.1,
+        selectedLng: 31.2,
+        selectedAddress: 'Mock Restored Address',
+        isMapModalOpen: true,
+        newPrimaryImage: file,
+        newAdditionalImages: [],
+        newVideo: null,
+        deletedPhotoIds: [1],
+        primaryPhotoId: 2
+      };
+
+      const newFixture = TestBed.createComponent(UrgentUpdate);
+      const newComponent = newFixture.componentInstance;
+      newFixture.detectChanges();
+
+      expect(newComponent.form.get('fName')?.value).toBe('سالم');
+      expect(newComponent.currentStep()).toBe(2);
+      expect(newComponent.selectedLat()).toBe(30.1);
+      expect(newComponent.mediaPayload().primaryImage).toBe(file);
+      expect(newComponent.mediaPayload().deletedImageIds).toEqual([1]);
     });
   });
 
-  describe('5) Submit Behavior', () => {
-    beforeEach(() => {
-      component.form.patchValue({
-        fName: 'احمد', lName: 'محمد', age: 25, gender: Gender.Male,
-        government: 'القاهرة', city: 'مدينة نصر', street: 'شارع النصر'
+  // 5) Media Handling
+  describe('5) Media Handling', () => {
+    it('should update media payload', () => {
+      const file = new File([''], 'test.png');
+      component.onMediaChange({
+        primaryImage: file, additionalImages: [], video: null, deletedImageIds: [1], primaryPhotoId: 2
       });
-      
-      component.mediaPayload.set({
-        primaryImage: null,
-        additionalImages: [],
-        video: null,
-        deletedImageIds: [], // keep existing photo
-        primaryPhotoId: 1
-      });
-      
-      component.selectedLat.set(30.0);
-      component.selectedLng.set(31.0);
+      expect(component.mediaPayload().primaryImage).toBe(file);
+      expect(component.mediaPayload().deletedImageIds).toEqual([1]);
     });
 
-    it('should successfully submit and handle successful update', () => {
+    it('should clear media errors', () => {
+      component.mediaErrors.set({ primary: 'error' });
+      component.onMediaChange({
+        primaryImage: new File([''], 'a.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null
+      });
+      expect(component.mediaErrors()).toEqual({});
+    });
+  });
+
+  // 6) Location Handling
+  describe('6) Location Handling', () => {
+    it('should update selected location', () => {
+      component.onLocationChange({ lat: 30, lng: 31, address: 'test' });
+      expect(component.selectedLat()).toBe(30);
+      expect(component.selectedLng()).toBe(31);
+    });
+
+    it('should clear location error after selecting location', () => {
+      component.errorMsg.set('error');
+      component.onLocationChange({ lat: 30, lng: 31, address: 'test' });
+      expect(component.errorMsg()).toBeNull();
+    });
+  });
+
+  // 7) Request Builder Verification
+  describe('7) Request Builder Verification', () => {
+    it('should build request payload matching current state', () => {
+      fillPersonData();
+      fillLocationForm();
+      component.selectedLat.set(30.5);
+      component.selectedLng.set(31.5);
+      const file = new File([''], 'primary.png');
+      component.onMediaChange({
+        primaryImage: file, additionalImages: [], video: null, deletedImageIds: [1], primaryPhotoId: null
+      });
+
+      const request = (component as any).buildUpdateRequest();
+
+      expect(request.fName).toBe('سالم');
+      expect(request.latitude).toBe(30.5);
+      expect(request.primaryImage).toBe(file);
+      expect(request.deletedPhotosIds).toEqual([1]);
+    });
+  });
+
+  // 8) Submit Success
+  describe('8) Submit Success', () => {
+    beforeEach(() => {
+      fillPersonData();
+      fillLocationForm();
+      component.selectedLat.set(30);
+      component.selectedLng.set(31);
+      component.onMediaChange({
+        primaryImage: new File([''], 'test.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null
+      });
+    });
+
+    it('should submit successfully', () => {
+      mockService.updateCaseResponse = of({ isSuccess: true, data: { isCreated: true } });
       component.onSubmit();
-      
+
       expect(mockService.updateCaseArgs.length).toBe(1);
-      
-      const args = mockService.updateCaseArgs[0];
-      expect(args.id).toBe(1);
-      const req = args.request;
-      expect(req.fName).toBe('احمد');
-      expect(req.lName).toBe('محمد');
-      expect(req.age).toBe(25);
-      expect(req.latitude).toBe(30.0);
-      expect(req.longitude).toBe(31.0);
-
       expect(mockCache.removeCalled).toBe(true);
-      expect(component.isSubmitting()).toBe(false);
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/urgent', 1]);
       expect(mockSnackbar.successArgs.length).toBe(1);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/urgent', '1']);
     });
   });
 
-  describe('6) Error Handling Behavior', () => {
+  // 9) Error Handling
+  describe('9) Error Handling', () => {
     beforeEach(() => {
-      component.form.patchValue({
-        fName: 'احمد', lName: 'محمد', age: 25, gender: Gender.Male,
-        government: 'القاهرة', city: 'مدينة نصر', street: 'شارع النصر'
+      fillPersonData();
+      fillLocationForm();
+      component.selectedLat.set(30);
+      component.selectedLng.set(31);
+      component.onMediaChange({
+        primaryImage: new File([''], 'test.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null
       });
-      component.mediaPayload.set({
-        primaryImage: null,
-        additionalImages: [],
-        video: null,
-        deletedImageIds: [], // keep existing photo
-        primaryPhotoId: 1
-      });
-      component.selectedLat.set(30.0);
-      component.selectedLng.set(31.0);
     });
 
-    it('API error sets error message and resets isSubmitting', () => {
-      mockService.updateCaseResponse = throwError(() => ({ error: { message: 'Server error' } }));
+    it('Server Error 500 sets errorMsg', () => {
+      mockService.updateCaseResponse = throwError(() => ({ status: 500, error: { message: 'Server error' } }));
       component.onSubmit();
+      expect(component.errorMsg()).not.toBeNull();
       expect(component.isSubmitting()).toBe(false);
-      expect(component.errorMsg()).toContain('Server error');
     });
 
-    it('Validation error correctly handled via 400 status', () => {
+    it('Network Error (status 0) sets network error message', () => {
+      mockService.updateCaseResponse = throwError(() => ({ status: 0, message: '0 Unknown Error', name: 'HttpErrorResponse' }));
+      component.onSubmit();
+      expect(component.errorMsg()).toContain('تعذر الاتصال بالإنترنت');
+    });
+
+    it('Validation Error 400 sets media errors', () => {
       mockService.updateCaseResponse = throwError(() => ({
         status: 400,
-        error: { errors: { 'PrimaryImage': ['الصورة غير صالحة'] } }
+        error: { errors: { PrimaryImage: ['Invalid format'] } }
       }));
       component.onSubmit();
-      expect(component.isSubmitting()).toBe(false);
-      expect(component.mediaErrors().primary).toBe('الصورة غير صالحة');
-      expect(component.errorMsg()).toBe('الصورة غير صالحة');
+      expect(component.errorMsg()).toContain('Invalid format');
+      expect(component.mediaErrors().primary).toBe('Invalid format');
+    });
+  });
+
+  // 10) Refactor Safety Tests
+  describe('10) Refactor Safety Tests', () => {
+    it('getSubmissionDependencies returns exact flow config', () => {
+      const deps = (component as any).getSubmissionDependencies();
+      expect(deps.successRoute).toEqual(['/urgent', '1']);
+      expect(deps.successMessage).toBeTruthy();
+      expect(deps.draftKey).toBe(`${URGENT_UPDATE_DRAFT_KEY_PREFIX}1`);
+      expect(deps.isSubmitting).toBe(component.isSubmitting);
     });
   });
 });

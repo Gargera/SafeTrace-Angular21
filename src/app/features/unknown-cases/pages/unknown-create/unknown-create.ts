@@ -35,7 +35,7 @@ import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
 import { DuplicateInfoDialogComponent } from '../../../../shared/components/cases-components/duplicate-info-dialog/duplicate-info-dialog.component';
 
 import { debounceTime, Observable } from 'rxjs';
-import { handleDuplicateDecision } from '../../../../shared/helper/case-duplicate.helper';
+import { handleDuplicateDecision, DuplicateDecisionPayload } from '../../../../shared/helper/case-duplicate.helper';
 
 // Shared validators
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
@@ -52,12 +52,12 @@ import {
   validateStepControls,
   validateCaseSubmission,
 } from '../../../../shared/helper/case-form.helper';
-import { executeCaseSubmissionFlow, CaseSubmissionResponse } from '../../../../shared/helper/case-submission-flow.helper';
+import { executeCaseSubmissionFlow, CaseSubmissionResponse, CaseSubmissionFlowDeps } from '../../../../shared/helper/case-submission-flow.helper';
 import { saveCreateDraft, restoreCreateDraft } from '../../../../shared/helper/case-cache.helper';
 
 type Step = CaseFormStep;
 
-const DRAFT_CACHE_KEY = 'UnknownCreate_Draft';
+export const UNKNOWN_CREATE_DRAFT_KEY = 'UnknownCreate_Draft';
 
 interface UnknownCreateCustomData {
   showForceCreatePopup: boolean;
@@ -223,7 +223,7 @@ export class UnknownCreate implements OnInit {
     if (this.submittedSuccessfully()) return;
     saveCreateDraft<any, UnknownCreateCustomData>(
       this.cacheService,
-      DRAFT_CACHE_KEY,
+      UNKNOWN_CREATE_DRAFT_KEY,
       this.form,
       this.currentStep(),
       this.mediaPayload(),
@@ -262,7 +262,7 @@ export class UnknownCreate implements OnInit {
 
     const draft = restoreCreateDraft<any, UnknownCreateCustomData>(
       this.cacheService,
-      DRAFT_CACHE_KEY,
+      UNKNOWN_CREATE_DRAFT_KEY,
       this.form,
       (s) => this.currentStep.set(s),
       {
@@ -345,50 +345,74 @@ export class UnknownCreate implements OnInit {
       return;
     }
 
-    this.isSubmitting.set(true);
-    this.errorMsg.set(null);
+    this.mediaErrors.set({});
 
     executeCaseSubmissionFlow(
       this.service.createCase(request, forceCreate) as unknown as Observable<CaseSubmissionResponse<any>>,
-      {
-        isSubmitting: this.isSubmitting,
-        errorMsg: this.errorMsg,
-        mediaErrors: this.mediaErrors,
-        form: this.form,
-        cacheService: this.cacheService,
-        draftKey: DRAFT_CACHE_KEY,
-        snackbar: this.snackbar,
-        router: this.router,
-        successRoute: ['/unknown-cases'],
-        successMessage: 'تم إضافة الحالة بنجاح وبانتظار المراجعة.',
-        onSuccess: () => {
-          this.submittedSuccessfully.set(true);
-        },
-        closeDialogs: () => {
-          this.showForceCreatePopup.set(false);
-          this.showDuplicateInfoDialog.set(false);
-        },
-        handleDuplicate: (data) => {
-          handleDuplicateDecision(data as any, {
-            setDecision: (d) => this.currentDuplicateDecision.set(d),
-            setBlocked: (b) => this.isBlockedDuplicate.set(b),
-            setMatchedCases: (c) => this.matchedCases.set(c),
-            setExistingCaseType: (t) => this.existingCaseType.set(t),
-            showInfoDialog: () => this.showDuplicateInfoDialog.set(true),
-            showForceCreatePopup: () => this.showForceCreatePopup.set(true),
-          });
-        },
-        onComplete: () => {
-          this.pendingRequest.set(null);
-        },
-        defaultErrorMessage: 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.'
-      }
+      this.getSubmissionDependencies()
     );
+  }
+
+  private handleDuplicate(data: DuplicateDecisionPayload): void {
+    handleDuplicateDecision(data, {
+      setDecision: (d) => {
+        this.currentDuplicateDecision.set(d);
+        this.saveDraft();
+      },
+      setBlocked: (b) => {
+        this.isBlockedDuplicate.set(b);
+        this.saveDraft();
+      },
+      setMatchedCases: (c) => {
+        this.matchedCases.set(c);
+        this.saveDraft();
+      },
+      setExistingCaseType: (t) => {
+        this.existingCaseType.set(t);
+        this.saveDraft();
+      },
+      showInfoDialog: () => {
+        this.showDuplicateInfoDialog.set(true);
+        this.saveDraft();
+      },
+      showForceCreatePopup: () => {
+        this.showForceCreatePopup.set(true);
+        this.saveDraft();
+      },
+    });
+  }
+
+  private getSubmissionDependencies(): CaseSubmissionFlowDeps<DuplicateDecisionPayload> {
+    return {
+      isSubmitting: this.isSubmitting,
+      errorMsg: this.errorMsg,
+      mediaErrors: this.mediaErrors,
+      form: this.form,
+      cacheService: this.cacheService,
+      draftKey: UNKNOWN_CREATE_DRAFT_KEY,
+      snackbar: this.snackbar,
+      router: this.router,
+      successRoute: ['/unknown'],
+      successMessage: 'تم إضافة الحالة بنجاح وبانتظار المراجعة.',
+      onSuccess: () => {
+        this.submittedSuccessfully.set(true);
+      },
+      closeDialogs: () => {
+        this.showForceCreatePopup.set(false);
+        this.showDuplicateInfoDialog.set(false);
+      },
+      handleDuplicate: (data: DuplicateDecisionPayload) => this.handleDuplicate(data),
+      onComplete: () => {
+        this.pendingRequest.set(null);
+      },
+      defaultErrorMessage: 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.'
+    };
   }
 
   onForceCreateCancel(): void {
     this.showForceCreatePopup.set(false);
     this.pendingRequest.set(null);
+    this.saveDraft();
   }
 
   onForceCreateConfirm(): void {
@@ -396,12 +420,14 @@ export class UnknownCreate implements OnInit {
       return;
     }
     this.showForceCreatePopup.set(false);
+    this.saveDraft();
     this.onSubmit(true);
   }
 
-  onPendingDialogClose() {
+  onPendingDialogClose(): void {
     this.showDuplicateInfoDialog.set(false);
     this.pendingRequest.set(null);
+    this.saveDraft();
   }
 
   onPendingDialogContinueCreate(): void {
@@ -409,6 +435,7 @@ export class UnknownCreate implements OnInit {
       return;
     }
     this.showDuplicateInfoDialog.set(false);
+    this.saveDraft();
     this.onSubmit(true);
   }
 

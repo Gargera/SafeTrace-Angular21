@@ -85,13 +85,13 @@ describe('UnknownCreate', () => {
     mockCache.getResult = null;
     fixture = TestBed.createComponent(UnknownCreate);
     component = fixture.componentInstance;
-    
+
     // Mock ViewChild mediaUploader as signal
     component.mediaUploader = (() => ({
       validateMedia: () => ({ valid: true, message: null }),
       validate: () => ({ valid: true, message: null })
     })) as any;
-    
+
     fixture.detectChanges();
   });
 
@@ -114,7 +114,7 @@ describe('UnknownCreate', () => {
 
     it('required fields are enforced', () => {
       component.form.patchValue({
-        isNameKnown: false, name: '', age: null, gender: '', government: '', city: '', street: '', eventDate: ''
+        fName: '', sName: '', age: null, gender: null, government: '', city: '', street: '', eventDate: ''
       });
       // Name fields are optional for Unknown, but if provided they are validated. Age and Gender are required.
       expect(component.form.get('age')?.invalid).toBe(true);
@@ -199,11 +199,11 @@ describe('UnknownCreate', () => {
         newVideo: null
       };
       mockCache.getResult = mockDraft;
-      
+
       const newFixture = TestBed.createComponent(UnknownCreate);
       const newComponent = newFixture.componentInstance;
       newFixture.detectChanges(); // triggers ngOnInit
-      
+
       expect(newComponent.form.get('age')?.value).toBe(40);
       expect(newComponent.currentStep()).toBe(2);
       expect(newComponent.mediaPayload().primaryImage).toBe(file);
@@ -239,7 +239,7 @@ describe('UnknownCreate', () => {
   describe('6) Submit Behavior', () => {
     beforeEach(() => {
       component.form.patchValue({
-        isNameKnown: true, name: 'احمد محمد', age: 25, gender: Gender.Male,
+        fName: 'احمد', sName: 'محمد', age: 25, gender: Gender.Male,
         government: 'القاهرة', city: 'مدينة نصر', street: 'شارع النصر', eventDate: validEventDate()
       });
       const file = new File([''], 'test.png');
@@ -251,9 +251,9 @@ describe('UnknownCreate', () => {
     it('should successfully submit and handle successful creation', () => {
       mockService.createCaseResult = of({ isSuccess: true, data: { isCreated: true } });
       component.onSubmit();
-      
+
       expect(mockService.createCaseCalled).toBe(true);
-      
+
       const req = mockService.createCaseArgs[0];
       expect(req.fName).toBe('احمد');
       expect(req.sName).toBe('محمد');
@@ -270,7 +270,7 @@ describe('UnknownCreate', () => {
   describe('7) Duplicate Case Behavior', () => {
     beforeEach(() => {
       component.form.patchValue({
-        isNameKnown: true, name: 'احمد محمد', age: 25, gender: Gender.Male,
+        fName: 'احمد', sName: 'محمد', age: 25, gender: Gender.Male,
         government: 'القاهرة', city: 'مدينة نصر', street: 'شارع النصر', eventDate: validEventDate()
       });
       const file = new File([''], 'test.png');
@@ -326,7 +326,7 @@ describe('UnknownCreate', () => {
       let onSubmitCalled = false;
       let onSubmitArg = false;
       component.onSubmit = (force) => { onSubmitCalled = true; onSubmitArg = force as boolean; };
-      
+
       component.isBlockedDuplicate.set(false);
       component.onForceCreateConfirm();
       expect(component.showForceCreatePopup()).toBe(false);
@@ -337,7 +337,7 @@ describe('UnknownCreate', () => {
     it('Blocked duplicates cannot force create', () => {
       let onSubmitCalled = false;
       component.onSubmit = () => { onSubmitCalled = true; };
-      
+
       component.isBlockedDuplicate.set(true);
       component.onForceCreateConfirm();
       expect(onSubmitCalled).toBe(false);
@@ -347,7 +347,7 @@ describe('UnknownCreate', () => {
   describe('9) Error Handling Behavior', () => {
     it('API error sets error message, resets isSubmitting, clears pending request', () => {
       component.form.patchValue({
-        isNameKnown: true, name: 'احمد محمد', age: 25, gender: Gender.Male,
+        fName: 'احمد', sName: 'محمد', age: 25, gender: Gender.Male,
         government: 'القاهرة', city: 'مدينة نصر', street: 'شارع النصر', eventDate: validEventDate()
       });
       const file = new File([''], 'test.png');
@@ -357,7 +357,7 @@ describe('UnknownCreate', () => {
 
       mockService.createCaseResult = throwError(() => ({ status: 500, message: 'Server error' }));
       component.onSubmit();
-      
+
       expect(component.isSubmitting()).toBe(false);
       expect((component as any).pendingRequest()).toBeNull();
       expect(component.errorMsg()).not.toBeNull();
@@ -365,7 +365,7 @@ describe('UnknownCreate', () => {
 
     it('Validation error correctly handled via 400 status', () => {
       component.form.patchValue({
-        isNameKnown: true, name: 'احمد محمد', age: 25, gender: Gender.Male,
+        fName: 'احمد', sName: 'محمد', age: 25, gender: Gender.Male,
         government: 'القاهرة', city: 'مدينة نصر', street: 'شارع النصر', eventDate: validEventDate()
       });
       const file = new File([''], 'test.png');
@@ -373,13 +373,13 @@ describe('UnknownCreate', () => {
         primaryImage: file, additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null
       });
 
-      mockService.createCaseResult = throwError(() => ({ 
-        status: 400, 
+      mockService.createCaseResult = throwError(() => ({
+        status: 400,
         error: { errors: { PrimaryImage: ['الصورة غير صالحة'] } },
         message: 'يجب أن تكون لنفس الشخص'
       }));
       component.onSubmit();
-      
+
       expect(component.isSubmitting()).toBe(false);
       expect(component.mediaErrors().primary).toBe('الصورة غير صالحة');
       expect(component.errorMsg()).toBe('الصورة غير صالحة');
