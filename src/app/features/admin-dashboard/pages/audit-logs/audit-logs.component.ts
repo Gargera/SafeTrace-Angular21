@@ -35,6 +35,7 @@ import { TableSkeletonComponent } from '../../../../shared/components/skeletons/
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+import { AUDIT_TABLES_DICTIONARY } from '../../../../core/constants/dictionaries/audit.tables.dictionary';
 
 const UI_STATE_CACHE_KEY = 'AuditLogs_UI_State';
 
@@ -62,6 +63,8 @@ export class AuditLogsComponent implements OnInit {
   private toast = inject(SnackbarService);
   private cacheService = inject(CacheService);
   private destroyRef = inject(DestroyRef);
+
+  auditTables = AUDIT_TABLES_DICTIONARY;
 
   logs = signal<AuditLogDto[]>([]);
   totalCount = signal<number>(0);
@@ -182,6 +185,12 @@ export class AuditLogsComponent implements OnInit {
 
   closeModal(): void {
     this.selectedLog.set(null);
+  }
+
+  getTableLabel(tableName: string | undefined): string {
+    if (!tableName) return '';
+    const found = this.auditTables.find(t => t.value === tableName);
+    return found ? found.label : tableName;
   }
 
   formatJson(jsonString?: string): string {

@@ -19,13 +19,15 @@
     </div>
 
     <div class="flex flex-col gap-xs">
-      <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">بحث بالجدول</label>
       <app-form-field
-        type="text"
+        type="select"
         [ngModel]="filter().searchTable"
         (ngModelChange)="updateFilter({ searchTable: $event })"
-        placeholder="ابحث باسم الجدول..."
+        label="الجدول"
       >
+        @for(item of auditTables; track item.value) {
+          <option [value]="item.value">{{ item.label }}</option>
+        }
       </app-form-field>
     </div>
 
@@ -62,7 +64,8 @@
 <section
   class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75"
 >
-  @if (isLoading() && logs().length === 0) {
+  @defer (on viewport) {
+    @if (isLoading() && logs().length === 0) {
     <app-table-skeleton [rows]="10"></app-table-skeleton>
   } @else {
     <div
@@ -94,7 +97,7 @@
                   log.userEmail || 'نظام'
                 }}</span>
               </td>
-              <td class="px-lg py-md font-sans opacity-70">{{ log.tableName }}</td>
+              <td class="px-lg py-md font-sans opacity-70">{{ getTableLabel(log.tableName) }}</td>
               <td class="px-lg py-md text-center">
                 <span [appAuditOperationBadge]="log.type"></span>
               </td>
@@ -150,10 +153,14 @@
       />
     </div>
   }
+  } @placeholder {
+    <app-table-skeleton [rows]="10"></app-table-skeleton>
+  }
 </section>
 
 <!-- Details Modal -->
 @if (selectedLog()) {
+  @defer {
   <div class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <!-- Backdrop -->
     <div
@@ -172,7 +179,7 @@
             class="bg-surface-container px-6 py-4 flex justify-between items-center border-b border-outline-variant"
           >
             <h3 class="text-xl font-bold text-on-surface" id="modal-title">
-              تفاصيل التعديل ({{ selectedLog()?.tableName }})
+              تفاصيل التعديل ({{ getTableLabel(selectedLog()?.tableName) }})
             </h3>
             <button
               type="button"
@@ -263,4 +270,5 @@
       </div>
     </div>
   </div>
+  }
 }
