@@ -20,6 +20,7 @@ import { CaseStatus } from '../../../../shared/enums/case-status';
 import { Gender } from '../../../../shared/enums/gender';
 import { CaseListItemResponse } from '../../../../core/models/cases.model';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -34,6 +35,7 @@ export class Home implements OnInit {
   private unknownSvc = inject(UnknownCaseService);
   private foundedSvc = inject(FoundedService);
   private complaintSvc = inject(ComplaintsService);
+  private authSvc = inject(AuthService);
   private snackbar = inject(SnackbarService);
   private router = inject(Router);
   private cacheService = inject(CacheService);
@@ -129,6 +131,11 @@ export class Home implements OnInit {
 
   submitComplaint() {
     if (this.isSendingComplaint()) return;
+
+    if (!this.authSvc.isLoggedIn()) {
+      this.router.navigate(['/auth/login']);
+      return;
+    }
 
     if (this.complaintForm.invalid) {
       this.complaintForm.markAllAsTouched();
