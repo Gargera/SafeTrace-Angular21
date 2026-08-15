@@ -1,3 +1,4 @@
+import { useCaseMediaState } from '../../../../shared/helper/cases-helper/case-media.helper';
 import { ImageService } from '../../../../shared/services/image.service';
 import { CacheService } from '../../../../core/cache/cache.service';
 import {
@@ -28,10 +29,6 @@ import {
   EGYPT_GOVERNORATES,
   getCitiesForGovernorate,
 } from '../../../../core/constants/governorates';
-import {
-  getFormFieldError,
-  isFieldInvalid,
-} from '../../../../shared/helper/form-validation.helper';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 
 import { FormField } from '../../../../shared/components/form-field/form-field';
@@ -39,6 +36,8 @@ import { CardComponent } from '../../../../shared/components/card/card';
 import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container';
 
 // Shared validators
+import { useCaseFormErrors } from '../../../../shared/helper/cases-helper/case-form-errors.helper';
+import { bindGovernorateCityValidation } from '../../../../shared/helper/cases-helper/case-location-sync.helper';
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { pastDate } from '../../../../shared/validators/past-date.validator';
@@ -54,9 +53,9 @@ import {
   previousCaseFormStep,
   validateStepControls,
   validateCaseSubmission,
-} from '../../../../shared/helper/case-form.helper';
-import { executeCaseSubmissionFlow, CaseSubmissionResponse, CaseSubmissionFlowDeps } from '../../../../shared/helper/case-submission-flow.helper';
-import { saveUpdateDraft, restoreUpdateDraft } from '../../../../shared/helper/case-cache.helper';
+} from '../../../../shared/helper/cases-helper/case-form.helper';
+import { executeCaseSubmissionFlow, CaseSubmissionResponse, CaseSubmissionFlowDeps } from '../../../../shared/helper/cases-helper/case-submission-flow.helper';
+import { saveUpdateDraft, restoreUpdateDraft } from '../../../../shared/helper/cases-helper/case-cache.helper';
 import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data";
 import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data";
 
@@ -88,6 +87,25 @@ interface LongTermUpdateCustomData {
   templateUrl: './long-term-update.html',
 })
 export class LongTermUpdate implements OnInit {
+  mediaState = useCaseMediaState({
+    onSaveDraft: () => {
+       const self = this as any;
+       if (typeof self.saveDraft === 'function') {
+          self.saveDraft();
+       } else if (typeof self.saveDraftToCache === 'function') {
+          self.saveDraftToCache(self.mediaPayload());
+       }
+    }
+  });
+
+  initialPrimary = this.mediaState.initialPrimary;
+  initialOriginalPrimary = this.mediaState.initialOriginalPrimary;
+  initialAdditional = this.mediaState.initialAdditional;
+  initialVideo = this.mediaState.initialVideo;
+  mediaPayload = this.mediaState.mediaPayload;
+  mediaErrors = this.mediaState.mediaErrors;
+  onMediaChange = this.mediaState.onMediaChange;
+
   private fb = inject(FormBuilder);
   private service = inject(LongTermCaseService);
   private router = inject(Router);
@@ -114,36 +132,14 @@ export class LongTermUpdate implements OnInit {
   existingVideoUrl = signal<string | null>(null);
 
   // Initial media state (for Cache restoration in Update mode)
-  initialPrimary = signal<File | null>(null);
-  initialAdditional = signal<File[]>([]);
-  initialVideo = signal<File | null>(null);
   initialDeletedPhotoIds = signal<number[]>([]);
   initialPrimaryPhotoId = signal<number | null>(null);
 
   policeReport = signal<File | null>(null);
 
   // Active media state from the uploader
-  mediaPayload = signal<CaseMediaPayload>({
-    primaryImage: null,
-    additionalImages: [],
-    video: null,
-    deletedImageIds: [],
-    primaryPhotoId: null,
-  });
 
   // Media validation errors from backend
-  mediaErrors = signal<{
-    primary?: string | null;
-    additional?: string | null;
-    video?: string | null;
-    policeReport?: string | null;
-  }>({});
-
-  onMediaChange(payload: CaseMediaPayload): void {
-    this.mediaPayload.set(payload);
-    this.mediaErrors.set({});
-    this.saveDraft();
-  }
 
   get draftKey() {
     return `${LONG_TERM_UPDATE_DRAFT_KEY_PREFIX}${this.caseId}`;
@@ -220,42 +216,18 @@ export class LongTermUpdate implements OnInit {
   // ─────────────────────────────────────────────────────────────
   // Error message helpers
   // ─────────────────────────────────────────────────────────────
-  getFieldError(field: string): string | null {
-    return getFormFieldError(this.form, field);
-  }
-
-  isInvalid(field: string): boolean {
-    return isFieldInvalid(this.form, field);
-  }
-
-  readonly isInvalidFn = this.isInvalid.bind(this);
-  readonly getErrorFn = this.getFieldError.bind(this);
+  private formErrors = useCaseFormErrors(this.form);
+  getFieldError = this.formErrors.getFieldError;
+  isInvalid = this.formErrors.isInvalid;
+  isInvalidFn = this.formErrors.isInvalidFn;
+  getErrorFn = this.formErrors.getErrorFn;
 
   availableCities = signal<string[]>([]);
 
   ngOnInit(): void {
     this.caseId = Number(this.route.snapshot.paramMap.get('id'));
 
-    this.form
-      .get('city')
-      ?.setValidators([
-        Validators.required,
-        validCity(() => this.form.get('government')?.value ?? null),
-      ]);
-    this.form.get('city')?.updateValueAndValidity();
-
-    this.form
-      .get('government')
-      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((gov) => {
-        const cities = getCitiesForGovernorate(gov);
-        this.availableCities.set(cities);
-        const currentCity = this.form.get('city')?.value;
-        if (currentCity && !cities.includes(currentCity)) {
-          this.form.get('city')?.setValue('');
-        }
-        this.form.get('city')?.updateValueAndValidity();
-      });
+    bindGovernorateCityValidation(this.form, this.destroyRef, this.availableCities);
 
     this.form.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef), debounceTime(500))
@@ -359,7 +331,7 @@ export class LongTermUpdate implements OnInit {
             this.initialPrimaryPhotoId.set(pId);
           } else {
             const pId = primary ? primary.id : (files[0]?.id ?? null);
-            this.mediaPayload.update(p => ({
+            this.mediaPayload.update((p: CaseMediaPayload) => ({
               ...p,
               primaryPhotoId: pId
             }));
@@ -401,12 +373,12 @@ export class LongTermUpdate implements OnInit {
 
     const validation = this.imageService.validate(file, 10);
     if (!validation.valid) {
-      this.mediaErrors.update(errs => ({ ...errs, policeReport: validation.errorMessage ?? null }));
+      this.mediaErrors.update((errs: Record<string, string | null>) => ({ ...errs, policeReport: validation.errorMessage ?? null }));
       input.value = '';
       return;
     }
 
-    this.mediaErrors.update(errs => ({ ...errs, policeReport: null }));
+    this.mediaErrors.update((errs: Record<string, string | null>) => ({ ...errs, policeReport: null }));
     this.policeReport.set(file);
     this.saveDraft();
   }
@@ -453,7 +425,7 @@ export class LongTermUpdate implements OnInit {
     let valid = validation.valid;
 
     if (!this.policeReport() && !this.existingPoliceReportUrl()) {
-      this.mediaErrors.update(errs => ({ ...errs, policeReport: 'برجاء إرفاق محضر الشرطة.' }));
+      this.mediaErrors.update((errs: Record<string, string | null>) => ({ ...errs, policeReport: 'برجاء إرفاق محضر الشرطة.' }));
       valid = false;
     }
 

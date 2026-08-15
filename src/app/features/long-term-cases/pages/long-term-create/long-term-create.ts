@@ -1,3 +1,4 @@
+import { useCaseMediaState } from '../../../../shared/helper/cases-helper/case-media.helper';
 import { ImageService } from '../../../../shared/services/image.service';
 import { CacheService } from '../../../../core/cache/cache.service';
 import {
@@ -27,10 +28,6 @@ import {
   EGYPT_GOVERNORATES,
   getCitiesForGovernorate,
 } from '../../../../core/constants/governorates';
-import {
-  getFormFieldError,
-  isFieldInvalid,
-} from '../../../../shared/helper/form-validation.helper';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { MatchedCaseResponse } from '../../../../core/models/cases.model';
@@ -39,6 +36,8 @@ import { DuplicateInfoDialogComponent } from '../../../../shared/components/case
 import { FormField } from '../../../../shared/components/form-field/form-field';
 
 // Shared validators
+import { useCaseFormErrors } from '../../../../shared/helper/cases-helper/case-form-errors.helper';
+import { bindGovernorateCityValidation } from '../../../../shared/helper/cases-helper/case-location-sync.helper';
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { pastDate } from '../../../../shared/validators/past-date.validator';
@@ -52,10 +51,11 @@ import {
   previousCaseFormStep,
   validateStepControls,
   validateCaseSubmission,
-} from '../../../../shared/helper/case-form.helper';
-import { executeCaseSubmissionFlow, CaseSubmissionResponse, CaseSubmissionFlowDeps } from '../../../../shared/helper/case-submission-flow.helper';
-import { saveCreateDraft, restoreCreateDraft } from '../../../../shared/helper/case-cache.helper';
-import { handleDuplicateDecision, DuplicateDecisionPayload } from '../../../../shared/helper/case-duplicate.helper';
+} from '../../../../shared/helper/cases-helper/case-form.helper';
+import { executeCaseSubmissionFlow, CaseSubmissionResponse, CaseSubmissionFlowDeps } from '../../../../shared/helper/cases-helper/case-submission-flow.helper';
+import { saveCreateDraft, restoreCreateDraft } from '../../../../shared/helper/cases-helper/case-cache.helper';
+import { handleDuplicateDecision, DuplicateDecisionPayload } from '../../../../shared/helper/cases-helper/case-duplicate.helper';
+import { useCaseDuplicateHandler } from '../../../../shared/helper/cases-helper/case-duplicate-handler.helper';
 import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data";
 import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data";
 
@@ -72,7 +72,6 @@ interface LongTermCreateCustomData {
   existingCaseType: CaseType | null;
   policeReportFile: File | null;
 }
-
 
 @Component({
   selector: 'app-long-term-create',
@@ -108,42 +107,33 @@ export class LongTermCreate implements OnInit {
   errorMsg = signal<string | null>(null);
 
   // Initial media state (for Cache restoration)
-  initialPrimary = signal<File | null>(null);
-  initialAdditional = signal<File[]>([]);
-  initialVideo = signal<File | null>(null);
 
   policeReport = signal<File | null>(null);
 
   // Active media state from the uploader
-  mediaPayload = signal<CaseMediaPayload>({
-    primaryImage: null,
-    additionalImages: [],
-    video: null,
-    deletedImageIds: [],
-    primaryPhotoId: null,
-  });
 
   // Media validation errors from backend
-  mediaErrors = signal<{
-    primary?: string | null;
-    additional?: string | null;
-    video?: string | null;
-    policeReport?: string | null;
-  }>({});
 
-  onMediaChange(payload: CaseMediaPayload): void {
-    this.mediaPayload.set(payload);
-    this.mediaErrors.set({});
-    this.saveDraft();
-  }
+  private pendingRequest = signal<LongTermCaseCreateRequest | null>(null);
 
-  showForceCreatePopup = signal(false);
-  showDuplicateInfoDialog = signal(false);
-  currentDuplicateDecision = signal<DuplicateDecision>(DuplicateDecision.None);
-  isBlockedDuplicate = signal(false);
-  matchedCases = signal<MatchedCaseResponse[]>([]);
-  existingCaseType = signal<CaseType | null>(null);
-  pendingRequest = signal<LongTermCaseCreateRequest | null>(null);
+  duplicateHandler = useCaseDuplicateHandler({
+    saveDraft: () => this.saveDraft(),
+    onSubmit: (f) => this.onSubmit(f),
+    pendingRequest: this.pendingRequest
+  });
+
+  showForceCreatePopup = this.duplicateHandler.showForceCreatePopup;
+  showDuplicateInfoDialog = this.duplicateHandler.showDuplicateInfoDialog;
+  currentDuplicateDecision = this.duplicateHandler.currentDuplicateDecision;
+  isBlockedDuplicate = this.duplicateHandler.isBlockedDuplicate;
+  matchedCases = this.duplicateHandler.matchedCases;
+  existingCaseType = this.duplicateHandler.existingCaseType;
+
+  handleDuplicate = this.duplicateHandler.handleDuplicate;
+  onForceCreateCancel = this.duplicateHandler.onForceCreateCancel;
+  onForceCreateConfirm = this.duplicateHandler.onForceCreateConfirm;
+  onPendingDialogClose = this.duplicateHandler.onPendingDialogClose;
+  onPendingDialogContinueCreate = this.duplicateHandler.onPendingDialogContinueCreate;
   private submittedSuccessfully = signal(false);
 
   readonly genders = Gender;
@@ -216,20 +206,34 @@ export class LongTermCreate implements OnInit {
   });
 
   // ─────────────────────────────────────────────────────────────
-  // Error message helper
+  // Error message helpers
   // ─────────────────────────────────────────────────────────────
-  getFieldError(field: string): string | null {
-    return getFormFieldError(this.form, field);
-  }
-
-  isInvalid(field: string): boolean {
-    return isFieldInvalid(this.form, field);
-  }
-
-  readonly isInvalidFn = this.isInvalid.bind(this);
-  readonly getErrorFn = this.getFieldError.bind(this);
+  private formErrors = useCaseFormErrors(this.form);
+  getFieldError = this.formErrors.getFieldError;
+  isInvalid = this.formErrors.isInvalid;
+  isInvalidFn = this.formErrors.isInvalidFn;
+  getErrorFn = this.formErrors.getErrorFn;
 
   availableCities = signal<string[]>([]);
+
+  mediaState = useCaseMediaState({
+    onSaveDraft: () => {
+       const self = this as any;
+       if (typeof self.saveDraft === 'function') {
+          self.saveDraft();
+       } else if (typeof self.saveDraftToCache === 'function') {
+          self.saveDraftToCache(self.mediaPayload());
+       }
+    }
+  });
+
+  initialPrimary = this.mediaState.initialPrimary;
+  initialOriginalPrimary = this.mediaState.initialOriginalPrimary;
+  initialAdditional = this.mediaState.initialAdditional;
+  initialVideo = this.mediaState.initialVideo;
+  mediaPayload = this.mediaState.mediaPayload;
+  mediaErrors = this.mediaState.mediaErrors;
+  onMediaChange = this.mediaState.onMediaChange;
 
   constructor() {
     this.form.valueChanges
@@ -261,26 +265,7 @@ export class LongTermCreate implements OnInit {
   }
 
   ngOnInit(): void {
-    this.form
-      .get('city')
-      ?.setValidators([
-        Validators.required,
-        validCity(() => this.form.get('government')?.value ?? null),
-      ]);
-    this.form.get('city')?.updateValueAndValidity();
-
-    this.form
-      .get('government')
-      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((gov) => {
-        const cities = getCitiesForGovernorate(gov);
-        this.availableCities.set(cities);
-        const currentCity = this.form.get('city')?.value;
-        if (currentCity && !cities.includes(currentCity)) {
-          this.form.get('city')?.setValue('');
-        }
-        this.form.get('city')?.updateValueAndValidity();
-      });
+    bindGovernorateCityValidation(this.form, this.destroyRef, this.availableCities);
 
     const draft = restoreCreateDraft<any, LongTermCreateCustomData>(
       this.cacheService,
@@ -338,12 +323,12 @@ export class LongTermCreate implements OnInit {
 
     const validation = this.imageService.validate(file, 10);
     if (!validation.valid) {
-      this.mediaErrors.update(errs => ({ ...errs, policeReport: validation.errorMessage ?? null }));
+      this.mediaErrors.update((errs: Record<string, string | null>) => ({ ...errs, policeReport: validation.errorMessage ?? null }));
       input.value = '';
       return;
     }
 
-    this.mediaErrors.update(errs => ({ ...errs, policeReport: null }));
+    this.mediaErrors.update((errs: Record<string, string | null>) => ({ ...errs, policeReport: null }));
     this.policeReport.set(file);
     this.saveDraft();
   }
@@ -386,7 +371,7 @@ export class LongTermCreate implements OnInit {
       }
 
       if (!this.policeReport()) {
-        this.mediaErrors.update(errs => ({ ...errs, policeReport: 'برجاء إرفاق محضر الشرطة.' }));
+        this.mediaErrors.update((errs: Record<string, string | null>) => ({ ...errs, policeReport: 'برجاء إرفاق محضر الشرطة.' }));
         valid = false;
       }
 
@@ -438,34 +423,6 @@ export class LongTermCreate implements OnInit {
     };
   }
 
-  private handleDuplicate(data: DuplicateDecisionPayload): void {
-    handleDuplicateDecision(data, {
-      setDecision: (d: DuplicateDecision) => {
-        this.currentDuplicateDecision.set(d);
-        this.saveDraft();
-      },
-      setBlocked: (b: boolean) => {
-        this.isBlockedDuplicate.set(b);
-        this.saveDraft();
-      },
-      setMatchedCases: (m: MatchedCaseResponse[]) => {
-        this.matchedCases.set(m);
-        this.saveDraft();
-      },
-      setExistingCaseType: (t: CaseType | null) => {
-        this.existingCaseType.set(t);
-        this.saveDraft();
-      },
-      showInfoDialog: () => {
-        this.showDuplicateInfoDialog.set(true);
-        this.saveDraft();
-      },
-      showForceCreatePopup: () => {
-        this.showForceCreatePopup.set(true);
-        this.saveDraft();
-      }
-    });
-  }
 
   private getSubmissionDependencies(): CaseSubmissionFlowDeps<DuplicateDecisionPayload> {
     return {
@@ -478,7 +435,7 @@ export class LongTermCreate implements OnInit {
       snackbar: this.snackbar,
       router: this.router,
       successRoute: ['/long-term'],
-      successMessage: 'تم إضافة الحالة بنجاح وبانتظار المراجعة.',
+      successMessage: 'تم إنشاء البلاغ بنجاح.',
       onSuccess: () => {
         this.submittedSuccessfully.set(true);
       },
@@ -492,34 +449,6 @@ export class LongTermCreate implements OnInit {
       },
       defaultErrorMessage: 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.'
     };
-  }
-
-  onForceCreateCancel(): void {
-    this.showForceCreatePopup.set(false);
-    this.pendingRequest.set(null);
-    this.saveDraft();
-  }
-
-  onForceCreateConfirm(): void {
-    if (this.isBlockedDuplicate()) {
-      return;
-    }
-    this.showForceCreatePopup.set(false);
-    this.onSubmit(true);
-  }
-
-  onPendingDialogClose(): void {
-    this.showDuplicateInfoDialog.set(false);
-    this.pendingRequest.set(null);
-    this.saveDraft();
-  }
-
-  onPendingDialogContinueCreate(): void {
-    if (this.isBlockedDuplicate()) {
-      return;
-    }
-    this.showDuplicateInfoDialog.set(false);
-    this.onSubmit(true);
   }
 
   goBack(): void {

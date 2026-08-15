@@ -1,3 +1,4 @@
+import { useCaseMediaState } from '../../../../shared/helper/cases-helper/case-media.helper';
 import { CacheService } from '../../../../core/cache/cache.service';
 import {
   Component,
@@ -26,10 +27,6 @@ import {
   EGYPT_GOVERNORATES,
   getCitiesForGovernorate,
 } from '../../../../core/constants/governorates';
-import {
-  getFormFieldError,
-  isFieldInvalid,
-} from '../../../../shared/helper/form-validation.helper';
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
@@ -38,6 +35,8 @@ import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
 import { DuplicateInfoDialogComponent } from '../../../../shared/components/cases-components/duplicate-info-dialog/duplicate-info-dialog.component';
 import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 
+import { useCaseFormErrors } from '../../../../shared/helper/cases-helper/case-form-errors.helper';
+import { bindGovernorateCityValidation } from '../../../../shared/helper/cases-helper/case-location-sync.helper';
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import {
@@ -56,10 +55,11 @@ import {
   validateStepControls,
   validateCaseSubmission,
   CaseMediaErrors
-} from '../../../../shared/helper/case-form.helper';
-import { handleDuplicateDecision, DuplicateDecisionPayload } from '../../../../shared/helper/case-duplicate.helper';
-import { executeCaseSubmissionFlow, CaseSubmissionFlowDeps } from '../../../../shared/helper/case-submission-flow.helper';
-import { saveCreateDraft, restoreCreateDraft, CreateDraft } from '../../../../shared/helper/case-cache.helper';
+} from '../../../../shared/helper/cases-helper/case-form.helper';
+import { handleDuplicateDecision, DuplicateDecisionPayload } from '../../../../shared/helper/cases-helper/case-duplicate.helper';
+import { useCaseDuplicateHandler } from '../../../../shared/helper/cases-helper/case-duplicate-handler.helper';
+import { executeCaseSubmissionFlow, CaseSubmissionFlowDeps } from '../../../../shared/helper/cases-helper/case-submission-flow.helper';
+import { saveCreateDraft, restoreCreateDraft, CreateDraft } from '../../../../shared/helper/cases-helper/case-cache.helper';
 import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data";
 import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data";
 
@@ -144,36 +144,8 @@ export class UrgentCreate implements OnInit {
   errorMsg = signal<string | null>(null);
 
   // Initial media state (for Cache restoration)
-  initialPrimary = signal<File | null>(null);
-  initialOriginalPrimary = signal<File | null>(null);
-  initialAdditional = signal<File[]>([]);
-  initialVideo = signal<File | null>(null);
 
   // Active media state from the uploader
-  mediaPayload = signal<CaseMediaPayload>({
-    primaryImage: null,
-    additionalImages: [],
-    video: null,
-    deletedImageIds: [],
-    primaryPhotoId: null,
-    originalPrimaryImage: null
-  });
-
-  // Media validation errors from backend
-  mediaErrors = signal<CaseMediaErrors>({});
-
-  onMediaChange(payload: CaseMediaPayload): void {
-    this.mediaPayload.set(payload);
-
-    this.initialPrimary.set(payload.primaryImage ?? null);
-    this.initialOriginalPrimary.set(payload.originalPrimaryImage ?? null);
-    this.initialAdditional.set(payload.additionalImages ?? []);
-    this.initialVideo.set(payload.video ?? null);
-
-    this.mediaErrors.set({});
-
-    this.saveDraft();
-  }
 
   selectedLat = signal<number | null>(null);
   selectedLng = signal<number | null>(null);
@@ -184,14 +156,27 @@ export class UrgentCreate implements OnInit {
   isLocating = signal(false);
   locationError = signal<string | null>(null);
 
-  showForceCreatePopup = signal(false);
-  showDuplicateInfoDialog = signal(false);
-  currentDuplicateDecision = signal<DuplicateDecision>(DuplicateDecision.None);
-  isBlockedDuplicate = signal(false);
-  matchedCases = signal<MatchedCaseResponse[]>([]);
-  existingCaseType = signal<CaseType | null>(null);
-  private submittedSuccessfully = signal(false);
   private pendingRequest = signal<UrgentCaseCreateRequest | null>(null);
+
+  duplicateHandler = useCaseDuplicateHandler({
+    saveDraft: () => this.saveDraft(),
+    onSubmit: (f) => this.onSubmit(f),
+    pendingRequest: this.pendingRequest
+  });
+
+  showForceCreatePopup = this.duplicateHandler.showForceCreatePopup;
+  showDuplicateInfoDialog = this.duplicateHandler.showDuplicateInfoDialog;
+  currentDuplicateDecision = this.duplicateHandler.currentDuplicateDecision;
+  isBlockedDuplicate = this.duplicateHandler.isBlockedDuplicate;
+  matchedCases = this.duplicateHandler.matchedCases;
+  existingCaseType = this.duplicateHandler.existingCaseType;
+
+  handleDuplicate = this.duplicateHandler.handleDuplicate;
+  onForceCreateCancel = this.duplicateHandler.onForceCreateCancel;
+  onForceCreateConfirm = this.duplicateHandler.onForceCreateConfirm;
+  onPendingDialogClose = this.duplicateHandler.onPendingDialogClose;
+  onPendingDialogContinueCreate = this.duplicateHandler.onPendingDialogContinueCreate;
+  private submittedSuccessfully = signal(false);
 
   readonly genders = Gender;
   readonly relationOptions = RELATION_TYPE_OPTIONS;
@@ -263,19 +248,13 @@ export class UrgentCreate implements OnInit {
   });
 
   // ─────────────────────────────────────────────────────────────
-  // Error message helper
+  // Error message helpers
   // ─────────────────────────────────────────────────────────────
-
-  getFieldError(field: string): string | null {
-    return getFormFieldError(this.form, field);
-  }
-
-  isInvalid(field: string): boolean {
-    return isFieldInvalid(this.form, field);
-  }
-
-  readonly isInvalidFn = this.isInvalid.bind(this);
-  readonly getErrorFn = this.getFieldError.bind(this);
+  private formErrors = useCaseFormErrors(this.form);
+  getFieldError = this.formErrors.getFieldError;
+  isInvalid = this.formErrors.isInvalid;
+  isInvalidFn = this.formErrors.isInvalidFn;
+  getErrorFn = this.formErrors.getErrorFn;
 
   onLocationChange(loc: { lat: number; lng: number; address: string }): void {
 
@@ -292,6 +271,25 @@ export class UrgentCreate implements OnInit {
   }
 
   availableCities = signal<string[]>([]);
+
+  mediaState = useCaseMediaState({
+    onSaveDraft: () => {
+       const self = this as any;
+       if (typeof self.saveDraft === 'function') {
+          self.saveDraft();
+       } else if (typeof self.saveDraftToCache === 'function') {
+          self.saveDraftToCache(self.mediaPayload());
+       }
+    }
+  });
+
+  initialPrimary = this.mediaState.initialPrimary;
+  initialOriginalPrimary = this.mediaState.initialOriginalPrimary;
+  initialAdditional = this.mediaState.initialAdditional;
+  initialVideo = this.mediaState.initialVideo;
+  mediaPayload = this.mediaState.mediaPayload;
+  mediaErrors = this.mediaState.mediaErrors;
+  onMediaChange = this.mediaState.onMediaChange;
 
   constructor() {
     this.form.valueChanges
@@ -328,28 +326,7 @@ export class UrgentCreate implements OnInit {
   }
 
   ngOnInit(): void {
-    // Set city validator here (after form is initialized) to avoid circular reference
-    this.form
-      .get('city')
-      ?.setValidators([
-        Validators.required,
-        validCity(() => this.form.get('government')?.value ?? null),
-      ]);
-    this.form.get('city')?.updateValueAndValidity();
-
-    this.form
-      .get('government')
-      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((gov) => {
-        const cities = getCitiesForGovernorate(gov);
-        this.availableCities.set(cities);
-        const currentCity = this.form.get('city')?.value;
-        if (currentCity && !cities.includes(currentCity)) {
-          this.form.get('city')?.setValue('');
-        }
-        // Revalidate city whenever governorate changes
-        this.form.get('city')?.updateValueAndValidity();
-      });
+    bindGovernorateCityValidation(this.form, this.destroyRef, this.availableCities);
 
     const draft = restoreCreateDraft<UrgentCreateFormValue, UrgentCreateCustomData>(
       this.cacheService,
@@ -558,35 +535,6 @@ export class UrgentCreate implements OnInit {
     );
   }
 
-  private handleDuplicate(data: DuplicateDecisionPayload): void {
-    handleDuplicateDecision(data, {
-      setDecision: (d) => {
-        this.currentDuplicateDecision.set(d);
-        this.saveDraft();
-      },
-      setBlocked: (b) => {
-        this.isBlockedDuplicate.set(b);
-        this.saveDraft();
-      },
-      setMatchedCases: (c) => {
-        this.matchedCases.set(c);
-        this.saveDraft();
-      },
-      setExistingCaseType: (t) => {
-        this.existingCaseType.set(t);
-        this.saveDraft();
-      },
-      showInfoDialog: () => {
-        this.showDuplicateInfoDialog.set(true);
-        this.saveDraft();
-      },
-      showForceCreatePopup: () => {
-        this.showForceCreatePopup.set(true);
-        this.saveDraft();
-      },
-    });
-  }
-
   private getSubmissionDependencies(): CaseSubmissionFlowDeps<DuplicateDecisionPayload> {
     return {
       isSubmitting: this.isSubmitting,
@@ -612,36 +560,6 @@ export class UrgentCreate implements OnInit {
       },
       defaultErrorMessage: 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.'
     };
-  }
-
-  onForceCreateCancel(): void {
-    this.showForceCreatePopup.set(false);
-    this.pendingRequest.set(null);
-    this.saveDraft();
-  }
-
-  onForceCreateConfirm(): void {
-    if (this.isBlockedDuplicate()) {
-      return;
-    }
-    this.showForceCreatePopup.set(false);
-    this.saveDraft();
-    this.onSubmit(true);
-  }
-
-  onPendingDialogClose(): void {
-    this.showDuplicateInfoDialog.set(false);
-    this.pendingRequest.set(null);
-    this.saveDraft();
-  }
-
-  onPendingDialogContinueCreate(): void {
-    if (this.isBlockedDuplicate()) {
-      return;
-    }
-    this.showDuplicateInfoDialog.set(false);
-    this.saveDraft();
-    this.onSubmit(true);
   }
 
   goBack(): void {

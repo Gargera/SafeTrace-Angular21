@@ -1,11 +1,11 @@
 import { FormGroup } from '@angular/forms';
 import { Observable, Subscription, timeout } from 'rxjs';
 import { CaseMediaErrors } from './case-form.helper';
-import { handleSubmissionError } from './case-submission.helper';
+import { handleSubmissionError } from './case-submission-error.helper';
 
-import { DuplicateDecision } from '../enums/duplicate-decision';
-import { MatchedCaseResponse } from '../../core/models/cases.model';
-import { CaseType } from '../enums/case-type';
+import { DuplicateDecision } from '../../enums/duplicate-decision';
+import { MatchedCaseResponse } from '../../../core/models/cases.model';
+import { CaseType } from '../../enums/case-type';
 
 export interface CaseSubmissionData {
   duplicateDecision?: DuplicateDecision;

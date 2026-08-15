@@ -1,6 +1,6 @@
-import { DuplicateDecision } from '../enums/duplicate-decision';
-import { MatchedCaseResponse } from '../../core/models/cases.model';
-import { CaseType } from '../enums/case-type';
+import { DuplicateDecision } from '../../enums/duplicate-decision';
+import { MatchedCaseResponse } from '../../../core/models/cases.model';
+import { CaseType } from '../../enums/case-type';
 
 export interface DuplicateDecisionPayload {
   duplicateDecision: DuplicateDecision;

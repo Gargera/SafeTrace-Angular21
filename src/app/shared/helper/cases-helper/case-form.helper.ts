@@ -1,4 +1,4 @@
-import { CaseMediaUploaderComponent } from "../components/cases-components/case-media-uploader/case-media-uploader";
+import { CaseMediaUploaderComponent } from "../../components/cases-components/case-media-uploader/case-media-uploader";
 import { FormGroup } from '@angular/forms';
 
 export type CaseFormStep = 1 | 2 | 3;

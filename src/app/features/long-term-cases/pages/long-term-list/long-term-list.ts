@@ -16,7 +16,7 @@ import { PaginationComponent } from '../../../../shared/components/cases-compone
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { CaseSkeletonGridComponent } from '../../../../shared/components/skeletons/case-skeleton-grid/case-skeleton-grid.component';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
-import { CasesFilterState } from '../../../../shared/helper/cases-filter-state';
+import { CasesFilterState } from '../../../../shared/helper/cases-helper/cases-filter-state';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { CaseType } from '../../../../shared/enums/case-type';

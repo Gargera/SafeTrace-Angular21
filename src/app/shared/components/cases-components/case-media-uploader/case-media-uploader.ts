@@ -16,7 +16,7 @@ import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { ImageService } from '../../../../shared/services/image.service';
 import { CaseFileResponse } from '../../../../core/models/cases.model';
 import { validateVideoFile } from '../../../../shared/validators/video-validation.validator';
-import { CaseObjectUrlRegistry } from '../../../../shared/helper/case-form.helper';
+import { CaseObjectUrlRegistry } from '../../../../shared/helper/cases-helper/case-form.helper';
 
 
 export interface CaseMediaPayload {

@@ -1,5 +1,5 @@
 import { FormGroup } from '@angular/forms';
-import { extractErrorMessage } from './error.helper';
+import { extractErrorMessage } from '../error.helper';
 import { applyCaseValidationErrors } from './case-form.helper';
 
 export interface SubmissionErrorResult {

@@ -12,7 +12,7 @@ import { MyCaseListItemResponse } from '../../../../features/user-profile/model/
 import { CardComponent } from '../../card/card';
 import { environment } from '../../../../../environments/environment';
 import { getAgeCategory } from '../../../helper/age-category.helper';
-import { getCaseActions } from '../../../helper/case-actions.helper';
+import { getCaseActions } from '../../../helper/cases-helper/case-actions.helper';
 
 @Component({
   selector: 'app-case-card-compact',

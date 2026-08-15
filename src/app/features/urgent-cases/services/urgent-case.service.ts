@@ -8,8 +8,8 @@ import { UrgentCreateCaseResponse } from '../models/response/UrgentCreateCaseRes
 import { UrgentCaseCreateRequest } from '../models/request/UrgentCaseCreateRequest';
 import { UrgentCaseUpdateRequest } from '../models/request/UrgentCaseUpdateRequest';
 import { FoundPersonInfoRequest } from '../../../core/models/cases.model';
-import { CaseSubmissionResponse } from '../../../shared/helper/case-submission-flow.helper';
-import { DuplicateDecisionPayload } from '../../../shared/helper/case-duplicate.helper';
+import { CaseSubmissionResponse } from '../../../shared/helper/cases-helper/case-submission-flow.helper';
+import { DuplicateDecisionPayload } from '../../../shared/helper/cases-helper/case-duplicate.helper';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { UrgentCasesFilterRequest } from '../models/request/UrgentCaseFilterRequest';
