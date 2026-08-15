@@ -1,13 +1,10 @@
-<div dir="rtl" class="mx-auto max-w-[760px] px-4 pb-16 pt-6">
+<div dir="rtl" class="mx-auto max-w-190 px-4 pb-16 pt-6">
 
   <!-- Single app-card containing the entire page -->
   <app-card extraClass="overflow-hidden rounded-2xl border border-outline-variant/30 bg-white shadow-sm">
 
     @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center p-12 text-on-surface-variant">
-      <span class="material-symbols-outlined animate-spin text-4xl text-secondary">progress_activity</span>
-      <p class="mt-3 text-sm">جاري تحميل بيانات البلاغ...</p>
-    </div>
+      <app-update-form-skeleton></app-update-form-skeleton>
     } @else {
 
     <!-- 1. Header -->
@@ -243,7 +240,7 @@
             <div class="flex flex-wrap gap-3">
               @for (photo of existingPhotos(); track photo.id) {
               <div class="relative h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
-                <img [src]="photo.imagePath" alt="صورة" class="h-full w-full object-cover" />
+                <img [src]="photo.imagePath" alt="صورة" width="96" height="96" class="h-full w-full object-cover" />
                 @if (primaryPhotoId() === photo.id) {
                 <span class="absolute top-1 right-1 rounded-md bg-secondary px-1.5 py-0.5 text-[10px] text-on-secondary font-medium shadow-xs">أساسية</span>
                 } @else {
@@ -285,7 +282,8 @@
             </div>
             @if (newPrimaryPreview()) {
             <div class="relative mt-3 h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
-              <img [src]="newPrimaryPreview()" alt="صورة أساسية جديدة" class="h-full w-full object-cover" />
+              <img [src]="newPrimaryPreview()" width="105" height="80"
+              class="h-20 w-26.25 rounded-xl border border-outline-variant/60 object-cover shadow-xs transition-transform duration-200 hover:scale-105" />
               <button type="button" (click)="clearNewPrimary()"
                 class="absolute top-1 right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110">
                 <span class="material-symbols-outlined text-xs">close</span>
@@ -314,7 +312,7 @@
             <div class="mt-3.5 flex flex-wrap gap-3">
               @for (preview of newPhotoPreviews(); track preview; let i = $index) {
               <div class="relative h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
-                <img [src]="preview" alt="صورة جديدة" class="h-full w-full object-cover" />
+                <img [src]="preview" alt="صورة جديدة" width="80" height="80" class="h-full w-full object-cover" />
                 <button type="button" (click)="removeNewPhoto(i)"
                   class="absolute top-1 right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110">
                   <span class="material-symbols-outlined text-xs">close</span>
@@ -440,12 +438,8 @@
         التالي <span class="material-symbols-outlined text-lg">arrow_back</span>
       </app-button>
       } @else {
-      <app-button variant="primary" type="button" [disabled]="isSubmitting()" (onClick)="onSubmit()">
-        @if (isSubmitting()) {
-        <span class="material-symbols-outlined animate-spin text-lg">progress_activity</span> جاري الحفظ...
-        } @else {
-        <span class="material-symbols-outlined text-lg">check_circle</span> حفظ التعديلات
-        }
+      <app-button variant="primary" type="button" icon="check_circle" [disabled]="isSubmitting()" [loading]="isSubmitting()" (onClick)="onSubmit()">
+        <span>حفظ التعديلات</span>
       </app-button>
       }
     </div>

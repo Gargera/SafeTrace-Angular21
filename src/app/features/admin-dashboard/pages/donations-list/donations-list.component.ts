@@ -2,7 +2,15 @@ import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import {
+  Subject,
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  catchError,
+  EMPTY,
+  tap,
+} from 'rxjs';
 
 import { DonationService } from '../../../donations/services/donations.service';
 import { DonationAdminListDto } from '../../../donations/models/responses/donation-admin-list.dto';
@@ -12,7 +20,6 @@ import { TruncatePipe } from '../../../../shared/pipes/truncate-pipe';
 import { CardComponent } from '../../../../shared/components/card/card';
 
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
@@ -20,9 +27,12 @@ import { PaymentStatusBadgeDirective } from '../../../../shared/directives/payme
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
+import { TableSkeletonComponent } from '../../../../shared/components/skeletons/table-skeleton/table-skeleton.component';
 import { ReportService } from '../../services/report.service';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+import { SnackbarService } from '../../../../shared/services/toast.service';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
 const UI_STATE_CACHE_KEY = 'DonationsList_UI_State';
 
@@ -35,13 +45,13 @@ const UI_STATE_CACHE_KEY = 'DonationsList_UI_State';
     TruncatePipe,
     CardComponent,
     HeaderComponent,
-    LoadingSpinnerComponent,
     EmptyStateComponent,
     ButtonComponent,
     FormField,
     PaymentStatusBadgeDirective,
     HasPermissionDirective,
-    PaginationComponent
+    PaginationComponent,
+    TableSkeletonComponent,
   ],
   templateUrl: './donations-list.component.html',
 })
@@ -51,6 +61,7 @@ export class DonationsListComponent implements OnInit {
   private readonly reportService = inject(ReportService);
   private readonly cacheService = inject(CacheService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly fetchTrigger$ = new Subject<void>();
 
   Permissions = Permissions;
 
@@ -73,6 +84,8 @@ export class DonationsListComponent implements OnInit {
     { label: 'مسترد', value: PaymentStatus.Refunded },
   ];
 
+  isDownloading = signal(false);
+
   pageNumber = signal(1);
   pageSize = 12;
   totalCount = signal(0);
@@ -89,10 +102,10 @@ export class DonationsListComponent implements OnInit {
         {
           search: this.search(),
           selectedStatus: this.selectedStatus(),
-          pageNumber: this.pageNumber()
+          pageNumber: this.pageNumber(),
         },
         CACHE_TTL.UI_STATE,
-        [CACHE_TAGS.UI_STATE]
+        [CACHE_TAGS.UI_STATE],
       );
     });
   }
@@ -111,6 +124,7 @@ export class DonationsListComponent implements OnInit {
     }
 
     this.loadStatistics();
+    this.setupFetchPipeline();
     this.loadDonations();
 
     this.searchSubject
@@ -133,24 +147,38 @@ export class DonationsListComponent implements OnInit {
   }
 
   loadDonations(): void {
-    this.loading.set(true);
-    this.donationService
-      .getDonations({
-        pageNumber: this.pageNumber(),
-        pageSize: this.pageSize,
-        userEmail: this.search() || undefined,
-        paymentStatus: (this.selectedStatus() as PaymentStatus) || undefined,
-      })
-      .subscribe({
-        next: (res) => {
+    this.fetchTrigger$.next();
+  }
+
+  private setupFetchPipeline(): void {
+    this.fetchTrigger$
+      .pipe(
+        tap(() => this.loading.set(true)),
+        switchMap(() =>
+          this.donationService
+            .getDonations({
+              pageNumber: this.pageNumber(),
+              pageSize: this.pageSize,
+              userEmail: this.search() || undefined,
+              paymentStatus: (this.selectedStatus() as PaymentStatus) || undefined,
+            })
+            .pipe(
+              catchError((err) => {
+                this.loading.set(false);
+                this.donations.set([]);
+                this.totalCount.set(0);
+                return EMPTY;
+              }),
+            ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((res) => {
+        if (res) {
           this.loading.set(false);
           this.donations.set(res.items ?? []);
           this.totalCount.set(res.totalCount);
-        },
-        error: () => {
-          this.loading.set(false);
-          this.donations.set([]);
-        },
+        }
       });
   }
 
@@ -165,7 +193,10 @@ export class DonationsListComponent implements OnInit {
     this.loadDonations();
   }
 
+  private readonly toast = inject(SnackbarService);
+
   resetFilters(): void {
+    this.cacheService.remove(UI_STATE_CACHE_KEY);
     this.search.set('');
     this.selectedStatus.set('');
     this.pageNumber.set(1);
@@ -200,6 +231,8 @@ export class DonationsListComponent implements OnInit {
   }
 
   downloadReport(): void {
+    if (this.isDownloading()) return;
+    this.isDownloading.set(true);
     this.reportService
       .generateDonationPdfReport({
         pageNumber: this.pageNumber(),
@@ -209,11 +242,13 @@ export class DonationsListComponent implements OnInit {
       })
       .subscribe({
         next: (response) => {
+          this.isDownloading.set(false);
           this.reportService.download(response);
         },
         error: (err) => {
-          // toast handled via injected toast if available or silent fallback
-        }
+          this.isDownloading.set(false);
+          this.toast.error(extractErrorMessage(err, 'حدث خطأ أثناء تحميل التقرير.'));
+        },
       });
   }
 }

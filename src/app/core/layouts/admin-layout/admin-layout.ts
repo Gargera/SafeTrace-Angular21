@@ -12,7 +12,6 @@ import { Permissions } from '../../constants/Permissions';
 import { getRoleTranslationAr } from '../../constants/dictionaries/roles.dictionary';
 import { HasPermissionDirective } from '../../../shared/directives/has-permission.directive';
 
-import { ScrollRestorationService } from '../../services/scroll-restoration.service';
 import { AfterViewInit } from '@angular/core';
 
 @Component({
@@ -27,22 +26,14 @@ export class AdminLayoutComponent implements OnInit, AfterViewInit {
   public authService = inject(AuthService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
-  private scrollRestoration = inject(ScrollRestorationService);
   currentUser = this.authService.currentUser;
   
   isSidebarExpanded = signal<boolean>(true);
   Permissions = Permissions;
 
-  @ViewChild('mainContent') mainContentRef?: ElementRef<HTMLElement>;
+  isMobileMenuOpen = signal<boolean>(false);
 
   ngAfterViewInit(): void {
-    if (this.mainContentRef) {
-      this.scrollRestoration.registerContainer(this.mainContentRef, this.destroyRef);
-    }
-  }
-
-  onMainScroll(event: Event): void {
-    // Handled by ScrollRestorationService
   }
 
   isSuperAdmin(): boolean {
@@ -81,7 +72,7 @@ export class AdminLayoutComponent implements OnInit, AfterViewInit {
     if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
       return imgPath;
     }
-    return `${environment.baseUrl}/${imgPath.replace(/^\//, '')}`;
+    return `${environment.filesBaseUrl}/${imgPath.replace(/^\//, '')}`;
   }
 
   logout(): void {

@@ -1,17 +1,26 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ButtonComponent } from '../button/button';
 
 @Component({
   selector: 'app-pagination',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ButtonComponent],
   templateUrl: './pagination.html'
 })
 export class PaginationComponent {
   currentPage = input.required<number>();
   totalPages = input.required<number>();
+  loading = input(false);
+  pendingPage = signal<number | null>(null);
   
   pageChange = output<number>();
+
+  constructor() {
+    effect(() => {
+      if (!this.loading()) this.pendingPage.set(null);
+    });
+  }
 
   pagesArray = computed(() => {
     const current = this.currentPage();
@@ -47,7 +56,8 @@ export class PaginationComponent {
   });
 
   changePage(page: number | string) {
-    if (typeof page === 'number' && page >= 1 && page <= this.totalPages() && page !== this.currentPage()) {
+    if (!this.loading() && typeof page === 'number' && page >= 1 && page <= this.totalPages() && page !== this.currentPage()) {
+      this.pendingPage.set(page);
       this.pageChange.emit(page);
     }
   }

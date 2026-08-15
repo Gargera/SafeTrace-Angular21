@@ -23,7 +23,7 @@ import { FormField } from '../../../../../../shared/components/form-field/form-f
 @Component({
   selector: 'app-location-picker',
   standalone: true,
-  imports: [CommonModule, MapLocationPickerComponent],
+  imports: [CommonModule, MapLocationPickerComponent, ButtonComponent],
   templateUrl: './location-picker.html',
 })
 export class LocationPicker implements OnChanges {
@@ -53,7 +53,14 @@ export class LocationPicker implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['userInfo'] && this.userInfo()) {
       const info = this.userInfo()!;
-      if (info.homeLatitude && info.homeLongitude) {
+      const currentLat = this.selectedLat();
+      const currentLng = this.selectedLng();
+
+      if (
+        info.homeLatitude &&
+        info.homeLongitude &&
+        (info.homeLatitude !== currentLat || info.homeLongitude !== currentLng)
+      ) {
         this.setLocation(info.homeLatitude, info.homeLongitude);
       }
     }

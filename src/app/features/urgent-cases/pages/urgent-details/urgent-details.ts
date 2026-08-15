@@ -29,6 +29,7 @@ import { HasPermissionDirective } from '../../../../shared/directives/has-permis
 import { Permissions } from '../../../../core/constants/Permissions';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
+import { CaseDetailsSkeletonComponent } from '../../../../shared/components/skeletons/case-details-skeleton/case-details-skeleton.component';
 
 @Component({
   selector: 'urgent-details',
@@ -46,6 +47,7 @@ import { ViewProfilePopup } from '../../../../shared/components/view-profile-pop
     HasPermissionDirective,
     ButtonComponent,
     ViewProfilePopup,
+    CaseDetailsSkeletonComponent,
   ],
   templateUrl: './urgent-details.html',
   styleUrls: ['./urgent-details.css'],
@@ -79,6 +81,7 @@ export class UrgentDetails implements OnInit {
   showFoundedPopup = signal(false);
   isFounding = signal(false);
   showPermanentDeleteConfirmation = signal(false);
+  isPermanentDeleting = signal(false);
   showLocationModal = signal(false);
 
   caseDetails = signal<UrgentCaseDetailResponse | null>(null);
@@ -108,21 +111,7 @@ export class UrgentDetails implements OnInit {
   currentIndex = signal(0);
 
   constructor() {
-    this.destroyRef.onDestroy(() => {
-      const id = this.caseDetails()?.id;
-      if (id) {
-        this.cacheService.set(
-          `UrgentDetails_Modals_${id}`,
-          {
-            showDelete: this.showDeleteConfirmation(),
-            showFounded: this.showFoundedPopup(),
-            showLocation: this.showLocationModal(),
-            showPermanentDelete: this.showPermanentDeleteConfirmation()
-          },
-          300000
-        );
-      }
-    });
+    // Modal states should not be cached across navigation
   }
 
   ngOnInit(): void {
@@ -161,22 +150,14 @@ export class UrgentDetails implements OnInit {
           if (apiRes.success && apiRes.data) {
             this.caseDetails.set(apiRes.data);
 
-            const cachedModals = this.cacheService.get<any>(`UrgentDetails_Modals_${apiRes.data.id}`);
-            if (cachedModals) {
-              this.showDeleteConfirmation.set(cachedModals.showDelete || false);
-              this.showFoundedPopup.set(cachedModals.showFounded || false);
-              this.showLocationModal.set(cachedModals.showLocation || false);
-              this.showPermanentDeleteConfirmation.set(cachedModals.showPermanentDelete || false);
-            }
+            const hasFounded = this.cacheService.has(`FoundedPopup_Urgent_${apiRes.data.id}`);
+            if (hasFounded) this.showFoundedPopup.set(true);
 
             if (apiRes.data.photos?.length) {
-              const primary =
-                apiRes.data.photos.find((x) => x.isPrimary) ?? apiRes.data.photos[0];
+              const primary = apiRes.data.photos.find((x) => x.isPrimary) ?? apiRes.data.photos[0];
 
               this.selectedMedia.set(primary);
-              this.currentIndex.set(
-                apiRes.data.photos.findIndex((x) => x.id === primary.id),
-              );
+              this.currentIndex.set(apiRes.data.photos.findIndex((x) => x.id === primary.id));
             }
           }
           this.loading.set(false);
@@ -191,13 +172,12 @@ export class UrgentDetails implements OnInit {
     if (path.startsWith('http')) {
       return path;
     }
-    return `${this.apiUrl}${path}`;
+    return `${environment.filesBaseUrl}/${path}`;
   }
 
   changeMedia(media: CasePhotoResponse): void {
     this.selectedMedia.set(media);
-    const index =
-      this.caseDetails()?.photos.findIndex((x) => x.id === media.id) ?? 0;
+    const index = this.caseDetails()?.photos.findIndex((x) => x.id === media.id) ?? 0;
     this.currentIndex.set(index);
   }
 
@@ -291,6 +271,11 @@ export class UrgentDetails implements OnInit {
   }
 
   deleteCase(): void {
+    if (this.caseDetails()?.status === CaseStatus.Found) {
+      this.snackbar.error('لا يمكن حذف حالة تم العثور عليها');
+      return;
+    }
+
     this.showDeleteConfirmation.set(true);
   }
 
@@ -303,6 +288,12 @@ export class UrgentDetails implements OnInit {
     const id = this.caseDetails()?.id;
     if (!id) return;
 
+    if (this.caseDetails()?.status === CaseStatus.Found) {
+      this.snackbar.error('لا يمكن حذف حالة تم العثور عليها');
+      this.showDeleteConfirmation.set(false);
+      return;
+    }
+
     this.deleting.set(true);
 
     this.UrgentDetailsService.deleteCase(id)
@@ -310,16 +301,17 @@ export class UrgentDetails implements OnInit {
       .subscribe({
         next: (res) => {
           this.deleting.set(false);
-          this.showDeleteConfirmation.set(false);
 
           if (res.success) {
+            this.showDeleteConfirmation.set(false);
             this.snackbar.success('تم حذف الحالة بنجاح');
             this.router.navigate(['/urgent']);
+          } else {
+            this.snackbar.error(res.message || 'حدث خطأ أثناء حذف الحالة');
           }
         },
         error: (err: unknown) => {
           this.deleting.set(false);
-          this.showDeleteConfirmation.set(false);
           const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء حذف الحالة');
           this.snackbar.error(errorMessage);
         },
@@ -327,6 +319,11 @@ export class UrgentDetails implements OnInit {
   }
 
   openPermanentDeleteConfirmation(): void {
+    if (this.caseDetails()?.status === CaseStatus.Found) {
+      this.snackbar.error('لا يمكن حذف حالة تم العثور عليها');
+      return;
+    }
+
     this.showPermanentDeleteConfirmation.set(true);
   }
 
@@ -343,21 +340,27 @@ export class UrgentDetails implements OnInit {
   }
 
   confirmPermanentDelete(): void {
+    if (this.isPermanentDeleting()) return;
     const id = this.caseDetails()?.id;
     if (!id) return;
+
+    this.isPermanentDeleting.set(true);
 
     this.UrgentDetailsService.permanentDelete(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          this.showPermanentDeleteConfirmation.set(false);
+          this.isPermanentDeleting.set(false);
           if (res.success) {
+            this.showPermanentDeleteConfirmation.set(false);
             this.snackbar.success('تم حذف الحالة نهائياً');
             this.router.navigate(['/admin/cases-management']);
+          } else {
+            this.snackbar.error(res.message || 'حدث خطأ أثناء الحذف النهائي');
           }
         },
         error: (err: unknown) => {
-          this.showPermanentDeleteConfirmation.set(false);
+          this.isPermanentDeleting.set(false);
           const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء الحذف النهائي');
           this.snackbar.error(errorMessage);
         },

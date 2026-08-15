@@ -1,406 +1,460 @@
 <div class="min-h-screen bg-background">
   <div class="mx-auto max-w-7xl space-y-6 px-4 py-6">
-
     <section class="space-y-3 pb-2">
       <app-header title="تفاصيل الحالة"></app-header>
     </section>
 
     @if (loading()) {
-    <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-12 text-center">
-      <p class="text-on-surface-variant">جاري تحميل بيانات الحالة...</p>
-    </div>
-    }
+      <app-case-details-skeleton></app-case-details-skeleton>
+    } @else if (caseDetails()) {
+      <div class="flex flex-col lg:flex-row items-start gap-6">
+        <!-- ================= اليمين: الميديا وصور الحالة + الأزرار ================= -->
+        <div
+          class="w-full lg:w-5/12 overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 shadow-sm"
+        >
+          <!-- Main Media -->
+          <div class="group relative overflow-hidden rounded-xl">
+            @if (selectedMedia()?.type === 'Video') {
+              <video controls class="h-137.5 w-full rounded-xl object-cover">
+                <source [src]="getImageUrl(selectedMedia()?.imagePath)" type="video/mp4" />
+              </video>
+            } @else {
+              <img
+                class="h-137.5 w-full cursor-pointer rounded-xl object-cover"
+                [src]="getImageUrl(selectedMedia()?.imagePath)"
+                (click)="openLightbox(currentIndex())"
+              />
+            }
 
-    @else if (caseDetails()) {
-    <div class="flex flex-col lg:flex-row items-start gap-6">
+            <!-- Modern nav arrows -->
+            @if ((caseDetails()?.photos?.length ?? 0) > 1) {
+              <button
+                class="absolute left-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md transition hover:bg-black/50"
+                (click)="previousMedia()"
+                aria-label="السابق"
+              >
+                <span class="material-symbols-outlined">chevron_left</span>
+              </button>
 
-      <!-- ================= اليمين: الميديا وصور الحالة + الأزرار ================= -->
-      <div
-        class="w-full lg:w-5/12 overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 shadow-sm">
+              <button
+                class="absolute right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md transition hover:bg-black/50"
+                (click)="nextMedia()"
+                aria-label="التالي"
+              >
+                <span class="material-symbols-outlined">chevron_right</span>
+              </button>
 
-        <!-- Main Media -->
-        <div class="group relative overflow-hidden rounded-xl">
-
-          @if(selectedMedia()?.type === 'Video'){
-            <video controls class="h-137.5 w-full rounded-xl object-cover">
-              <source [src]="getImageUrl(selectedMedia()?.imagePath)" type="video/mp4">
-            </video>
-          } @else {
-            <img
-              class="h-137.5 w-full cursor-pointer rounded-xl object-cover"
-              [src]="getImageUrl(selectedMedia()?.imagePath)"
-              (click)="openLightbox(currentIndex())">
-          }
-
-          <!-- Modern nav arrows -->
-          @if((caseDetails()?.photos?.length ?? 0) > 1) {
-            <button
-              class="absolute left-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md transition hover:bg-black/50"
-              (click)="previousMedia()"
-              aria-label="السابق">
-              <span class="material-symbols-outlined text-[20px]">chevron_left</span>
-            </button>
-
-            <button
-              class="absolute right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md transition hover:bg-black/50"
-              (click)="nextMedia()"
-              aria-label="التالي">
-              <span class="material-symbols-outlined text-[20px]">chevron_right</span>
-            </button>
-
-            <!-- Counter pill -->
-            <div class="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/20 bg-black/40 px-3 py-1 text-xs font-medium text-white backdrop-blur-md">
-              {{ currentIndex() + 1 }} / {{ caseDetails()?.photos?.length }}
-            </div>
-          }
-        </div>
-
-        <!-- Gallery -->
-        @if(caseDetails()?.photos?.length){
-          <div class="mt-4 flex gap-3 overflow-x-auto pb-2">
-            @for(photo of caseDetails()!.photos; track photo.id){
-              @if(photo.type ==='Video'){
-                <div
-                  class="relative h-20 w-20 shrink-0 cursor-pointer overflow-hidden rounded-lg border-2 transition"
-                  [class.border-primary]="selectedMedia()?.id===photo.id"
-                  [class.border-outline-variant]="selectedMedia()?.id!==photo.id"
-                  (click)="changeMedia(photo)">
-                  <video muted class="h-full w-full object-cover">
-                    <source [src]="getImageUrl(photo.imagePath)" type="video/mp4">
-                  </video>
-                  <div class="absolute inset-0 flex items-center justify-center bg-black/35">
-                    <span class="material-symbols-outlined text-white text-[18px]">play_arrow</span>
-                  </div>
-                </div>
-              } @else {
-                <img
-                  [src]="getImageUrl(photo.imagePath)"
-                  class="h-20 w-20 shrink-0 cursor-pointer rounded-lg border-2 object-cover transition hover:scale-105"
-                  [class.border-primary]="selectedMedia()?.id===photo.id"
-                  [class.border-outline-variant]="selectedMedia()?.id!==photo.id"
-                  (click)="changeMedia(photo)">
-              }
+              <!-- Counter pill -->
+              <div
+                class="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/20 bg-black/40 px-3 py-1 text-xs font-medium text-white backdrop-blur-md"
+              >
+                {{ currentIndex() + 1 }} / {{ caseDetails()?.photos?.length }}
+              </div>
             }
           </div>
-        }
 
-        <!-- ================= أزرار صاحب الحالة (User Owner Buttons) ================= -->
-        @if (
-          isOwner() &&
-          !isAdminPage() &&
-          caseDetails()?.status !== CaseStatus.Found &&
-          caseDetails()?.status !== CaseStatus.Expired
-        ) {
-        <div class="mt-5 flex flex-wrap items-center gap-2.5 border-t border-outline-variant pt-4">
+          <!-- Gallery -->
+          @if (caseDetails()?.photos?.length) {
+            <div class="mt-4 flex gap-3 overflow-x-auto pb-2">
+              @for (photo of caseDetails()!.photos; track photo.id) {
+                @if (photo.type === 'Video') {
+                  <div
+                    class="relative h-20 w-20 shrink-0 cursor-pointer overflow-hidden rounded-lg border-2 transition"
+                    [class.border-primary]="selectedMedia()?.id === photo.id"
+                    [class.border-outline-variant]="selectedMedia()?.id !== photo.id"
+                    (click)="changeMedia(photo)"
+                  >
+                    <video muted class="h-full w-full object-cover">
+                      <source [src]="getImageUrl(photo.imagePath)" type="video/mp4" />
+                    </video>
+                    <div class="absolute inset-0 flex items-center justify-center bg-black/35">
+                      <span class="material-symbols-outlined text-white text-[18px]"
+                        >play_arrow</span
+                      >
+                    </div>
+                  </div>
+                } @else {
+                  <img
+                    [src]="getImageUrl(photo.imagePath)"
+                    class="h-20 w-20 shrink-0 cursor-pointer rounded-lg border-2 object-cover transition hover:scale-105"
+                    [class.border-primary]="selectedMedia()?.id === photo.id"
+                    [class.border-outline-variant]="selectedMedia()?.id !== photo.id"
+                    (click)="changeMedia(photo)"
+                  />
+                }
+              }
+            </div>
+          }
 
-          <app-button
-            *hasPermission="Permissions.UrgentCases.MarkAsFounded"
-            (onClick)="openFoundedPopup()"
-            variant="primary"
-            extraClass="flex items-center gap-1.5 rounded-xl !bg-[#009688] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#00796b]">
-            <span class="material-symbols-outlined text-[18px]">beenhere</span>
-            <span>تم العثور</span>
-          </app-button>
-
-          <app-button
-            (onClick)="editCase()"
-            variant="primary"
-            extraClass="flex items-center gap-1.5 rounded-xl !bg-[#0265DC] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#0252b5]">
-            <span class="material-symbols-outlined text-[18px]">edit</span>
-            <span>تعديل</span>
-          </app-button>
-
-          <app-button
-            (onClick)="deleteCase()"
-            variant="primary"
-            extraClass="flex items-center gap-1.5 rounded-xl !bg-[#C61A1A] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
-            <span class="material-symbols-outlined text-[18px]">delete</span>
-            <span>حذف</span>
-          </app-button>
-
-        </div>
-        }
-
-        @if (
-          !isAdminPage() &&
-          !isOwner() &&
-          caseDetails()?.status !== CaseStatus.Found &&
-          caseDetails()?.status !== CaseStatus.Expired
-        ) {
-<app-button
-  variant="secondary"
-  (onClick)="startChat(caseDetails()?.id!)"
-  extraClass="mt-5 w-full justify-center gap-2 rounded-xl
-             border-t border-outline-variant
-             py-4
-             hover:border-primary hover:bg-primary/5 hover:text-primary">
-
-  <span class="material-symbols-outlined material-icon-sm">
-    chat
-  </span>
-
-  تواصل مع المُبلّغ
-</app-button>
-        }
-
-        <!-- ================= أزرار الأدمن والـ Moderator (Admin Buttons) ================= -->
-       <!-- ================= أزرار الأدمن والـ Moderator (Admin Buttons) ================= -->
-        @let status = caseDetails()?.status;
-
-        @if (isAdminPage()) {
-          <div class="mt-5 flex flex-wrap items-center gap-2.5 border-t border-outline-variant pt-4">
-            @if(!isOwner()){
-              <app-button
-                variant="secondary"
-                (onClick)="startChat(caseDetails()?.id!)"
-                extraClass="flex items-center gap-1.5 rounded-xl">
-                <span class="material-symbols-outlined material-icon-sm">chat</span>
-                <span>تواصل مع المُبلّغ</span>
-              </app-button>
-            }
-
-            @if (status === CaseStatus.Pending || status === CaseStatus.Active) {
+          <!-- ================= أزرار صاحب الحالة (User Owner Buttons) ================= -->
+          @if (
+            isOwner() &&
+            !isAdminPage() &&
+            caseDetails()?.status !== CaseStatus.Found &&
+            caseDetails()?.status !== CaseStatus.Expired
+          ) {
+            <div
+              class="mt-5 flex flex-wrap items-center gap-2.5 border-t border-outline-variant pt-4"
+            >
               <app-button
                 *hasPermission="Permissions.UrgentCases.MarkAsFounded"
                 (onClick)="openFoundedPopup()"
                 variant="primary"
-                extraClass="flex items-center gap-1.5 rounded-xl !bg-[#009688] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#00796b]">
-                <span class="material-symbols-outlined text-[18px]">beenhere</span>
+                extraClass="flex items-center gap-1.5 rounded-xl !bg-[#009688] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#00796b]"
+              >
+                <span class="material-symbols-outlined">beenhere</span>
                 <span>تم العثور</span>
               </app-button>
-              
+
+              <app-button
+                (onClick)="editCase()"
+                variant="primary"
+                extraClass="flex items-center gap-1.5 rounded-xl !bg-[#0265DC] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#0252b5]"
+              >
+                <span class="material-symbols-outlined">edit</span>
+                <span>تعديل</span>
+              </app-button>
+
+              <app-button
+                (onClick)="deleteCase()"
+                variant="primary"
+                extraClass="flex items-center gap-1.5 rounded-xl !bg-[#C61A1A] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#a11313]"
+              >
+                <span class="material-symbols-outlined">delete</span>
+                <span>حذف</span>
+              </app-button>
+            </div>
+          }
+
+          @if (
+            !isAdminPage() &&
+            !isOwner() &&
+            caseDetails()?.status !== CaseStatus.Found &&
+            caseDetails()?.status !== CaseStatus.Expired
+          ) {
+            <app-button
+              variant="secondary"
+              (onClick)="startChat(caseDetails()?.id!)"
+              extraClass="mt-5 w-full justify-center gap-2 rounded-xl
+             border-t border-outline-variant
+             py-4
+             hover:border-primary hover:bg-primary/5 hover:text-primary"
+            >
+              <span class="material-symbols-outlined"> chat </span>
+
+              تواصل مع المُبلّغ
+            </app-button>
+          }
+
+          <!-- ================= أزرار الأدمن والـ Moderator (Admin Buttons) ================= -->
+          <!-- ================= أزرار الأدمن والـ Moderator (Admin Buttons) ================= -->
+          @let status = caseDetails()?.status;
+
+          @if (isAdminPage()) {
+            <div
+              class="mt-5 flex flex-wrap items-center gap-2.5 border-t border-outline-variant pt-4"
+            >
+              @if (!isOwner()) {
+                <app-button
+                  variant="secondary"
+                  (onClick)="startChat(caseDetails()?.id!)"
+                  extraClass="flex items-center gap-1.5 rounded-xl"
+                >
+                  <span class="material-symbols-outlined">chat</span>
+                  <span>تواصل مع المُبلّغ</span>
+                </app-button>
+              }
+
+              @if (status === CaseStatus.Pending || status === CaseStatus.Active) {
+                <app-button
+                  *hasPermission="Permissions.UrgentCases.MarkAsFounded"
+                  (onClick)="openFoundedPopup()"
+                  variant="primary"
+                  extraClass="flex items-center gap-1.5 rounded-xl !bg-[#009688] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#00796b]"
+                >
+                  <span class="material-symbols-outlined">beenhere</span>
+                  <span>تم العثور</span>
+                </app-button>
+              }
+
+              @if (status !== CaseStatus.Found) {
+                <app-button
+                  *hasPermission="Permissions.UrgentCases.HardDelete"
+                  (onClick)="openPermanentDeleteConfirmation()"
+                  variant="primary"
+                  extraClass="flex items-center gap-1.5 rounded-xl !bg-[#C61A1A] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#a11313]"
+                >
+                  <span class="material-symbols-outlined">delete_forever</span>
+                  <span>حذف نهائي</span>
+                </app-button>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- ================= اليسار: تفاصيل الحالة (كارت واحد يجمع كل شيء) ================= -->
+        <div class="w-full lg:w-7/12">
+          <div
+            class="divide-y divide-outline-variant overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-sm"
+          >
+            <!-- رأس الكارت: الاسم + العنوان + كود الحالة -->
+            <div class="space-y-4 p-6">
+              <div class="flex items-start justify-between gap-3">
+                <h1 class="text-2xl font-bold text-on-background sm:text-3xl">
+                  {{ caseDetails()?.fName }} {{ caseDetails()?.sName }} {{ caseDetails()?.tName }}
+                  {{ caseDetails()?.lName }}
+                </h1>
+              </div>
+
+              <p class="flex items-center gap-1.5 text-on-surface-variant">
+                <span class="material-symbols-outlined">location_on</span>
+                {{ caseDetails()?.government }} - {{ caseDetails()?.city }} -
+                {{ caseDetails()?.street }}
+              </p>
+
+              <!-- شبكة المعلومات -->
+              <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div class="rounded-lg border border-outline-variant p-4">
+                  <p class="text-xs text-on-surface-variant">كود الحالة</p>
+                  <h3 class="mt-2 font-semibold">{{ caseDetails()?.caseCode }}</h3>
+                </div>
+
+                <div class="rounded-lg border border-outline-variant p-4">
+                  <p class="text-xs text-on-surface-variant">العمر</p>
+                  <h3 class="mt-2 font-semibold">{{ caseDetails()?.age }}</h3>
+                </div>
+
+                <div class="rounded-lg border border-outline-variant p-4">
+                  <p class="text-xs text-on-surface-variant">الفئة العمرية</p>
+                  <div class="mt-2">
+                    <span [appAgeBadgeDirective]="getAgeCategoryEnum()"></span>
+                  </div>
+                </div>
+
+                <div class="rounded-lg border border-outline-variant p-4">
+                  <p class="text-xs text-on-surface-variant">الجنس</p>
+                  <div class="mt-2">
+                    <span [appGenderBadgeDirective]="caseDetails()!.gender"></span>
+                  </div>
+                </div>
+
+                <div class="rounded-lg border border-outline-variant p-4">
+                  <p class="text-xs text-on-surface-variant">نوع الحالة</p>
+                  <div class="mt-2">
+                    <span [appCaseTypeBadgeDirective]="caseDetails()!.caseType"></span>
+                  </div>
+                </div>
+
+                @if (isAdminPage() || isMyCasePage()) {
+                  <div class="rounded-lg border border-outline-variant p-4">
+                    <p class="text-xs text-on-surface-variant">حالة البلاغ</p>
+
+                    <div class="mt-2">
+                      <span [appCaseStatusBadgeDirective]="caseDetails()!.status"></span>
+                    </div>
+                  </div>
+                }
+
+                <div class="rounded-lg border border-outline-variant p-4">
+                  <p class="text-xs text-on-surface-variant">رقم التواصل</p>
+                  <h3 class="mt-2 font-semibold">{{ caseDetails()?.communicationPhone || '-' }}</h3>
+                </div>
+              </div>
+            </div>
+
+            <!-- كارت الناشر -->
+            @if (caseDetails()?.user && !(isOwner() && isMyCasePage())) {
+              <div class="p-6">
+                <div
+                  (click)="openPublisherProfile()"
+                  class="group/pub flex cursor-pointer items-center gap-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-low p-3.5 transition-all hover:border-primary hover:bg-primary/5"
+                >
+                  @if (caseDetails()?.user?.profileImage) {
+                    <img
+                      [src]="getImageUrl(caseDetails()!.user!.profileImage!)"
+                      class="h-11 w-11 rounded-full border border-outline-variant object-cover group-hover/pub:border-primary"
+                      alt="صورة الناشر"
+                    />
+                  } @else {
+                    <div
+                      class="flex h-11 w-11 items-center justify-center rounded-full border border-primary/20 bg-primary/15 text-sm font-bold text-primary group-hover/pub:bg-primary group-hover/pub:text-on-primary"
+                    >
+                      {{
+                        (
+                          (caseDetails()?.user?.fName || '').charAt(0) +
+                          (caseDetails()?.user?.lName || '').charAt(0)
+                        ).toUpperCase()
+                      }}
+                    </div>
+                  }
+                  <div class="flex min-w-0 flex-1 flex-col">
+                    <span class="text-xs text-on-surface-variant">ناشر الحالة (المُبلّغ)</span>
+                    <h4
+                      class="flex items-center gap-1.5 text-base font-bold text-on-surface group-hover/pub:text-primary"
+                    >
+                      {{
+                        isOwner()
+                          ? 'أنت (صاحب الحالة)'
+                          : caseDetails()?.user?.fName + ' ' + caseDetails()?.user?.lName
+                      }}
+                      <span
+                        class="material-symbols-outlined text-on-surface-variant group-hover/pub:text-primary"
+                        >open_in_new</span
+                      >
+                    </h4>
+                  </div>
+                </div>
+              </div>
             }
 
-            <app-button
-              *hasPermission="Permissions.UrgentCases.HardDelete"
-              (onClick)="openPermanentDeleteConfirmation()"
-              variant="primary"
-              extraClass="flex items-center gap-1.5 rounded-xl !bg-[#C61A1A] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:!bg-[#a11313]">
-              <span class="material-symbols-outlined text-[18px]">delete_forever</span>
-              <span>حذف نهائي</span>
-            </app-button>
-          </div>
-        }
-      </div>
-
-      <!-- ================= اليسار: تفاصيل الحالة (كارت واحد يجمع كل شيء) ================= -->
-      <div class="w-full lg:w-7/12">
-        <div class="divide-y divide-outline-variant overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-sm">
-
-          <!-- رأس الكارت: الاسم + العنوان + كود الحالة -->
-          <div class="space-y-4 p-6">
-            <div class="flex items-start justify-between gap-3">
-              <h1 class="text-2xl font-bold text-on-background sm:text-3xl">
-                {{caseDetails()?.fName}} {{caseDetails()?.sName}} {{caseDetails()?.tName}} {{caseDetails()?.lName}}
-              </h1>
+            <!-- الوصف -->
+            <div class="p-6">
+              <h3 class="mb-3 text-lg font-bold text-on-surface">الوصف</h3>
+              <p class="whitespace-pre-line leading-8 text-on-surface-variant">
+                {{ caseDetails()?.description || 'لا يوجد وصف' }}
+              </p>
             </div>
 
-            <p class="flex items-center gap-1.5 text-on-surface-variant">
-              <span class="material-symbols-outlined text-[18px]">location_on</span>
-              {{caseDetails()?.government}} - {{caseDetails()?.city}} - {{caseDetails()?.street}}
-            </p>
-
-            <!-- شبكة المعلومات -->
-            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-
-              <div class="rounded-lg border border-outline-variant p-4">
-                <p class="text-xs text-on-surface-variant">كود الحالة</p>
-                <h3 class="mt-2 font-semibold">{{caseDetails()?.caseCode}}</h3>
-              </div>
-
-              <div class="rounded-lg border border-outline-variant p-4">
-                <p class="text-xs text-on-surface-variant">العمر</p>
-                <h3 class="mt-2 font-semibold">{{caseDetails()?.age}}</h3>
-              </div>
-
-              <div class="rounded-lg border border-outline-variant p-4">
-                <p class="text-xs text-on-surface-variant">الفئة العمرية</p>
-                <div class="mt-2">
-                  <span [appAgeBadgeDirective]="getAgeCategoryEnum()"></span>
+            <!-- الموقع الجغرافي -->
+            @if (caseDetails()?.latitude && caseDetails()?.longitude) {
+              <app-button
+                variant="text"
+                (onClick)="openLocationModal()"
+                extraClass="group flex w-full items-center justify-between rounded-l border border-primary/20 bg-[#EFF4FF] px-5 py-3.5 text-start transition-all duration-200 hover:border-primary/40 hover:bg-primary/10"
+              >
+                <div class="flex items-center gap-3">
+                  <div
+                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"
+                  >
+                    <span class="material-symbols-outlined text-xl">location_on</span>
+                  </div>
+                  <div>
+                    <span class="block text-xs font-semibold text-primary">الموقع على الخريطة</span>
+                    <span class="text-xs text-on-surface-variant line-clamp-1"
+                      >انقر لمشاهدة الموقع بدقة</span
+                    >
+                  </div>
                 </div>
-              </div>
-
-              <div class="rounded-lg border border-outline-variant p-4">
-                <p class="text-xs text-on-surface-variant">الجنس</p>
-                <div class="mt-2">
-                  <span [appGenderBadgeDirective]="caseDetails()!.gender"></span>
-                </div>
-              </div>
-
-              <div class="rounded-lg border border-outline-variant p-4">
-                <p class="text-xs text-on-surface-variant">نوع الحالة</p>
-                <div class="mt-2">
-                  <span [appCaseTypeBadgeDirective]="caseDetails()!.caseType"></span>
-                </div>
-              </div>
-
-     @if (isAdminPage() || isMyCasePage()) {
-  <div class="rounded-lg border border-outline-variant p-4">
-    <p class="text-xs text-on-surface-variant">
-      حالة البلاغ
-    </p>
-
-    <div class="mt-2">
-      <span [appCaseStatusBadgeDirective]="caseDetails()!.status"></span>
-    </div>
-  </div>
-}
-
-              <div class="rounded-lg border border-outline-variant p-4">
-                <p class="text-xs text-on-surface-variant">رقم التواصل</p>
-                <h3 class="mt-2 font-semibold">{{caseDetails()?.communicationPhone || '-'}}</h3>
-              </div>
-
-            </div>
+                <span
+                  class="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform"
+                  >chevron_left</span
+                >
+              </app-button>
+            }
           </div>
-
-          <!-- كارت الناشر -->
-          @if (caseDetails()?.user && !(isOwner() && isMyCasePage())) {
-          <div class="p-6">
-            <div (click)="openPublisherProfile()"
-              class="group/pub flex cursor-pointer items-center gap-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-low p-3.5 transition-all hover:border-primary hover:bg-primary/5">
-              @if (caseDetails()?.user?.profileImage) {
-              <img [src]="getImageUrl(caseDetails()?.user?.profileImage!)"
-                class="h-11 w-11 rounded-full border border-outline-variant object-cover group-hover/pub:border-primary" alt="صورة الناشر" />
-              } @else {
-              <div class="flex h-11 w-11 items-center justify-center rounded-full border border-primary/20 bg-primary/15 text-sm font-bold text-primary group-hover/pub:bg-primary group-hover/pub:text-on-primary">
-                {{ ((caseDetails()?.user?.fName?.[0] ?? '') + (caseDetails()?.user?.lName?.[0] ?? '')).toUpperCase() }}
-              </div>
-              }
-              <div class="flex min-w-0 flex-1 flex-col">
-                <span class="text-xs text-on-surface-variant">ناشر الحالة (المُبلّغ)</span>
-                <h4 class="flex items-center gap-1.5 text-base font-bold text-on-surface group-hover/pub:text-primary">
-                  {{ isOwner() ? 'أنت (صاحب الحالة)' : (caseDetails()?.user?.fName + ' ' + caseDetails()?.user?.lName) }}
-                  <span class="material-symbols-outlined text-[18px] text-on-surface-variant group-hover/pub:text-primary">open_in_new</span>
-                </h4>
-              </div>
-            </div>
-          </div>
-          }
-
-          <!-- الوصف -->
-          <div class="p-6">
-            <h3 class="mb-3 text-lg font-bold text-on-surface">الوصف</h3>
-            <p class="whitespace-pre-line leading-8 text-on-surface-variant">
-              {{caseDetails()?.description || 'لا يوجد وصف'}}
-            </p>
-          </div>
-
-          <!-- الموقع الجغرافي -->
-          @if(caseDetails()?.latitude && caseDetails()?.longitude){
-<button
-  (click)="openLocationModal()"
-  class="group flex w-full items-center justify-between
-         rounded-l border border-primary/20
-         bg-[#EFF4FF] px-5 py-3.5
-         text-start transition-all duration-200
-         hover:border-primary/40 hover:bg-primary/10">
-
-  <div class="flex items-center gap-3">
-
-    <span
-      class="material-symbols-outlined text-primary/70
-             transition-transform duration-200
-             group-hover:scale-110 group-hover:text-primary">
-      location_on
-    </span>
-
-    <span class="font-semibold text-primary/90">
-      عرض الموقع على الخريطة
-    </span>
-
-  </div>
-
-  <span
-    class="material-symbols-outlined text-primary/70
-           transition-colors duration-200
-           group-hover:text-primary">
-    open_in_full
-  </span>
-
-</button>
-
-
-          }
-
         </div>
       </div>
-
-    </div>
-    }
-
-    @else {
-    <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-12 text-center">
-      <h2 class="mb-2 text-xl font-bold">الحالة غير موجودة</h2>
-      <p class="text-on-surface-variant">لم يتم العثور على بيانات هذه الحالة.</p>
-    </div>
+    } @else {
+      <div
+        class="rounded-xl border border-outline-variant bg-surface-container-lowest p-12 text-center"
+      >
+        <h2 class="mb-2 text-xl font-bold">الحالة غير موجودة</h2>
+        <p class="text-on-surface-variant">لم يتم العثور على بيانات هذه الحالة.</p>
+      </div>
     }
   </div>
 
   <!-- ================= Modals ================= -->
 
   <!-- موديول بوب أب الحذف العادي -->
-  @if(showDeleteConfirmation()){
-  <app-confirmation-modal title="حذف الحالة"
-    message="هل أنت متأكد أنك تريد حذف هذه الحالة؟ لا يمكن التراجع عن هذا الإجراء." confirmText="حذف" cancelText="إلغاء"
-    icon="delete" variant="danger" (confirm)="confirmDelete()" (cancel)="cancelDelete()">
-  </app-confirmation-modal>
+  @if (showDeleteConfirmation()) {
+    <app-confirmation-modal
+      title="حذف الحالة"
+      message="هل أنت متأكد أنك تريد حذف هذه الحالة؟ لا يمكن التراجع عن هذا الإجراء."
+      confirmText="حذف"
+      cancelText="إلغاء"
+      icon="delete"
+      variant="danger"
+      [confirmLoading]="deleting()"
+      (confirm)="confirmDelete()"
+      (cancel)="cancelDelete()"
+    >
+    </app-confirmation-modal>
   }
 
   <!-- موديول بوب أب الحذف النهائي للأدمن -->
-  @if(showPermanentDeleteConfirmation()){
-  <app-confirmation-modal title="حذف نهائي"
-    message="هل أنت متأكد أنك تريد حذف هذه الحالة نهائياً من النظام؟ هذا الإجراء لا يمكن التراجع عنه."
-    confirmText="حذف نهائي" cancelText="إلغاء" variant="danger" icon="delete_forever" (confirm)="confirmPermanentDelete()"
-    (cancel)="cancelPermanentDelete()">
-  </app-confirmation-modal>
+  @if (showPermanentDeleteConfirmation()) {
+    <app-confirmation-modal
+      title="حذف نهائي"
+      message="هل أنت متأكد أنك تريد حذف هذه الحالة نهائياً من النظام؟ هذا الإجراء لا يمكن التراجع عنه."
+      confirmText="حذف نهائي"
+      cancelText="إلغاء"
+      variant="danger"
+      icon="delete_forever"
+      [confirmLoading]="isPermanentDeleting()"
+      (confirm)="confirmPermanentDelete()"
+      (cancel)="cancelPermanentDelete()"
+    >
+    </app-confirmation-modal>
   }
 
   <!-- موديول بوب أب تم العثور عليه -->
-  @if(showFoundedPopup()){
-  <app-founded-popup
-    [caseId]="caseDetails()?.id"
-    [contextKey]="'FoundedPopup_Urgent_' + caseDetails()?.id"
-    (confirmed)="confirmFounded($event)"
-    (cancel)="cancelFounded()">
-  </app-founded-popup>
+  @if (showFoundedPopup()) {
+    <app-founded-popup
+      [caseId]="caseDetails()?.id"
+      [isSubmitting]="isFounding()"
+      [contextKey]="'FoundedPopup_Urgent_' + caseDetails()?.id"
+      (confirmed)="confirmFounded($event)"
+      (cancel)="cancelFounded()"
+    >
+    </app-founded-popup>
   }
 
   <!-- موديول عرض الموقع للقراءة فقط -->
-  @if(showLocationModal()){
-  <app-map-location-picker [isOpen]="showLocationModal()" [readOnly]="true" [initialLat]="caseDetails()!.latitude!"
-    [initialLng]="caseDetails()!.longitude!" [initialAddress]="''" (cancel)="closeLocationModal()">
-  </app-map-location-picker>
+  @if (showLocationModal()) {
+    <app-map-location-picker
+      [isOpen]="showLocationModal()"
+      [readOnly]="true"
+      [initialLat]="caseDetails()!.latitude!"
+      [initialLng]="caseDetails()!.longitude!"
+      [initialAddress]="''"
+      (cancel)="closeLocationModal()"
+    >
+    </app-map-location-picker>
   }
 
   <!-- موديول الـ Lightbox لتكبير الصور -->
-  @if(lightboxVisible()){
-  <div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
-    <button class="absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition hover:bg-white/20" (click)="closeLightbox()">
-      <span class="material-symbols-outlined">close</span>
-    </button>
+  @if (lightboxVisible()) {
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="نافذة منبثقة"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+    >
+      <button
+        class="absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition hover:bg-white/20"
+        (click)="closeLightbox()"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
 
-    <button class="absolute left-5 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition hover:bg-white/20" (click)="previousMedia()">
-      <span class="material-symbols-outlined text-[24px]">chevron_left</span>
-    </button>
+      <button
+        class="absolute left-5 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition hover:bg-white/20"
+        (click)="previousMedia()"
+      >
+        <span class="material-symbols-outlined">chevron_left</span>
+      </button>
 
-    @if(selectedMedia()?.type === FileType.Video){
-    <video controls autoplay class="max-h-[90vh] max-w-[90vw] rounded-xl">
-      <source [src]="getImageUrl(selectedMedia()?.imagePath)" type="video/mp4">
-    </video>
-    } @else {
-    <img class="max-h-[90vh] max-w-[90vw] rounded-xl" [src]="getImageUrl(selectedMedia()?.imagePath)">
-    }
+      @if (selectedMedia()?.type === FileType.Video) {
+        <video controls autoplay class="max-h-[90vh] max-w-[90vw] rounded-xl">
+          <source [src]="getImageUrl(selectedMedia()?.imagePath)" type="video/mp4" />
+        </video>
+      } @else {
+        <img
+          class="max-h-[90vh] max-w-[90vw] rounded-xl"
+          [src]="getImageUrl(selectedMedia()?.imagePath)"
+        />
+      }
 
-    <button class="absolute right-5 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition hover:bg-white/20" (click)="nextMedia()">
-      <span class="material-symbols-outlined text-[24px]">chevron_right</span>
-    </button>
-  </div>
+      <button
+        class="absolute right-5 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition hover:bg-white/20"
+        (click)="nextMedia()"
+      >
+        <span class="material-symbols-outlined">chevron_right</span>
+      </button>
+    </div>
   }
 
-  <app-view-profile-popup
-    [userId]="selectedUserId()"
-    (closed)="selectedUserId.set(null)">
+  <app-view-profile-popup [userId]="selectedUserId()" (closed)="selectedUserId.set(null)">
   </app-view-profile-popup>
-
 </div>

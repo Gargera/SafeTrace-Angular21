@@ -5,14 +5,14 @@
     >
 
     @if (!isEditingProfileImage()) {
-      <button
-        type="button"
-        (click)="toggleProfileImageEdit(true)"
-        class="material-symbols-outlined text-[20px] cursor-pointer text-on-surface-variant hover:text-primary transition-colors p-1 rounded-lg hover:bg-surface-container-high border-none bg-transparent"
-        aria-label="تعديل الصورة الشخصية"
+      <app-button
+        variant="icon"
+        ariaLabel="تعديل الصورة الشخصية"
+        (onClick)="toggleProfileImageEdit(true)"
+        extraClass="text-on-surface-variant hover:text-primary transition-colors p-1 rounded-lg hover:bg-surface-container-high border-none bg-transparent"
       >
-        edit
-      </button>
+        <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+      </app-button>
     } @else {
       <div class="flex items-center gap-xs">
         <app-button
@@ -28,13 +28,9 @@
           type="button"
           variant="success"
           (click)="saveProfileImage()"
-          [attr.aria-busy]="isUploadingProfileImage()"
+          [loading]="isUploadingProfileImage()"
+          icon="upload"
         >
-          @if (isUploadingProfileImage()) {
-            <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
-              >progress_activity</span
-            >
-          }
           حفظ
         </app-button>
       </div>
@@ -56,7 +52,7 @@
           class="w-24 h-24 rounded-full border-2 border-dashed border-outline-variant flex items-center justify-center text-on-surface-variant"
           aria-hidden="true"
         >
-          <span class="material-symbols-outlined text-[32px]">person</span>
+          <span class="material-symbols-outlined">person</span>
         </div>
       }
 
@@ -66,9 +62,7 @@
           role="status"
           aria-label="جاري المعالجة"
         >
-          <span
-            class="material-symbols-outlined text-white text-[24px] animate-spin"
-            aria-hidden="true"
+          <span class="material-symbols-outlined text-white animate-spin" aria-hidden="true"
             >progress_activity</span
           >
         </div>
@@ -105,22 +99,16 @@
       }
 
       @if (profileImagePreview()) {
-        <button
-          type="button"
+        <app-button
+          variant="danger"
           [disabled]="isUploadingProfileImage() || isRemovingProfileImage()"
-          (click)="requestRemoveProfilePhoto()"
-          class="inline-flex items-center justify-center gap-2 rounded-xl border border-error/20 bg-error-container/60 px-4 py-2.5 text-sm font-semibold text-error transition-all duration-200 hover:bg-error-container hover:border-error/40 hover:shadow-md active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
+          [loading]="isRemovingProfileImage()"
+          icon="delete"
+          (onClick)="requestRemoveProfilePhoto()"
+          extraClass="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold"
         >
-          <span
-            class="material-symbols-outlined text-[18px]"
-            style="font-variation-settings: 'FILL' 1"
-            aria-hidden="true"
-          >
-            delete
-          </span>
-
-          <span>إزالة الصورة الشخصية</span>
-        </button>
+          <span>حذف الصورة الشخصية</span>
+        </app-button>
       }
     </div>
   </div>

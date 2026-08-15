@@ -9,6 +9,7 @@ import { UserService } from '../../services/user.service';
 import { RoleService } from '../../services/role.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 import { DestroyRef } from '@angular/core';
 import { UserPermissionDto } from '../../models/User/responses/UserPermissionDto';
 import { getRoleTranslationAr } from '../../../../core/constants/dictionaries/roles.dictionary';
@@ -18,11 +19,11 @@ import { VerificationStatus } from '../../../../shared/enums/verification-status
 import { VerificationBadgeDirective } from "../../../../shared/directives/verification-badge-directive";
 import { RoleBadgeDirective } from "../../../../shared/directives/role-badge-directive";
 import { BlockBadgeDirective } from "../../../../shared/directives/block-badge-directive";
-import Swal from 'sweetalert2';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { FormField } from '../../../../shared/components/form-field/form-field';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { ProfileSkeletonComponent } from '../../../../shared/components/skeletons/profile-skeleton/profile-skeleton.component';
+import { TableSkeletonComponent } from '../../../../shared/components/skeletons/table-skeleton/table-skeleton.component';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
@@ -38,7 +39,7 @@ interface PermissionGroup {
 @Component({
   selector: 'app-user-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, FormField, LoadingSpinnerComponent, ConfirmationModalComponent, HasPermissionDirective, HeaderComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, VerificationBadgeDirective, RoleBadgeDirective, BlockBadgeDirective, ButtonComponent, CardComponent, FormField, ProfileSkeletonComponent, TableSkeletonComponent, ConfirmationModalComponent, HasPermissionDirective, HeaderComponent],
   templateUrl: './user-details.html',
   styleUrl: './user-details.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -58,13 +59,13 @@ export class UserDetails implements OnInit {
   user = signal<GetUserByIdDto | null>(null);
   selectedRole = signal<string>('');
   roles = signal<RoleDto[]>([]);
-  
+
   originalPermissionsList = signal<UserPermissionDto[]>(this.generateEmptyPermissions());
   permissionsList = signal<UserPermissionDto[]>(this.generateEmptyPermissions());
-  
+
   expandedGroups = signal<Record<string, boolean>>({});
   isRootExpanded = signal<boolean>(true);
-  
+
   isUserLoading = signal<boolean>(true);
   isPermissionsLoading = signal<boolean>(true);
   isSavingPerms = signal<boolean>(false);
@@ -78,7 +79,7 @@ export class UserDetails implements OnInit {
     confirmText: '',
     icon: 'help_outline',
     variant: 'primary' as 'primary' | 'danger',
-    action: () => {}
+    action: () => { }
   });
 
   currentOpenModal = signal<'ROLE' | 'APPROVE' | 'REJECT' | 'BLOCK' | 'SAVE' | null>(null);
@@ -90,14 +91,23 @@ export class UserDetails implements OnInit {
   }
 
   onConfirmModal() {
-    this.showConfirmModal.set(false);
-    this.currentOpenModal.set(null);
     this.modalConfig().action();
   }
 
   onCancelModal() {
     this.showConfirmModal.set(false);
     this.currentOpenModal.set(null);
+    this.rejectReason.set('');
+    this.blockReason.set('');
+    const id = this.userId();
+    if (id) {
+      this.cacheService.set(`UserDetails_State_${id}`, {
+        rejectReason: '',
+        blockReason: '',
+        selectedRole: this.selectedRole(),
+        currentOpenModal: null
+      }, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+    }
   }
 
   constructor() {
@@ -105,11 +115,11 @@ export class UserDetails implements OnInit {
       const id = this.userId();
       if (id) {
         this.cacheService.set(`UserDetails_State_${id}`, {
-          openModal: this.showConfirmModal() ? this.currentOpenModal() : null,
           rejectReason: this.rejectReason(),
           blockReason: this.blockReason(),
-          selectedRole: this.selectedRole()
-        }, 300000);
+          selectedRole: this.selectedRole(),
+          currentOpenModal: this.currentOpenModal()
+        }, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
       }
     });
   }
@@ -128,7 +138,7 @@ export class UserDetails implements OnInit {
   canManageUser = computed(() => {
     const targetUser = this.user();
     if (!targetUser || this.isCurrentUser()) return false;
-    
+
     const myRole = this.authService.getUserRole();
     const targetRole = targetUser.role;
 
@@ -226,12 +236,12 @@ export class UserDetails implements OnInit {
   loadUserData() {
     this.isUserLoading.set(true);
     this.isPermissionsLoading.set(true);
-    
+
     this.userService.getUserById(this.userId()).subscribe({
       next: (res) => {
         if (res.success) {
           this.user.set(res.data);
-          
+
           const state = this.cacheService.get<any>(`UserDetails_State_${this.userId()}`);
           if (state) {
             if (state.selectedRole) this.selectedRole.set(state.selectedRole);
@@ -240,17 +250,10 @@ export class UserDetails implements OnInit {
             this.rejectReason.set(state.rejectReason || '');
             this.blockReason.set(state.blockReason || '');
 
-            const modal = state.openModal;
-            if (modal === 'ROLE') {
-              this.onChangeRole(this.selectedRole());
-            } else if (modal === 'APPROVE') {
-              this.onApprove();
-            } else if (modal === 'REJECT') {
-              this.onReject(true);
-            } else if (modal === 'BLOCK') {
-              this.onToggleBlock(true);
-            } else if (modal === 'SAVE') {
-              this.savePermissions();
+            if (state.currentOpenModal === 'REJECT') {
+              this.onReject();
+            } else if (state.currentOpenModal === 'BLOCK') {
+              this.onToggleBlock();
             }
           } else {
             this.selectedRole.set(res.data?.role || '');
@@ -272,7 +275,7 @@ export class UserDetails implements OnInit {
       next: (res) => {
         if (res.success && res.data) {
           this.permissionsList.set(res.data.permissions);
-          this.originalPermissionsList.set(this.permissionsList().map(p => ({...p})));
+          this.originalPermissionsList.set(this.permissionsList().map(p => ({ ...p })));
         }
         this.isPermissionsLoading.set(false);
       },
@@ -312,10 +315,7 @@ export class UserDetails implements OnInit {
 
   rejectReason = signal<string>('');
 
-  onReject(fromRestore: boolean = false) {
-    if (!fromRestore) {
-      this.rejectReason.set('');
-    }
+  onReject() {
     this.openConfirmModal(
       'تأكيد رفض الحساب',
       'يرجى كتابة سبب رفض توثيق هذا الحساب (اختياري):',
@@ -332,13 +332,9 @@ export class UserDetails implements OnInit {
 
   blockReason = signal<string>('');
 
-  onToggleBlock(fromRestore: boolean = false) {
+  onToggleBlock() {
     const isBlocking = !this.user()?.isBlocked;
     const actionText = isBlocking ? 'حظر' : 'فك حظر';
-    
-    if (isBlocking && !fromRestore) {
-      this.blockReason.set('');
-    }
 
     this.openConfirmModal(
       `تأكيد ${actionText} المستخدم`,
@@ -355,6 +351,7 @@ export class UserDetails implements OnInit {
   }
 
   private executeAction(observable: any, successMessage: string, actionName: string) {
+    if (this.loadingAction() !== null) return;
     this.loadingAction.set(actionName);
 
     observable.subscribe({
@@ -368,11 +365,11 @@ export class UserDetails implements OnInit {
         const id = this.userId();
         if (id) {
           this.cacheService.set(`UserDetails_State_${id}`, {
-            openModal: null,
             rejectReason: '',
             blockReason: '',
-            selectedRole: this.selectedRole()
-          }, 300000);
+            selectedRole: this.selectedRole(),
+            currentOpenModal: null
+          }, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
         }
 
         this.snackbar.success(successMessage);
@@ -387,7 +384,7 @@ export class UserDetails implements OnInit {
   }
 
   savePermissions() {
-    if (!this.hasChanges()) return;
+    if (!this.hasChanges() || this.isSavingPerms()) return;
 
     this.openConfirmModal(
       'حفظ الصلاحيات',
@@ -400,8 +397,9 @@ export class UserDetails implements OnInit {
         this.userService.assignUserPermissions({ userId: this.userId(), selectedPermissions: selectedValues }).subscribe({
           next: () => {
             this.isSavingPerms.set(false);
-            this.originalPermissionsList.set(this.permissionsList().map(p => ({...p})));
+            this.originalPermissionsList.set(this.permissionsList().map(p => ({ ...p })));
             this.snackbar.success('تم تحديث صلاحيات المستخدم');
+            this.onCancelModal();
           },
           error: (err) => {
             this.isSavingPerms.set(false);
@@ -417,7 +415,7 @@ export class UserDetails implements OnInit {
   }
 
   resetAll() {
-    this.permissionsList.set(this.originalPermissionsList().map(p => ({...p})));
+    this.permissionsList.set(this.originalPermissionsList().map(p => ({ ...p })));
   }
 
   resetGroup(groupName: string) {
@@ -473,10 +471,14 @@ export class UserDetails implements OnInit {
   getRoleName(roleName: string | undefined): string {
     return getRoleTranslationAr(roleName);
   }
-  
-  getImageUrl(path: string | undefined): string {
-    if (!path) return '';
-    return path.startsWith('http') ? path : `${environment.baseUrl}/${path.replace(/^\//, '')}`;
+
+  getImageUrl(imgPath: string | undefined): string {
+    if (!imgPath) return '';
+
+    if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+      return imgPath;
+    }
+    return `${environment.filesBaseUrl}/${imgPath.replace(/^\//, '')}`;
   }
 
   private generateEmptyPermissions(): UserPermissionDto[] {

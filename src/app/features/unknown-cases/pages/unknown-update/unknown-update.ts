@@ -20,12 +20,15 @@ import { arabicText } from '../../../../shared/validators/arabic-text.validator'
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
+import { validCity } from '../../../../shared/validators/city.validator';
+import { validGovernorate } from '../../../../shared/validators/governorate.validator';
 import { ImageService } from '../../../../shared/services/image.service';
 
 import { CommonModule } from '@angular/common';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
+import { UpdateFormSkeletonComponent } from '../../../../shared/components/skeletons/update-form-skeleton/update-form-skeleton.component';
 
 type Step = 1 | 2 | 3;
 
@@ -40,6 +43,7 @@ type Step = 1 | 2 | 3;
     CardComponent,
     HeaderComponent,
     ConfirmationModalComponent,
+    UpdateFormSkeletonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./unknown-update.css'],
@@ -102,7 +106,7 @@ export class UnknownUpdate implements OnInit {
     tName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
     lName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
     // Age — required, 0-120
-    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(120)]],
+    age: [null as number | null, [Validators.required, Validators.min(1), Validators.max(120)]],
     // Gender — required, valid enum
     gender: ['' as Gender | '', [Validators.required, validEnum(Gender)]],
     // Phone — optional, Egyptian format, max 15
@@ -110,8 +114,8 @@ export class UnknownUpdate implements OnInit {
     // Description — optional, max 2000
     description: ['', [Validators.maxLength(2000)]],
     // Location — required, Arabic only, 2-100
-    government: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
-    city: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
+    government: ['', [Validators.required, validGovernorate(), Validators.minLength(2), Validators.maxLength(100)]],
+    city: ['', [Validators.required]],
     // Street — required, NOT Arabic-only, max 200
     street: ['', [Validators.required, Validators.maxLength(200)]],
     // EventDate — required, cannot be future
@@ -134,6 +138,9 @@ export class UnknownUpdate implements OnInit {
   ngOnInit(): void {
     this.caseId = Number(this.route.snapshot.paramMap.get('id'));
 
+    this.form.get('city')?.setValidators([Validators.required, validCity(() => this.form.get('government')?.value ?? null)]);
+    this.form.get('city')?.updateValueAndValidity();
+
     this.form.get('government')?.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((gov) => {
@@ -143,6 +150,7 @@ export class UnknownUpdate implements OnInit {
         if (currentCity && !cities.includes(currentCity)) {
           this.form.get('city')?.setValue('');
         }
+        this.form.get('city')?.updateValueAndValidity();
       });
 
     this.loadCase();
@@ -157,7 +165,7 @@ export class UnknownUpdate implements OnInit {
   private resolveMediaUrl(path: string | null | undefined): string | null {
     if (!path) return null;
     if (/^https?:\/\//i.test(path)) return path;
-    return `${environment.baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+    return `${environment.filesBaseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
   }
 
   private loadCase(): void {

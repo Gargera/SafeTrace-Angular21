@@ -22,13 +22,13 @@
 
       <div class="flex items-center gap-1.5">
         <button type="button" (click)="facade.toggleFullscreen()"
-          [title]="state.isFullscreen() ? 'تصغير الشاشة' : 'ملء الشاشة'"
+          [attr.aria-label]="state.isFullscreen() ? 'تصغير الشاشة' : 'ملء الشاشة'"
           class="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant/70 transition hover:bg-surface-container-high hover:text-on-surface">
           <span class="material-symbols-outlined text-xl">
             {{ state.isFullscreen() ? 'fullscreen_exit' : 'fullscreen' }}
           </span>
         </button>
-        <button type="button" (click)="onCancel()" title="إغلاق (ESC)"
+        <button type="button" (click)="onCancel()" aria-label="إغلاق (ESC)"
           class="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant/70 transition hover:bg-surface-container-high hover:text-on-surface">
           <span class="material-symbols-outlined text-xl">close</span>
         </button>
@@ -48,7 +48,7 @@
         <span
           class="material-symbols-outlined absolute left-3 animate-spin text-lg text-secondary">progress_activity</span>
         } @else if (state.searchQuery()) {
-        <button type="button" (click)="facade.clearSearchState()"
+        <button type="button" (click)="facade.clearSearchState()" aria-label="مسح البحث"
           class="absolute left-3 flex h-5 w-5 items-center justify-center rounded-full text-outline hover:text-on-surface">
           <span class="material-symbols-outlined text-sm">close</span>
         </button>
@@ -107,15 +107,15 @@
 
       <!-- Floating Zoom Controls -->
       <div class="absolute top-4 right-4 z-[500] flex flex-col gap-2 pointer-events-auto">
-        <button type="button" (click)="facade.zoomIn()" title="تكبير"
+        <button type="button" (click)="facade.zoomIn()" aria-label="تكبير"
           class="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-on-surface shadow-md border border-outline-variant/30 transition hover:bg-surface-bright active:scale-95">
           <span class="material-symbols-outlined text-lg">add</span>
         </button>
-        <button type="button" (click)="facade.zoomOut()" title="تصغير"
+        <button type="button" (click)="facade.zoomOut()" aria-label="تصغير"
           class="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-on-surface shadow-md border border-outline-variant/30 transition hover:bg-surface-bright active:scale-95">
           <span class="material-symbols-outlined text-lg">remove</span>
         </button>
-        <button type="button" (click)="facade.reCenter()" title="إعادة التمركز على الدبوس"
+        <button type="button" (click)="facade.reCenter()" aria-label="إعادة التمركز على الدبوس"
           class="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-secondary shadow-md border border-outline-variant/30 transition hover:bg-surface-bright active:scale-95">
           <span class="material-symbols-outlined text-lg">center_focus_strong</span>
         </button>
@@ -123,15 +123,16 @@
 
       @if (!readOnly()) {
       <!-- Floating Current Location FAB -->
-      <button type="button" (click)="facade.useCurrentLocation()" [disabled]="state.isLocatingModal()"
-        title="موقعي الحالي"
-        class="absolute bottom-5 right-5 z-[500] flex h-12 w-12 items-center justify-center rounded-full bg-white text-secondary shadow-xl border border-outline-variant/30 transition-all hover:bg-surface-bright hover:scale-105 active:scale-95 disabled:opacity-60 disabled:pointer-events-none pointer-events-auto">
-        @if (state.isLocatingModal()) {
-        <span class="material-symbols-outlined animate-spin text-xl">progress_activity</span>
-        } @else {
-        <span class="material-symbols-outlined text-2xl">my_location</span>
-        }
-      </button>
+      <app-button
+        variant="icon"
+        ariaLabel="موقعي الحالي"
+        [disabled]="state.isLocatingModal()"
+        [loading]="state.isLocatingModal()"
+        icon="my_location"
+        (onClick)="facade.useCurrentLocation()"
+        extraClass="absolute bottom-5 right-5 z-[500] flex h-12 w-12 items-center justify-center rounded-full bg-white text-secondary shadow-xl border border-outline-variant/30 transition-all hover:bg-surface-bright hover:scale-105 active:scale-95 disabled:opacity-60 disabled:pointer-events-none pointer-events-auto p-0"
+      >
+      </app-button>
       }
     </div>
 

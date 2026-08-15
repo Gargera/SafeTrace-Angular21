@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { environment } from '../../../environments/environment';
 import { Observable, tap, firstValueFrom } from 'rxjs';
+import { jwtDecode } from 'jwt-decode';
 import { ApiResponse } from '../../shared/models/responses/api-response.model';
 import { AuthResponse } from '../../features/auth/models/responses/AuthResponse';
 import { LoginRequest } from '../../features/auth/models/requests/LoginRequest';
@@ -23,6 +24,9 @@ export class AuthService {
   private locationTrackingService = inject(LocationTrackingService);
   private accessToken: string | null = null;
   private readonly userDataKey = 'user_data';
+  private refreshInFlight: Promise<string | null> | null = null;
+  private refreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly refreshBufferMs = 60_000;
 
   isLoggedIn = signal<boolean>(false);
   currentUser = signal<any>(null);
@@ -36,6 +40,10 @@ export class AuthService {
   }
 
   async checkSession(): Promise<void> {
+    if (!this.getUserData()) {
+      return;
+    }
+
     const expirationStr = this.getRefreshTokenExpiration();
     if (expirationStr) {
       const expDate = new Date(expirationStr);
@@ -43,10 +51,6 @@ export class AuthService {
         this.clearSession();
         return;
       }
-    }
-
-    if (!this.getUserData()) {
-      return;
     }
 
     try {
@@ -63,26 +67,18 @@ export class AuthService {
 
   private getUserData(): any {
     const data = localStorage.getItem(this.userDataKey);
-    return data ? JSON.parse(data) : null;
-  }
-
-  private getDecodedToken(): any | null {
-    const token = this.getToken();
-    if (!token) return null;
+    if (!data) return null;
 
     try {
-      const payload = token.split('.')[1];
-      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-      const decodedPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      return JSON.parse(decodedPayload);
+      return JSON.parse(data);
     } catch {
+      localStorage.removeItem(this.userDataKey);
       return null;
     }
+  }
+
+  private getDecodedToken(): Record<string, unknown> | null {
+    return this.decodeToken<Record<string, unknown>>(this.getToken());
   }
 
   getCurrentUserId(): string | null {
@@ -90,8 +86,8 @@ export class AuthService {
     if (!decodedToken) return null;
 
     return (
-      decodedToken['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] ||
-      decodedToken.sub ||
+      (decodedToken['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] as string | undefined) ||
+      (decodedToken['sub'] as string | undefined) ||
       null
     );
   }
@@ -106,8 +102,8 @@ export class AuthService {
     if (!decodedToken) return null;
 
     const roleClaim =
-      decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
-      decodedToken.role;
+      (decodedToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] as string | string[] | undefined) ||
+      (decodedToken['role'] as string | string[] | undefined);
     return typeof roleClaim === 'string'
       ? roleClaim
       : Array.isArray(roleClaim) && roleClaim.length > 0
@@ -123,6 +119,94 @@ export class AuthService {
 
   getToken(): string | null {
     return this.accessToken;
+  }
+
+  private clearRefreshTimer(): void {
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+  }
+
+  private decodeToken<T = Record<string, unknown>>(token: string | null): T | null {
+    if (!token) return null;
+
+    try {
+      return jwtDecode<T>(token);
+    } catch {
+      return null;
+    }
+  }
+
+  private getTokenPayload(token: string | null): Record<string, unknown> | null {
+    return this.decodeToken<Record<string, unknown>>(token);
+  }
+
+  private getTokenExpiry(token: string | null): Date | null {
+    const payload = this.getTokenPayload(token);
+    const exp = payload?.['exp'];
+    if (!exp) return null;
+
+    const expMs = Number(exp) * 1000;
+    return Number.isFinite(expMs) ? new Date(expMs) : null;
+  }
+
+  private isTokenExpiringSoon(token: string | null): boolean {
+    const expiry = this.getTokenExpiry(token);
+    if (!expiry) return true;
+    return expiry.getTime() - Date.now() <= this.refreshBufferMs;
+  }
+
+  private scheduleTokenRefresh(token: string | null): void {
+    this.clearRefreshTimer();
+
+    const expiry = this.getTokenExpiry(token);
+    if (!expiry) return;
+
+    const refreshAt = new Date(expiry.getTime() - this.refreshBufferMs);
+    const delay = Math.max(0, refreshAt.getTime() - Date.now());
+
+    this.refreshTimer = setTimeout(() => {
+      void this.ensureValidAccessToken();
+    }, delay);
+  }
+
+  async ensureValidAccessToken(forceRefresh = false): Promise<string | null> {
+    const currentToken = this.accessToken;
+    if (!forceRefresh && currentToken && !this.isTokenExpiringSoon(currentToken)) {
+      return currentToken;
+    }
+
+    if (!this.isLoggedIn()) {
+      return null;
+    }
+
+    if (this.refreshInFlight) {
+      return this.refreshInFlight;
+    }
+
+    const refreshExpiration = this.getRefreshTokenExpiration();
+    if (refreshExpiration) {
+      const expirationDate = new Date(refreshExpiration);
+      if (!Number.isNaN(expirationDate.getTime()) && expirationDate < new Date()) {
+        this.handleSessionExpiration();
+        return null;
+      }
+    }
+
+    this.refreshInFlight = firstValueFrom(this.refreshToken())
+      .then((res) => (res.success && res.data ? res.data.accessToken : null))
+      .catch((error) => {
+        if (error?.status === 401 || error?.status === 403) {
+          this.handleSessionExpiration();
+        }
+        return null;
+      })
+      .finally(() => {
+        this.refreshInFlight = null;
+      });
+
+    return this.refreshInFlight;
   }
 
   getRefreshTokenExpiration(): string | null {
@@ -148,6 +232,7 @@ export class AuthService {
     }
     this.isLoggedIn.set(true);
     this.currentUser.set(userData);
+    this.scheduleTokenRefresh(response.accessToken);
   }
 
   handleSessionExpiration(): void {
@@ -175,6 +260,7 @@ export class AuthService {
 
   clearSession(): void {
     this.locationTrackingService.stopTrackingLocation();
+    this.clearRefreshTimer();
 
     this.accessToken = null;
     localStorage.removeItem(this.userDataKey);

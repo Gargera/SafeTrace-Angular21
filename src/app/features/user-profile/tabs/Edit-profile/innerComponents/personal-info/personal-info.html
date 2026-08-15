@@ -9,18 +9,18 @@
       id="personal-heading"
       class="text-headline-sm font-bold text-primary flex items-center gap-sm"
     >
-      <span class="material-symbols-outlined text-[24px]" aria-hidden="true">person</span>
+      <span class="material-symbols-outlined" aria-hidden="true">person</span>
       المعلومات الشخصية
     </h3>
     @if (!isEditingPersonal()) {
-      <button
-        type="button"
-        (click)="togglePersonalEdit(true)"
-        class="material-symbols-outlined text-[20px] cursor-pointer text-on-surface-variant hover:text-primary transition-colors p-1 rounded-lg hover:bg-surface-container-high border-none bg-transparent"
-        aria-label="تعديل المعلومات الشخصية"
+      <app-button
+        variant="icon"
+        ariaLabel="تعديل المعلومات الشخصية"
+        (onClick)="togglePersonalEdit(true)"
+        extraClass="text-on-surface-variant hover:text-primary transition-colors p-1 rounded-lg hover:bg-surface-container-high border-none bg-transparent"
       >
-        edit
-      </button>
+        <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+      </app-button>
     } @else {
       <div class="flex items-center gap-sm">
         <app-button
@@ -35,13 +35,9 @@
           type="submit"
           variant="success"
           [disabled]="isSavingPersonal()"
-          [attr.aria-busy]="isSavingPersonal()"
+          [loading]="isSavingPersonal()"
+          icon="save"
         >
-          @if (isSavingPersonal()) {
-            <span class="material-symbols-outlined text-[14px] animate-spin" aria-hidden="true"
-              >progress_activity</span
-            >
-          }
           حفظ
         </app-button>
       </div>

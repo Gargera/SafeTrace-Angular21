@@ -7,6 +7,7 @@ import {
   output,
   signal,
   SimpleChanges,
+  OnInit,
 } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -17,6 +18,10 @@ import { FormField } from '../../../../../../shared/components/form-field/form-f
 import { ButtonComponent } from '../../../../../../shared/components/button/button';
 import { egyptianPhone } from '../../../../../../shared/validators/egyptian-phone.validator';
 import { extractErrorMessage } from '../../../../../../shared/helper/error.helper';
+import { CacheService } from '../../../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL, PROFILE_CACHE_KEYS } from '../../../../../../core/cache/cache.constants';
+
+const DRAFT_CACHE_KEY = PROFILE_CACHE_KEYS.DRAFT_PHONE;
 
 @Component({
   selector: 'app-phone',
@@ -24,7 +29,7 @@ import { extractErrorMessage } from '../../../../../../shared/helper/error.helpe
   imports: [ReactiveFormsModule, FormField, ButtonComponent],
   templateUrl: './phone.html',
 })
-export class Phone implements OnChanges, OnDestroy {
+export class Phone implements OnChanges, OnDestroy, OnInit {
   readonly userInfo = input<GetUserInfoDTO | null>(null);
   // Emitted after a successful save — parent re-fetches GetUserInfo and
   // pushes the fresh profile up to ProfileView (UpdatePhoneNumber only
@@ -34,6 +39,7 @@ export class Phone implements OnChanges, OnDestroy {
   readonly #fb = inject(FormBuilder);
   readonly #profileService = inject(ProfileService);
   readonly #snackbar = inject(SnackbarService);
+  readonly #cacheService = inject(CacheService);
   readonly #destroy$ = new Subject<void>();
 
   readonly isEditingPhone = signal(false);
@@ -43,16 +49,24 @@ export class Phone implements OnChanges, OnDestroy {
     phoneNumber: ['', [Validators.required, egyptianPhone()]],
   });
 
+  ngOnInit(): void {
+    const draft = this.#cacheService.get<any>(DRAFT_CACHE_KEY);
+    if (draft) {
+      this.isEditingPhone.set(true);
+      this.phoneForm.enable();
+      this.phoneForm.patchValue(draft);
+      this.phoneForm.markAsDirty();
+    }
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['userInfo'] && this.userInfo()) {
       const info = this.userInfo()!;
 
-      this.phoneForm.patchValue({
-        phoneNumber: info.phoneNumber ?? '',
-      });
-
-      // Disable form initially by default
       if (!this.isEditingPhone()) {
+        this.phoneForm.patchValue({
+          phoneNumber: info.phoneNumber ?? '',
+        });
         this.phoneForm.disable();
       }
     }
@@ -81,6 +95,7 @@ export class Phone implements OnChanges, OnDestroy {
       phoneNumber: this.userInfo()?.phoneNumber ?? '',
     });
     this.phoneForm.markAsPristine();
+    this.#cacheService.remove(DRAFT_CACHE_KEY);
   }
 
   /**
@@ -108,6 +123,7 @@ export class Phone implements OnChanges, OnDestroy {
           this.isSavingPhone.set(false);
           this.togglePhoneEdit(false);
           this.#snackbar.success('تم تغيير رقم الهاتف بنجاح');
+          this.#cacheService.remove(DRAFT_CACHE_KEY);
           this.phoneUpdated.emit();
         },
         error: (err) => {
@@ -119,6 +135,9 @@ export class Phone implements OnChanges, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.isEditingPhone() && this.phoneForm.dirty) {
+      this.#cacheService.set(DRAFT_CACHE_KEY, this.phoneForm.value, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+    }
     this.#destroy$.next();
     this.#destroy$.complete();
   }

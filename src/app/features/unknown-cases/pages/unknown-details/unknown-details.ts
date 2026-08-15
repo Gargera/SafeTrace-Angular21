@@ -31,6 +31,7 @@ import { RejectCasePopupComponent } from '../../../../shared/components/cases-co
 import { RejectionReasonCardComponent } from '../../../../shared/components/cases-components/rejection-reason-card/rejection-reason-card';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
+import { CaseDetailsSkeletonComponent } from '../../../../shared/components/skeletons/case-details-skeleton/case-details-skeleton.component';
 
 /**
  * The backend DTO includes a `video` field (a plain path string) that is
@@ -55,6 +56,7 @@ const VIDEO_MEDIA_ID = -1;
     AgeBadgeDirective,
     ConfirmationModalComponent,
     FoundedPopupComponent,
+    CaseDetailsSkeletonComponent,
     HasPermissionDirective,
     ButtonComponent,
     RejectCasePopupComponent,
@@ -94,10 +96,12 @@ export class UnknownDetails implements OnInit {
   isFounding = signal(false);
 
   showApproveConfirmation = signal(false);
+  isApproving = signal(false);
   showRejectConfirmation = signal(false);
   isRejecting = signal(false);
   rejectApiError = signal<string | null>(null);
   showPermanentDeleteConfirmation = signal(false);
+  isPermanentDeleting = signal(false);
 
   caseDetails = signal<UnknownCaseDetailWithVideo | null>(null);
   loading = signal(true);
@@ -155,24 +159,7 @@ export class UnknownDetails implements OnInit {
   isAdminPage = signal(false);
   isMyCasePage = signal(false);
 
-  constructor() {
-    this.destroyRef.onDestroy(() => {
-      const id = this.caseDetails()?.id;
-      if (id) {
-        this.cacheService.set(
-          `UnknownDetails_Modals_${id}`,
-          {
-            showDelete: this.showDeleteConfirmation(),
-            showFounded: this.showFoundedPopup(),
-            showApprove: this.showApproveConfirmation(),
-            showReject: this.showRejectConfirmation(),
-            showPermanentDelete: this.showPermanentDeleteConfirmation()
-          },
-          300000 // 5 minutes
-        );
-      }
-    });
-  }
+  constructor() {}
 
   ngOnInit(): void {
     this.isAdminPage.set(this.route.snapshot.data['mode'] === 'dashboard');
@@ -210,14 +197,11 @@ export class UnknownDetails implements OnInit {
           if (apiRes.success && apiRes.data) {
             this.caseDetails.set(apiRes.data);
 
-            const cachedModals = this.cacheService.get<any>(`UnknownDetails_Modals_${apiRes.data.id}`);
-            if (cachedModals) {
-              this.showDeleteConfirmation.set(cachedModals.showDelete || false);
-              this.showFoundedPopup.set(cachedModals.showFounded || false);
-              this.showApproveConfirmation.set(cachedModals.showApprove || false);
-              this.showRejectConfirmation.set(cachedModals.showReject || false);
-              this.showPermanentDeleteConfirmation.set(cachedModals.showPermanentDelete || false);
-            }
+            const hasReject = this.cacheService.has(`RejectPopup_Unknown_${apiRes.data.id}`);
+            const hasFounded = this.cacheService.has(`FoundedPopup_Unknown_${apiRes.data.id}`);
+
+            if (hasReject) this.showRejectConfirmation.set(true);
+            if (hasFounded) this.showFoundedPopup.set(true);
 
             const media = this.mediaList();
             if (media.length) {
@@ -243,14 +227,12 @@ export class UnknownDetails implements OnInit {
       return path;
     }
 
-    return `${this.apiUrl}${path}`;
+    return `${environment.filesBaseUrl}/${path}`;
   }
 
   changeMedia(media: CasePhotoResponse): void {
     this.selectedMedia.set(media);
-    const index = this.mediaList().findIndex(
-      (x) => x.id === media.id && x.type === media.type,
-    );
+    const index = this.mediaList().findIndex((x) => x.id === media.id && x.type === media.type);
     this.currentIndex.set(index >= 0 ? index : 0);
   }
 
@@ -310,8 +292,7 @@ export class UnknownDetails implements OnInit {
 
     this.isFounding.set(true);
 
-    this.UnknownCaseService
-      .markAsFound(id, data)
+    this.UnknownCaseService.markAsFound(id, data)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
@@ -350,6 +331,11 @@ export class UnknownDetails implements OnInit {
   }
 
   deleteCase(): void {
+    if (this.caseDetails()?.status === CaseStatus.Found) {
+      this.snackbar.error('لا يمكن حذف حالة تم العثور عليها');
+      return;
+    }
+
     this.showDeleteConfirmation.set(true);
   }
 
@@ -362,25 +348,31 @@ export class UnknownDetails implements OnInit {
     const id = this.caseDetails()?.id;
     if (!id) return;
 
+    if (this.caseDetails()?.status === CaseStatus.Found) {
+      this.snackbar.error('لا يمكن حذف حالة تم العثور عليها');
+      this.showDeleteConfirmation.set(false);
+      return;
+    }
+
     this.deleting.set(true);
 
-    this.UnknownCaseService
-      .deleteCase(id)
+    this.UnknownCaseService.deleteCase(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
           this.deleting.set(false);
-          this.showDeleteConfirmation.set(false);
 
           if (res.success) {
+            this.showDeleteConfirmation.set(false);
             this.snackbar.success('تم حذف الحالة بنجاح');
             this.router.navigate(['/unknown']);
+          } else {
+            this.snackbar.error(res.message || 'حدث خطأ أثناء حذف الحالة');
           }
         },
 
         error: (err: unknown) => {
           this.deleting.set(false);
-          this.showDeleteConfirmation.set(false);
           const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء حذف الحالة');
           this.snackbar.error(errorMessage);
         },
@@ -424,22 +416,26 @@ export class UnknownDetails implements OnInit {
   }
 
   confirmApprove(): void {
+    if (this.isApproving()) return;
     const id = this.caseDetails()?.id;
     if (!id) return;
 
-    this.UnknownCaseService
-      .approveCase(id)
+    this.isApproving.set(true);
+    this.UnknownCaseService.approveCase(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          this.showApproveConfirmation.set(false);
+          this.isApproving.set(false);
           if (res.success) {
+            this.showApproveConfirmation.set(false);
             this.snackbar.success('تم قبول الحالة بنجاح');
             this.refreshCaseDetails(id);
+          } else {
+            this.snackbar.error(res.message || 'حدث خطأ أثناء قبول الحالة');
           }
         },
         error: (err: unknown) => {
-          this.showApproveConfirmation.set(false);
+          this.isApproving.set(false);
           const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء قبول الحالة');
           this.snackbar.error(errorMessage);
         },
@@ -464,8 +460,7 @@ export class UnknownDetails implements OnInit {
     this.isRejecting.set(true);
     this.rejectApiError.set(null);
 
-    this.UnknownCaseService
-      .rejectCase(id, reason)
+    this.UnknownCaseService.rejectCase(id, reason)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
@@ -489,6 +484,11 @@ export class UnknownDetails implements OnInit {
   }
 
   openPermanentDeleteConfirmation(): void {
+    if (this.caseDetails()?.status === CaseStatus.Found) {
+      this.snackbar.error('لا يمكن حذف حالة تم العثور عليها');
+      return;
+    }
+
     this.showPermanentDeleteConfirmation.set(true);
   }
 
@@ -497,22 +497,26 @@ export class UnknownDetails implements OnInit {
   }
 
   confirmPermanentDelete(): void {
+    if (this.isPermanentDeleting()) return;
     const id = this.caseDetails()?.id;
     if (!id) return;
 
-    this.UnknownCaseService
-      .permanentDelete(id)
+    this.isPermanentDeleting.set(true);
+    this.UnknownCaseService.permanentDelete(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          this.showPermanentDeleteConfirmation.set(false);
+          this.isPermanentDeleting.set(false);
           if (res.success) {
+            this.showPermanentDeleteConfirmation.set(false);
             this.snackbar.success('تم حذف الحالة نهائياً');
             this.router.navigate(['/admin/cases-management']);
+          } else {
+            this.snackbar.error(res.message || 'حدث خطأ أثناء الحذف النهائي');
           }
         },
         error: (err: unknown) => {
-          this.showPermanentDeleteConfirmation.set(false);
+          this.isPermanentDeleting.set(false);
           const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء الحذف النهائي');
           this.snackbar.error(errorMessage);
         },
@@ -532,7 +536,7 @@ export class UnknownDetails implements OnInit {
       },
     });
   }
-  
+
   startChat(id: number): void {
     if (!this.authService.isLoggedIn()) {
       this.router.navigate(['/auth/login'], { queryParams: { returnUrl: this.router.url } });

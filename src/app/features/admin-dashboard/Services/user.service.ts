@@ -25,9 +25,13 @@ export class UserService extends ApiService {
     const key = `Users_getAllUsers_${JSON.stringify(filter)}`;
     return this.cacheService.getOrSet(
       key,
-      () => this.get<ApiResponse<PaginationResponse<GetUserDto>>>(this.baseUrl, filter as Record<string, any>),
+      () =>
+        this.get<ApiResponse<PaginationResponse<GetUserDto>>>(
+          this.baseUrl,
+          filter as Record<string, any>,
+        ),
       CACHE_TTL.LIST,
-      [CACHE_TAGS.USERS]
+      [CACHE_TAGS.USERS],
     );
   }
 
@@ -37,53 +41,56 @@ export class UserService extends ApiService {
       key,
       () => this.getById<ApiResponse<GetUserByIdDto>>(this.baseUrl, userId),
       CACHE_TTL.DETAILS,
-      [CACHE_TAGS.USERS]
+      [CACHE_TAGS.USERS],
     );
   }
 
   registerByAdmin(dto: RegisterByAdminDto): Observable<ApiResponse<string>> {
     return this.post<ApiResponse<string>>(`${this.baseUrl}/register-by-admin`, dto).pipe(
-      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS]))
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS])),
     );
   }
 
   changeUserRole(dto: ChangeUserRoleDto): Observable<ApiResponse<string>> {
     return this.post<ApiResponse<string>>(`${this.baseUrl}/ChangeRole`, dto).pipe(
-      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS]))
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS])),
     );
   }
 
   approveUser(userId: string): Observable<ApiResponse<string>> {
     return this.post<ApiResponse<string>>(`${this.baseUrl}/approve/${userId}`, {}).pipe(
-      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS]))
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS])),
     );
   }
 
   rejectUser(userId: string, reason: string): Observable<ApiResponse<string>> {
-    return this.post<ApiResponse<string>>(`${this.baseUrl}/reject/${userId}`, { reason }).pipe(
-      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS]))
-    );
+    return this.post<ApiResponse<string>>(`${this.baseUrl}/Reject/${userId}`, {
+      reason: reason,
+    }).pipe(tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS])));
   }
 
   toggleBlockStatus(userId: string, reason?: string): Observable<ApiResponse<string>> {
-    return this.post<ApiResponse<string>>(`${this.baseUrl}/toggle-block/${userId}`, { reason: reason || null }).pipe(
-      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS]))
-    );
+    return this.post<ApiResponse<string>>(`${this.baseUrl}/toggle-block/${userId}`, {
+      reason: reason?.trim() || null,
+    }).pipe(tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS])));
   }
 
   getUserPermissions(userId: string): Observable<ApiResponse<UserPermissionsResponseDto>> {
     const key = `Users_getUserPermissions_${userId}`;
     return this.cacheService.getOrSet(
       key,
-      () => this.get<ApiResponse<UserPermissionsResponseDto>>(`${this.baseUrl}/GetPermissions/${userId}`),
+      () =>
+        this.get<ApiResponse<UserPermissionsResponseDto>>(
+          `${this.baseUrl}/GetPermissions/${userId}`,
+        ),
       CACHE_TTL.DETAILS,
-      [CACHE_TAGS.USERS]
+      [CACHE_TAGS.USERS],
     );
   }
 
   assignUserPermissions(dto: AssignUserPermissionsDto): Observable<ApiResponse<string>> {
     return this.post<ApiResponse<string>>(`${this.baseUrl}/AssignPermissions`, dto).pipe(
-      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS]))
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.USERS])),
     );
   }
 
@@ -93,7 +100,7 @@ export class UserService extends ApiService {
       key,
       () => this.get<ApiResponse<UserStatisticsDto>>(`${this.baseUrl}/statistics`),
       CACHE_TTL.LIST,
-      [CACHE_TAGS.USERS]
+      [CACHE_TAGS.USERS],
     );
   }
 }

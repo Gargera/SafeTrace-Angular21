@@ -10,14 +10,20 @@ import { SnackbarService } from '../../../../shared/services/toast.service';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+import { GenderBadgeDirective } from '../../../../shared/directives/gender-badge-directive';
+import { Gender } from '../../../../shared/enums/gender';
+import { CaseDetailsSkeletonComponent } from '../../../../shared/components/skeletons/case-details-skeleton/case-details-skeleton.component';
 
 @Component({
   selector: 'app-founded-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, HeaderComponent, ButtonComponent],
+  imports: [CommonModule, RouterModule, HeaderComponent, ButtonComponent, GenderBadgeDirective, CaseDetailsSkeletonComponent],
   templateUrl: './founded-detail.component.html',
 })
 export class FoundedDetailComponent implements OnInit {
+  getGender(genderStr: string): Gender {
+    return genderStr as Gender;
+  }
   private readonly foundedService = inject(FoundedService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);

@@ -54,18 +54,15 @@
       }
     </div>
 
-    <app-button type="submit" [disabled]="isLoading()" variant="primary" [loading]="isLoading()" extraClass="w-full justify-center mt-4 font-label-lg group relative overflow-hidden transition-all">
-      <span class="flex items-center gap-2">
-        تأكيد الحساب
-        <span class="material-symbols-outlined transition-transform duration-300 group-hover:-translate-x-1">arrow_back</span>
-      </span>
+    <app-button type="submit" [disabled]="isLoading()" variant="primary" [loading]="isLoading()" icon="arrow_back" extraClass="w-full justify-center mt-4 font-label-lg group relative overflow-hidden transition-all">
+      تأكيد الحساب
     </app-button>
   </form>
 
   <div class="text-center mt-6">
     <p class="text-on-surface-variant text-body-sm">
       لم يصلك الرمز؟ 
-      <app-button type="button" (onClick)="resendOtp()" [disabled]="countdown() > 0" variant="text" extraClass="text-secondary font-semibold hover:underline bg-transparent border-none cursor-pointer disabled:opacity-100 disabled:cursor-not-allowed disabled:hover:no-underline transition-all">
+      <app-button type="button" icon="refresh" (onClick)="resendOtp()" [disabled]="countdown() > 0" [loading]="isResending()" variant="text" extraClass="text-secondary font-semibold hover:underline bg-transparent border-none cursor-pointer disabled:opacity-100 disabled:cursor-not-allowed disabled:hover:no-underline transition-all">
         @if (countdown() > 0) {
           <span class="inline-flex items-center gap-1 bg-surface-variant/70 px-2.5 py-1 rounded-full text-on-surface-variant font-bold text-[11px]">إعادة الإرسال بعد {{ countdown() }} ثانية</span>
         } @else {

@@ -8,7 +8,7 @@ import { CaseType } from '../../../../shared/enums/case-type';
 import { Gender } from '../../../../shared/enums/gender';
 import { environment } from '../../../../../environments/environment';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
-import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
+import { CaseSkeletonGridComponent } from '../../../../shared/components/skeletons/case-skeleton-grid/case-skeleton-grid.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { PaginationComponent } from '../../../../shared/components/cases-components/case-pagination/case-pagination.component';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
@@ -97,7 +97,7 @@ export class FoundedListComponent implements OnInit {
     if (cachedState) {
       this.filterState.restoreState(cachedState.filter);
     }
-    
+
     this.setupLoadPipeline();
     this.load();
   }

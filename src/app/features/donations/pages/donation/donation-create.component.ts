@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -9,6 +9,8 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 const MIN_DONATION_AMOUNT = 10;
 const MAX_DONATION_AMOUNT = 100_000;
@@ -26,9 +28,12 @@ const MAX_DONATION_AMOUNT = 100_000;
   ],
   templateUrl: './donation-create.component.html',
 })
-export class DonationCreateComponent {
+export class DonationCreateComponent implements OnInit {
   private readonly donationService = inject(DonationService);
   private readonly snackbar = inject(SnackbarService);
+  private readonly cacheService = inject(CacheService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly DRAFT_CACHE_KEY = 'Donation_Create_Draft';
 
   message = '';
   loading = false;
@@ -38,6 +43,25 @@ export class DonationCreateComponent {
 
   readonly minAmount = MIN_DONATION_AMOUNT;
   readonly maxAmount = MAX_DONATION_AMOUNT;
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      if (this.amount !== 10 || this.message !== '') {
+        this.cacheService.set(this.DRAFT_CACHE_KEY, {
+          amount: this.amount,
+          message: this.message
+        }, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+      }
+    });
+  }
+
+  ngOnInit() {
+    const draft = this.cacheService.get<any>(this.DRAFT_CACHE_KEY);
+    if (draft) {
+      if (draft.amount !== undefined) this.amount = draft.amount;
+      if (draft.message !== undefined) this.message = draft.message;
+    }
+  }
 
   selectAmount(value: number): void {
     this.amount = value;
@@ -92,6 +116,7 @@ export class DonationCreateComponent {
           this.loading = false;
 
           if (res.success && res.data?.checkoutUrl) {
+            this.cacheService.remove(this.DRAFT_CACHE_KEY);
             this.snackbar.info('جاري تحويلك لصفحة الدفع الآمن...');
             window.location.href = res.data.checkoutUrl;
           } else {
