@@ -23,8 +23,9 @@ import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 // Shared validators
-import { arabicText } from '../../../validators/arabic-text.validator';
 import { pastDate } from '../../../validators/past-date.validator';
+import { validGovernorate } from '../../../validators/governorate.validator';
+import { validCity } from '../../../validators/city.validator';
 
 @Component({
   selector: 'app-founded-popup',
@@ -47,18 +48,21 @@ export class FoundedPopupComponent implements OnInit {
 
   readonly governorates = EGYPT_GOVERNORATES;
   readonly availableCities = signal<string[]>([]);
-  readonly isSubmitting = signal(false);
+  readonly isSubmitting = input(false);
   readonly errorMsg = signal<string | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     description: ['', [Validators.required, Validators.maxLength(2000)]],
-    government: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
-    city: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
-    street: ['', [Validators.maxLength(200)]],
+    government: ['', [Validators.required, validGovernorate(), Validators.minLength(2), Validators.maxLength(100)]],
+    city: ['', [Validators.required]],
+    street: ['', [Validators.required, Validators.maxLength(200)]],
     foundedAt: ['', [Validators.required, pastDate()]],
   });
 
   ngOnInit(): void {
+    this.form.get('city')?.setValidators([Validators.required, validCity(() => this.form.get('government')?.value ?? null)]);
+    this.form.get('city')?.updateValueAndValidity();
+
     this.form.get('government')?.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((gov) => {

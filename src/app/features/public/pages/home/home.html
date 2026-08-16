@@ -1,68 +1,96 @@
 <div class="max-w-7xl mx-auto space-y-xl px-4 md:px-8 py-12" dir="rtl">
-  
   <!-- Hero Section -->
-  <section class="flex flex-col-reverse md:flex-row items-center gap-12 bg-linear-to-br from-surface-container-lowest to-surface-container p-8 md:p-12 rounded-3xl border border-primary/10 shadow-sm relative overflow-hidden">
+  <section
+    class="flex flex-col-reverse md:flex-row items-center gap-12 bg-linear-to-br from-surface-container-lowest to-surface-container p-8 md:p-12 rounded-3xl border border-primary/10 shadow-sm relative overflow-hidden"
+  >
     <div class="flex-1 space-y-6">
-      <div class="inline-flex items-center gap-2 bg-secondary/10 text-secondary px-4 py-2 rounded-full font-bold text-[16px]">
-        <span class="material-symbols-outlined text-[20px]">volunteer_activism</span>
+      <div
+        class="inline-flex items-center gap-2 bg-secondary/10 text-secondary px-4 py-2 rounded-full font-bold text-[16px]"
+      >
+        <span class="material-symbols-outlined">volunteer_activism</span>
         <span>منصة إنسانية ذكية</span>
       </div>
       <h1 class="text-[48px] md:text-[64px] font-black text-primary leading-tight">
-        نعيد الروابط،<br>
+        نعيد الروابط،<br />
         <span class="text-secondary">نحيي الأمل.</span>
       </h1>
       <p class="text-[20px] text-on-surface-variant max-w-112.5 leading-relaxed">
-        منصة لقاء تستخدم الذكاء الاصطناعي لمساعدتك في تتبع المفقودين وإعادة لمّ شمل العائلات. من خلال البحث بالصورة والتعاون المجتمعي.
+        منصة لقاء تستخدم الذكاء الاصطناعي لمساعدتك في تتبع المفقودين وإعادة لمّ شمل العائلات. من
+        خلال البحث بالصورة والتعاون المجتمعي.
       </p>
       <div class="flex flex-wrap gap-4 pt-4">
-        <app-button routerLink="/aisearch" variant="primary" extraClass="px-8 py-4 font-bold text-[18px] rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
+        <app-button
+          routerLink="/aisearch"
+          variant="primary"
+          extraClass="px-8 py-4 font-bold text-[18px] rounded-xl gap-2 shadow-md hover:shadow-lg transition-all"
+        >
           <span class="material-symbols-outlined">photo_camera</span>
           ابدأ البحث الآن
         </app-button>
-        <app-button routerLink="/about" variant="secondary" extraClass="px-8 py-4 font-bold text-[18px] rounded-xl gap-2 text-primary border-outline-variant hover:bg-surface-container-low transition-all">
+        <app-button
+          routerLink="/about"
+          variant="secondary"
+          extraClass="px-8 py-4 font-bold text-[18px] rounded-xl gap-2 text-primary border-outline-variant hover:bg-surface-container-low transition-all"
+        >
           تعرف على المنصة
           <span class="material-symbols-outlined">chevron_left</span>
         </app-button>
       </div>
     </div>
     <div class="flex-1 w-full flex justify-center">
-      <img src="/images/hero-family.png" alt="عائلة سعيدة" class="w-full max-w-200 rounded-2xl object-cover" />
+      <img
+        src="/images/hero-family.png"
+        alt="عائلة سعيدة"
+        class="w-full max-w-200 rounded-2xl object-cover"
+      />
     </div>
   </section>
 
   <!-- How It Works Section -->
-  <section class="flex flex-col-reverse md:flex-row items-center gap-12 bg-surface-container-low p-8 md:p-12 rounded-3xl border border-outline-variant shadow-sm">
+  <section
+    class="flex flex-col-reverse md:flex-row items-center gap-12 bg-surface-container-low p-8 md:p-12 rounded-3xl border border-outline-variant shadow-sm"
+  >
     <div class="flex-1 space-y-6">
       <h2 class="text-[36px] md:text-[48px] font-black text-primary leading-tight">
-        كيف يستخدم<br>
+        كيف يستخدم<br />
         <span class="text-secondary">لقاء الذكاء الاصطناعي؟</span>
       </h2>
       <p class="text-[20px] text-on-surface-variant leading-relaxed">
-        تعتمد منصة لقاء على تقنيات الذكاء الاصطناعي والرؤية الحاسوبية لمقارنة صور الأشخاص المفقودين مع البلاغات الجديدة، وتحليل البيانات بسرعة للمساعدة في الوصول الى نتائج دقيقة خلال وقت قصير.
+        تعتمد منصة لقاء على تقنيات الذكاء الاصطناعي والرؤية الحاسوبية لمقارنة صور الأشخاص المفقودين
+        مع البلاغات الجديدة، وتحليل البيانات بسرعة للمساعدة في الوصول الى نتائج دقيقة خلال وقت قصير.
       </p>
       <ul class="space-y-4">
         <li class="flex items-center gap-3 text-[18px] text-primary font-medium">
-          <span class="material-symbols-outlined text-secondary text-[24px]">check_circle</span>
+          <span class="material-symbols-outlined text-secondary">check_circle</span>
           <span>مطابقة ذكية للوجوه باستخدام الذكاء الاصطناعي</span>
         </li>
         <li class="flex items-center gap-3 text-[18px] text-primary font-medium">
-          <span class="material-symbols-outlined text-secondary text-[24px]">check_circle</span>
+          <span class="material-symbols-outlined text-secondary">check_circle</span>
           <span>تحليل الصور حتى مع اختلاف الإضاءة أو زاوية التصوير</span>
         </li>
         <li class="flex items-center gap-3 text-[18px] text-primary font-medium">
-          <span class="material-symbols-outlined text-secondary text-[24px]">check_circle</span>
+          <span class="material-symbols-outlined text-secondary">check_circle</span>
           <span>مقارنة فورية مع قاعدة بيانات البلاغات</span>
         </li>
       </ul>
       <div class="pt-4">
-        <app-button routerLink="/aisearch" variant="primary" extraClass="px-8 py-4 font-bold text-[18px] rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
+        <app-button
+          routerLink="/aisearch"
+          variant="primary"
+          extraClass="px-8 py-4 font-bold text-[18px] rounded-xl gap-2 shadow-md hover:shadow-lg transition-all"
+        >
           ابدأ البحث الآن
           <span class="material-symbols-outlined">arrow_back</span>
         </app-button>
       </div>
     </div>
     <div class="flex-1 w-full flex justify-center">
-      <img src="/images/section2.png" alt="الذكاء الاصطناعي" class="w-full max-w-160 rounded-2xl object-contain drop-shadow-xl" onerror="this.style.display='none'" />
+      <img
+        src="/images/section2.png"
+        alt="الذكاء الاصطناعي"
+        class="w-full max-w-160 rounded-2xl object-contain drop-shadow-xl"
+        onerror="this.style.display = 'none'"
+      />
     </div>
   </section>
 
@@ -74,20 +102,24 @@
           <span class="material-symbols-outlined text-error">emergency</span>
           حالات عاجلة
         </h2>
-        <a routerLink="/urgent" class="text-secondary font-bold hover:underline flex items-center gap-1">
+        <a
+          routerLink="/urgent"
+          class="text-secondary font-bold hover:underline flex items-center gap-1"
+        >
           عرض جميع الحالات
-          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+          <span class="material-symbols-outlined">arrow_back</span>
         </a>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         @for (c of urgentCases(); track c.id) {
-          <app-case-card 
-            [caseItem]="c" 
-            [showUrgentTag]="true" 
+          <app-case-card
+            [caseItem]="c"
+            [showUrgentTag]="true"
             [showCaseType]="false"
             [detailRoute]="['/urgent', c.id]"
             (onContact)="onContactReporter($event, 'urgent')"
-            class="block" />
+            class="block"
+          />
         }
       </div>
     </section>
@@ -101,19 +133,23 @@
           <span class="material-symbols-outlined text-tertiary">history_toggle_off</span>
           حالات طويلة المدى
         </h2>
-        <a routerLink="/long-term" class="text-secondary font-bold hover:underline flex items-center gap-1">
+        <a
+          routerLink="/long-term"
+          class="text-secondary font-bold hover:underline flex items-center gap-1"
+        >
           عرض جميع الحالات
-          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+          <span class="material-symbols-outlined">arrow_back</span>
         </a>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         @for (c of longTermCases(); track c.id) {
-          <app-case-card 
-            [caseItem]="c" 
+          <app-case-card
+            [caseItem]="c"
             [showCaseType]="false"
             [detailRoute]="['/long-term', c.id]"
             (onContact)="onContactReporter($event, 'long-term')"
-            class="block" />
+            class="block"
+          />
         }
       </div>
     </section>
@@ -127,19 +163,23 @@
           <span class="material-symbols-outlined text-outline">question_mark</span>
           حالات مجهولة الهوية
         </h2>
-        <a routerLink="/unknown" class="text-secondary font-bold hover:underline flex items-center gap-1">
+        <a
+          routerLink="/unknown"
+          class="text-secondary font-bold hover:underline flex items-center gap-1"
+        >
           عرض جميع الحالات
-          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+          <span class="material-symbols-outlined">arrow_back</span>
         </a>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         @for (c of unknownCases(); track c.id) {
-          <app-case-card 
-            [caseItem]="c" 
+          <app-case-card
+            [caseItem]="c"
             [showCaseType]="false"
             [detailRoute]="['/unknown', c.id]"
             (onContact)="onContactReporter($event, 'unknown')"
-            class="block" />
+            class="block"
+          />
         }
       </div>
     </section>
@@ -150,25 +190,29 @@
     <section class="space-y-6">
       <div class="flex items-center justify-between">
         <h2 class="text-[28px] md:text-[36px] font-bold text-primary flex items-center gap-2">
-          <span class="material-symbols-outlined text-[24px]" style="color: #16a34a">check_circle</span>
+          <span class="material-symbols-outlined" style="color: #16a34a">check_circle</span>
           تم العثور عليهم بنجاح
         </h2>
-        <a routerLink="/founded" class="text-secondary font-bold hover:underline flex items-center gap-1">
+        <a
+          routerLink="/founded"
+          class="text-secondary font-bold hover:underline flex items-center gap-1"
+        >
           عرض جميع الحالات
-          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+          <span class="material-symbols-outlined">arrow_back</span>
         </a>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         @for (c of foundedCases(); track c.id) {
-          <app-case-card 
-            [caseItem]="mapToCaseItem(c)" 
-            [showCaseType]="true" 
-            [showGender]="false" 
+          <app-case-card
+            [caseItem]="mapToCaseItem(c)"
+            [showCaseType]="true"
+            [showGender]="false"
             [showAge]="false"
-            createdAtLabel="تاريخ العثور" 
-            [detailRoute]="['/founded', c.id]" 
+            createdAtLabel="تاريخ العثور"
+            [detailRoute]="['/founded', c.id]"
             [showContactButton]="false"
-            class="block">
+            class="block"
+          >
           </app-case-card>
         }
       </div>
@@ -176,31 +220,49 @@
   }
 
   <!-- Complaint Form Section -->
-  <section class="flex flex-col md:flex-row items-center gap-12 bg-linear-to-br from-surface-container-low to-surface-container p-8 md:p-12 rounded-3xl border border-primary/10 shadow-sm mt-12">
+  <section
+    class="flex flex-col md:flex-row items-center gap-12 bg-linear-to-br from-surface-container-low to-surface-container p-8 md:p-12 rounded-3xl border border-primary/10 shadow-sm mt-12"
+  >
     <div class="flex-1 w-full justify-center hidden md:flex">
-      <img src="/images/complaint.png" alt="تواصل معنا" class="w-full max-w-125 object-contain drop-shadow-xl" onerror="this.style.display='none'" />
+      <img
+        src="/images/complaint.png"
+        alt="تواصل معنا"
+        class="w-full max-w-125 object-contain drop-shadow-xl"
+        onerror="this.style.display = 'none'"
+      />
     </div>
     <div class="flex-1 w-full">
       <app-card extraClass="p-8 space-y-6 border-none shadow-md bg-white">
         <div class="text-center space-y-2">
-          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-secondary/10 text-secondary mb-2">
-            <span class="material-symbols-outlined text-[32px]">forum</span>
+          <div
+            class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-secondary/10 text-secondary mb-2"
+          >
+            <span class="material-symbols-outlined">forum</span>
           </div>
           <h2 class="text-[28px] md:text-[32px] font-bold text-primary">كيف يمكننا مساعدتك؟</h2>
-          <p class="text-[14px] text-on-surface-variant">نحن هنا للاستماع إليك. سواء كان لديك استفسار، اقتراح، أو معلومة تفيدنا، لا تتردد في التواصل معنا وسيقوم فريقنا بالرد عليك.</p>
+          <p class="text-[14px] text-on-surface-variant">
+            نحن هنا للاستماع إليك. سواء كان لديك استفسار، اقتراح، أو معلومة تفيدنا، لا تتردد في
+            التواصل معنا وسيقوم فريقنا بالرد عليك.
+          </p>
         </div>
-        
+
         <form [formGroup]="complaintForm" class="space-y-6">
           <div>
-            <app-form-field type="select" label="نوع الشكوى *" formControlName="complaintTargetType">
+            <app-form-field
+              type="select"
+              label="نوع الشكوى *"
+              formControlName="complaintTargetType"
+            >
               <option value="">اختر نوع الشكوى...</option>
               <option value="case">شكوى بسبب حالة معينة</option>
               <option value="general">شكوى عامة</option>
             </app-form-field>
-            @if (complaintForm.get('complaintTargetType')?.invalid && (complaintForm.get('complaintTargetType')?.touched || complaintForm.get('complaintTargetType')?.dirty)) {
-              <span class="text-error text-[14px] font-medium mt-1 block">
-                هذا الحقل مطلوب.
-              </span>
+            @if (
+              complaintForm.get('complaintTargetType')?.invalid &&
+              (complaintForm.get('complaintTargetType')?.touched ||
+                complaintForm.get('complaintTargetType')?.dirty)
+            ) {
+              <span class="text-error text-[14px] font-medium mt-1 block"> هذا الحقل مطلوب. </span>
             }
           </div>
 
@@ -208,8 +270,16 @@
             <div class="grid grid-cols-1 gap-4" [class.sm:grid-cols-2]="false">
               @if (complaintForm.get('complaintTargetType')?.value === 'case') {
                 <div>
-                  <app-form-field type="text" label="كود الحالة *" placeholder="مثال: Case-12345" formControlName="caseCode"></app-form-field>
-                  @if (complaintForm.get('caseCode')?.invalid && (complaintForm.get('caseCode')?.touched || complaintForm.get('caseCode')?.dirty)) {
+                  <app-form-field
+                    type="text"
+                    label="كود الحالة *"
+                    placeholder="مثال: Case-12345"
+                    formControlName="caseCode"
+                  ></app-form-field>
+                  @if (
+                    complaintForm.get('caseCode')?.invalid &&
+                    (complaintForm.get('caseCode')?.touched || complaintForm.get('caseCode')?.dirty)
+                  ) {
                     <span class="text-error text-[14px] font-medium mt-1 block">
                       @if (complaintForm.get('caseCode')?.errors?.['required']) {
                         هذا الحقل مطلوب.
@@ -223,13 +293,21 @@
 
               @if (complaintForm.get('complaintTargetType')?.value === 'general') {
                 <div>
-                  <app-form-field type="select" label="موضوع الشكوى *" formControlName="contactType">
+                  <app-form-field
+                    type="select"
+                    label="موضوع الشكوى *"
+                    formControlName="contactType"
+                  >
                     <option value="">اختر الموضوع...</option>
                     @for (opt of contactTypeOptions; track opt) {
                       <option [value]="opt">{{ opt }}</option>
                     }
                   </app-form-field>
-                  @if (complaintForm.get('contactType')?.invalid && (complaintForm.get('contactType')?.touched || complaintForm.get('contactType')?.dirty)) {
+                  @if (
+                    complaintForm.get('contactType')?.invalid &&
+                    (complaintForm.get('contactType')?.touched ||
+                      complaintForm.get('contactType')?.dirty)
+                  ) {
                     <span class="text-error text-[14px] font-medium mt-1 block">
                       هذا الحقل مطلوب.
                     </span>
@@ -240,8 +318,16 @@
           }
 
           <div>
-            <app-form-field type="textarea" label="وصف الشكوى *" placeholder="اكتب شكواك هنا..." formControlName="message"></app-form-field>
-            @if (complaintForm.get('message')?.invalid && (complaintForm.get('message')?.touched || complaintForm.get('message')?.dirty)) {
+            <app-form-field
+              type="textarea"
+              label="وصف الشكوى *"
+              placeholder="اكتب شكواك هنا..."
+              formControlName="message"
+            ></app-form-field>
+            @if (
+              complaintForm.get('message')?.invalid &&
+              (complaintForm.get('message')?.touched || complaintForm.get('message')?.dirty)
+            ) {
               <span class="text-error text-[14px] font-medium mt-1 block">
                 @if (complaintForm.get('message')?.errors?.['required']) {
                   هذا الحقل مطلوب.
@@ -254,13 +340,18 @@
             }
           </div>
 
-          <app-button (onClick)="submitComplaint()" [disabled]="isSendingComplaint()" [loading]="isSendingComplaint()" variant="primary" extraClass="w-full justify-center py-4 font-bold text-[18px] rounded-xl gap-2 shadow-md">
-            <span class="material-symbols-outlined">send</span>
+          <app-button
+            (onClick)="submitComplaint()"
+            [disabled]="isSendingComplaint()"
+            [loading]="isSendingComplaint()"
+            icon="send"
+            variant="primary"
+            extraClass="w-full justify-center py-4 font-bold text-[18px] rounded-xl gap-2 shadow-md"
+          >
             {{ isSendingComplaint() ? 'جاري الإرسال...' : 'إرسال الشكوى' }}
           </app-button>
         </form>
       </app-card>
     </div>
   </section>
-
 </div>

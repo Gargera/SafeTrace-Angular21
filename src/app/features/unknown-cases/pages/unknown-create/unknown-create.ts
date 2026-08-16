@@ -25,6 +25,8 @@ import { arabicText } from '../../../../shared/validators/arabic-text.validator'
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { pastDate } from '../../../../shared/validators/past-date.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
+import { validCity } from '../../../../shared/validators/city.validator';
+import { validGovernorate } from '../../../../shared/validators/governorate.validator';
 import { ImageService } from '../../../../shared/services/image.service';
 import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
 
@@ -46,6 +48,9 @@ interface UnknownCreateDraft {
   isBlockedDuplicate: boolean;
   matchedCases: MatchedCaseResponse[];
   existingCaseType: CaseType | null;
+  primaryFile?: File | null;
+  additionalPhotos?: File[];
+  videoFile?: File | null;
 }
 
 @Component({
@@ -127,16 +132,16 @@ export class UnknownCreate implements OnInit {
     tName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
     lName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
     // Age — required, 0-120
-    age: [null as number | null, [Validators.required, Validators.min(0), Validators.max(120)]],
+    age: [null as number | null, [Validators.required, Validators.min(1), Validators.max(120)]],
     // Gender — required, valid enum
     gender: ['' as Gender | '', [Validators.required, validEnum(Gender)]],
     // Phone — optional, Egyptian format, max 15
     communicationPhone: ['', [egyptianPhone(), Validators.maxLength(15)]],
-    // Description — optional, max 2000
+    // Description
     description: ['', [Validators.maxLength(2000)]],
-    // Location — required, Arabic only, 2-100
-    government: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
-    city: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(100)]],
+    // Location
+    government: ['', [Validators.required, validGovernorate(), Validators.minLength(2), Validators.maxLength(100)]],
+    city: ['', [Validators.required]],
     // Street — required, NOT Arabic-only, max 200
     street: ['', [Validators.required, Validators.maxLength(200)]],
     // EventDate — required, cannot be future
@@ -159,7 +164,7 @@ export class UnknownCreate implements OnInit {
   constructor() {
     this.destroyRef.onDestroy(() => {
       // Only cache if we didn't just submit successfully (we clear it on success)
-      if (this.form.dirty || this.currentStep > 1 || this.matchedCases().length > 0) {
+      if (this.form.dirty || this.currentStep > 1 || this.matchedCases().length > 0 || this.primaryFile()) {
         const draft: UnknownCreateDraft = {
           formValue: this.form.getRawValue(),
           currentStep: this.currentStep,
@@ -168,7 +173,10 @@ export class UnknownCreate implements OnInit {
           currentDuplicateDecision: this.currentDuplicateDecision(),
           isBlockedDuplicate: this.isBlockedDuplicate(),
           matchedCases: this.matchedCases(),
-          existingCaseType: this.existingCaseType()
+          existingCaseType: this.existingCaseType(),
+          primaryFile: this.primaryFile(),
+          additionalPhotos: this.additionalPhotos(),
+          videoFile: this.videoFile()
         };
         this.cacheService.set(DRAFT_CACHE_KEY, draft, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
       }
@@ -176,6 +184,9 @@ export class UnknownCreate implements OnInit {
   }
 
   ngOnInit(): void {
+    this.form.get('city')?.setValidators([Validators.required, validCity(() => this.form.get('government')?.value ?? null)]);
+    this.form.get('city')?.updateValueAndValidity();
+
     this.form.get('government')?.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((gov) => {
@@ -185,6 +196,7 @@ export class UnknownCreate implements OnInit {
         if (currentCity && !cities.includes(currentCity)) {
           this.form.get('city')?.setValue('');
         }
+        this.form.get('city')?.updateValueAndValidity();
       });
 
     const draft = this.cacheService.get<UnknownCreateDraft>(DRAFT_CACHE_KEY);
@@ -198,9 +210,18 @@ export class UnknownCreate implements OnInit {
       this.matchedCases.set(draft.matchedCases);
       this.existingCaseType.set(draft.existingCaseType);
 
-      if (draft.showForceCreatePopup || draft.showDuplicateInfoDialog) {
-        this.snackbar.info('تم استعادة بيانات النموذج. يرجى إعادة إرفاق الصور للمتابعة.');
+      if (draft.primaryFile) {
+        this.primaryFile.set(draft.primaryFile);
+        this.croppedPrimaryImagePreview.set(URL.createObjectURL(draft.primaryFile));
       }
+      if (draft.additionalPhotos && draft.additionalPhotos.length > 0) {
+        this.additionalPhotos.set(draft.additionalPhotos);
+        this.additionalPhotoPreviews.set(draft.additionalPhotos.map(f => URL.createObjectURL(f)));
+      }
+      if (draft.videoFile) {
+        this.videoFile.set(draft.videoFile);
+      }
+
     }
   }
 

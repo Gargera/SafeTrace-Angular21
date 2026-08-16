@@ -1,6 +1,22 @@
-import { Component, computed, inject, signal, ChangeDetectionStrategy, OnInit, DestroyRef } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+  OnInit,
+  DestroyRef,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, catchError, EMPTY, tap } from 'rxjs';
+import {
+  Subject,
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  catchError,
+  EMPTY,
+  tap,
+} from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
 
@@ -12,7 +28,6 @@ import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { AuditOperationBadgeDirective } from '../../../../shared/directives/audit-operation-badge.directive';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
@@ -20,7 +35,7 @@ import { TableSkeletonComponent } from '../../../../shared/components/skeletons/
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
-
+import { AUDIT_TABLES_DICTIONARY } from '../../../../core/constants/dictionaries/audit.tables.dictionary';
 
 const UI_STATE_CACHE_KEY = 'AuditLogs_UI_State';
 
@@ -38,7 +53,7 @@ const UI_STATE_CACHE_KEY = 'AuditLogs_UI_State';
     AuditOperationBadgeDirective,
     DatePipe,
     PaginationComponent,
-    TableSkeletonComponent
+    TableSkeletonComponent,
   ],
   templateUrl: './audit-logs.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,6 +63,8 @@ export class AuditLogsComponent implements OnInit {
   private toast = inject(SnackbarService);
   private cacheService = inject(CacheService);
   private destroyRef = inject(DestroyRef);
+
+  auditTables = AUDIT_TABLES_DICTIONARY;
 
   logs = signal<AuditLogDto[]>([]);
   totalCount = signal<number>(0);
@@ -59,7 +76,7 @@ export class AuditLogsComponent implements OnInit {
     pageSize: 10,
     searchEmail: '',
     searchTable: '',
-    searchType: ''
+    searchType: '',
   });
 
   readonly hasActiveFilters = computed(() => {
@@ -73,7 +90,7 @@ export class AuditLogsComponent implements OnInit {
       pageSize: 10,
       searchEmail: '',
       searchTable: '',
-      searchType: ''
+      searchType: '',
     });
     this.loadLogs();
   }
@@ -85,12 +102,9 @@ export class AuditLogsComponent implements OnInit {
 
   constructor() {
     this.destroyRef.onDestroy(() => {
-      this.cacheService.set(
-        UI_STATE_CACHE_KEY,
-        { filter: this.filter() },
-        CACHE_TTL.UI_STATE,
-        [CACHE_TAGS.UI_STATE]
-      );
+      this.cacheService.set(UI_STATE_CACHE_KEY, { filter: this.filter() }, CACHE_TTL.UI_STATE, [
+        CACHE_TAGS.UI_STATE,
+      ]);
     });
   }
 
@@ -126,16 +140,18 @@ export class AuditLogsComponent implements OnInit {
               this.logs.set([]);
               this.totalCount.set(0);
               return EMPTY;
-            })
-          )
+            }),
+          ),
         ),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((res) => {
         if (res && res.success && res.data) {
           this.logs.set(res.data.items);
           this.totalCount.set(res.data.totalCount);
-          this.totalPages.set(res.data.totalPages || Math.ceil(res.data.totalCount / this.filter().pageSize));
+          this.totalPages.set(
+            res.data.totalPages || Math.ceil(res.data.totalCount / this.filter().pageSize),
+          );
         } else if (res) {
           this.toast.error(res.message || 'فشل في تحميل السجلات.');
         }
@@ -169,6 +185,12 @@ export class AuditLogsComponent implements OnInit {
 
   closeModal(): void {
     this.selectedLog.set(null);
+  }
+
+  getTableLabel(tableName: string | undefined): string {
+    if (!tableName) return '';
+    const found = this.auditTables.find(t => t.value === tableName);
+    return found ? found.label : tableName;
   }
 
   formatJson(jsonString?: string): string {

@@ -24,7 +24,7 @@
         id="profile-images-heading"
         class="text-headline-sm font-bold text-primary flex items-center gap-sm"
       >
-        <span class="material-symbols-outlined text-[24px]" aria-hidden="true">account_circle</span>
+        <span class="material-symbols-outlined" aria-hidden="true">account_circle</span>
         الصورة الشخصية
       </h3>
     </div>
@@ -43,9 +43,12 @@
       @if (showId) {
         <app-identification-image
           [userInfo]="userInfo()"
-          [croppedFrontImage]="idFrontCroppedImage()" [croppedBackImage]="idBackCroppedImage()"
-          (openCropperFront)="onOpenCropper('idFront', $event)" (openCropperBack)="onOpenCropper('idBack', $event)"
-          (cropResetFront)="idFrontCroppedImage.set(null)" (cropResetBack)="idBackCroppedImage.set(null)"
+          [croppedFrontImage]="idFrontCroppedImage()"
+          [croppedBackImage]="idBackCroppedImage()"
+          (openCropperFront)="onOpenCropper('idFront', $event)"
+          (openCropperBack)="onOpenCropper('idBack', $event)"
+          (cropResetFront)="idFrontCroppedImage.set(null)"
+          (cropResetBack)="idBackCroppedImage.set(null)"
           (profileUpdated)="onProfileUpdated()"
         />
       }
@@ -62,7 +65,7 @@
           class="w-14 h-14 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm shrink-0"
         >
           <span
-            class="material-symbols-outlined text-[32px]"
+            class="material-symbols-outlined"
             style="font-variation-settings: 'FILL' 1"
             aria-hidden="true"
           >
@@ -152,4 +155,3 @@
 />
 
 <app-toast />
-

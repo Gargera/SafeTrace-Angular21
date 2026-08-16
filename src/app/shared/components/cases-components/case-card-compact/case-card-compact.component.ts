@@ -62,7 +62,7 @@ export class CaseCardCompactComponent {
     if (this.imageHasError() || !item.mainImageUrl) {
       return this.fallbackImage;
     }
-    return `${this.baseUrl}${item.mainImageUrl}`;
+    return `${environment.filesBaseUrl}/${item.mainImageUrl}`;
   });
 
   /** Formatted location (city and government) */

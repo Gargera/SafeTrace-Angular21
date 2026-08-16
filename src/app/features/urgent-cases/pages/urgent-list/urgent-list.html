@@ -62,6 +62,7 @@
         <!-- Pagination (shows its own "showing X-Y of Z" summary since totalItems/pageSize are passed) -->
         <app-pagination
           [currentPage]="currentPage()"
+          [loading]="loading()"
           [totalPages]="totalPages()"
           [totalItems]="totalItems()"
           [pageSize]="pageSize()"

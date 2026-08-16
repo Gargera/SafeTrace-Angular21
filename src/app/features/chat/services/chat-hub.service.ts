@@ -23,20 +23,32 @@ export class ChatHubService {
 
   private hubUrl = environment.chatHubUrl;
   private connection: signalR.HubConnection | null = null;
+  private startInFlight: Promise<void> | null = null;
 
   connectionState = signal<signalR.HubConnectionState>(signalR.HubConnectionState.Disconnected);
 
   async start(): Promise<void> {
-    if(this.connection && this.connection.state !== signalR.HubConnectionState.Disconnected) {
+    if (this.connection?.state === signalR.HubConnectionState.Connected) {
       return;
     }
 
+    if (this.startInFlight) {
+      return this.startInFlight;
+    }
+
+    this.startInFlight = this.startCore().finally(() => {
+      this.startInFlight = null;
+    });
+    return this.startInFlight;
+  }
+
+  private async startCore(): Promise<void> {
     this.connection = new signalR.HubConnectionBuilder()
-    .withUrl(this.hubUrl,{
-      accessTokenFactory: () => this.getAccessToken()
-    })
-    .withAutomaticReconnect()
-    .build();
+      .withUrl(this.hubUrl, {
+        accessTokenFactory: async () => (await this.authService.ensureValidAccessToken()) ?? '',
+      })
+      .withAutomaticReconnect()
+      .build();
 
     this.connection.onreconnecting(() => this.connectionState.set(signalR.HubConnectionState.Reconnecting));
     this.connection.onreconnected(() => this.connectionState.set(signalR.HubConnectionState.Connected));
@@ -48,6 +60,7 @@ export class ChatHubService {
 
   async stop(): Promise<void> {
     await this.connection?.stop();
+    this.connection = null;
     this.connectionState.set(signalR.HubConnectionState.Disconnected);
   }
 
@@ -102,7 +115,4 @@ offMessageDeletedForEveryone(
     }
   }
 
-  private getAccessToken(): string  {
-    return this.authService.getToken() || '';
-  }
 }

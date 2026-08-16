@@ -21,11 +21,14 @@ import { validateVideoFile } from '../../../../shared/validators/video-validatio
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import {getCaseStatusTranslationAr} from '../../../../core/constants/dictionaries/case.status.dictionary';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+import { DestroyRef } from '@angular/core';
 @Component({
   selector: 'app-chat-window',
   standalone: true,
   imports: [FormsModule, DatePipe, ViewProfilePopup, ChatSkeletonComponent,
-    CommonModule
+    CommonModule, ButtonComponent
   ],
   templateUrl: './chat-window.html',
 })
@@ -39,6 +42,8 @@ export class ChatWindow implements OnInit {
   private snackbarService = inject(SnackbarService);
   private chatHubService = inject(ChatHubService);
   private authService = inject(AuthService);
+  private cacheService = inject(CacheService);
+  private destroyRef = inject(DestroyRef);
 
   readonly selectedUserId = signal<string | null>(null);
 
@@ -60,6 +65,7 @@ export class ChatWindow implements OnInit {
   selectedFile = signal<File | null>(null);
   fileError = signal<string | null>(null);
   sending = signal<boolean>(false);
+  deletingMessageId = signal<number | null>(null);
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
 
@@ -113,6 +119,25 @@ getCaseStatusTranslationAr = getCaseStatusTranslationAr;
     this.chatHubService.onReceiveMessage(this.handleReceivedMessage);
     this.chatHubService.onMessagesRead(this.handleMessagesRead);
     this.chatHubService.onMessageDeletedForEveryone(this.handleMessageDeletedForEveryone);
+
+    // Restore draft
+    const draftKey = `CHAT_DRAFT_${this.chatId}`;
+    const savedDraft = this.cacheService.get<{ draft: string; file: File | null }>(draftKey);
+    if (savedDraft) {
+      this.draft.set(savedDraft.draft);
+      if (savedDraft.file) {
+        this.selectedFile.set(savedDraft.file);
+      }
+    }
+
+    // Save draft on destroy
+    this.destroyRef.onDestroy(() => {
+      if (this.draft() || this.selectedFile()) {
+        this.cacheService.set(draftKey, { draft: this.draft(), file: this.selectedFile() }, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+      } else {
+        this.cacheService.remove(draftKey);
+      }
+    });
 
     this.loadMessages();
   }
@@ -280,7 +305,7 @@ private handleMessageDeletedForEveryone = (
 
   attachmentUrl(message: MessageDto): string | null {
     if(!message.filePath) return null;
-    const fileBaseUrl = environment.baseUrl;
+    const fileBaseUrl = environment.filesBaseUrl;
     return `${fileBaseUrl}/${message.filePath}`;
   }
 
@@ -389,14 +414,21 @@ private handleMessageDeletedForEveryone = (
 
     this.draft.set('');
     this.clearSelectedFile();
+    const draftKey = `CHAT_DRAFT_${this.chatId}`;
+    this.cacheService.remove(draftKey);
   }
 
  async onDeleteMessage(message: MessageDto): Promise<void> {
+  if (this.deletingMessageId() !== null) return;
+
   const choice = await this.chatAlertsService.confirmDeleteMessage(message.isMine);
 
   if (choice === 'cancel') {
     return;
   }
+
+  if (this.deletingMessageId() !== null) return;
+  this.deletingMessageId.set(message.id);
 
   const request$ = choice === 'everyone'
     ? this.messageService.deleteMessageForEveryone(message.id)
@@ -416,10 +448,12 @@ private handleMessageDeletedForEveryone = (
       // لا نعدل هنا
       // SignalR event هو اللي هيحدث الرسالة عند الطرفين
 
+    this.deletingMessageId.set(null);
     this.snackbarService.success(res.message);
     },
 
     error: (err) => {
+      this.deletingMessageId.set(null);
       this.snackbarService.error(
         extractErrorMessage(err, 'تعذر حذف الرسالة، حاول مرة أخرى')
       );

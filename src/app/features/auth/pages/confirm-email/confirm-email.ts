@@ -22,6 +22,7 @@ export class ConfirmEmail implements OnInit, OnDestroy {
 
   email = signal<string>('');
   isLoading = signal<boolean>(false);
+  isResending = signal<boolean>(false);
   apiErrorMessage = signal<string>('');
   countdown = signal<number>(0);
   private intervalId: ReturnType<typeof setInterval> | null = null;
@@ -76,15 +77,18 @@ export class ConfirmEmail implements OnInit, OnDestroy {
   }
 
   resendOtp() {
-    if (this.countdown() > 0) return;
+    if (this.countdown() > 0 || this.isResending()) return;
     
+    this.isResending.set(true);
     this.startCountdown();
 
     this.authService.resendOtp(this.email(), 0).subscribe({
       next: (res) => {
+        this.isResending.set(false);
         this.snackbar.success(res.message || 'تم إرسال الرمز بنجاح.');
       },
       error: (err) => {
+        this.isResending.set(false);
         this.countdown.set(0);
         if (this.intervalId) {
           clearInterval(this.intervalId);

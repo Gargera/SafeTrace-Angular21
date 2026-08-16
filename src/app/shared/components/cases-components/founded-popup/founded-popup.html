@@ -23,9 +23,8 @@
         </div>
       </div>
 
-      <button type="button"
-        class="flex h-9 w-9 items-center justify-center rounded-full text-on-tertiary/80 transition hover:bg-error-container hover:text-error cursor-pointer"
-        (click)="onCancel()" aria-label="إغلاق">
+      <button type="button" (click)="onCancel()" aria-label="إغلاق"
+        class="flex h-9 w-9 items-center justify-center rounded-full text-on-tertiary/80 transition hover:bg-error-container hover:text-error cursor-pointer">
         <span class="material-symbols-outlined text-xl">close</span>
       </button>
     </div>
@@ -37,7 +36,8 @@
       <div class="space-y-4">
         <div class="mb-2 rounded-2xl border border-on-tertiary-container/15 bg-on-tertiary-container/5 p-4">
           <div class="flex items-center gap-3">
-            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-on-tertiary-container text-on-tertiary shadow-xs">
+            <div
+              class="flex h-10 w-10 items-center justify-center rounded-xl bg-on-tertiary-container text-on-tertiary shadow-xs">
               <span class="material-symbols-outlined text-xl">description</span>
             </div>
             <div class="flex-1">
@@ -67,7 +67,8 @@
       <div class="space-y-4">
         <div class="mb-2 rounded-2xl border border-on-tertiary-container/15 bg-on-tertiary-container/5 p-4">
           <div class="flex items-center gap-3">
-            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-on-tertiary-container text-on-tertiary shadow-xs">
+            <div
+              class="flex h-10 w-10 items-center justify-center rounded-xl bg-on-tertiary-container text-on-tertiary shadow-xs">
               <span class="material-symbols-outlined text-xl">location_on</span>
             </div>
             <div class="flex-1">
@@ -112,7 +113,7 @@
 
         <!-- Street -->
         <div>
-          <app-form-field label="الشارع / المنطقة" formControlName="street" type="text"
+          <app-form-field label="الشارع / المنطقة *" formControlName="street" type="text"
             placeholder="أدخل اسم الشارع أو المنطقة وأي معالم قريبة (مثال: شارع التحرير، بجوار مسجد السلام)"
             [extraClass]="isInvalid('street') ? 'border-error' : ''" />
           @if (isInvalid('street')) {
@@ -156,12 +157,9 @@
           إلغاء
         </app-button>
 
-        <app-button variant="success" type="button" [disabled]="isSubmitting()" (onClick)="onSubmit()">
-          @if (isSubmitting()) {
-          <span class="material-symbols-outlined animate-spin text-lg">progress_activity</span> جاري الحفظ...
-          } @else {
-          <span class="material-symbols-outlined text-lg">verified</span> تأكيد العثور
-          }
+        <app-button variant="success" type="button" icon="verified" [disabled]="isSubmitting()" [loading]="isSubmitting()"
+          (onClick)="onSubmit()">
+          <span>تأكيد العثور</span>
         </app-button>
       </div>
     </div>
