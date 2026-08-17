@@ -19,7 +19,7 @@ export class ButtonComponent {
   extraClass = input('');
   loading = input(false);
   icon = input('');
-  iconClass = input('text-[20px]');
+  iconClass = input('');
   ariaLabel = input('');
 
   readonly isNumericIcon = computed(() => /^\d+$/.test(this.icon()));
@@ -49,7 +49,7 @@ export class ButtonComponent {
     };
 
     if (this.variant() === 'icon') {
-      return `group inline-flex h-8 w-8 items-center justify-center rounded-full p-0.5 leading-none transition-all duration-200 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 ${this.extraClass()}`;
+      return `group inline-flex items-center justify-center rounded-full p-0.5 leading-none transition-all duration-200 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 ${this.extraClass()}`;
     }
 
     if (this.variant() === 'text') {

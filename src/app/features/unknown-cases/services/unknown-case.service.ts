@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, map } from 'rxjs/operators';
 import { ApiService } from '../../../shared/services/api.service';
 import { UnknownCaseFilterRequest } from '../models/request/UnknownCaseFilterRequest';
 import { UnknownCaseListItemResponse } from '../models/response/UnknownCaseListItemResponse';
@@ -12,6 +12,8 @@ import { FoundPersonInfoRequest } from '../../../core/models/cases.model';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../shared/models/responses/api-response.model';
 import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
+import { CaseSubmissionResponse } from '../../../shared/helper/cases-helper/case-submission-flow.helper';
+import { DuplicateDecisionPayload } from '../../../shared/helper/cases-helper/case-duplicate.helper';
 import { CacheService } from '../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../core/cache/cache.constants';
 
@@ -98,14 +100,19 @@ export class UnknownCaseService extends ApiService {
   createCase(
     request: UnknownCaseCreateRequest,
     forceCreate = false,
-  ): Observable<ApiResponse<UnknownCreateCaseResponse>> {
+  ): Observable<CaseSubmissionResponse<DuplicateDecisionPayload>> {
     const formData = this.buildFormData(request);
     return this.postFormData<ApiResponse<UnknownCreateCaseResponse>>(
       `${this.baseUrl}/CreateCase`,
       formData,
       { forceCreate },
     ).pipe(
-      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.UNKNOWN_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.UNKNOWN_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD])),
+      map(response => ({
+        isSuccess: response.success,
+        message: response.message,
+        data: response.data as unknown as DuplicateDecisionPayload
+      }))
     );
   }
 

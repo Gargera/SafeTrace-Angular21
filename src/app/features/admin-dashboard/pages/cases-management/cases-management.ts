@@ -48,7 +48,7 @@ import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
-import { CasesFilterState } from '../../../../shared/helper/cases-filter-state';
+import { CasesFilterState } from '../../../../shared/helper/cases-helper/cases-filter-state';
 
 import { TableSkeletonComponent } from '../../../../shared/components/skeletons/table-skeleton/table-skeleton.component';
 
@@ -220,7 +220,7 @@ export class CasesManagement implements OnInit, OnDestroy {
     this.loadCases();
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void { }
 
   // =========================================================
   // Event Handlers

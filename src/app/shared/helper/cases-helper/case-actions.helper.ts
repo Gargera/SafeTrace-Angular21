@@ -1,4 +1,4 @@
-import { CaseStatus } from '../enums/case-status';
+import { CaseStatus } from '../../enums/case-status';
 
 export interface CaseCardActions {
   canView: boolean;

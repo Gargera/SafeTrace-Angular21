@@ -1,17 +1,24 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
+import { AuthService } from '../../../../core/services/auth.service';
+import { ActivatedRoute } from '@angular/router';
 
-import { UrgentList } from './urgent-list';
+import { UrgentListComponent } from './urgent-list';
 
 describe('UrgentList', () => {
-  let component: UrgentList;
-  let fixture: ComponentFixture<UrgentList>;
+  let component: UrgentListComponent;
+  let fixture: ComponentFixture<UrgentListComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [UrgentList],
+      imports: [UrgentListComponent],
+      providers: [
+        { provide: AuthService, useValue: { currentUser: signal(null), isLoggedIn: signal(false), hasPermission: () => false } },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => '1' } } } }
+      ]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(UrgentList);
+    fixture = TestBed.createComponent(UrgentListComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
