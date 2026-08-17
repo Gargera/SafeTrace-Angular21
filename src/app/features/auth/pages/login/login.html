@@ -37,7 +37,11 @@
   }
 
   <div class="flex justify-center mb-6 h-[40px] w-full">
-    <asl-google-signin-button type="standard" size="large" locale="ar"></asl-google-signin-button>
+    @defer (on idle) {
+      <asl-google-signin-button type="standard" size="large" locale="ar"></asl-google-signin-button>
+    } @placeholder {
+      <div class="w-70 h-[40px] bg-surface-variant/40 animate-pulse rounded"></div>
+    }
   </div>
 
   <div class="relative flex py-2 items-center mb-6">
