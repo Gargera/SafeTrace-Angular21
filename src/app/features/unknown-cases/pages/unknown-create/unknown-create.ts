@@ -153,11 +153,11 @@ export class UnknownCreate implements OnInit {
   readonly steps = [
     { num: 1, label: 'بيانات الشخص' },
     { num: 2, label: 'موقع العثور عليه' },
-    { num: 3, label: 'صور' },
+    { num: 3, label: 'المستندات و الصور' },
   ];
 
   stepTitle = computed(() => {
-    return ['بيانات الشخص (إن وُجدت)', 'موقع العثور عليه', 'صور'][this.currentStep() - 1];
+    return ['بيانات الشخص (إن وُجدت)', 'موقع العثور عليه', 'المستندات و الصور'][this.currentStep() - 1];
   });
 
   stepHeader = computed(() => {
@@ -177,7 +177,7 @@ export class UnknownCreate implements OnInit {
       case 3:
         return {
           icon: 'photo_library',
-          title: 'صور وفيديو',
+          title: 'المستندات و الصور',
           description: 'ارفع الصور والمستندات ومقاطع الفيديو المتاحة.',
         };
       default:

@@ -34,12 +34,15 @@ export function handleDuplicateDecision(
 
   switch (data.duplicateDecision) {
 
+    // Pending cases
     case DuplicateDecision.SameUserDuplicate:
     case DuplicateDecision.PendingOwnerCase:
     case DuplicateDecision.PendingUnknownCase:
       handlers.showInfoDialog();
       break;
 
+
+    // Active cases
     case DuplicateDecision.ActiveOwnerCase:
     case DuplicateDecision.ActiveUnknownCase:
       handlers.showForceCreatePopup();
