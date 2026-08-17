@@ -168,7 +168,7 @@ export class LongTermUpdate implements OnInit {
       case 1:
         return {
           icon: 'person',
-          title: 'بيانات الشخص المفقود',
+          title: 'تحديث بيانات المفقود',
           description: 'أدخل البيانات الأساسية للشخص المفقود للمساعدة في التعرف عليه.',
         };
       case 2:
@@ -180,7 +180,7 @@ export class LongTermUpdate implements OnInit {
       case 3:
         return {
           icon: 'photo_library',
-          title: 'صور وفيديو',
+          title: 'مستندات وصور',
           description: 'ارفع الصور والمستندات ومقاطع الفيديو المتاحة.',
         };
       default:

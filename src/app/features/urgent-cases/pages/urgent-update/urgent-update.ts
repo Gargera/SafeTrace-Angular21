@@ -161,7 +161,7 @@ export class UrgentUpdate implements OnInit {
   ];
 
   stepTitle = computed(() => {
-    return ['بيانات الشخص المفقود', 'موقع الحادث على الخريطة', 'صور'][this.currentStep() - 1];
+    return ['بيانات الشخص المفقود', 'موقع الحادث على الخريطة', 'المستندات والصور'][this.currentStep() - 1];
   });
 
   stepHeader = computed(() => {
@@ -181,7 +181,7 @@ export class UrgentUpdate implements OnInit {
       case 3:
         return {
           icon: 'photo_library',
-          title: 'صور وفيديو',
+          title: 'مستندات وصور',
           description: 'ارفع الصور والمستندات ومقاطع الفيديو المتاحة.',
         };
       default:

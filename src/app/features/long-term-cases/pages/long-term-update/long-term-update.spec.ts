@@ -35,7 +35,7 @@ class MockLongTermCaseService {
   updateCaseArgs: any[] = [];
   getMyCaseByIdResponse: any = of({
     status: 200,
-    isSuccess: true,
+    success: true,
     data: {
       fName: 'احمد',
       lName: 'محمد',
@@ -52,7 +52,7 @@ class MockLongTermCaseService {
 
   updateCaseResponse: any = of({
     status: 200,
-    isSuccess: true,
+    success: true,
     data: true,
   });
 

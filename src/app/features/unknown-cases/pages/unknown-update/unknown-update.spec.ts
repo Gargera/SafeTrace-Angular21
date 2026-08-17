@@ -46,7 +46,7 @@ class MockUnknownCaseService {
   updateCaseArgs: any[] = [];
   updateCaseResponse: any = of({
     status: 200,
-    isSuccess: true,
+    success: true,
     data: { isCreated: true, caseId: 101 },
   });
   updateCase(id: number, request: any) {
@@ -57,7 +57,7 @@ class MockUnknownCaseService {
   getMyCaseByIdArgs: number[] = [];
   getMyCaseByIdResponse: any = of({
     status: 200,
-    isSuccess: true,
+    success: true,
     data: {
       id: 1,
       fName: 'احمد',
@@ -335,7 +335,7 @@ describe('UnknownUpdate', () => {
     });
 
     it('should submit successfully', () => {
-      mockService.updateCaseResponse = of({ isSuccess: true, data: { isCreated: true } });
+      mockService.updateCaseResponse = of({ success: true, data: { isCreated: true } });
       component.onSubmit();
 
       expect(mockService.updateCaseArgs.length).toBe(1);

@@ -15,9 +15,9 @@ export interface CaseSubmissionData {
 }
 
 export interface CaseSubmissionResponse<T = unknown> {
-  isSuccess: boolean;
+  success: boolean;
   message?: string;
-  data?: T & CaseSubmissionData;
+  data?: (T & CaseSubmissionData) | null;
 }
 
 export interface CaseSubmissionFlowDeps<TDuplicate = unknown> {
@@ -50,7 +50,7 @@ export function executeCaseSubmissionFlow<TDuplicate = unknown>(
       next: (res) => {
         deps.isSubmitting.set(false);
 
-        if (!res.isSuccess) {
+        if (!res.success) {
           deps.errorMsg.set(res.message ?? 'حدث خطأ أثناء تنفيذ العملية.');
           deps.onComplete?.();
           return;

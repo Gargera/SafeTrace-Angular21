@@ -287,7 +287,7 @@ describe('UrgentCreate', () => {
     });
 
     it('should submit successfully', () => {
-      mockService.createCaseResult = of({ isSuccess: true, data: { isCreated: true } });
+      mockService.createCaseResult = of({ success: true, data: { isCreated: true } });
       component.onSubmit();
 
       expect(mockService.createCaseCalled).toBe(true);
@@ -312,7 +312,7 @@ describe('UrgentCreate', () => {
 
     const testDuplicate = (decision: DuplicateDecision) => {
       mockService.createCaseResult = of({
-        isSuccess: true,
+        success: true,
         data: { isCreated: false, duplicateDecision: decision, isBlocked: false, matchedCases: [] }
       });
       component.onSubmit();
