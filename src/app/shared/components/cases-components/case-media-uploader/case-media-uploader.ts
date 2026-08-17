@@ -1,0 +1,448 @@
+import {
+  Component,
+  input,
+  output,
+  inject,
+  signal,
+  DestroyRef,
+  OnInit,
+  OnChanges,
+  SimpleChanges,
+  ChangeDetectionStrategy,
+  computed,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormControl } from '@angular/forms';
+import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
+import { ImageService } from '../../../../shared/services/image.service';
+import { maxFilesCount } from '../../../../shared/validators/image-validation.validator';
+import { getControlFieldError } from '../../../../shared/helper/form-validation.helper';
+import { CaseFileResponse } from '../../../../core/models/cases.model';
+import { validateVideoFile } from '../../../../shared/validators/video-validation.validator';
+import { CaseObjectUrlRegistry } from '../../../../shared/helper/cases-helper/case-form.helper';
+
+export interface CaseMediaPayload {
+  primaryImage: File | null;
+  additionalImages: File[];
+  video: File | null;
+  deletedImageIds: number[];
+  primaryPhotoId: number | null;
+  originalPrimaryImage?: File | null;
+}
+
+@Component({
+  selector: 'app-case-media-uploader',
+  standalone: true,
+  imports: [CommonModule, ImageCropperComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: './case-media-uploader.html',
+})
+export class CaseMediaUploaderComponent implements OnInit, OnChanges {
+  mode = input<'create' | 'update'>('create');
+
+  // Existing Data (for Update mode)
+  existingPhotos = input<CaseFileResponse[]>([]);
+  existingVideoUrl = input<string | null>(null);
+
+  // Initial State (for Cache restoration in Create mode, or initial state in Update mode)
+  initialPrimaryFile = input<File | null>(null);
+  initialOriginalPrimaryFile = input<File | null>(null);
+  initialPrimaryPhotoId = input<number | null>(null);
+  initialAdditionalFiles = input<File[]>([]);
+  initialVideoFile = input<File | null>(null);
+  initialDeletedPhotoIds = input<number[]>([]);
+
+  // Errors from Parent
+  errors = input<{
+    primary?: string | null;
+    additional?: string | null;
+    video?: string | null;
+  }>({});
+
+  mediaChange = output<CaseMediaPayload>();
+
+  private imageService = inject(ImageService);
+  private destroyRef = inject(DestroyRef);
+  private readonly objectUrls = new CaseObjectUrlRegistry();
+
+  // Internal State
+  localExistingPhotos = signal<CaseFileResponse[]>([]);
+  deletedPhotoIds = signal<number[]>([]);
+  primaryPhotoId = signal<number | null>(null);
+
+  newPrimaryImage = signal<File | null>(null);
+  newPrimaryPreview = signal<string | null>(null);
+  private originalPrimaryImage = signal<File | null>(null);
+  private primaryImageSource = signal<File | null>(null);
+  private pendingCropSource = signal<File | null>(null);
+
+  // Active Cropper State
+  cropImageEvent = signal<Event | null>(null);
+  tempCroppedBlob = signal<Blob | null>(null);
+  cropTargetExistingId = signal<number | null>(null);
+
+  newPhotos = signal<File[]>([]);
+  newPhotoPreviews = signal<string[]>([]);
+
+  existingPrimaryPhoto = computed(() => {
+    const id = this.primaryPhotoId();
+    return this.localExistingPhotos().find((p) => p.id === id) || null;
+  });
+
+  existingAdditionalPhotos = computed(() => {
+    const id = this.primaryPhotoId();
+    return this.localExistingPhotos().filter((p) => p.id !== id);
+  });
+
+  videoFile = signal<File | null>(null);
+  videoPreview = signal<string | null>(null);
+  isVideoModalOpen = signal(false);
+
+  // Local UI errors (for frontend validation before submit)
+  localPrimaryError = signal<string | null>(null);
+  localAdditionalError = signal<string | null>(null);
+  localVideoError = signal<string | null>(null);
+  existingPhotoEditError = signal<string | null>(null);
+
+  constructor() {
+    this.destroyRef.onDestroy(() => this.objectUrls.revokeAll());
+  }
+
+  ngOnInit(): void {
+    if (this.mode() === 'update') {
+      const deletedIds = this.initialDeletedPhotoIds();
+      this.deletedPhotoIds.set([...deletedIds]);
+      this.localExistingPhotos.set(
+        this.existingPhotos().filter((p) => !deletedIds.includes(p.id))
+      );
+      this.primaryPhotoId.set(this.initialPrimaryPhotoId());
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['initialPrimaryFile'] && changes['initialPrimaryFile'].currentValue !== undefined) {
+      const file = changes['initialPrimaryFile'].currentValue;
+      this.newPrimaryImage.set(file);
+      if (file) {
+        this.primaryImageSource.set(file);
+        this.newPrimaryPreview.set(this.objectUrls.replace('primary', file));
+        this.localPrimaryError.set(null);
+      } else {
+        this.primaryImageSource.set(null);
+        this.newPrimaryPreview.set(null);
+      }
+    }
+
+    if (changes['initialOriginalPrimaryFile'] && changes['initialOriginalPrimaryFile'].currentValue !== undefined) {
+      this.originalPrimaryImage.set(changes['initialOriginalPrimaryFile'].currentValue || null);
+    }
+
+    if (changes['initialAdditionalFiles'] && changes['initialAdditionalFiles'].currentValue !== undefined) {
+      const files = changes['initialAdditionalFiles'].currentValue;
+      this.newPhotos.set(files || []);
+      if (files && files.length > 0) {
+        this.newPhotoPreviews.set(this.objectUrls.replaceMany('additional', files) || []);
+        this.localAdditionalError.set(null);
+      } else {
+        this.newPhotoPreviews.set([]);
+      }
+    }
+
+    if (changes['initialVideoFile'] && changes['initialVideoFile'].currentValue !== undefined) {
+      const file = changes['initialVideoFile'].currentValue || null;
+      if (file !== this.videoFile()) {
+        this.videoFile.set(file);
+        if (file) {
+          this.videoPreview.set(this.objectUrls.replace('video', file));
+        } else {
+          this.videoPreview.set(null);
+          this.objectUrls.revoke('video');
+        }
+        this.localVideoError.set(null);
+      }
+    }
+  }
+
+  private emitChange(): void {
+    const payload: CaseMediaPayload = {
+      primaryImage: this.newPrimaryImage(),
+      additionalImages: this.newPhotos(),
+      video: this.videoFile(),
+      deletedImageIds: this.deletedPhotoIds(),
+      primaryPhotoId: this.primaryPhotoId(),
+      originalPrimaryImage: this.originalPrimaryImage()
+    };
+    this.mediaChange.emit(payload);
+  }
+
+  public validate(): boolean {
+    if (this.cropImageEvent()) {
+      if (this.tempCroppedBlob()) {
+        this.confirmCrop();
+      } else {
+        this.localPrimaryError.set('برجاء اعتماد الصورة (تأكيد القص) قبل الإرسال.');
+        return false;
+      }
+    }
+
+    let isValid = true;
+
+    const hasPrimary = !!this.newPrimaryImage() || !!this.primaryPhotoId();
+    if (!hasPrimary) {
+      this.localPrimaryError.set('برجاء إضافة وتأطير الصورة الأساسية.');
+      isValid = false;
+    } else {
+      this.localPrimaryError.set(null);
+    }
+
+    const additionalImagesControl = new FormControl([...this.newPhotos(), ...this.existingAdditionalPhotos()], [maxFilesCount(4)]);
+    additionalImagesControl.markAsTouched();
+    if (additionalImagesControl.invalid) {
+      this.localAdditionalError.set(getControlFieldError(additionalImagesControl));
+      isValid = false;
+    } else {
+      this.localAdditionalError.set(null);
+    }
+
+    if (this.localAdditionalError() || this.localVideoError() || this.existingPhotoEditError()) {
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
+  // -------------------------------------------------------------
+  // Existing Photos (Update Mode)
+  // -------------------------------------------------------------
+
+  removeExistingPhoto(photo: CaseFileResponse): void {
+    this.localExistingPhotos.update((list) => list.filter((p) => p.id !== photo.id));
+    this.deletedPhotoIds.update((ids) => [...ids, photo.id]);
+
+    if (this.primaryPhotoId() === photo.id) {
+      this.primaryPhotoId.set(null);
+    }
+    this.emitChange();
+  }
+
+  setExistingAsPrimary(photo: CaseFileResponse): void {
+    if (this.mode() === 'update') return;
+    this.primaryPhotoId.set(photo.id);
+    this.newPrimaryImage.set(null);
+    this.newPrimaryPreview.set(null);
+    this.primaryImageSource.set(null);
+    this.objectUrls.revoke('primary');
+    this.emitChange();
+  }
+
+  async editExistingPhoto(photo: CaseFileResponse): Promise<void> {
+    this.existingPhotoEditError.set(null);
+    try {
+      const response = await fetch(photo.imagePath, { mode: 'cors' });
+      if (!response.ok) throw new Error('fetch failed');
+
+      const blob = await response.blob();
+      const file = new File([blob], `existing_${photo.id}.jpg`, {
+        type: blob.type || 'image/jpeg',
+      });
+
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      const fakeEvent = { target: { files: dt.files } } as unknown as Event;
+
+      this.cropTargetExistingId.set(photo.id);
+      this.pendingCropSource.set(file);
+      this.tempCroppedBlob.set(null);
+      this.cropImageEvent.set(fakeEvent);
+    } catch {
+      this.existingPhotoEditError.set('تعذر تحميل الصورة للتعديل. حاول مرة أخرى.');
+    }
+  }
+
+  // -------------------------------------------------------------
+  // Primary Photo
+  // -------------------------------------------------------------
+
+  onPrimaryPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const validation = this.imageService.validate(file, 5);
+    if (!validation.valid) {
+      this.localPrimaryError.set(validation.errorMessage ?? null);
+      input.value = '';
+      return;
+    }
+
+    this.localPrimaryError.set(null);
+    this.cropTargetExistingId.set(null);
+    this.originalPrimaryImage.set(file);
+    this.pendingCropSource.set(file);
+    this.tempCroppedBlob.set(null);
+    this.cropImageEvent.set(event);
+  }
+
+  onImageCropped(event: ImageCroppedEvent): void {
+    if (event.blob) {
+      this.tempCroppedBlob.set(event.blob);
+    }
+  }
+
+  confirmCrop(): void {
+    const blob = this.tempCroppedBlob();
+    if (!blob) return;
+
+    const targetId = this.cropTargetExistingId();
+    const croppedFile = new File([blob], `primary_image_${Date.now()}.jpg`, {
+      type: 'image/jpeg',
+    });
+
+    if (targetId !== null) {
+      // Editing an existing photo: treat it as "delete old + upload edited version"
+      const wasPrimary = this.primaryPhotoId() === targetId;
+
+      this.deletedPhotoIds.update((ids) => [...ids, targetId]);
+      this.localExistingPhotos.update((list) => list.filter((p) => p.id !== targetId));
+
+      if (wasPrimary) {
+        this.newPrimaryImage.set(croppedFile);
+        this.newPrimaryPreview.set(this.objectUrls.replace('primary', croppedFile));
+        this.primaryImageSource.set(this.originalPrimaryImage() ?? this.pendingCropSource() ?? croppedFile);
+        this.primaryPhotoId.set(null);
+      } else {
+        this.newPhotos.update((p) => [...p, croppedFile]);
+        this.newPhotoPreviews.set(this.objectUrls.replaceMany('additional', this.newPhotos()) || []);
+      }
+      this.cropTargetExistingId.set(null);
+    } else {
+      // Brand new primary
+      this.newPrimaryImage.set(croppedFile);
+      this.newPrimaryPreview.set(this.objectUrls.replace('primary', croppedFile));
+      this.primaryImageSource.set(this.originalPrimaryImage() ?? this.pendingCropSource() ?? croppedFile);
+      this.primaryPhotoId.set(null);
+    }
+
+    this.cropImageEvent.set(null);
+    this.pendingCropSource.set(null);
+    this.emitChange();
+  }
+
+  cancelCrop(): void {
+    this.cropImageEvent.set(null);
+    this.cropTargetExistingId.set(null);
+    this.pendingCropSource.set(null);
+    this.tempCroppedBlob.set(null);
+  }
+
+  reCropPrimary(): void {
+    const source = this.originalPrimaryImage() ?? this.primaryImageSource() ?? this.newPrimaryImage();
+    if (!source) return;
+    this.cropTargetExistingId.set(null);
+    this.pendingCropSource.set(source);
+    this.tempCroppedBlob.set(null);
+
+    const dt = new DataTransfer();
+    dt.items.add(source);
+    this.cropImageEvent.set({ target: { files: dt.files } } as unknown as Event);
+  }
+
+  clearPrimary(): void {
+    this.newPrimaryImage.set(null);
+    this.originalPrimaryImage.set(null);
+    this.newPrimaryPreview.set(null);
+    this.primaryImageSource.set(null);
+    this.objectUrls.revoke('primary');
+    this.localPrimaryError.set(null);
+    this.emitChange();
+  }
+
+  // -------------------------------------------------------------
+  // Additional Photos
+  // -------------------------------------------------------------
+
+  onAdditionalPhotosSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let files = Array.from(input.files ?? []);
+
+    if (files.length === 0) {
+      input.value = '';
+      return;
+    }
+
+    for (const f of files) {
+      const validation = this.imageService.validate(f, 5);
+      if (!validation.valid) {
+        this.localAdditionalError.set(validation.errorMessage ?? null);
+        input.value = '';
+        return;
+      }
+    }
+
+    const proposedPhotos = [...this.newPhotos(), ...files, ...this.existingAdditionalPhotos()];
+    const additionalImagesControl = new FormControl(proposedPhotos, [maxFilesCount(4)]);
+    additionalImagesControl.markAsTouched();
+    if (additionalImagesControl.invalid) {
+      this.localAdditionalError.set(getControlFieldError(additionalImagesControl));
+      input.value = '';
+      return;
+    }
+
+    this.localAdditionalError.set(null);
+    this.newPhotos.update((p) => [...p, ...files]);
+    this.newPhotoPreviews.set(this.objectUrls.replaceMany('additional', this.newPhotos()) || []);
+    input.value = '';
+    this.emitChange();
+  }
+
+  removeNewPhoto(index: number): void {
+    const updated = this.newPhotos().filter((_, i) => i !== index);
+    this.newPhotos.set(updated);
+    this.newPhotoPreviews.set(this.objectUrls.replaceMany('additional', updated) || []);
+    this.localAdditionalError.set(null);
+    this.emitChange();
+  }
+
+  // -------------------------------------------------------------
+  // Video
+  // -------------------------------------------------------------
+
+  onVideoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+
+    if (!file) {
+      return;
+    }
+
+    const validation = validateVideoFile(file, 50);
+
+    if (!validation.valid) {
+      this.videoFile.set(null);
+      this.localVideoError.set(validation.errorMessage ?? 'الفيديو غير صالح.');
+      input.value = '';
+      this.emitChange();
+      return;
+    }
+
+    this.localVideoError.set(null);
+    this.videoFile.set(file);
+    this.videoPreview.set(this.objectUrls.replace('video', file));
+    this.emitChange();
+  }
+
+  removeVideo(): void {
+    this.videoFile.set(null);
+    this.videoPreview.set(null);
+    this.objectUrls.revoke('video');
+    this.emitChange();
+  }
+
+  openVideoModal(): void {
+    this.isVideoModalOpen.set(true);
+  }
+
+  closeVideoModal(): void {
+    this.isVideoModalOpen.set(false);
+  }
+}

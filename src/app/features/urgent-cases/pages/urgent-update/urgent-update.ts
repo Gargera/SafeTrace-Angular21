@@ -1,5 +1,17 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit, DestroyRef } from '@angular/core';
+import { useCaseMediaState } from '../../../../shared/helper/cases-helper/case-media.helper';
+import { CacheService } from '../../../../core/cache/cache.service';
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  OnInit,
+  DestroyRef,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime, Observable } from 'rxjs';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -9,34 +21,54 @@ import { UrgentCaseUpdateRequest } from '../../models/request/UrgentCaseUpdateRe
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
 import { RELATION_TYPE_OPTIONS } from '../../../../core/constants/dictionaries/relation.type.dictionary';
-import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
-import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
+import {
+  EGYPT_GOVERNORATES,
+  getCitiesForGovernorate,
+} from '../../../../core/constants/governorates';
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { SnackbarService } from '../../../../shared/services/toast.service';
-import { ButtonComponent } from '../../../../shared/components/button/button';
-import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
+import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container';
 
 // Shared validators
+import { useCaseFormErrors } from '../../../../shared/helper/cases-helper/case-form-errors.helper';
+import { bindGovernorateCityValidation } from '../../../../shared/helper/cases-helper/case-location-sync.helper';
 import { arabicText } from '../../../../shared/validators/arabic-text.validator';
 import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.validator';
 import { validEnum } from '../../../../shared/validators/enum.validator';
 import { validCity } from '../../../../shared/validators/city.validator';
 import { validGovernorate } from '../../../../shared/validators/governorate.validator';
-import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
-import { ImageService } from '../../../../shared/services/image.service';
+import { CaseMediaUploaderComponent, CaseMediaPayload } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader';
 
 import { CommonModule } from '@angular/common';
-import { HeaderComponent } from '../../../../shared/components/header/header.component';
-import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
-
 import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 import { CaseFileResponse } from '../../../../core/models/cases.model';
-import { validateVideoFile} from '../../../../shared/validators/video-validation.validator';
 import { UpdateFormSkeletonComponent } from '../../../../shared/components/skeletons/update-form-skeleton/update-form-skeleton.component';
+import {
+  CaseFormStep,
+  localDateInputValue,
+  nextCaseFormStep,
+  previousCaseFormStep,
+  validateStepControls,
+  validateCaseSubmission,
+} from '../../../../shared/helper/cases-helper/case-form.helper';
+import { executeCaseSubmissionFlow, CaseSubmissionResponse, CaseSubmissionFlowDeps } from '../../../../shared/helper/cases-helper/case-submission-flow.helper';
+import { saveUpdateDraft, restoreUpdateDraft } from '../../../../shared/helper/cases-helper/case-cache.helper';
+import { toDatetimeLocalString } from '../../../../shared/validators/urgent-event-date.validator';
+import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data";
+import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data";
 
+type Step = CaseFormStep;
 
-type Step = 1 | 2 | 3;
+export const URGENT_UPDATE_DRAFT_KEY_PREFIX = 'UrgentUpdate_Draft_';
+
+interface UrgentUpdateCustomData {
+  primaryPhotoId: number | null;
+  selectedLat: number | null;
+  selectedLng: number | null;
+  selectedAddress: string;
+  isMapModalOpen: boolean;
+}
 
 @Component({
   selector: 'app-urgent-update',
@@ -45,22 +77,42 @@ type Step = 1 | 2 | 3;
     CommonModule,
     ReactiveFormsModule,
     MapLocationPickerComponent,
-    ButtonComponent,
-    FormField,
     CardComponent,
-    HeaderComponent,
-    ConfirmationModalComponent,
     UpdateFormSkeletonComponent,
-    ImageCropperComponent,
+    CaseMediaUploaderComponent,
+    CaseFormContainerComponent,
+    CaseLocationDataComponent,
+    CasePersonDataComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./urgent-update.css'],
   templateUrl: './urgent-update.html',
 })
 export class UrgentUpdate implements OnInit {
+  mediaState = useCaseMediaState({
+    onSaveDraft: () => {
+      const self = this as any;
+      if (typeof self.saveDraft === 'function') {
+        self.saveDraft();
+      } else if (typeof self.saveDraftToCache === 'function') {
+        self.saveDraftToCache(self.mediaPayload());
+      }
+    }
+  });
+
+  initialPrimary = this.mediaState.initialPrimary;
+  initialOriginalPrimary = this.mediaState.initialOriginalPrimary;
+  initialAdditional = this.mediaState.initialAdditional;
+  initialVideo = this.mediaState.initialVideo;
+  mediaPayload = this.mediaState.mediaPayload;
+  mediaErrors = this.mediaState.mediaErrors;
+  onMediaChange = this.mediaState.onMediaChange;
+
   private fb = inject(FormBuilder);
-  private imageService = inject(ImageService);
   private destroyRef = inject(DestroyRef);
+  private cacheService = inject(CacheService);
+
+  mediaUploader = viewChild<CaseMediaUploaderComponent>(CaseMediaUploaderComponent);
 
   private service = inject(UrgentCaseService);
   private router = inject(Router);
@@ -69,40 +121,30 @@ export class UrgentUpdate implements OnInit {
   private geocoding = inject(GeocodingService);
 
   caseId!: number;
-  currentStep: Step = 1;
+  currentStep = signal<Step>(1);
   isLoading = signal(true);
   isSubmitting = signal(false);
   errorMsg = signal<string | null>(null);
 
-  showDeleteImageConfirm = signal(false);
-  photoToDelete = signal<CaseFileResponse | null>(null);
+  private submittedSuccessfully = signal(false);
 
   existingPhotos = signal<CaseFileResponse[]>([]);
-  deletedPhotoIds = signal<number[]>([]);
-  primaryPhotoId = signal<number | null>(null);
-
-  newPhotos = signal<File[]>([]);
-  newPhotoPreviews = signal<string[]>([]);
-  newPrimaryImage = signal<File | null>(null);
-  newPrimaryPreview = signal<string | null>(null);
-  newPrimaryError = signal<string | null>(null);
-  newPhotosError = signal<string | null>(null);
-
-  // Cropper state for Update (same pattern as Create)
-  cropImageEvent = signal<Event | null>(null);
-  tempCroppedBlob = signal<Blob | null>(null);
-  croppedPrimaryImagePreview = signal<string | null>(null);
-
   existingVideoUrl = signal<string | null>(null);
-  videoFile = signal<File | null>(null);
-  videoError = signal<string | null>(null);
+
+  initialDeletedPhotoIds = signal<number[]>([]);
+  initialPrimaryPhotoId = signal<number | null>(null);
+
+  get draftKey() {
+    return `${URGENT_UPDATE_DRAFT_KEY_PREFIX}${this.caseId}`;
+  }
 
   selectedLat = signal<number | null>(null);
   selectedLng = signal<number | null>(null);
   selectedAddress = signal<string>('');
-  /** initial coords passed to the map picker so it centers on the existing location */
   initialMapCenter = signal<{ lat: number; lng: number } | null>(null);
   isMapModalOpen = signal(false);
+  private originalEventDate = signal<string>('');
+  eventDateDisplay = signal<string>('');
 
   isLocating = signal(false);
   locationError = signal<string | null>(null);
@@ -110,48 +152,78 @@ export class UrgentUpdate implements OnInit {
   readonly genders = Gender;
   readonly relationOptions = RELATION_TYPE_OPTIONS;
   readonly governorates = EGYPT_GOVERNORATES;
-  readonly today = new Date().toISOString().split('T')[0];
+  readonly today = localDateInputValue();
 
   readonly steps = [
     { num: 1, label: 'بيانات الشخص' },
     { num: 2, label: 'موقع الحادث' },
-    { num: 3, label: 'صور' },
+    { num: 3, label: 'مستندات وصور' },
   ];
 
-  get stepTitle(): string {
-    return ['بيانات الشخص', 'موقع الحادث على الخريطة', 'صور'][this.currentStep - 1];
-  }
+  stepTitle = computed(() => {
+    return ['بيانات الشخص المفقود', 'موقع الحادث على الخريطة', 'صور'][this.currentStep() - 1];
+  });
+
+  stepHeader = computed(() => {
+    switch (this.currentStep()) {
+      case 1:
+        return {
+          icon: 'person',
+          title: 'تحديث بيانات المفقود',
+          description: 'أدخل البيانات الأساسية للشخص المفقود للمساعدة في التعرف عليه.',
+        };
+      case 2:
+        return {
+          icon: 'location_on',
+          title: 'موقع وتفاصيل الحادث',
+          description: 'يجب تحديد الموقع والتاريخ بدقة عالية.',
+        };
+      case 3:
+        return {
+          icon: 'photo_library',
+          title: 'صور وفيديو',
+          description: 'ارفع الصور والمستندات ومقاطع الفيديو المتاحة.',
+        };
+      default:
+        return null;
+    }
+  });
 
   // ─────────────────────────────────────────────────────────────
-  // Form definition — validators match backend exactly (Update)
+  // Form definition
   // ─────────────────────────────────────────────────────────────
   form = this.fb.group({
-    fName: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    fName: [
+      '',
+      [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)],
+    ],
     sName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
     tName: ['', [arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
-    lName: ['', [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)]],
+    lName: [
+      '',
+      [Validators.required, arabicText(), Validators.minLength(2), Validators.maxLength(60)],
+    ],
     age: [null as number | null, [Validators.required, Validators.min(1), Validators.max(120)]],
     gender: ['' as Gender | '', [Validators.required, validEnum(Gender)]],
-    // Relation is optional on Update
-    relation: [null as RelationType | null, [validEnum(RelationType)]],
-    // Phone — optional, Egyptian format, max 15
+    relation: [null as RelationType | null, [Validators.required, validEnum(RelationType)]],
     communicationPhone: ['', [egyptianPhone(), Validators.maxLength(15)]],
     description: ['', [Validators.maxLength(2000)]],
-    government: ['', [Validators.required, validGovernorate(), Validators.minLength(2), Validators.maxLength(100)]],
+    government: [
+      '',
+      [Validators.required, validGovernorate(), Validators.minLength(2), Validators.maxLength(100)],
+    ],
     city: ['', [Validators.required]],
     street: ['', [Validators.required, Validators.maxLength(200)]],
   });
 
   // ─────────────────────────────────────────────────────────────
-  // Error message helper
+  // Error message helpers
   // ─────────────────────────────────────────────────────────────
-  getFieldError(field: string): string | null {
-    return getFormFieldError(this.form, field);
-  }
-
-  isInvalid(field: string): boolean {
-    return isFieldInvalid(this.form, field);
-  }
+  private formErrors = useCaseFormErrors(this.form);
+  getFieldError = this.formErrors.getFieldError;
+  isInvalid = this.formErrors.isInvalid;
+  isInvalidFn = this.formErrors.isInvalidFn;
+  getErrorFn = this.formErrors.getErrorFn;
 
   availableCities = signal<string[]>([]);
 
@@ -159,29 +231,45 @@ export class UrgentUpdate implements OnInit {
     this.caseId = Number(this.route.snapshot.paramMap.get('id'));
 
     // Set city validator after form is initialized to avoid circular reference
-    this.form.get('city')?.setValidators([Validators.required, validCity(() => this.form.get('government')?.value ?? null)]);
-    this.form.get('city')?.updateValueAndValidity();
+    bindGovernorateCityValidation(this.form, this.destroyRef, this.availableCities);
 
-    this.form.get('government')?.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((gov) => {
-        const cities = getCitiesForGovernorate(gov);
-        this.availableCities.set(cities);
-        const currentCity = this.form.get('city')?.value;
-        if (currentCity && !cities.includes(currentCity)) {
-          this.form.get('city')?.setValue('');
-        }
-        this.form.get('city')?.updateValueAndValidity();
+    this.form.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef), debounceTime(500))
+      .subscribe(() => {
+        this.saveDraftToCache();
       });
 
     this.loadCase();
   }
 
+  private saveDraftToCache(media?: CaseMediaPayload): void {
+    if (this.isLoading() || this.submittedSuccessfully()) return;
+
+    const payload = media ?? this.mediaPayload();
+
+    saveUpdateDraft<any, UrgentUpdateCustomData>(
+      this.cacheService,
+      this.draftKey,
+      this.form,
+      this.currentStep(),
+      {
+        primaryImage: payload.primaryImage,
+        additionalImages: payload.additionalImages,
+        deletedImageIds: payload.deletedImageIds,
+        video: payload.video,
+      },
+      {
+        primaryPhotoId: payload.primaryPhotoId,
+        selectedLat: this.selectedLat(),
+        selectedLng: this.selectedLng(),
+        selectedAddress: this.selectedAddress(),
+        isMapModalOpen: this.isMapModalOpen(),
+      }
+    );
+  }
+
   /**
-   * The backend (local FileStorageService) returns RELATIVE paths only
-   * (e.g. "/Images/UrgentCase/xxx.jpg"). Without prefixing environment.baseUrl,
-   * <img src> resolves against the Angular app's own origin instead of the API.
-   * Kept forward-compatible: an already-absolute URL (e.g. future S3) passes through.
+   * The backend returns RELATIVE paths only.
    */
   private resolveMediaUrl(path: string | null | undefined): string | null {
     if (!path) return null;
@@ -218,6 +306,10 @@ export class UrgentUpdate implements OnInit {
             city: c.city ?? '',
             street: c.street ?? '',
           });
+          this.originalEventDate.set(c.eventDate ?? '');
+          this.eventDateDisplay.set(
+            c.eventDate ? toDatetimeLocalString(new Date(c.eventDate)) : '',
+          );
 
           if (c.latitude != null && c.longitude != null) {
             this.selectedLat.set(c.latitude);
@@ -228,7 +320,8 @@ export class UrgentUpdate implements OnInit {
               .pipe(takeUntilDestroyed(this.destroyRef))
               .subscribe({
                 next: (addr) => this.selectedAddress.set(addr),
-                error: () => this.selectedAddress.set(`${c.latitude!.toFixed(4)}, ${c.longitude!.toFixed(4)}`),
+                error: () =>
+                  this.selectedAddress.set(`${c.latitude!.toFixed(4)}, ${c.longitude!.toFixed(4)}`),
               });
           }
 
@@ -237,9 +330,55 @@ export class UrgentUpdate implements OnInit {
             ...f,
             imagePath: this.resolveMediaUrl(f.imagePath) ?? f.imagePath,
           }));
-          this.existingPhotos.set(files);
-          this.primaryPhotoId.set(files.find((f) => f.isPrimary)?.id ?? null);
+
+          const primary = files.find((f) => f.isPrimary);
+
           this.existingVideoUrl.set(this.resolveMediaUrl(c.video ?? null));
+
+          const draft = restoreUpdateDraft<any, UrgentUpdateCustomData>(
+            this.cacheService,
+            this.draftKey,
+            this.form,
+            (s) => this.currentStep.set(s),
+            {
+              primary: (f) => this.initialPrimary.set(f),
+              additional: (fs) => this.initialAdditional.set(fs),
+              deletedPhotoIds: (ids) => this.initialDeletedPhotoIds.set(ids),
+              video: (f) => this.initialVideo.set(f)
+            }
+          );
+
+          if (draft) {
+            if (draft.selectedLat !== null && draft.selectedLat !== undefined && draft.selectedLng !== null && draft.selectedLng !== undefined) {
+              this.selectedLat.set(draft.selectedLat);
+              this.selectedLng.set(draft.selectedLng);
+              this.selectedAddress.set(draft.selectedAddress);
+              this.initialMapCenter.set({ lat: draft.selectedLat, lng: draft.selectedLng });
+            }
+            if (draft.isMapModalOpen) {
+              this.isMapModalOpen.set(true);
+            }
+
+            // Important: we need to set the payload so that we don't have to wait for the uploader to emit it
+            const pId = draft.primaryPhotoId ?? (primary ? primary.id : (files[0]?.id ?? null));
+            this.mediaPayload.set({
+              primaryImage: draft.newPrimaryImage ?? null,
+              additionalImages: draft.newAdditionalImages ?? [],
+              deletedImageIds: draft.deletedPhotoIds ?? [],
+              video: draft.newVideo ?? null,
+              primaryPhotoId: pId,
+            });
+            this.initialPrimaryPhotoId.set(pId);
+
+          } else {
+            const pId = primary ? primary.id : (files[0]?.id ?? null);
+            this.mediaPayload.update((p: CaseMediaPayload) => ({
+              ...p,
+              primaryPhotoId: pId
+            }));
+            this.initialPrimaryPhotoId.set(pId);
+          }
+          this.existingPhotos.set(files);
 
           this.isLoading.set(false);
         },
@@ -255,14 +394,18 @@ export class UrgentUpdate implements OnInit {
     this.selectedLat.set(loc.lat);
     this.selectedLng.set(loc.lng);
     this.selectedAddress.set(loc.address);
+    this.errorMsg.set(null);
+    this.saveDraftToCache();
   }
 
   openMapModal(): void {
     this.isMapModalOpen.set(true);
+    this.saveDraftToCache();
   }
 
   closeMapModal(): void {
     this.isMapModalOpen.set(false);
+    this.saveDraftToCache();
   }
 
   onMapLocationConfirmed(loc: { lat: number; lng: number; address: string }): void {
@@ -271,6 +414,7 @@ export class UrgentUpdate implements OnInit {
     this.selectedAddress.set(loc.address);
     this.initialMapCenter.set({ lat: loc.lat, lng: loc.lng });
     this.isMapModalOpen.set(false);
+    this.saveDraftToCache();
   }
 
   useCurrentLocation(): void {
@@ -305,7 +449,9 @@ export class UrgentUpdate implements OnInit {
         this.isLocating.set(false);
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            this.locationError.set('تم رفض إذن الوصول لموقعك. من فضلك فعّل صلاحية الموقع من إعدادات المتصفح.');
+            this.locationError.set(
+              'تم رفض إذن الوصول لموقعك. من فضلك فعّل صلاحية الموقع من إعدادات المتصفح.',
+            );
             break;
           case error.POSITION_UNAVAILABLE:
             this.locationError.set('تعذر تحديد موقعك الحالي.');
@@ -321,239 +467,113 @@ export class UrgentUpdate implements OnInit {
     );
   }
 
+  private readonly stepControls: Record<1 | 2, string[]> = {
+    1: [
+      'fName',
+      'sName',
+      'tName',
+      'lName',
+      'age',
+      'gender',
+      'relation',
+      'communicationPhone',
+      'description',
+    ],
+    2: ['government', 'city', 'street'],
+  };
+
   nextStep(): void {
-    if (this.currentStep === 1) {
-      const fields = ['fName', 'lName', 'age', 'gender', 'communicationPhone'];
-      fields.forEach((f) => this.form.get(f)?.markAsTouched());
-      if (fields.some((f) => this.form.get(f)?.invalid)) return;
-    }
-    if (this.currentStep === 2) {
-      const fields = ['government', 'city', 'street'];
-      fields.forEach((f) => this.form.get(f)?.markAsTouched());
-      if (fields.some((f) => this.form.get(f)?.invalid)) return;
+    const current = this.currentStep();
+    const fields = this.stepControls[current as 1 | 2] ?? [];
+    if (validateStepControls(this.form, fields)) return;
+
+    if (current === 2) {
       if (this.selectedLat() === null || this.selectedLng() === null) {
         this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
         return;
       }
     }
     this.errorMsg.set(null);
-    this.currentStep = (this.currentStep + 1) as Step;
+    this.currentStep.set(nextCaseFormStep(current));
   }
 
   prevStep(): void {
-    if (this.currentStep > 1) this.currentStep = (this.currentStep - 1) as Step;
+    this.currentStep.set(previousCaseFormStep(this.currentStep()));
   }
-
-  // ─────────────────────────────────────────────────────────────
-  // Photo management — file type/size validation
-  // ─────────────────────────────────────────────────────────────
-
-  confirmRemoveExistingPhoto(photo: CaseFileResponse): void {
-    this.photoToDelete.set(photo);
-    this.showDeleteImageConfirm.set(true);
-  }
-
-  executeRemoveExistingPhoto(): void {
-    const photo = this.photoToDelete();
-    if (photo) {
-      this.deletedPhotoIds.update((ids) => [...ids, photo.id]);
-      this.existingPhotos.update((photos) => photos.filter((p) => p.id !== photo.id));
-      if (this.primaryPhotoId() === photo.id) {
-        const next = this.existingPhotos()[0];
-        this.primaryPhotoId.set(next ? next.id : null);
-      }
-    }
-    this.showDeleteImageConfirm.set(false);
-    this.photoToDelete.set(null);
-  }
-
-  setExistingAsPrimary(photo: CaseFileResponse): void {
-    this.primaryPhotoId.set(photo.id);
-    this.newPrimaryImage.set(null);
-    this.newPrimaryPreview.set(null);
-  }
-
-  onNewPrimarySelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
-    if (!file) return;
-
-    const validation = this.imageService.validate(file, 5);
-    if (!validation.valid) {
-      this.newPrimaryError.set(validation.errorMessage ?? null);
-      return;
-    }
-
-    this.newPrimaryError.set(null);
-    // Open crop dialog — same pattern as Create
-    this.cropImageEvent.set(event);
-    this.primaryPhotoId.set(null);
-  }
-
-  onImageCropped(event: ImageCroppedEvent): void {
-    const blob = event.blob;
-    if (!blob) return;
-    this.tempCroppedBlob.set(blob);
-  }
-
-  confirmCrop(): void {
-    const blob = this.tempCroppedBlob();
-    if (!blob) return;
-    const croppedFile = new File([blob], 'primary_image.jpg', { type: 'image/jpeg' });
-    this.newPrimaryImage.set(croppedFile);
-    this.newPrimaryPreview.set(URL.createObjectURL(croppedFile));
-    this.croppedPrimaryImagePreview.set(URL.createObjectURL(croppedFile));
-    this.cropImageEvent.set(null);
-  }
-
-  cancelCrop(): void {
-    this.cropImageEvent.set(null);
-  }
-
-  reCropPhoto(): void {
-    this.croppedPrimaryImagePreview.set(null);
-    this.newPrimaryImage.set(null);
-    this.newPrimaryPreview.set(null);
-    this.cropImageEvent.set(null);
-  }
-
-  onCropCancel(): void {
-    this.cropImageEvent.set(null);
-  }
-
-  clearNewPrimary(): void {
-    this.newPrimaryImage.set(null);
-    this.newPrimaryPreview.set(null);
-    this.newPrimaryError.set(null);
-  }
-
-  onNewPhotosSelected(event: Event): void {
-    const files = Array.from((event.target as HTMLInputElement).files ?? []);
-    for (const f of files) {
-      const validation = this.imageService.validate(f, 5);
-      if (!validation.valid) {
-        this.newPhotosError.set(validation.errorMessage ?? null);
-        return;
-      }
-    }
-    this.newPhotosError.set(null);
-    this.newPhotos.update((p) => [...p, ...files].slice(0, 5));
-    this.newPhotoPreviews.set(this.newPhotos().map((f) => URL.createObjectURL(f)));
-  }
-
-  removeNewPhoto(index: number): void {
-    this.newPhotos.update((p) => p.filter((_, i) => i !== index));
-    this.newPhotoPreviews.update((p) => p.filter((_, i) => i !== index));
-  }
-
- 
-onVideoSelected(event: Event): void {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0] ?? null;
-
-  if (!file) {
-    return;
-  }
-
-  const validation = validateVideoFile(file, 50);
-
-  if (!validation.valid) {
-    this.videoFile.set(null);
-    this.videoError.set(
-      validation.errorMessage ?? 'الفيديو غير صالح.'
-    );
-
-    input.value = '';
-    return;
-  }
-
-  this.videoError.set(null);
-  this.videoFile.set(file);
-}
-
-
 
   onSubmit(): void {
     if (this.isSubmitting()) return;
-    const noPhotoLeft = this.existingPhotos().length === 0 && !this.newPrimaryImage() && this.newPhotos().length === 0;
-    if (this.form.invalid || noPhotoLeft || this.selectedLat() === null) {
-      this.form.markAllAsTouched();
-      if (noPhotoLeft) this.errorMsg.set('لازم يفضل في صورة واحدة على الأقل للحالة.');
-      else if (this.selectedLat() === null) this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
-      return;
+    const media = this.mediaPayload();
+    const currentRemainingPhotos = this.existingPhotos().length - media.deletedImageIds.length;
+    const hasAtLeastOnePhoto =
+      currentRemainingPhotos > 0 || !!media.primaryImage || media.additionalImages.length > 0;
+
+    const uploader = this.mediaUploader();
+    if (uploader) {
+      const validation = validateCaseSubmission(this.form, uploader);
+      if (!validation.valid || !hasAtLeastOnePhoto || this.selectedLat() === null) {
+        if (!hasAtLeastOnePhoto) this.errorMsg.set('لازم يفضل في صورة واحدة على الأقل للحالة.');
+        else if (this.selectedLat() === null) this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
+        else this.errorMsg.set(validation.message!);
+        return;
+      }
     }
 
-    this.isSubmitting.set(true);
-    this.errorMsg.set(null);
+    const request = this.buildUpdateRequest();
 
+    this.mediaErrors.set({});
+
+    executeCaseSubmissionFlow(
+      this.service.updateCase(this.caseId, request) as unknown as Observable<CaseSubmissionResponse<any>>,
+      this.getSubmissionDependencies()
+    );
+  }
+
+  private buildUpdateRequest(): UrgentCaseUpdateRequest {
     const v = this.form.getRawValue();
+    const media = this.mediaPayload();
 
-    const request: UrgentCaseUpdateRequest = {
+    return {
       fName: v.fName!,
       lName: v.lName!,
       sName: v.sName || null,
       tName: v.tName || null,
       gender: v.gender as Gender,
-      age: v.age!,
+      age: Number(v.age ?? 0),
       relation: v.relation as RelationType,
       communicationPhone: v.communicationPhone || null,
       description: v.description || null,
       government: v.government!,
       city: v.city!,
       street: v.street!,
-      eventDate: new Date().toISOString(),
-      primaryImage: this.newPrimaryImage(),
-      newPhotos: this.newPhotos().length ? this.newPhotos() : null,
-      deletedPhotoIds: this.deletedPhotoIds().length ? this.deletedPhotoIds() : null,
-      primaryPhotoId: this.primaryPhotoId(),
-      video: this.videoFile(),
+      eventDate: this.originalEventDate(),
+      primaryImage: media.primaryImage ?? undefined,
+      newPhotos: media.additionalImages.length ? media.additionalImages : null,
+      deletedPhotosIds: media.deletedImageIds.length ? media.deletedImageIds : null,
+      primaryPhotoId: media.primaryPhotoId,
+      video: media.video,
       latitude: this.selectedLat()!,
       longitude: this.selectedLng()!,
     };
+  }
 
-    this.service
-      .updateCase(this.caseId, request)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.isSubmitting.set(false);
-          this.snackbar.success('تم تحديث بيانات الحالة بنجاح.');
-          this.router.navigate(['/urgent', this.caseId]);
-        },
-        error: (err: unknown) => {
-          this.isSubmitting.set(false);
-          const msg = extractErrorMessage(err, 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.');
-          
-          if (msg.includes('يجب أن تكون لنفس الشخص') || msg.includes('لا تبدو لنفس الشخص')) {
-            this.newPrimaryError.set(msg);
-            this.newPhotosError.set(msg);
-            return;
-          }
-
-          if (err && typeof err === 'object' && 'status' in err && (err as any).status === 400) {
-            const errorObj = (err as any).error;
-            if (errorObj?.errors) {
-              let hasUnmappedErrors = false;
-              for (const key in errorObj.errors) {
-                const controlName = key.charAt(0).toLowerCase() + key.slice(1);
-                const control = this.form.get(controlName);
-                if (control) {
-                  control.setErrors({ serverError: errorObj.errors[key][0] });
-                } else {
-                  hasUnmappedErrors = true;
-                  this.errorMsg.set(errorObj.errors[key][0]);
-                }
-              }
-              if (!hasUnmappedErrors) {
-                this.errorMsg.set(null);
-              }
-            } else {
-              this.errorMsg.set(msg);
-            }
-          } else {
-            this.snackbar.error(msg);
-          }
-        },
-      });
+  private getSubmissionDependencies(): CaseSubmissionFlowDeps<any> {
+    return {
+      isSubmitting: this.isSubmitting,
+      errorMsg: this.errorMsg,
+      mediaErrors: this.mediaErrors,
+      form: this.form,
+      cacheService: this.cacheService,
+      draftKey: this.draftKey,
+      snackbar: this.snackbar,
+      router: this.router,
+      successRoute: ['/urgent', this.caseId],
+      successMessage: 'تم تعديل بيانات الحالة بنجاح.',
+      onSuccess: () => {
+        this.submittedSuccessfully.set(true);
+      },
+      defaultErrorMessage: 'حدث خطأ أثناء حفظ التعديلات. حاول مرة أخرى.'
+    };
   }
 
   goBack(): void {

@@ -17,7 +17,7 @@ import { CaseStatus } from '../../../../shared/enums/case-status';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
 import { FoundedHeaderQueryDTO } from '../../models/requests/founded-header-query-dto';
 import { FoundPersonListItemDto } from '../../models/responses/found-person-list-item-dto';
-import { FoundedFilterState } from '../../../../shared/helper/cases-filter-state';
+import { FoundedFilterState } from '../../../../shared/helper/cases-helper/cases-filter-state';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { CacheService } from '../../../../core/cache/cache.service';

@@ -16,7 +16,7 @@ import { UrgentCaseListItemResponse } from '../../models/response/UrgentCaseList
 import { UrgentCasesFilterRequest } from '../../models/request/UrgentCaseFilterRequest';
 import { CaseCreationFlowService } from '../../../../core/services/case-creation-flow.service';
 import { CommonModule } from '@angular/common';
-import { CasesFilterState } from '../../../../shared/helper/cases-filter-state';
+import { CasesFilterState } from '../../../../shared/helper/cases-helper/cases-filter-state';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { CaseType } from '../../../../shared/enums/case-type';

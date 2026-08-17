@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
+import { AuthService } from '../../../../core/services/auth.service';
 
 import { RoleManagement } from './role-management';
 
@@ -9,6 +11,9 @@ describe('RoleManagement', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [RoleManagement],
+      providers: [
+        { provide: AuthService, useValue: { currentUser: signal(null), isLoggedIn: signal(false), hasPermission: () => false } }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(RoleManagement);
