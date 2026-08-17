@@ -1,7 +1,7 @@
 @if(loading()){
-  <div class="max-w-3xl mx-auto py-lg px-md w-full mt-24">
-    <app-card-skeleton [items]="6" layout="chat-list"></app-card-skeleton>
-  </div>
+<div class="max-w-3xl mx-auto py-lg px-md w-full mt-24">
+  <app-card-skeleton [items]="6" layout="chat-list"></app-card-skeleton>
+</div>
 }
 @else {
 <div class="max-w-3xl mx-auto py-lg px-md h-125 md:h-150 flex flex-col">
@@ -12,14 +12,11 @@
     <!-- Filter tabs -->
     <div class="flex gap-xs mb-md">
       @for (tab of filterTabs; track tab.key) {
-        <button
-          type="button"
-          (click)="setFilter(tab.key)"
-          class="h-9 px-4 rounded-full text-sm font-medium transition-colors cursor-pointer"
-          [ngClass]="activeFilter() === tab.key ? 'bg-secondary text-white shadow-sm' : 'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'"
-        >
-          {{ tab.label }}
-        </button>
+      <button type="button" (click)="setFilter(tab.key)"
+        class="h-9 px-4 rounded-full text-sm font-medium transition-colors cursor-pointer"
+        [ngClass]="activeFilter() === tab.key ? 'bg-secondary text-white shadow-sm' : 'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'">
+        {{ tab.label }}
+      </button>
       }
     </div>
   </div>
@@ -27,82 +24,74 @@
   <!-- Conversation list -->
   <div class="flex flex-col gap-sm flex-1 overflow-y-auto pe-2">
     @for (chat of filteredChats(); track chat.chatId) {
-      <!-- Inlined conversation card (was app-conversation-card) -->
-      <div
-        class="w-full flex items-center gap-sm bg-surface-container-lowest border border-outline-variant rounded-lg px-md py-sm hover:bg-surface-container-low cursor-pointer"
-        role="button"
-        tabindex="0"
-        (click)="openChat(chat)"
-        (keyup.enter)="openChat(chat)"
-      >
-        <!-- Generic placeholder icon - ChatSummaryDto has no avatarUrl -->
-        <!-- حاوية الصورة/الأيقونة -->
-        <span class="w-10 h-10 rounded-full bg-secondary text-on-secondary-container flex items-center justify-center shrink-0 overflow-hidden">
-          @if (chat.otherUserImage) {
-            <!-- إذا كانت الصورة موجودة -->
-            <img [src]="chatService.getImageUrl(chat.otherUserImage)" alt="صورة المستخدم" class="w-full h-full object-cover" />
-          } @else {
-            <!-- إذا لم تكن الصورة موجودة، تعرض الأيقونة الافتراضية -->
-            <span class="m-auto font-medium text-sm">{{ chat.otherUserName.charAt(0) }}</span>
+    <!-- Inlined conversation card (was app-conversation-card) -->
+    <div
+      class="w-full flex items-center gap-sm bg-surface-container-lowest border border-outline-variant rounded-lg px-md py-sm hover:bg-surface-container-low cursor-pointer"
+      role="button" tabindex="0" (click)="openChat(chat)" (keyup.enter)="openChat(chat)">
+      <!-- Generic placeholder icon - ChatSummaryDto has no avatarUrl -->
+      <!-- حاوية الصورة/الأيقونة -->
+      <span
+        class="w-10 h-10 rounded-full bg-secondary text-on-secondary-container flex items-center justify-center shrink-0 overflow-hidden">
+        @if (chat.otherUserImage) {
+        <!-- إذا كانت الصورة موجودة -->
+        <img [src]="chatService.getImageUrl(chat.otherUserImage)" alt="صورة المستخدم"
+          class="w-full h-full object-cover" />
+        } @else {
+        <!-- إذا لم تكن الصورة موجودة، تعرض الأيقونة الافتراضية -->
+        <span class="m-auto font-medium text-sm">{{ chat.otherUserName.charAt(0) }}</span>
 
-          }
-        </span>
-        <div class="flex-1 min-w-0">
-          <!-- الكانتينر مرتب عمودياً للموبايل وأفقياً للشاشات الأكبر -->
-          <div class="flex flex-col items-start gap-y-1 sm:flex-row sm:items-center sm:gap-x-xs mb-1">
-            
-            <!-- البادج: وضعناه أولاً في الـ HTML ليظهر فوق الاسم في الموبايل (order-1)، وعند الشاشات الكبيرة يرجع خلف الاسم (sm:order-2) -->
-            <span class="inline-flex items-center rounded-full border border-outline-variant bg-surface-container-low px-2.5 py-0.5 text-[11px] font-medium text-secondary whitespace-nowrap order-1 sm:order-2">
-              حالة : {{ chat.caseTitle }}
-            </span>
+        }
+      </span>
+      <div class="flex-1 min-w-0">
+        <!-- الكانتينر مرتب عمودياً للموبايل وأفقياً للشاشات الأكبر -->
+        <div class="flex flex-col items-start gap-y-1 sm:flex-row sm:items-center sm:gap-x-xs mb-1">
 
-            <!-- الاسم: يأخذ (order-2) في الموبايل ليصبح تحت البادج، ويأخذ (sm:order-1) في الشاشات الكبيرة ليصبح الأول على اليمين -->
-            <span class="font-semibold text-on-surface text-xs sm:text-sm md:text-base truncate max-w-full order-2 sm:order-1">
-              {{ chat.otherUserName }}
-            </span>
+          <!-- البادج: وضعناه أولاً في الـ HTML ليظهر فوق الاسم في الموبايل (order-1)، وعند الشاشات الكبيرة يرجع خلف الاسم (sm:order-2) -->
+          <span
+            class="inline-flex items-center rounded-full border border-outline-variant bg-surface-container-low px-2.5 py-0.5 text-[11px] font-medium text-secondary whitespace-nowrap order-1 sm:order-2">
+            حالة : {{ chat.caseTitle }}
+          </span>
 
-          </div>
-          <p class="text-sm text-on-surface-variant truncate">{{ chat.lastMessage }}</p>
+          <!-- الاسم: يأخذ (order-2) في الموبايل ليصبح تحت البادج، ويأخذ (sm:order-1) في الشاشات الكبيرة ليصبح الأول على اليمين -->
+          <span
+            class="font-semibold text-on-surface text-xs sm:text-sm md:text-base truncate max-w-full order-2 sm:order-1">
+            {{ chat.otherUserName }}
+          </span>
+
         </div>
-
-        <div class="flex flex-col items-end gap-xs shrink-0">
-          @if (chat.lastMessageDate) {
-            <span class="text-xs text-on-surface-variant">{{ formatLastMessageDate(chat.lastMessageDate)  }}</span>
-          }
-          @if (chat.unreadCount > 0) {
-            <span class="min-w-5 h-5 px-1 rounded-full bg-secondary text-on-secondary text-xs flex items-center justify-center">
-              {{ chat.unreadCount }}
-            </span>
-          }
-        </div>
-
-        <app-button
-          variant="icon"
-          ariaLabel="حذف المحادثة"
-          extraClass="text-on-surface-variant hover:text-error shrink p-1 border-none bg-transparent"
-          (onClick)="$event.stopPropagation(); openDeleteModal(chat)"
-        >
-          <span class="material-symbols-outlined text-[20px]">delete</span>
-        </app-button>
+        <p class="text-sm text-on-surface-variant truncate">{{ chat.lastMessage }}</p>
       </div>
+
+      <div class="flex flex-col items-end gap-xs shrink-0">
+        @if (chat.lastMessageDate) {
+        <span class="text-xs text-on-surface-variant">{{ formatLastMessageDate(chat.lastMessageDate) }}</span>
+        }
+        @if (chat.unreadCount > 0) {
+        <span
+          class="min-w-5 h-5 px-1 rounded-full bg-secondary text-on-secondary text-xs flex items-center justify-center">
+          {{ chat.unreadCount }}
+        </span>
+        }
+      </div>
+
+      <app-button variant="icon" ariaLabel="حذف المحادثة"
+        extraClass="text-on-surface-variant hover:text-error shrink p-1 border-none bg-transparent"
+        (onClick)="$event.stopPropagation(); openDeleteModal(chat)">
+        <span class="material-symbols-outlined">delete</span>
+      </app-button>
+    </div>
     } @empty {
-      <p class="text-center text-on-surface-variant py-2xl">
-        {{ activeFilter() !== 'all' ? 'لم نتمكن من العثور على محادثات تطابق خيارات التصفية أو البحث الحالية.' : 'لا توجد محادثات مسجلة حالياً.' }}
-      </p>
+    <p class="text-center text-on-surface-variant py-2xl">
+      {{ activeFilter() !== 'all' ? 'لم نتمكن من العثور على محادثات تطابق خيارات التصفية أو البحث الحالية.' : 'لا توجد
+      محادثات مسجلة حالياً.' }}
+    </p>
     }
   </div>
 </div>
 }
 @if (showDeleteModal()) {
-  <app-confirmation-modal
-    title="حذف المحادثة"
-    message="سيتم حذف هذه المحادثة من قائمتك فقط."
-    icon="delete"
-    variant="danger"
-    confirmText="حذف"
-    cancelText="إلغاء"
-    [confirmLoading]="deleting()"
-    (confirm)="confirmDeleteChat()"
-    (cancel)="closeDeleteModal()">
-  </app-confirmation-modal>
+<app-confirmation-modal title="حذف المحادثة" message="سيتم حذف هذه المحادثة من قائمتك فقط." icon="delete"
+  variant="danger" confirmText="حذف" cancelText="إلغاء" [confirmLoading]="deleting()" (confirm)="confirmDeleteChat()"
+  (cancel)="closeDeleteModal()">
+</app-confirmation-modal>
 }
