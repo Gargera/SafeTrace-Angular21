@@ -138,6 +138,7 @@ export class LongTermUpdate implements OnInit {
   initialPrimaryPhotoId = signal<number | null>(null);
 
   policeReport = signal<File | null>(null);
+  policeReportPreview = signal<string | null>(null);
 
   // Active media state from the uploader
 
@@ -382,6 +383,19 @@ export class LongTermUpdate implements OnInit {
 
     this.mediaErrors.update((errs: Record<string, string | null>) => ({ ...errs, policeReport: null }));
     this.policeReport.set(file);
+    if (this.policeReportPreview()) {
+      URL.revokeObjectURL(this.policeReportPreview()!);
+    }
+    this.policeReportPreview.set(URL.createObjectURL(file));
+    this.saveDraft();
+  }
+
+  removePoliceReport(): void {
+    this.policeReport.set(null);
+    if (this.policeReportPreview()) {
+      URL.revokeObjectURL(this.policeReportPreview()!);
+    }
+    this.policeReportPreview.set(null);
     this.saveDraft();
   }
 

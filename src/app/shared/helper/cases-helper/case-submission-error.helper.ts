@@ -50,7 +50,6 @@ export function handleSubmissionError(
 
     const hasMediaErrors = Object.keys(tempErrors).length > 0;
 
-
     if (hasMediaErrors) {
       return {
         message: msg,

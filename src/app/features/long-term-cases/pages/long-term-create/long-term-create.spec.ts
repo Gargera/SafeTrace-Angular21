@@ -142,6 +142,13 @@ describe('LongTermCreate', () => {
       component.form.patchValue({ fName: 'Ahmed' });
       expect(component.form.get('fName')?.invalid).toBe(true);
     });
+
+    it('future dates must be rejected according to pastDate validator', () => {
+      const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      component.form.patchValue({ eventDate: futureDate });
+      expect(component.form.get('eventDate')?.invalid).toBe(true);
+      expect(component.form.get('eventDate')?.errors?.['pastDate']).toBeTruthy();
+    });
   });
 
   // 3) Step Navigation

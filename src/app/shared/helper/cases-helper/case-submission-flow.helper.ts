@@ -1,5 +1,5 @@
 import { FormGroup } from '@angular/forms';
-import { Observable, Subscription, timeout } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { CaseMediaErrors } from './case-form.helper';
 import { handleSubmissionError } from './case-submission-error.helper';
 
@@ -46,9 +46,6 @@ export function executeCaseSubmissionFlow<TDuplicate = unknown>(
   deps.errorMsg.set(null);
 
   return requestObservable
-    .pipe(
-      timeout(15000)
-    )
     .subscribe({
       next: (res) => {
         deps.isSubmitting.set(false);

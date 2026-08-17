@@ -178,21 +178,62 @@
     </div>
     }
 
-    <div
-      class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
-      [class.border-secondary]="!!videoFile()" [class.bg-surface-container-low]="!!videoFile()"
-      (click)="videoInput.click()">
-      <input #videoInput type="file" accept=".mp4,.mov,.webm,video/mp4,video/quicktime,video/webm" class="hidden"
-        (change)="onVideoSelected($event)" />
+    <div class="flex flex-col gap-4">
       <div
-        class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
-        <span class="material-symbols-outlined text-3xl"
-          [ngClass]="videoFile() ? 'text-secondary' : 'text-outline'">videocam</span>
+        class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
+        [class.border-secondary]="!!videoFile()" [class.bg-surface-container-low]="!!videoFile()"
+        (click)="videoInput.click()">
+        <input #videoInput type="file" accept=".mp4,.mov,.webm,video/mp4,video/quicktime,video/webm" class="hidden"
+          (change)="onVideoSelected($event)" />
+        <div
+          class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
+          <span class="material-symbols-outlined text-3xl"
+            [ngClass]="videoFile() ? 'text-secondary' : 'text-outline'">videocam</span>
+        </div>
+        <p class="text-sm font-bold text-on-surface">
+          {{ videoFile()?.name ?? (mode() === 'update' ? 'استبدال / رفع فيديو' : 'رفع فيديو') }}
+        </p>
+        <p class="mt-1 text-xs text-on-surface-variant/70">MP4 / MOV / WebM — حتى 50 MB</p>
       </div>
-      <p class="text-sm font-bold text-on-surface">
-        {{ videoFile()?.name ?? (mode() === 'update' ? 'استبدال / رفع فيديو' : 'رفع فيديو') }}
-      </p>
-      <p class="mt-1 text-xs text-on-surface-variant/70">MP4 / MOV / WebM — حتى 50 MB</p>
+      @if (videoPreview()) {
+      <div class="mt-3.5 flex flex-wrap gap-3">
+        <div
+          class="relative h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105 cursor-pointer group bg-black"
+          (click)="openVideoModal()">
+          <video [src]="videoPreview()" preload="metadata"
+            class="h-full w-full object-cover opacity-80 group-hover:opacity-100"></video>
+
+          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span class="material-symbols-outlined text-white text-2xl drop-shadow-md">play_circle</span>
+          </div>
+
+          <button type="button" (click)="removeVideo(); $event.stopPropagation()"
+            class="absolute top-1 right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110 z-10">
+            <span class="material-symbols-outlined text-xs">close</span>
+          </button>
+        </div>
+      </div>
+
+      @if (isVideoModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+        (click)="closeVideoModal()">
+        <div class="relative w-[90vw] max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl bg-surface shadow-2xl"
+          (click)="$event.stopPropagation()">
+          <div
+            class="flex items-center justify-between border-b border-outline-variant/30 px-4 py-3 bg-surface-container-low">
+            <h3 class="text-sm font-bold text-on-surface">معاينة الفيديو</h3>
+            <button type="button" (click)="closeVideoModal()"
+              class="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-highest text-on-surface hover:bg-error hover:text-white transition-colors">
+              <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
+          <div class="flex items-center justify-center bg-black w-full h-[60vh] max-h-[800px]">
+            <video [src]="videoPreview()" controls autoplay class="h-full w-full object-contain"></video>
+          </div>
+        </div>
+      </div>
+      }
+      }
     </div>
 
     @if (localVideoError()) {

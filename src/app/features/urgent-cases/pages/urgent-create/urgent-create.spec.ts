@@ -414,7 +414,7 @@ describe('UrgentCreate', () => {
     it('getSubmissionDependencies returns exact flow config', () => {
       const deps = (component as any).getSubmissionDependencies();
       expect(deps.successRoute).toEqual(['/urgent']);
-      expect(deps.successMessage).toBeTruthy();
+      expect(deps.successMessage).toBe('تم إرسال البلاغ العاجل ونشره فورًا دون الحاجة لمراجعة الإدارة.');
       expect(deps.draftKey).toBe(URGENT_CREATE_DRAFT_KEY);
       expect(deps.isSubmitting).toBe(component.isSubmitting);
     });

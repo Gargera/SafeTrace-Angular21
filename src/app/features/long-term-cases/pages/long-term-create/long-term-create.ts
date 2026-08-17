@@ -121,6 +121,7 @@ export class LongTermCreate implements OnInit {
   // Initial media state (for Cache restoration)
 
   policeReport = signal<File | null>(null);
+  policeReportPreview = signal<string | null>(null);
 
   // Active media state from the uploader
 
@@ -344,6 +345,19 @@ export class LongTermCreate implements OnInit {
 
     this.mediaErrors.update((errs: Record<string, string | null>) => ({ ...errs, policeReport: null }));
     this.policeReport.set(file);
+    if (this.policeReportPreview()) {
+      URL.revokeObjectURL(this.policeReportPreview()!);
+    }
+    this.policeReportPreview.set(URL.createObjectURL(file));
+    this.saveDraft();
+  }
+
+  removePoliceReport(): void {
+    this.policeReport.set(null);
+    if (this.policeReportPreview()) {
+      URL.revokeObjectURL(this.policeReportPreview()!);
+    }
+    this.policeReportPreview.set(null);
     this.saveDraft();
   }
 

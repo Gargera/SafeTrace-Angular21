@@ -136,6 +136,34 @@ describe('UnknownCreate', () => {
       });
       expect(component.form.valid).toBe(true);
     });
+
+    it('future dates must be rejected according to pastDate validator', () => {
+      const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
+      component.form.patchValue({ eventDate: futureDate });
+      expect(component.form.get('eventDate')?.invalid).toBe(true);
+      expect(component.form.get('eventDate')?.errors?.['pastDate']).toBeTruthy();
+    });
+
+    it('old removed controls do NOT exist', () => {
+      expect(component.form.contains('isNameKnown')).toBe(false);
+      expect(component.form.contains('name')).toBe(false);
+    });
+
+    it('current four name controls are used and follow business rules', () => {
+      expect(component.form.contains('fName')).toBe(true);
+      expect(component.form.contains('sName')).toBe(true);
+      expect(component.form.contains('tName')).toBe(true);
+      expect(component.form.contains('lName')).toBe(true);
+
+      // Names are optional for unknown case
+      component.form.patchValue({ fName: '', sName: '', tName: '', lName: '' });
+      expect(component.form.get('fName')?.valid).toBe(true);
+      expect(component.form.get('sName')?.valid).toBe(true);
+      
+      // But if provided they must be valid (Arabic)
+      component.form.patchValue({ fName: 'John' });
+      expect(component.form.get('fName')?.invalid).toBe(true);
+    });
   });
 
   describe('3) Step Navigation Behavior', () => {

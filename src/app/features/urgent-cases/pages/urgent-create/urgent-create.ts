@@ -543,7 +543,7 @@ export class UrgentCreate implements OnInit {
       snackbar: this.snackbar,
       router: this.router,
       successRoute: ['/urgent'],
-      successMessage: 'تم إنشاء بلاغك العاجل.',
+      successMessage: 'تم إرسال البلاغ العاجل ونشره فورًا دون الحاجة لمراجعة الإدارة.',
       onSuccess: () => {
         this.submittedSuccessfully.set(true);
       },

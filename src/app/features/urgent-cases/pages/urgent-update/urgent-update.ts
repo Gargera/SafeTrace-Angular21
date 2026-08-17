@@ -157,7 +157,7 @@ export class UrgentUpdate implements OnInit {
   readonly steps = [
     { num: 1, label: 'بيانات الشخص' },
     { num: 2, label: 'موقع الحادث' },
-    { num: 3, label: 'صور' },
+    { num: 3, label: 'مستندات وصور' },
   ];
 
   stepTitle = computed(() => {

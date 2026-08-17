@@ -149,6 +149,18 @@ describe('LongTermUpdate', () => {
     it('form is valid after loading valid case data', () => {
       expect(component.form.valid).toBe(true);
     });
+
+    it('should reject non arabic names', () => {
+      component.form.patchValue({ fName: 'Ahmed' });
+      expect(component.form.get('fName')?.invalid).toBe(true);
+    });
+
+    it('future dates must be rejected according to pastDate validator', () => {
+      const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
+      component.form.patchValue({ eventDate: futureDate });
+      expect(component.form.get('eventDate')?.invalid).toBe(true);
+      expect(component.form.get('eventDate')?.errors?.['pastDate']).toBeTruthy();
+    });
   });
 
   describe('3) Navigation (Steps)', () => {
@@ -193,6 +205,49 @@ describe('LongTermUpdate', () => {
       component.onSubmit();
       expect(component.mediaErrors().primary).toContain('الصورة غير صالحة');
       expect(component.mediaErrors().policeReport).toContain('محضر مزيف');
+    });
+  });
+
+  describe('5) Cache / Draft', () => {
+    it('should save draft after changes', async () => {
+      component.form.patchValue({ age: 30 });
+      await new Promise(resolve => setTimeout(resolve, 600));
+      const draft = mockCache.get(`LongTermUpdate_Draft_1`);
+      expect(draft).toBeTruthy();
+      expect(draft.formValue.age).toBe(30);
+    });
+
+    it('should restore existing draft from cache', () => {
+      const file = new File([''], 'test.png');
+      mockCache.cache[`LongTermUpdate_Draft_1`] = {
+        formValue: { fName: 'سالم', age: 40 },
+        currentStep: 2,
+        newPrimaryImage: file,
+        newAdditionalImages: [],
+        newVideo: null,
+        deletedPhotoIds: [1],
+        primaryPhotoId: 2,
+        policeReportFile: null
+      };
+
+      const newFixture = TestBed.createComponent(LongTermUpdate);
+      const newComponent = newFixture.componentInstance;
+      newFixture.detectChanges();
+
+      expect(newComponent.form.get('age')?.value).toBe(40);
+      expect(newComponent.currentStep()).toBe(2);
+      expect(newComponent.mediaPayload().primaryImage).toBe(file);
+      expect(newComponent.mediaPayload().deletedImageIds).toEqual([1]);
+    });
+  });
+
+  describe('6) Refactor Safety Tests', () => {
+    it('getSubmissionDependencies returns exact flow config', () => {
+      const deps = (component as any).getSubmissionDependencies();
+      expect(deps.successRoute).toEqual(['/long-term', '1']);
+      expect(deps.successMessage).toBe('تم تعديل بيانات الحالة بنجاح، وسيتم مراجعتها مرة أخرى من قِبَل الإدارة قبل النشر.');
+      expect(deps.draftKey).toBe(`LongTermUpdate_Draft_1`);
+      expect(deps.isSubmitting).toBe(component.isSubmitting);
     });
   });
 });

@@ -420,7 +420,7 @@ describe('UrgentUpdate', () => {
     it('getSubmissionDependencies returns exact flow config', () => {
       const deps = (component as any).getSubmissionDependencies();
       expect(deps.successRoute).toEqual(['/urgent', 1]);
-      expect(deps.successMessage).toBeTruthy();
+      expect(deps.successMessage).toBe('تم تعديل بيانات الحالة بنجاح.');
       expect(deps.draftKey).toBe(`${URGENT_UPDATE_DRAFT_KEY_PREFIX}1`);
       expect(deps.isSubmitting).toBe(component.isSubmitting);
     });

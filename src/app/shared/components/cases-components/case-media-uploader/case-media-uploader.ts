@@ -12,12 +12,14 @@ import {
   computed,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormControl } from '@angular/forms';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { ImageService } from '../../../../shared/services/image.service';
+import { maxFilesCount } from '../../../../shared/validators/image-validation.validator';
+import { getControlFieldError } from '../../../../shared/helper/form-validation.helper';
 import { CaseFileResponse } from '../../../../core/models/cases.model';
 import { validateVideoFile } from '../../../../shared/validators/video-validation.validator';
 import { CaseObjectUrlRegistry } from '../../../../shared/helper/cases-helper/case-form.helper';
-
 
 export interface CaseMediaPayload {
   primaryImage: File | null;
@@ -93,6 +95,8 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
   });
 
   videoFile = signal<File | null>(null);
+  videoPreview = signal<string | null>(null);
+  isVideoModalOpen = signal(false);
 
   // Local UI errors (for frontend validation before submit)
   localPrimaryError = signal<string | null>(null);
@@ -145,9 +149,15 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
     }
 
     if (changes['initialVideoFile'] && changes['initialVideoFile'].currentValue !== undefined) {
-      const file = changes['initialVideoFile'].currentValue;
-      this.videoFile.set(file || null);
-      if (file) {
+      const file = changes['initialVideoFile'].currentValue || null;
+      if (file !== this.videoFile()) {
+        this.videoFile.set(file);
+        if (file) {
+          this.videoPreview.set(this.objectUrls.replace('video', file));
+        } else {
+          this.videoPreview.set(null);
+          this.objectUrls.revoke('video');
+        }
         this.localVideoError.set(null);
       }
     }
@@ -166,6 +176,15 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
   }
 
   public validate(): boolean {
+    if (this.cropImageEvent()) {
+      if (this.tempCroppedBlob()) {
+        this.confirmCrop();
+      } else {
+        this.localPrimaryError.set('برجاء اعتماد الصورة (تأكيد القص) قبل الإرسال.');
+        return false;
+      }
+    }
+
     let isValid = true;
 
     const hasPrimary = !!this.newPrimaryImage() || !!this.primaryPhotoId();
@@ -175,6 +194,16 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
     } else {
       this.localPrimaryError.set(null);
     }
+
+    const additionalImagesControl = new FormControl([...this.newPhotos(), ...this.existingAdditionalPhotos()], [maxFilesCount(4)]);
+    additionalImagesControl.markAsTouched();
+    if (additionalImagesControl.invalid) {
+      this.localAdditionalError.set(getControlFieldError(additionalImagesControl));
+      isValid = false;
+    } else {
+      this.localAdditionalError.set(null);
+    }
+
     if (this.localAdditionalError() || this.localVideoError() || this.existingPhotoEditError()) {
       isValid = false;
     }
@@ -282,12 +311,8 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
         this.primaryImageSource.set(this.originalPrimaryImage() ?? this.pendingCropSource() ?? croppedFile);
         this.primaryPhotoId.set(null);
       } else {
-        if (this.newPhotos().length >= 4) {
-          this.localAdditionalError.set('وصلت للحد الأقصى للصور الإضافية.');
-        } else {
-          this.newPhotos.update((p) => [...p, croppedFile]);
-          this.newPhotoPreviews.set(this.objectUrls.replaceMany('additional', this.newPhotos()) || []);
-        }
+        this.newPhotos.update((p) => [...p, croppedFile]);
+        this.newPhotoPreviews.set(this.objectUrls.replaceMany('additional', this.newPhotos()) || []);
       }
       this.cropTargetExistingId.set(null);
     } else {
@@ -338,13 +363,9 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
 
   onAdditionalPhotosSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const files = Array.from(input.files ?? []);
-    // Most forms allow 4 or 5. Let's standardize to max 4 additional (so 5 total)
-    const maxAdditional = 4;
-    const remaining = maxAdditional - this.newPhotos().length;
+    let files = Array.from(input.files ?? []);
 
-    if (files.length > remaining) {
-      this.localAdditionalError.set(`يمكنك إضافة ${remaining} صور جديدة كحد أقصى.`);
+    if (files.length === 0) {
       input.value = '';
       return;
     }
@@ -356,6 +377,15 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
         input.value = '';
         return;
       }
+    }
+
+    const proposedPhotos = [...this.newPhotos(), ...files, ...this.existingAdditionalPhotos()];
+    const additionalImagesControl = new FormControl(proposedPhotos, [maxFilesCount(4)]);
+    additionalImagesControl.markAsTouched();
+    if (additionalImagesControl.invalid) {
+      this.localAdditionalError.set(getControlFieldError(additionalImagesControl));
+      input.value = '';
+      return;
     }
 
     this.localAdditionalError.set(null);
@@ -397,6 +427,22 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
 
     this.localVideoError.set(null);
     this.videoFile.set(file);
+    this.videoPreview.set(this.objectUrls.replace('video', file));
     this.emitChange();
+  }
+
+  removeVideo(): void {
+    this.videoFile.set(null);
+    this.videoPreview.set(null);
+    this.objectUrls.revoke('video');
+    this.emitChange();
+  }
+
+  openVideoModal(): void {
+    this.isVideoModalOpen.set(true);
+  }
+
+  closeVideoModal(): void {
+    this.isVideoModalOpen.set(false);
   }
 }
