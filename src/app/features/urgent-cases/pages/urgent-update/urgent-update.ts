@@ -582,7 +582,7 @@ export class UrgentUpdate implements OnInit {
       draftKey: this.draftKey,
       snackbar: this.snackbar,
       router: this.router,
-      successRoute: ['/urgent', this.caseId],
+      successRoute: ['/urgent/my', this.caseId],
       successMessage: 'تم تعديل بيانات الحالة بنجاح.',
       onSuccess: () => {
         this.submittedSuccessfully.set(true);

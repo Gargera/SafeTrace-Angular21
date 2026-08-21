@@ -513,7 +513,7 @@ export class LongTermUpdate implements OnInit {
       draftKey: this.draftKey,
       snackbar: this.snackbar,
       router: this.router,
-      successRoute: ['/long-term', String(this.caseId)],
+      successRoute: ['/long-term/my', String(this.caseId)],
       successMessage: 'تم تعديل بيانات الحالة بنجاح، وسيتم مراجعتها مرة أخرى من قِبَل الإدارة قبل النشر.',
       onSuccess: () => {
         this.submittedSuccessfully.set(true);
