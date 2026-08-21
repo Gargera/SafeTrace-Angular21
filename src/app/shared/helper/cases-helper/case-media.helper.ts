@@ -6,6 +6,9 @@ export function useCaseMediaState(options?: { onSaveDraft?: () => void }) {
   const initialOriginalPrimary = signal<File | null>(null);
   const initialAdditional = signal<File[]>([]);
   const initialVideo = signal<File | null>(null);
+  const initialDeletedPhotoIds = signal<number[]>([]);
+  const initialPrimaryPhotoId = signal<number | null>(null);
+  const initialExistingVideoDeleted = signal(false);
 
   const mediaPayload = signal<CaseMediaPayload>({
     primaryImage: null,
@@ -41,8 +44,11 @@ export function useCaseMediaState(options?: { onSaveDraft?: () => void }) {
       delete currentErrors.additional;
     }
 
-    // Clear video errors only if video changed
-    if (payload.video !== current.video) {
+    // Clear video errors when either the upload or the existing-video action changed.
+    if (
+      payload.video !== current.video ||
+      payload.isExistingVideoDeleted !== current.isExistingVideoDeleted
+    ) {
       delete currentErrors.video;
     }
 
@@ -52,6 +58,9 @@ export function useCaseMediaState(options?: { onSaveDraft?: () => void }) {
     initialOriginalPrimary.set(payload.originalPrimaryImage ?? null);
     initialAdditional.set(payload.additionalImages ?? []);
     initialVideo.set(payload.video ?? null);
+    initialDeletedPhotoIds.set([...(payload.deletedImageIds ?? [])]);
+    initialPrimaryPhotoId.set(payload.primaryPhotoId);
+    initialExistingVideoDeleted.set(payload.isExistingVideoDeleted ?? false);
 
     mediaErrors.set(currentErrors);
 
@@ -65,6 +74,9 @@ export function useCaseMediaState(options?: { onSaveDraft?: () => void }) {
     initialOriginalPrimary,
     initialAdditional,
     initialVideo,
+    initialDeletedPhotoIds,
+    initialPrimaryPhotoId,
+    initialExistingVideoDeleted,
     mediaPayload,
     mediaErrors,
     onMediaChange

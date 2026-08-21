@@ -64,7 +64,6 @@ type Step = CaseFormStep;
 export const LONG_TERM_UPDATE_DRAFT_KEY_PREFIX = 'LongTermUpdate_Draft_';
 
 interface LongTermUpdateCustomData {
-  primaryPhotoId: number | null;
   newPoliceReport: File | null;
 }
 
@@ -102,6 +101,9 @@ export class LongTermUpdate implements OnInit {
   initialOriginalPrimary = this.mediaState.initialOriginalPrimary;
   initialAdditional = this.mediaState.initialAdditional;
   initialVideo = this.mediaState.initialVideo;
+  initialDeletedPhotoIds = this.mediaState.initialDeletedPhotoIds;
+  initialPrimaryPhotoId = this.mediaState.initialPrimaryPhotoId;
+  initialExistingVideoDeleted = this.mediaState.initialExistingVideoDeleted;
   mediaPayload = this.mediaState.mediaPayload;
   mediaErrors = this.mediaState.mediaErrors;
   onMediaChange = this.mediaState.onMediaChange;
@@ -132,10 +134,6 @@ export class LongTermUpdate implements OnInit {
   existingPhotos = signal<CaseFileResponse[]>([]);
   existingPoliceReportUrl = signal<string | null>(null);
   existingVideoUrl = signal<string | null>(null);
-
-  // Initial media state (for Cache restoration in Update mode)
-  initialDeletedPhotoIds = signal<number[]>([]);
-  initialPrimaryPhotoId = signal<number | null>(null);
 
   policeReport = signal<File | null>(null);
   policeReportPreview = signal<string | null>(null);
@@ -256,9 +254,11 @@ export class LongTermUpdate implements OnInit {
         additionalImages: payload.additionalImages,
         deletedImageIds: payload.deletedImageIds,
         video: payload.video,
+        isExistingVideoDeleted: payload.isExistingVideoDeleted,
+        primaryPhotoId: payload.primaryPhotoId,
+        originalPrimaryImage: payload.originalPrimaryImage,
       },
       {
-        primaryPhotoId: payload.primaryPhotoId,
         newPoliceReport: this.policeReport(),
       }
     );
@@ -314,26 +314,40 @@ export class LongTermUpdate implements OnInit {
             (s) => this.currentStep.set(s),
             {
               primary: (f) => this.initialPrimary.set(f),
+              originalPrimary: (f) => this.initialOriginalPrimary.set(f),
               additional: (fs) => this.initialAdditional.set(fs),
               deletedPhotoIds: (ids) => this.initialDeletedPhotoIds.set(ids),
-              video: (f) => this.initialVideo.set(f)
+              video: (f) => this.initialVideo.set(f),
+              primaryPhotoId: (id) => this.initialPrimaryPhotoId.set(id),
+              isExistingVideoDeleted: (deleted) => this.initialExistingVideoDeleted.set(deleted),
             }
           );
 
           if (draft) {
             if (draft.newPoliceReport) this.policeReport.set(draft.newPoliceReport);
 
-            const pId = draft.primaryPhotoId ?? (primary ? primary.id : (files[0]?.id ?? null));
+            const deletedPhotoIds = draft.deletedPhotoIds ?? [];
+            const restoredPrimaryId = draft.primaryPhotoId !== undefined
+              ? draft.primaryPhotoId
+              : (primary?.id ?? null);
+            const pId = restoredPrimaryId !== null && !deletedPhotoIds.includes(restoredPrimaryId)
+              ? restoredPrimaryId
+              : null;
+            const isExistingVideoDeleted =
+              draft.isExistingVideoDeleted ?? draft.removedVideo ?? false;
             this.mediaPayload.set({
               primaryImage: draft.newPrimaryImage ?? null,
               additionalImages: draft.newAdditionalImages ?? [],
-              deletedImageIds: draft.deletedPhotoIds ?? [],
+              deletedImageIds: deletedPhotoIds,
               video: draft.newVideo ?? null,
+              isExistingVideoDeleted,
               primaryPhotoId: pId,
+              originalPrimaryImage: draft.originalPrimaryImage ?? null,
             });
             this.initialPrimaryPhotoId.set(pId);
+            this.initialExistingVideoDeleted.set(isExistingVideoDeleted);
           } else {
-            const pId = primary ? primary.id : (files[0]?.id ?? null);
+            const pId = primary?.id ?? null;
             this.mediaPayload.update((p: CaseMediaPayload) => ({
               ...p,
               primaryPhotoId: pId
@@ -433,16 +447,20 @@ export class LongTermUpdate implements OnInit {
   onSubmit(): void {
     if (this.isSubmitting()) return;
     const media = this.mediaPayload();
-    const currentRemainingPhotos = this.existingPhotos().length - media.deletedImageIds.length;
-    const hasAtLeastOnePhoto =
-      currentRemainingPhotos > 0 || !!media.primaryImage || media.additionalImages.length > 0;
+    const existingPrimaryRemains =
+      media.primaryPhotoId !== null &&
+      !media.deletedImageIds.includes(media.primaryPhotoId) &&
+      this.existingPhotos().some(
+        (photo) => photo.id === media.primaryPhotoId && photo.isPrimary
+      );
+    const hasPrimaryImage = !!media.primaryImage || existingPrimaryRemains;
 
     const validation = validateCaseSubmission(this.form, this.mediaUploader);
     let valid = validation.valid;
 
-    if (!valid || !hasAtLeastOnePhoto) {
-      if (!hasAtLeastOnePhoto) {
-        this.errorMsg.set('لازم يفضل في صورة واحدة على الأقل للحالة.');
+    if (!valid || !hasPrimaryImage) {
+      if (!hasPrimaryImage) {
+        this.errorMsg.set('الصورة الأساسية مطلوبة.');
       } else {
         this.errorMsg.set(validation.message || 'يرجى مراجعة الأخطاء وتصحيحها.');
       }
@@ -477,10 +495,10 @@ export class LongTermUpdate implements OnInit {
       city: v.city!,
       street: v.street!,
       eventDate: v.eventDate!,
-      primaryImage: media.primaryImage ?? undefined,
+      primaryImage: media.primaryImage ?? null,
       newPhotos: media.additionalImages.length ? media.additionalImages : null,
-      deletedPhotosIds: media.deletedImageIds.length ? media.deletedImageIds : null,
-      primaryPhotoId: media.primaryPhotoId,
+      isExistingVideoDeleted: media.isExistingVideoDeleted ?? false,
+      deletedPhotoIds: media.deletedImageIds.length ? media.deletedImageIds : null,
       video: media.video,
       policeReportImage: this.policeReport(),
     };

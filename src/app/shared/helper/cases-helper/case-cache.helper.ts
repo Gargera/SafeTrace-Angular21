@@ -9,7 +9,6 @@ export interface CreateDraft<T = unknown> {
   newPrimaryImage?: File | null;
   newAdditionalImages?: File[];
   newVideo?: File | null;
-  primaryPhotoId?: number | null;
   originalPrimaryImage?: File | null;
 }
 
@@ -18,7 +17,7 @@ export interface CaseMediaPayload {
   additionalImages?: File[];
   video?: File | null;
   deletedImageIds?: number[];
-  removedVideo?: boolean;
+  isExistingVideoDeleted?: boolean;
   primaryPhotoId?: number | null;
   originalPrimaryImage?: File | null;
 }
@@ -38,7 +37,6 @@ export function saveCreateDraft<T, S = {}>(
     newPrimaryImage: mediaPayload?.primaryImage ?? null,
     newAdditionalImages: mediaPayload?.additionalImages ?? [],
     newVideo: mediaPayload?.video,
-    primaryPhotoId: mediaPayload?.primaryPhotoId,
     originalPrimaryImage: mediaPayload?.originalPrimaryImage ?? null
   } as CreateDraft<T> & S;
   cacheService.set(key, draft, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
@@ -60,7 +58,7 @@ export function saveUpdateDraft<T, S = {}>(
     newAdditionalImages: mediaPayload?.additionalImages,
     newVideo: mediaPayload?.video,
     deletedPhotoIds: mediaPayload?.deletedImageIds,
-    removedVideo: mediaPayload?.removedVideo,
+    isExistingVideoDeleted: mediaPayload?.isExistingVideoDeleted,
     primaryPhotoId: mediaPayload?.primaryPhotoId,
     originalPrimaryImage: mediaPayload?.originalPrimaryImage ?? null
   } as UpdateDraft<T> & S;
@@ -106,7 +104,7 @@ export function restoreUpdateDraft<T, S = {}>(
     additional?: (files: File[]) => void;
     video?: (file: File | null) => void;
     deletedPhotoIds?: (ids: number[]) => void;
-    removedVideo?: (removed: boolean) => void;
+    isExistingVideoDeleted?: (removed: boolean) => void;
     primaryPhotoId?: (id: number | null) => void;
   }
 ): (UpdateDraft<T> & S) | undefined {
@@ -121,9 +119,12 @@ export function restoreUpdateDraft<T, S = {}>(
     if (draft.originalPrimaryImage !== undefined && mediaSetters.originalPrimary) mediaSetters.originalPrimary(draft.originalPrimaryImage);
     if (draft.newAdditionalImages && mediaSetters.additional) mediaSetters.additional(draft.newAdditionalImages);
     if (draft.newVideo !== undefined && mediaSetters.video) mediaSetters.video(draft.newVideo);
-    if (draft.deletedPhotoIds && mediaSetters.deletedPhotoIds) mediaSetters.deletedPhotoIds(draft.deletedPhotoIds);
+    if (draft.deletedPhotoIds !== undefined && mediaSetters.deletedPhotoIds) mediaSetters.deletedPhotoIds(draft.deletedPhotoIds);
     if (draft.primaryPhotoId !== undefined && mediaSetters.primaryPhotoId) mediaSetters.primaryPhotoId(draft.primaryPhotoId);
-    if (draft.removedVideo !== undefined && mediaSetters.removedVideo) mediaSetters.removedVideo(draft.removedVideo);
+    const isExistingVideoDeleted = draft.isExistingVideoDeleted ?? draft.removedVideo;
+    if (isExistingVideoDeleted !== undefined && mediaSetters.isExistingVideoDeleted) {
+      mediaSetters.isExistingVideoDeleted(isExistingVideoDeleted);
+    }
   }
 
   return draft;

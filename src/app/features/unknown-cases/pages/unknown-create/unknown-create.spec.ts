@@ -159,7 +159,7 @@ describe('UnknownCreate', () => {
       component.form.patchValue({ fName: '', sName: '', tName: '', lName: '' });
       expect(component.form.get('fName')?.valid).toBe(true);
       expect(component.form.get('sName')?.valid).toBe(true);
-      
+
       // But if provided they must be valid (Arabic)
       component.form.patchValue({ fName: 'John' });
       expect(component.form.get('fName')?.invalid).toBe(true);

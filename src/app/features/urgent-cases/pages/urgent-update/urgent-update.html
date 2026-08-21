@@ -47,7 +47,8 @@
       <app-case-media-uploader mode="update" [existingPhotos]="existingPhotos()" [existingVideoUrl]="existingVideoUrl()"
         [initialPrimaryFile]="initialPrimary()" [initialAdditionalFiles]="initialAdditional()"
         [initialVideoFile]="initialVideo()" [initialDeletedPhotoIds]="initialDeletedPhotoIds()"
-        [initialPrimaryPhotoId]="initialPrimaryPhotoId()" [errors]="mediaErrors()"
+        [initialPrimaryPhotoId]="initialPrimaryPhotoId()"
+        [initialExistingVideoDeleted]="initialExistingVideoDeleted()" [errors]="mediaErrors()"
         (mediaChange)="onMediaChange($event)"></app-case-media-uploader>
     </div>
     }

@@ -78,6 +78,14 @@ describe('CaseMediaUploaderComponent', () => {
       component.removeNewPhoto(0);
       expect(component.newPhotos().length).toBe(0);
     });
+
+    it('should reject additional images when the dedicated primary field is empty', () => {
+      const additional = new File([''], 'additional.png', { type: 'image/png' });
+      component.onAdditionalPhotosSelected({ target: { files: [additional], value: '' } } as any);
+
+      expect(component.validate()).toBe(false);
+      expect(component.localPrimaryError()).toContain('برجاء إضافة وتأطير الصورة الأساسية.');
+    });
   });
 
   describe('Update Mode', () => {
@@ -111,6 +119,56 @@ describe('CaseMediaUploaderComponent', () => {
       const file1 = new File([''], 'test1.png', { type: 'image/png' });
       component.onAdditionalPhotosSelected({ target: { files: [file1] } } as any);
       expect(component.primaryPhotoId()).toBe(1);
+    });
+
+    it('should retain and restore the existing primary while a replacement is staged then cleared', () => {
+      const replacement = new File(['replacement'], 'replacement.png', { type: 'image/png' });
+      component.onPrimaryPhotoSelected({ target: { files: [replacement], value: '' } } as any);
+      component.tempCroppedBlob.set(new Blob(['cropped'], { type: 'image/jpeg' }));
+
+      component.confirmCrop();
+
+      expect(component.newPrimaryImage()).not.toBeNull();
+      expect(component.primaryPhotoId()).toBe(1);
+      expect(component.existingAdditionalPhotos().map((photo) => photo.id)).toEqual([2]);
+
+      component.clearPrimary();
+
+      expect(component.newPrimaryImage()).toBeNull();
+      expect(component.existingPrimaryPhoto()?.id).toBe(1);
+      expect(component.validate()).toBe(true);
+    });
+
+    it('should not expose a way to promote an existing additional image', () => {
+      expect((component as any).setExistingAsPrimary).toBeUndefined();
+    });
+
+    it('should reject deleting the existing primary even when additional images remain', () => {
+      component.removeExistingPhoto(existingPhoto1);
+
+      expect(component.existingAdditionalPhotos().map((photo) => photo.id)).toEqual([2]);
+      expect(component.validate()).toBe(false);
+    });
+
+    it('should mark only a direct existing-video removal as deletion', () => {
+      fixture.componentRef.setInput('existingVideoUrl', '/old-video.mp4');
+      fixture.detectChanges();
+
+      component.removeVideo();
+
+      expect(component.isExistingVideoDeleted()).toBe(true);
+    });
+
+    it('should keep the old video when a newly uploaded replacement is cancelled', () => {
+      fixture.componentRef.setInput('existingVideoUrl', '/old-video.mp4');
+      fixture.detectChanges();
+      const replacement = new File(['video'], 'replacement.mp4', { type: 'video/mp4' });
+      component.onVideoSelected({ target: { files: [replacement], value: '' } } as any);
+
+      component.removeVideo();
+
+      expect(component.videoFile()).toBeNull();
+      expect(component.isExistingVideoDeleted()).toBe(false);
     });
   });
 

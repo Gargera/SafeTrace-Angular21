@@ -39,6 +39,7 @@ class MockCaseMediaUploaderComponent {
   @Input() initialVideoFile: File | null = null;
   @Input() initialDeletedPhotoIds: number[] = [];
   @Input() initialPrimaryPhotoId: number | null = null;
+  @Input() initialExistingVideoDeleted = false;
   @Input() errors: any = {};
   @Output() mediaChange = new EventEmitter<any>();
 }
@@ -305,7 +306,7 @@ describe('UrgentUpdate', () => {
     it('should update media payload', () => {
       const file = new File([''], 'test.png');
       component.onMediaChange({
-        primaryImage: file, additionalImages: [], video: null, deletedImageIds: [1], primaryPhotoId: 2
+        primaryImage: file, additionalImages: [], video: null, deletedImageIds: [1], primaryPhotoId: 2, isExistingVideoDeleted: false
       });
       expect(component.mediaPayload().primaryImage).toBe(file);
       expect(component.mediaPayload().deletedImageIds).toEqual([1]);
@@ -314,7 +315,7 @@ describe('UrgentUpdate', () => {
     it('should clear media errors', () => {
       component.mediaErrors.set({ primary: 'error' });
       component.onMediaChange({
-        primaryImage: new File([''], 'a.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null
+        primaryImage: new File([''], 'a.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null, isExistingVideoDeleted: false
       });
       expect(component.mediaErrors()).toEqual({});
     });
@@ -344,7 +345,7 @@ describe('UrgentUpdate', () => {
       component.selectedLng.set(31.5);
       const file = new File([''], 'primary.png');
       component.onMediaChange({
-        primaryImage: file, additionalImages: [], video: null, deletedImageIds: [1], primaryPhotoId: null
+        primaryImage: file, additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: 1, isExistingVideoDeleted: false
       });
 
       const request = (component as any).buildUpdateRequest();
@@ -352,7 +353,9 @@ describe('UrgentUpdate', () => {
       expect(request.fName).toBe('سالم');
       expect(request.latitude).toBe(30.5);
       expect(request.primaryImage).toBe(file);
-      expect(request.deletedPhotosIds).toEqual([1]);
+      expect(request).not.toHaveProperty('primaryPhotoId');
+      expect(request.isExistingVideoDeleted).toBe(false);
+      expect(request.deletedPhotoIds).toBeNull();
     });
   });
 
@@ -364,7 +367,7 @@ describe('UrgentUpdate', () => {
       component.selectedLat.set(30);
       component.selectedLng.set(31);
       component.onMediaChange({
-        primaryImage: new File([''], 'test.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null
+        primaryImage: new File([''], 'test.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null, isExistingVideoDeleted: false
       });
     });
 
@@ -377,6 +380,24 @@ describe('UrgentUpdate', () => {
       expect(mockSnackbar.successArgs.length).toBe(1);
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/urgent', 1]);
     });
+
+    it('should reject deleting the primary when only additional images remain', () => {
+      mockService.updateCaseArgs = [];
+      component.mediaUploader = (() => undefined) as any;
+      component.onMediaChange({
+        primaryImage: null,
+        additionalImages: [new File(['additional'], 'additional.jpg', { type: 'image/jpeg' })],
+        video: null,
+        deletedImageIds: [1],
+        primaryPhotoId: null,
+        isExistingVideoDeleted: false,
+      });
+
+      component.onSubmit();
+
+      expect(mockService.updateCaseArgs).toHaveLength(0);
+      expect(component.errorMsg()).toBe('الصورة الأساسية مطلوبة.');
+    });
   });
 
   // 9) Error Handling
@@ -387,7 +408,7 @@ describe('UrgentUpdate', () => {
       component.selectedLat.set(30);
       component.selectedLng.set(31);
       component.onMediaChange({
-        primaryImage: new File([''], 'test.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null
+        primaryImage: new File([''], 'test.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null, isExistingVideoDeleted: false
       });
     });
 

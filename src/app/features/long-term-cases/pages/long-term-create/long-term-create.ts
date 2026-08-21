@@ -49,7 +49,7 @@ import {
   validateStepControls,
   validateCaseSubmission,
 } from '../../../../shared/helper/cases-helper/case-form.helper';
-import { executeCaseSubmissionFlow, CaseSubmissionResponse, CaseSubmissionFlowDeps } from '../../../../shared/helper/cases-helper/case-submission-flow.helper';
+import { executeCaseSubmissionFlow, CaseSubmissionFlowDeps } from '../../../../shared/helper/cases-helper/case-submission-flow.helper';
 import { saveCreateDraft, restoreCreateDraft } from '../../../../shared/helper/cases-helper/case-cache.helper';
 import { DuplicateDecisionPayload } from '../../../../shared/helper/cases-helper/case-duplicate.helper';
 import { useCaseDuplicateHandler } from '../../../../shared/helper/cases-helper/case-duplicate-handler.helper';
