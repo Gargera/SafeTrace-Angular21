@@ -82,7 +82,6 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
   // Active Cropper State
   cropImageEvent = signal<Event | null>(null);
   tempCroppedBlob = signal<Blob | null>(null);
-  cropTargetExistingId = signal<number | null>(null);
 
   newPhotos = signal<File[]>([]);
   newPhotoPreviews = signal<string[]>([]);
@@ -106,7 +105,6 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
   localPrimaryError = signal<string | null>(null);
   localAdditionalError = signal<string | null>(null);
   localVideoError = signal<string | null>(null);
-  existingPhotoEditError = signal<string | null>(null);
 
   constructor() {
     this.destroyRef.onDestroy(() => this.objectUrls.revokeAll());
@@ -243,7 +241,7 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
       this.localAdditionalError.set(null);
     }
 
-    if (this.localAdditionalError() || this.localVideoError() || this.existingPhotoEditError()) {
+    if (this.localAdditionalError() || this.localVideoError()) {
       isValid = false;
     }
 
@@ -264,29 +262,7 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
     this.emitChange();
   }
 
-  async editExistingPhoto(photo: CaseFileResponse): Promise<void> {
-    this.existingPhotoEditError.set(null);
-    try {
-      const response = await fetch(photo.imagePath, { mode: 'cors' });
-      if (!response.ok) throw new Error('fetch failed');
 
-      const blob = await response.blob();
-      const file = new File([blob], `existing_${photo.id}.jpg`, {
-        type: blob.type || 'image/jpeg',
-      });
-
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      const fakeEvent = { target: { files: dt.files } } as unknown as Event;
-
-      this.cropTargetExistingId.set(photo.id);
-      this.pendingCropSource.set(file);
-      this.tempCroppedBlob.set(null);
-      this.cropImageEvent.set(fakeEvent);
-    } catch {
-      this.existingPhotoEditError.set('تعذر تحميل الصورة للتعديل. حاول مرة أخرى.');
-    }
-  }
 
   // -------------------------------------------------------------
   // Primary Photo
@@ -305,7 +281,6 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
     }
 
     this.localPrimaryError.set(null);
-    this.cropTargetExistingId.set(null);
     this.originalPrimaryImage.set(file);
     this.pendingCropSource.set(file);
     this.tempCroppedBlob.set(null);
@@ -322,34 +297,13 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
     const blob = this.tempCroppedBlob();
     if (!blob) return;
 
-    const targetId = this.cropTargetExistingId();
     const croppedFile = new File([blob], `primary_image_${Date.now()}.jpg`, {
       type: 'image/jpeg',
     });
 
-    if (targetId !== null) {
-      // Editing an existing photo: treat it as "delete old + upload edited version"
-      const wasPrimary = this.primaryPhotoId() === targetId;
-
-      this.deletedPhotoIds.update((ids) => ids.includes(targetId) ? ids : [...ids, targetId]);
-      this.localExistingPhotos.update((list) => list.filter((p) => p.id !== targetId));
-
-      if (wasPrimary) {
-        this.newPrimaryImage.set(croppedFile);
-        this.newPrimaryPreview.set(this.objectUrls.replace('primary', croppedFile));
-        this.primaryImageSource.set(this.originalPrimaryImage() ?? this.pendingCropSource() ?? croppedFile);
-        this.primaryPhotoId.set(null);
-      } else {
-        this.newPhotos.update((p) => [...p, croppedFile]);
-        this.newPhotoPreviews.set(this.objectUrls.replaceMany('additional', this.newPhotos()) || []);
-      }
-      this.cropTargetExistingId.set(null);
-    } else {
-      // Brand new primary
-      this.newPrimaryImage.set(croppedFile);
-      this.newPrimaryPreview.set(this.objectUrls.replace('primary', croppedFile));
-      this.primaryImageSource.set(this.originalPrimaryImage() ?? this.pendingCropSource() ?? croppedFile);
-    }
+    this.newPrimaryImage.set(croppedFile);
+    this.newPrimaryPreview.set(this.objectUrls.replace('primary', croppedFile));
+    this.primaryImageSource.set(this.originalPrimaryImage() ?? this.pendingCropSource() ?? croppedFile);
 
     this.cropImageEvent.set(null);
     this.pendingCropSource.set(null);
@@ -358,7 +312,6 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
 
   cancelCrop(): void {
     this.cropImageEvent.set(null);
-    this.cropTargetExistingId.set(null);
     this.pendingCropSource.set(null);
     this.tempCroppedBlob.set(null);
   }
@@ -366,7 +319,6 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
   reCropPrimary(): void {
     const source = this.originalPrimaryImage() ?? this.primaryImageSource() ?? this.newPrimaryImage();
     if (!source) return;
-    this.cropTargetExistingId.set(null);
     this.pendingCropSource.set(source);
     this.tempCroppedBlob.set(null);
 

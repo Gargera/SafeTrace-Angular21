@@ -82,20 +82,12 @@
         class="h-20 w-26.25 rounded-xl border border-outline-variant/60 object-cover shadow-xs transition-transform duration-200 hover:scale-105" />
       <div class="flex-1">
         <p class="mb-1 text-sm font-semibold text-on-tertiary-container">✓ هذه هي الصورة الأساسية الحالية</p>
-        <app-button variant="text"
-          extraClass="ml-3 p-0 text-xs text-secondary font-medium underline hover:opacity-80 transition"
-          (onClick)="editExistingPhoto(existingPrimaryPhoto()!)">
-          إعادة ضبط وتعديل المربع
-        </app-button>
         <app-button variant="text" extraClass="p-0 text-xs text-error font-medium underline hover:opacity-80 transition"
           (onClick)="removeExistingPhoto(existingPrimaryPhoto()!)">
           حذف واختيار صورة أخرى
         </app-button>
       </div>
     </div>
-    @if (existingPhotoEditError()) {
-    <p class="mt-2 flex items-center gap-1 text-xs text-error">{{ existingPhotoEditError() }}</p>
-    }
     }
   </div>
 
