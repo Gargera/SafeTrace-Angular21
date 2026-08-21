@@ -64,6 +64,7 @@
             [initialExistingVideoDeleted]="initialExistingVideoDeleted()"
             [errors]="mediaErrors()"
             (mediaChange)="onMediaChange($event)"
+            (clearError)="clearMediaError($event)"
           ></app-case-media-uploader>
         </div>
       }

@@ -108,6 +108,13 @@ export class LongTermUpdate implements OnInit {
   mediaErrors = this.mediaState.mediaErrors;
   onMediaChange = this.mediaState.onMediaChange;
 
+  clearMediaError(field: 'primary' | 'additional' | 'video'): void {
+    this.mediaErrors.update((errors: any) => ({
+      ...errors,
+      [field]: null
+    }));
+  }
+
   private fb = inject(FormBuilder);
   private service = inject(LongTermCaseService);
   private router = inject(Router);

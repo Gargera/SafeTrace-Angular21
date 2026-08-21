@@ -229,6 +229,13 @@ export class UnknownCreate implements OnInit {
   mediaErrors = this.mediaState.mediaErrors;
   onMediaChange = this.mediaState.onMediaChange;
 
+  clearMediaError(field: 'primary' | 'additional' | 'video'): void {
+    this.mediaErrors.update((errors: any) => ({
+      ...errors,
+      [field]: null
+    }));
+  }
+
   constructor() {
     this.form.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef), debounceTime(500))

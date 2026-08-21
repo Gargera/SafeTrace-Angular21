@@ -28,11 +28,8 @@
       </p>
       <p class="mt-1 text-xs text-on-surface-variant/70">JPG / JPEG / PNG / WebP — حتى 5 MB</p>
     </div>
-    @if (localPrimaryError()) {
-    <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ localPrimaryError() }}</p>
-    }
-    @if (errors().primary) {
-    <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ errors().primary }}</p>
+    @if (errors().primary || localPrimaryError()) {
+    <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ errors().primary || localPrimaryError() }}</p>
     }
     }
 
@@ -108,11 +105,8 @@
       <p class="text-xs text-on-surface-variant/70">JPG / PNG / WebP — حتى 5MB لكل صورة</p>
     </div>
 
-    @if (localAdditionalError()) {
-    <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ localAdditionalError() }}</p>
-    }
-    @if (errors().additional) {
-    <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ errors().additional }}</p>
+    @if (errors().additional || localAdditionalError()) {
+    <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ errors().additional || localAdditionalError() }}</p>
     }
 
     @if (newPhotoPreviews().length > 0 || (mode() === 'update' && existingAdditionalPhotos().length > 0)) {
@@ -206,16 +200,10 @@
       }
     </div>
 
-    @if (localVideoError()) {
+    @if (errors().video || localVideoError()) {
     <p class="mt-1.5 flex items-center gap-1 text-xs text-error">
       <span class="material-symbols-outlined text-sm"> error </span>
-      {{ localVideoError() }}
-    </p>
-    }
-    @if (errors().video) {
-    <p class="mt-1.5 flex items-center gap-1 text-xs text-error">
-      <span class="material-symbols-outlined text-sm"> error </span>
-      {{ errors().video }}
+      {{ errors().video || localVideoError() }}
     </p>
     }
   </div>

@@ -63,6 +63,7 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
   }>({});
 
   mediaChange = output<CaseMediaPayload>();
+  clearError = output<'primary' | 'additional' | 'video'>();
 
   private imageService = inject(ImageService);
   private destroyRef = inject(DestroyRef);
@@ -192,6 +193,10 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
     this.mediaChange.emit(payload);
   }
 
+  private clearFieldError(field: 'primary' | 'additional' | 'video'): void {
+    this.clearError.emit(field);
+  }
+
   private syncExistingPhotoState(): void {
     const deletedIds = [...new Set(this.initialDeletedPhotoIds())];
     const remainingPhotos = this.existingPhotos().filter((photo) => !deletedIds.includes(photo.id));
@@ -226,7 +231,7 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
       ? !!this.newPrimaryImage()
       : !!this.newPrimaryImage() || hasExistingPrimary;
     if (!hasPrimary) {
-      this.localPrimaryError.set('برجاء إضافة وتأطير الصورة الأساسية.');
+      this.localPrimaryError.set('الصورة الأساسية مطلوبة.');
       isValid = false;
     } else {
       this.localPrimaryError.set(null);
@@ -269,6 +274,7 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
   // -------------------------------------------------------------
 
   onPrimaryPhotoSelected(event: Event): void {
+    this.clearFieldError('primary');
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
@@ -349,6 +355,8 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
       input.value = '';
       return;
     }
+    
+    this.clearFieldError('additional');
 
     for (const f of files) {
       const validation = this.imageService.validate(f, 5);
@@ -394,6 +402,8 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
     if (!file) {
       return;
     }
+
+    this.clearFieldError('video');
 
     const validation = validateVideoFile(file, 50);
 

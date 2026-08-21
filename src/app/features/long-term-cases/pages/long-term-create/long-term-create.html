@@ -28,7 +28,7 @@
 
       <app-case-media-uploader [mode]="'create'" [initialPrimaryFile]="initialPrimary()"
         [initialAdditionalFiles]="initialAdditional()" [initialVideoFile]="initialVideo()" [errors]="mediaErrors()"
-        (mediaChange)="onMediaChange($event)"></app-case-media-uploader>
+        (mediaChange)="onMediaChange($event)" (clearError)="clearMediaError($event)"></app-case-media-uploader>
 
       <div>
         <label class="mb-2 block text-sm font-medium text-on-surface-variant">

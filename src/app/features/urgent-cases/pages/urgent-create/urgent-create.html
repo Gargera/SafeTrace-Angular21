@@ -31,7 +31,7 @@
       <app-case-media-uploader mode="create" [initialPrimaryFile]="initialPrimary()"
         [initialOriginalPrimaryFile]="initialOriginalPrimary()" [initialAdditionalFiles]="initialAdditional()"
         [initialVideoFile]="initialVideo()" [errors]="mediaErrors()"
-        (mediaChange)="onMediaChange($event)"></app-case-media-uploader>
+        (mediaChange)="onMediaChange($event)" (clearError)="clearMediaError($event)"></app-case-media-uploader>
     </div>
     }
   </form>
