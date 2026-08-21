@@ -417,7 +417,6 @@ export class LongTermUpdate implements OnInit {
     const fields = this.stepControls[this.currentStep() as 1 | 2] ?? [];
     if (validateStepControls(this.form, fields)) return;
     this.currentStep.set(nextCaseFormStep(this.currentStep()));
-    this.errorMsg.set(null);
   }
 
   prevStep(): void {
@@ -460,7 +459,7 @@ export class LongTermUpdate implements OnInit {
 
     if (!valid || !hasPrimaryImage) {
       if (!hasPrimaryImage) {
-        this.errorMsg.set('الصورة الأساسية مطلوبة.');
+        this.mediaErrors.set({ primary: 'الصورة الأساسية مطلوبة.' });
       } else {
         this.errorMsg.set(validation.message || 'يرجى مراجعة الأخطاء وتصحيحها.');
       }

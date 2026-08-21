@@ -317,7 +317,6 @@ export class UnknownCreate implements OnInit {
     const fields = this.stepControls[current] ?? [];
     if (validateStepControls(this.form, fields)) return;
     this.currentStep.set(nextCaseFormStep(current));
-    this.errorMsg.set(null);
   }
 
   prevStep(): void {
@@ -356,7 +355,7 @@ export class UnknownCreate implements OnInit {
     }
 
     if (forceCreate && !request.primaryImage) {
-      this.errorMsg.set('يرجى إعادة إرفاق الصورة الأساسية قبل المتابعة.');
+      this.mediaErrors.set({ primary: 'يرجى إرفاق الصورة الأساسية.' });
       this.showForceCreatePopup.set(false);
       this.showDuplicateInfoDialog.set(false);
       return;
@@ -412,7 +411,7 @@ export class UnknownCreate implements OnInit {
     const video = media.video ?? this.initialVideo();
 
     if (!primaryImage) {
-      this.errorMsg.set('يرجى إعادة إرفاق الصورة الأساسية قبل المتابعة.');
+      this.mediaErrors.set({ primary: 'يرجى إرفاق الصورة الأساسية.' });
       return null;
     }
 

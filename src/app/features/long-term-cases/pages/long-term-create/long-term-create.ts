@@ -366,7 +366,6 @@ export class LongTermCreate implements OnInit {
     const fields = this.stepControls[current as 1 | 2] ?? [];
     if (validateStepControls(this.form, fields)) return;
     this.currentStep.set(nextCaseFormStep(current));
-    this.errorMsg.set(null);
   }
 
   prevStep(): void {
@@ -379,7 +378,7 @@ export class LongTermCreate implements OnInit {
 
     const pending = this.pendingRequest();
     if (forceCreate && !pending && !primaryImg) {
-      this.errorMsg.set('يرجى إعادة إرفاق الصورة الأساسية قبل المتابعة.');
+      this.mediaErrors.set({ primary: 'يرجى إرفاق الصورة الأساسية.' });
       this.showForceCreatePopup.set(false);
       this.showDuplicateInfoDialog.set(false);
       return;

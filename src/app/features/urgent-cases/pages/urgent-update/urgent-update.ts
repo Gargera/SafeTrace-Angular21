@@ -409,7 +409,6 @@ export class UrgentUpdate implements OnInit {
     this.selectedLat.set(loc.lat);
     this.selectedLng.set(loc.lng);
     this.selectedAddress.set(loc.address);
-    this.errorMsg.set(null);
     this.saveDraftToCache();
   }
 
@@ -504,11 +503,10 @@ export class UrgentUpdate implements OnInit {
 
     if (current === 2) {
       if (this.selectedLat() === null || this.selectedLng() === null) {
-        this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
+        this.locationError.set('من فضلك حدد موقع الحادث على الخريطة.');
         return;
       }
     }
-    this.errorMsg.set(null);
     this.currentStep.set(nextCaseFormStep(current));
   }
 
@@ -530,8 +528,8 @@ export class UrgentUpdate implements OnInit {
     const uploader = this.mediaUploader();
     const validation = validateCaseSubmission(this.form, uploader);
     if (!validation.valid || !hasPrimaryImage || this.selectedLat() === null) {
-      if (!hasPrimaryImage) this.errorMsg.set('الصورة الأساسية مطلوبة.');
-      else if (this.selectedLat() === null) this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
+      if (!hasPrimaryImage) this.mediaErrors.set({ primary: 'الصورة الأساسية مطلوبة.' });
+      else if (this.selectedLat() === null) this.locationError.set('من فضلك حدد موقع الحادث على الخريطة.');
       else this.errorMsg.set(validation.message!);
       return;
     }

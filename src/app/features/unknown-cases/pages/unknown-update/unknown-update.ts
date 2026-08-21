@@ -346,7 +346,6 @@ export class UnknownUpdate implements OnInit {
     const fields = this.stepControls[current as 1 | 2] ?? [];
     if (validateStepControls(this.form, fields)) return;
     this.currentStep.set(nextCaseFormStep(current));
-    this.errorMsg.set(null);
   }
 
   prevStep(): void {
@@ -368,7 +367,7 @@ export class UnknownUpdate implements OnInit {
     const validation = validateCaseSubmission(this.form, uploader);
     if (!validation.valid || !hasPrimaryImage) {
       if (!hasPrimaryImage) {
-        this.errorMsg.set('الصورة الأساسية مطلوبة.');
+        this.mediaErrors.set({ primary: 'الصورة الأساسية مطلوبة.' });
       } else {
         this.errorMsg.set(validation.message!);
       }
