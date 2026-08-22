@@ -44,7 +44,6 @@ import { DateSort } from '../../../enums/date-sort';
   standalone: true,
   imports: [ReactiveFormsModule, FormsModule, CardComponent, FormField, ButtonComponent, NgTemplateOutlet],
   templateUrl: './case-filters.component.html',
-  styleUrls: ['./case-filters.component.css'],
 })
 export class CaseFiltersComponent implements OnInit, AfterContentInit {
   // ---------- Search mode input ----------

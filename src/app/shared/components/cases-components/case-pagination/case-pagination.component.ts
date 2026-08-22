@@ -13,7 +13,6 @@ import { ButtonComponent } from '../../button/button';
   standalone: true,
   imports: [ButtonComponent],
   templateUrl: './case-pagination.component.html',
-  styleUrls: ['./case-pagination.component.css'],
 })
 
 export class PaginationComponent {
