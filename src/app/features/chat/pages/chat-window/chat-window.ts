@@ -461,23 +461,6 @@ private handleMessageDeletedForEveryone = (
   });
 }
 
-  // async onDeleteChat(): Promise<void> {
-  //   const confirmed = await this.chatAlertsService.confirm(
-  //     'حذف المحادثة',
-  //     'سيتم حذف هذه المحادثة من قائمتك فقط، ولن تظهر لك مرة أخرى.'
-  //   );
-  //   if (!confirmed) {
-  //     return;
-  //   }
-
-  //   this.chatService.deleteChatForMe(this.chatId).subscribe({
-  //     next: () => {
-  //       this.chatAlertsService.success('تم حذف المحادثة');
-  //       this.router.navigate(['/chat/conversations']);
-  //     },
-  //     error: () => this.chatAlertsService.error('تعذر حذف المحادثة، حاول مرة أخرى'),
-  //   });
-  // }
 
    goBack(): void {
     this.location.back();
@@ -578,6 +561,12 @@ goToCaseDetails(caseId: number, caseType: string): void {
       this.snackbarService.show("هذه الحالة تم حذفها");
       return;
     }
+
+    if (status === CaseStatus.Expired) {
+    this.snackbarService.show("هذه الحالة انتهت صلاحيتها");
+    return;
+  }
+
 
     if(status === CaseStatus.Found){
       this.router.navigate(['/founded',chat?.foundCaseId]);
