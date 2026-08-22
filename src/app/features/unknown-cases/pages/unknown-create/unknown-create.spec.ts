@@ -36,7 +36,7 @@ describe('UnknownCreate', () => {
 
   beforeEach(async () => {
     mockService = {
-      createCaseResult: of({ isSuccess: true, data: { isCreated: true } }),
+      createCaseResult: of({ success: true, data: { isCreated: true } }),
       createCaseCalled: false,
       createCaseArgs: [] as any[],
       createCase: function (req: any, force: any) {
@@ -159,7 +159,7 @@ describe('UnknownCreate', () => {
       component.form.patchValue({ fName: '', sName: '', tName: '', lName: '' });
       expect(component.form.get('fName')?.valid).toBe(true);
       expect(component.form.get('sName')?.valid).toBe(true);
-      
+
       // But if provided they must be valid (Arabic)
       component.form.patchValue({ fName: 'John' });
       expect(component.form.get('fName')?.invalid).toBe(true);
@@ -277,7 +277,7 @@ describe('UnknownCreate', () => {
     });
 
     it('should successfully submit and handle successful creation', () => {
-      mockService.createCaseResult = of({ isSuccess: true, data: { isCreated: true } });
+      mockService.createCaseResult = of({ success: true, data: { isCreated: true } });
       component.onSubmit();
 
       expect(mockService.createCaseCalled).toBe(true);
@@ -309,7 +309,7 @@ describe('UnknownCreate', () => {
 
     const testDuplicateDecision = (decision: DuplicateDecision) => {
       mockService.createCaseResult = of({
-        isSuccess: true,
+        success: true,
         data: { isCreated: false, duplicateDecision: decision, matchedCases: [], isBlocked: false }
       });
       component.onSubmit();

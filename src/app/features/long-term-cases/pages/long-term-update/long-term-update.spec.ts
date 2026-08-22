@@ -27,6 +27,7 @@ class MockCaseMediaUploaderComponent {
   @Input() initialVideoFile: File | null = null;
   @Input() initialDeletedPhotoIds: number[] = [];
   @Input() initialPrimaryPhotoId: number | null = null;
+  @Input() initialExistingVideoDeleted = false;
   @Input() errors: any = {};
   @Output() mediaChange = new EventEmitter<any>();
 }
@@ -35,7 +36,7 @@ class MockLongTermCaseService {
   updateCaseArgs: any[] = [];
   getMyCaseByIdResponse: any = of({
     status: 200,
-    isSuccess: true,
+    success: true,
     data: {
       fName: 'احمد',
       lName: 'محمد',
@@ -52,7 +53,7 @@ class MockLongTermCaseService {
 
   updateCaseResponse: any = of({
     status: 200,
-    isSuccess: true,
+    success: true,
     data: true,
   });
 
@@ -178,7 +179,8 @@ describe('LongTermUpdate', () => {
         additionalImages: [],
         video: null,
         deletedImageIds: [],
-        primaryPhotoId: 1
+        primaryPhotoId: 1,
+        isExistingVideoDeleted: false
       });
       component.policeReport.set(new File([''], 'police.jpg', { type: 'image/jpeg' }));
     });
@@ -189,6 +191,22 @@ describe('LongTermUpdate', () => {
       expect(mockCache.removeCalled).toBe(true);
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/long-term', '1']);
       expect(mockSnackbar.successArgs).toContain('تم تعديل بيانات الحالة بنجاح، وسيتم مراجعتها مرة أخرى من قِبَل الإدارة قبل النشر.');
+    });
+
+    it('should reject deleting the primary when only additional images remain', () => {
+      component.mediaPayload.set({
+        primaryImage: null,
+        additionalImages: [new File(['additional'], 'additional.jpg', { type: 'image/jpeg' })],
+        video: null,
+        deletedImageIds: [1],
+        primaryPhotoId: null,
+        isExistingVideoDeleted: false,
+      });
+
+      component.onSubmit();
+
+      expect(mockService.updateCaseArgs).toHaveLength(0);
+      expect(component.errorMsg()).toBe('الصورة الأساسية مطلوبة.');
     });
 
     it('handles API errors', () => {

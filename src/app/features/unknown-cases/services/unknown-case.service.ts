@@ -109,7 +109,7 @@ export class UnknownCaseService extends ApiService {
     ).pipe(
       tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.UNKNOWN_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD])),
       map(response => ({
-        isSuccess: response.success,
+        success: response.success,
         message: response.message,
         data: response.data as unknown as DuplicateDecisionPayload
       }))

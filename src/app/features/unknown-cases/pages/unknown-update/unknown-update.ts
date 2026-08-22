@@ -57,9 +57,7 @@ import { saveUpdateDraft, restoreUpdateDraft } from '../../../../shared/helper/c
 type Step = CaseFormStep;
 export const UNKNOWN_UPDATE_DRAFT_KEY_PREFIX = 'UnknownUpdate_Draft_';
 
-interface UnknownUpdateCustomData {
-  primaryPhotoId: number | null;
-}
+interface UnknownUpdateCustomData {}
 
 @Component({
   selector: 'app-unknown-update',
@@ -81,12 +79,12 @@ interface UnknownUpdateCustomData {
 export class UnknownUpdate implements OnInit {
   mediaState = useCaseMediaState({
     onSaveDraft: () => {
-       const self = this as any;
-       if (typeof self.saveDraft === 'function') {
-          self.saveDraft();
-       } else if (typeof self.saveDraftToCache === 'function') {
-          self.saveDraftToCache(self.mediaPayload());
-       }
+      const self = this as any;
+      if (typeof self.saveDraft === 'function') {
+        self.saveDraft();
+      } else if (typeof self.saveDraftToCache === 'function') {
+        self.saveDraftToCache(self.mediaPayload());
+      }
     }
   });
 
@@ -94,9 +92,19 @@ export class UnknownUpdate implements OnInit {
   initialOriginalPrimary = this.mediaState.initialOriginalPrimary;
   initialAdditional = this.mediaState.initialAdditional;
   initialVideo = this.mediaState.initialVideo;
+  initialDeletedPhotoIds = this.mediaState.initialDeletedPhotoIds;
+  initialPrimaryPhotoId = this.mediaState.initialPrimaryPhotoId;
+  initialExistingVideoDeleted = this.mediaState.initialExistingVideoDeleted;
   mediaPayload = this.mediaState.mediaPayload;
   mediaErrors = this.mediaState.mediaErrors;
   onMediaChange = this.mediaState.onMediaChange;
+
+  clearMediaError(field: 'primary' | 'additional' | 'video'): void {
+    this.mediaErrors.update((errors: any) => ({
+      ...errors,
+      [field]: null
+    }));
+  }
 
   private fb = inject(FormBuilder);
   private service = inject(UnknownCaseService);
@@ -118,10 +126,6 @@ export class UnknownUpdate implements OnInit {
 
   existingPhotos = signal<CaseFileResponse[]>([]);
   existingVideoUrl = signal<string | null>(null);
-
-  // Initial media state (for Cache restoration in Update mode)
-  initialDeletedPhotoIds = signal<number[]>([]);
-  initialPrimaryPhotoId = signal<number | null>(null);
 
   get draftKey() {
     return `${UNKNOWN_UPDATE_DRAFT_KEY_PREFIX}${this.caseId}`;
@@ -158,7 +162,7 @@ export class UnknownUpdate implements OnInit {
       case 3:
         return {
           icon: 'photo_library',
-          title: 'صور وفيديو',
+          title: 'مستندات وصور',
           description: 'ارفع الصور والمستندات ومقاطع الفيديو المتاحة.',
         };
       default:
@@ -227,9 +231,9 @@ export class UnknownUpdate implements OnInit {
         additionalImages: payload.additionalImages,
         deletedImageIds: payload.deletedImageIds,
         video: payload.video,
-      },
-      {
         primaryPhotoId: payload.primaryPhotoId,
+        isExistingVideoDeleted: payload.isExistingVideoDeleted,
+        originalPrimaryImage: payload.originalPrimaryImage,
       }
     );
   }
@@ -290,24 +294,38 @@ export class UnknownUpdate implements OnInit {
             (s) => this.currentStep.set(s),
             {
               primary: (f) => this.initialPrimary.set(f),
+              originalPrimary: (f) => this.initialOriginalPrimary.set(f),
               additional: (fs) => this.initialAdditional.set(fs),
               deletedPhotoIds: (ids) => this.initialDeletedPhotoIds.set(ids),
-              video: (f) => this.initialVideo.set(f)
+              video: (f) => this.initialVideo.set(f),
+              primaryPhotoId: (id) => this.initialPrimaryPhotoId.set(id),
+              isExistingVideoDeleted: (deleted) => this.initialExistingVideoDeleted.set(deleted),
             }
           );
 
           if (draft) {
-            const pId = draft.primaryPhotoId ?? (primary ? primary.id : (files[0]?.id ?? null));
+            const deletedPhotoIds = draft.deletedPhotoIds ?? [];
+            const restoredPrimaryId = draft.primaryPhotoId !== undefined
+              ? draft.primaryPhotoId
+              : (primary?.id ?? null);
+            const pId = restoredPrimaryId !== null && !deletedPhotoIds.includes(restoredPrimaryId)
+              ? restoredPrimaryId
+              : null;
+            const isExistingVideoDeleted =
+              draft.isExistingVideoDeleted ?? draft.removedVideo ?? false;
             this.mediaPayload.set({
               primaryImage: draft.newPrimaryImage ?? null,
               additionalImages: draft.newAdditionalImages ?? [],
-              deletedImageIds: draft.deletedPhotoIds ?? [],
+              deletedImageIds: deletedPhotoIds,
               video: draft.newVideo ?? null,
+              isExistingVideoDeleted,
               primaryPhotoId: pId,
+              originalPrimaryImage: draft.originalPrimaryImage ?? null,
             });
             this.initialPrimaryPhotoId.set(pId);
+            this.initialExistingVideoDeleted.set(isExistingVideoDeleted);
           } else {
-            const pId = primary ? primary.id : (files[0]?.id ?? null);
+            const pId = primary?.id ?? null;
             this.mediaPayload.update((p: CaseMediaPayload) => ({
               ...p,
               primaryPhotoId: pId
@@ -335,7 +353,6 @@ export class UnknownUpdate implements OnInit {
     const fields = this.stepControls[current as 1 | 2] ?? [];
     if (validateStepControls(this.form, fields)) return;
     this.currentStep.set(nextCaseFormStep(current));
-    this.errorMsg.set(null);
   }
 
   prevStep(): void {
@@ -345,21 +362,23 @@ export class UnknownUpdate implements OnInit {
   onSubmit(): void {
     if (this.isSubmitting()) return;
     const media = this.mediaPayload();
-    const currentRemainingPhotos = this.existingPhotos().length - media.deletedImageIds.length;
-    const hasAtLeastOnePhoto =
-      currentRemainingPhotos > 0 || !!media.primaryImage || media.additionalImages.length > 0;
+    const existingPrimaryRemains =
+      media.primaryPhotoId !== null &&
+      !media.deletedImageIds.includes(media.primaryPhotoId) &&
+      this.existingPhotos().some(
+        (photo) => photo.id === media.primaryPhotoId && photo.isPrimary
+      );
+    const hasPrimaryImage = !!media.primaryImage || existingPrimaryRemains;
 
     const uploader = this.mediaUploader();
-    if (uploader) {
-      const validation = validateCaseSubmission(this.form, uploader);
-      if (!validation.valid || !hasAtLeastOnePhoto) {
-        if (!hasAtLeastOnePhoto) {
-          this.errorMsg.set('لازم يفضل في صورة واحدة على الأقل للحالة.');
-        } else {
-          this.errorMsg.set(validation.message!);
-        }
-        return;
+    const validation = validateCaseSubmission(this.form, uploader);
+    if (!validation.valid || !hasPrimaryImage) {
+      if (!hasPrimaryImage) {
+        this.mediaErrors.set({ primary: 'الصورة الأساسية مطلوبة.' });
+      } else {
+        this.errorMsg.set(validation.message!);
       }
+      return;
     }
 
     const request = this.buildUpdateRequest();
@@ -394,10 +413,10 @@ export class UnknownUpdate implements OnInit {
       city: v.city ?? '',
       street: v.street ?? '',
       eventDate: v.eventDate ?? '',
-      primaryImage: media.primaryImage ?? undefined,
+      primaryImage: media.primaryImage ?? null,
       newPhotos: media.additionalImages.length ? media.additionalImages : null,
-      deletedPhotosIds: media.deletedImageIds.length ? media.deletedImageIds : null,
-      primaryPhotoId: media.primaryPhotoId,
+      isExistingVideoDeleted: media.isExistingVideoDeleted ?? false,
+      deletedPhotoIds: media.deletedImageIds.length ? media.deletedImageIds : null,
       video: media.video,
     };
   }
@@ -412,7 +431,7 @@ export class UnknownUpdate implements OnInit {
       draftKey: this.draftKey,
       snackbar: this.snackbar,
       router: this.router,
-      successRoute: ['/unknown', String(this.caseId)],
+      successRoute: ['/unknown/my', String(this.caseId)],
       successMessage: 'تم تعديل بيانات الحالة بنجاح، وسيتم مراجعتها مرة أخرى من قِبَل الإدارة قبل النشر.',
       onSuccess: () => {
         this.submittedSuccessfully.set(true);

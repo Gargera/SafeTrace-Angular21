@@ -48,7 +48,8 @@
         [existingVideoUrl]="existingVideoUrl()" [initialPrimaryFile]="initialPrimary()"
         [initialAdditionalFiles]="initialAdditional()" [initialVideoFile]="initialVideo()"
         [initialDeletedPhotoIds]="initialDeletedPhotoIds()" [initialPrimaryPhotoId]="initialPrimaryPhotoId()"
-        [errors]="mediaErrors()" (mediaChange)="onMediaChange($event)"></app-case-media-uploader>
+        [initialExistingVideoDeleted]="initialExistingVideoDeleted()"
+        [errors]="mediaErrors()" (mediaChange)="onMediaChange($event)" (clearError)="clearMediaError($event)"></app-case-media-uploader>
 
       <div>
         <label class="mb-2 block text-sm font-medium text-on-surface-variant">

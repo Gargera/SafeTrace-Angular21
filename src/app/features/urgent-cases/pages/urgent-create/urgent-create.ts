@@ -260,7 +260,6 @@ export class UrgentCreate implements OnInit {
     this.selectedAddress.set(loc.address);
 
     if (this.hasValidLocation()) {
-      this.errorMsg.set(null);
       this.locationError.set(null);
     }
 
@@ -287,6 +286,13 @@ export class UrgentCreate implements OnInit {
   mediaPayload = this.mediaState.mediaPayload;
   mediaErrors = this.mediaState.mediaErrors;
   onMediaChange = this.mediaState.onMediaChange;
+
+  clearMediaError(field: 'primary' | 'additional' | 'video'): void {
+    this.mediaErrors.update((errors: any) => ({
+      ...errors,
+      [field]: null
+    }));
+  }
 
   constructor() {
     this.form.valueChanges
@@ -386,7 +392,6 @@ export class UrgentCreate implements OnInit {
     this.isMapModalOpen.set(false);
 
     if (this.hasValidLocation()) {
-      this.errorMsg.set(null);
       this.locationError.set(null);
     }
 
@@ -469,13 +474,12 @@ export class UrgentCreate implements OnInit {
 
     if (current === 2) {
       if (!this.hasValidLocation()) {
-        this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
+        this.locationError.set('من فضلك حدد موقع الحادث على الخريطة.');
         return;
       }
     }
 
     this.currentStep.set(nextCaseFormStep(current));
-    this.errorMsg.set(null);
   }
 
   prevStep(): void {
@@ -498,7 +502,7 @@ export class UrgentCreate implements OnInit {
         }
       }
       if (!this.hasValidLocation()) {
-        this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
+        this.locationError.set('من فضلك حدد موقع الحادث على الخريطة.');
         return;
       }
     }
@@ -518,7 +522,7 @@ export class UrgentCreate implements OnInit {
     }
 
     if (forceCreate && !request.primaryImage) {
-      this.errorMsg.set('يرجى إعادة إرفاق الصورة الأساسية قبل المتابعة.');
+      this.mediaErrors.set({ primary: 'يرجى إرفاق الصورة الأساسية.' });
       this.showForceCreatePopup.set(false);
       this.showDuplicateInfoDialog.set(false);
       return;
@@ -586,12 +590,12 @@ export class UrgentCreate implements OnInit {
     const lng = this.selectedLng();
 
     if (!this.hasValidLocation() || lat === null || lng === null) {
-      this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
+      this.locationError.set('من فضلك حدد موقع الحادث على الخريطة.');
       return null;
     }
 
     if (!primaryImage) {
-      this.errorMsg.set('يرجى إعادة إرفاق الصورة الأساسية قبل المتابعة.');
+      this.mediaErrors.set({ primary: 'يرجى إرفاق الصورة الأساسية.' });
       return null;
     }
 

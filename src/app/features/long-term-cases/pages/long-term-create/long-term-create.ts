@@ -49,7 +49,7 @@ import {
   validateStepControls,
   validateCaseSubmission,
 } from '../../../../shared/helper/cases-helper/case-form.helper';
-import { executeCaseSubmissionFlow, CaseSubmissionResponse, CaseSubmissionFlowDeps } from '../../../../shared/helper/cases-helper/case-submission-flow.helper';
+import { executeCaseSubmissionFlow, CaseSubmissionFlowDeps } from '../../../../shared/helper/cases-helper/case-submission-flow.helper';
 import { saveCreateDraft, restoreCreateDraft } from '../../../../shared/helper/cases-helper/case-cache.helper';
 import { DuplicateDecisionPayload } from '../../../../shared/helper/cases-helper/case-duplicate.helper';
 import { useCaseDuplicateHandler } from '../../../../shared/helper/cases-helper/case-duplicate-handler.helper';
@@ -182,7 +182,7 @@ export class LongTermCreate implements OnInit {
       case 3:
         return {
           icon: 'photo_library',
-          title: 'صور وفيديو',
+          title: 'مستندات وصور',
           description: 'ارفع الصور والمستندات ومقاطع الفيديو المتاحة.',
         };
       default:
@@ -247,6 +247,13 @@ export class LongTermCreate implements OnInit {
   mediaPayload = this.mediaState.mediaPayload;
   mediaErrors = this.mediaState.mediaErrors;
   onMediaChange = this.mediaState.onMediaChange;
+
+  clearMediaError(field: 'primary' | 'additional' | 'video'): void {
+    this.mediaErrors.update((errors: any) => ({
+      ...errors,
+      [field]: null
+    }));
+  }
 
   constructor() {
     this.form.valueChanges
@@ -366,7 +373,6 @@ export class LongTermCreate implements OnInit {
     const fields = this.stepControls[current as 1 | 2] ?? [];
     if (validateStepControls(this.form, fields)) return;
     this.currentStep.set(nextCaseFormStep(current));
-    this.errorMsg.set(null);
   }
 
   prevStep(): void {
@@ -379,7 +385,7 @@ export class LongTermCreate implements OnInit {
 
     const pending = this.pendingRequest();
     if (forceCreate && !pending && !primaryImg) {
-      this.errorMsg.set('يرجى إعادة إرفاق الصورة الأساسية قبل المتابعة.');
+      this.mediaErrors.set({ primary: 'يرجى إرفاق الصورة الأساسية.' });
       this.showForceCreatePopup.set(false);
       this.showDuplicateInfoDialog.set(false);
       return;

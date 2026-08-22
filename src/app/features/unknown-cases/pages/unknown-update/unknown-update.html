@@ -61,8 +61,10 @@
             [initialVideoFile]="initialVideo()"
             [initialDeletedPhotoIds]="initialDeletedPhotoIds()"
             [initialPrimaryPhotoId]="initialPrimaryPhotoId()"
+            [initialExistingVideoDeleted]="initialExistingVideoDeleted()"
             [errors]="mediaErrors()"
             (mediaChange)="onMediaChange($event)"
+            (clearError)="clearMediaError($event)"
           ></app-case-media-uploader>
         </div>
       }

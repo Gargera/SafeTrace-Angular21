@@ -153,11 +153,11 @@ export class UnknownCreate implements OnInit {
   readonly steps = [
     { num: 1, label: 'بيانات الشخص' },
     { num: 2, label: 'موقع العثور عليه' },
-    { num: 3, label: 'صور' },
+    { num: 3, label: 'المستندات و الصور' },
   ];
 
   stepTitle = computed(() => {
-    return ['بيانات الشخص (إن وُجدت)', 'موقع العثور عليه', 'صور'][this.currentStep() - 1];
+    return ['بيانات الشخص (إن وُجدت)', 'موقع العثور عليه', 'المستندات و الصور'][this.currentStep() - 1];
   });
 
   stepHeader = computed(() => {
@@ -177,7 +177,7 @@ export class UnknownCreate implements OnInit {
       case 3:
         return {
           icon: 'photo_library',
-          title: 'صور وفيديو',
+          title: 'المستندات و الصور',
           description: 'ارفع الصور والمستندات ومقاطع الفيديو المتاحة.',
         };
       default:
@@ -228,6 +228,13 @@ export class UnknownCreate implements OnInit {
   mediaPayload = this.mediaState.mediaPayload;
   mediaErrors = this.mediaState.mediaErrors;
   onMediaChange = this.mediaState.onMediaChange;
+
+  clearMediaError(field: 'primary' | 'additional' | 'video'): void {
+    this.mediaErrors.update((errors: any) => ({
+      ...errors,
+      [field]: null
+    }));
+  }
 
   constructor() {
     this.form.valueChanges
@@ -317,7 +324,6 @@ export class UnknownCreate implements OnInit {
     const fields = this.stepControls[current] ?? [];
     if (validateStepControls(this.form, fields)) return;
     this.currentStep.set(nextCaseFormStep(current));
-    this.errorMsg.set(null);
   }
 
   prevStep(): void {
@@ -356,7 +362,7 @@ export class UnknownCreate implements OnInit {
     }
 
     if (forceCreate && !request.primaryImage) {
-      this.errorMsg.set('يرجى إعادة إرفاق الصورة الأساسية قبل المتابعة.');
+      this.mediaErrors.set({ primary: 'يرجى إرفاق الصورة الأساسية.' });
       this.showForceCreatePopup.set(false);
       this.showDuplicateInfoDialog.set(false);
       return;
@@ -412,7 +418,7 @@ export class UnknownCreate implements OnInit {
     const video = media.video ?? this.initialVideo();
 
     if (!primaryImage) {
-      this.errorMsg.set('يرجى إعادة إرفاق الصورة الأساسية قبل المتابعة.');
+      this.mediaErrors.set({ primary: 'يرجى إرفاق الصورة الأساسية.' });
       return null;
     }
 

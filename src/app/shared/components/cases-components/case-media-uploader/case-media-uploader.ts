@@ -20,12 +20,14 @@ import { getControlFieldError } from '../../../../shared/helper/form-validation.
 import { CaseFileResponse } from '../../../../core/models/cases.model';
 import { validateVideoFile } from '../../../../shared/validators/video-validation.validator';
 import { CaseObjectUrlRegistry } from '../../../../shared/helper/cases-helper/case-form.helper';
+import { ButtonComponent } from '../../button/button';
 
 export interface CaseMediaPayload {
   primaryImage: File | null;
   additionalImages: File[];
   video: File | null;
   deletedImageIds: number[];
+  isExistingVideoDeleted?: boolean;
   primaryPhotoId: number | null;
   originalPrimaryImage?: File | null;
 }
@@ -33,7 +35,7 @@ export interface CaseMediaPayload {
 @Component({
   selector: 'app-case-media-uploader',
   standalone: true,
-  imports: [CommonModule, ImageCropperComponent],
+  imports: [CommonModule, ImageCropperComponent, ButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './case-media-uploader.html',
 })
@@ -51,6 +53,7 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
   initialAdditionalFiles = input<File[]>([]);
   initialVideoFile = input<File | null>(null);
   initialDeletedPhotoIds = input<number[]>([]);
+  initialExistingVideoDeleted = input(false);
 
   // Errors from Parent
   errors = input<{
@@ -60,6 +63,7 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
   }>({});
 
   mediaChange = output<CaseMediaPayload>();
+  clearError = output<'primary' | 'additional' | 'video'>();
 
   private imageService = inject(ImageService);
   private destroyRef = inject(DestroyRef);
@@ -79,7 +83,6 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
   // Active Cropper State
   cropImageEvent = signal<Event | null>(null);
   tempCroppedBlob = signal<Blob | null>(null);
-  cropTargetExistingId = signal<number | null>(null);
 
   newPhotos = signal<File[]>([]);
   newPhotoPreviews = signal<string[]>([]);
@@ -97,12 +100,12 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
   videoFile = signal<File | null>(null);
   videoPreview = signal<string | null>(null);
   isVideoModalOpen = signal(false);
+  isExistingVideoDeleted = signal(false);
 
   // Local UI errors (for frontend validation before submit)
   localPrimaryError = signal<string | null>(null);
   localAdditionalError = signal<string | null>(null);
   localVideoError = signal<string | null>(null);
-  existingPhotoEditError = signal<string | null>(null);
 
   constructor() {
     this.destroyRef.onDestroy(() => this.objectUrls.revokeAll());
@@ -110,16 +113,27 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     if (this.mode() === 'update') {
-      const deletedIds = this.initialDeletedPhotoIds();
-      this.deletedPhotoIds.set([...deletedIds]);
-      this.localExistingPhotos.set(
-        this.existingPhotos().filter((p) => !deletedIds.includes(p.id))
-      );
-      this.primaryPhotoId.set(this.initialPrimaryPhotoId());
+      this.syncExistingPhotoState();
+      this.isExistingVideoDeleted.set(this.initialExistingVideoDeleted());
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (
+      this.mode() === 'update' &&
+      (changes['existingPhotos'] ||
+        changes['initialDeletedPhotoIds'] ||
+        changes['initialPrimaryPhotoId'])
+    ) {
+      this.syncExistingPhotoState();
+    }
+
+    if (changes['initialExistingVideoDeleted']) {
+      this.isExistingVideoDeleted.set(
+        this.mode() === 'update' && !!changes['initialExistingVideoDeleted'].currentValue
+      );
+    }
+
     if (changes['initialPrimaryFile'] && changes['initialPrimaryFile'].currentValue !== undefined) {
       const file = changes['initialPrimaryFile'].currentValue;
       this.newPrimaryImage.set(file);
@@ -154,6 +168,7 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
         this.videoFile.set(file);
         if (file) {
           this.videoPreview.set(this.objectUrls.replace('video', file));
+          this.isExistingVideoDeleted.set(false);
         } else {
           this.videoPreview.set(null);
           this.objectUrls.revoke('video');
@@ -172,7 +187,28 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
       primaryPhotoId: this.primaryPhotoId(),
       originalPrimaryImage: this.originalPrimaryImage()
     };
+    if (this.mode() === 'update') {
+      payload.isExistingVideoDeleted = this.isExistingVideoDeleted();
+    }
     this.mediaChange.emit(payload);
+  }
+
+  private clearFieldError(field: 'primary' | 'additional' | 'video'): void {
+    this.clearError.emit(field);
+  }
+
+  private syncExistingPhotoState(): void {
+    const deletedIds = [...new Set(this.initialDeletedPhotoIds())];
+    const remainingPhotos = this.existingPhotos().filter((photo) => !deletedIds.includes(photo.id));
+    const initialPrimaryId = this.initialPrimaryPhotoId();
+
+    this.deletedPhotoIds.set(deletedIds);
+    this.localExistingPhotos.set(remainingPhotos);
+    this.primaryPhotoId.set(
+      initialPrimaryId !== null && remainingPhotos.some((photo) => photo.id === initialPrimaryId)
+        ? initialPrimaryId
+        : null
+    );
   }
 
   public validate(): boolean {
@@ -187,9 +223,15 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
 
     let isValid = true;
 
-    const hasPrimary = !!this.newPrimaryImage() || !!this.primaryPhotoId();
+    const hasExistingPrimary =
+      this.mode() === 'update' &&
+      this.primaryPhotoId() !== null &&
+      this.localExistingPhotos().some((photo) => photo.id === this.primaryPhotoId());
+    const hasPrimary = this.mode() === 'create'
+      ? !!this.newPrimaryImage()
+      : !!this.newPrimaryImage() || hasExistingPrimary;
     if (!hasPrimary) {
-      this.localPrimaryError.set('برجاء إضافة وتأطير الصورة الأساسية.');
+      this.localPrimaryError.set('الصورة الأساسية مطلوبة.');
       isValid = false;
     } else {
       this.localPrimaryError.set(null);
@@ -204,7 +246,7 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
       this.localAdditionalError.set(null);
     }
 
-    if (this.localAdditionalError() || this.localVideoError() || this.existingPhotoEditError()) {
+    if (this.localAdditionalError() || this.localVideoError()) {
       isValid = false;
     }
 
@@ -217,7 +259,7 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
 
   removeExistingPhoto(photo: CaseFileResponse): void {
     this.localExistingPhotos.update((list) => list.filter((p) => p.id !== photo.id));
-    this.deletedPhotoIds.update((ids) => [...ids, photo.id]);
+    this.deletedPhotoIds.update((ids) => ids.includes(photo.id) ? ids : [...ids, photo.id]);
 
     if (this.primaryPhotoId() === photo.id) {
       this.primaryPhotoId.set(null);
@@ -225,45 +267,14 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
     this.emitChange();
   }
 
-  setExistingAsPrimary(photo: CaseFileResponse): void {
-    if (this.mode() === 'update') return;
-    this.primaryPhotoId.set(photo.id);
-    this.newPrimaryImage.set(null);
-    this.newPrimaryPreview.set(null);
-    this.primaryImageSource.set(null);
-    this.objectUrls.revoke('primary');
-    this.emitChange();
-  }
 
-  async editExistingPhoto(photo: CaseFileResponse): Promise<void> {
-    this.existingPhotoEditError.set(null);
-    try {
-      const response = await fetch(photo.imagePath, { mode: 'cors' });
-      if (!response.ok) throw new Error('fetch failed');
-
-      const blob = await response.blob();
-      const file = new File([blob], `existing_${photo.id}.jpg`, {
-        type: blob.type || 'image/jpeg',
-      });
-
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      const fakeEvent = { target: { files: dt.files } } as unknown as Event;
-
-      this.cropTargetExistingId.set(photo.id);
-      this.pendingCropSource.set(file);
-      this.tempCroppedBlob.set(null);
-      this.cropImageEvent.set(fakeEvent);
-    } catch {
-      this.existingPhotoEditError.set('تعذر تحميل الصورة للتعديل. حاول مرة أخرى.');
-    }
-  }
 
   // -------------------------------------------------------------
   // Primary Photo
   // -------------------------------------------------------------
 
   onPrimaryPhotoSelected(event: Event): void {
+    this.clearFieldError('primary');
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
@@ -276,7 +287,6 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
     }
 
     this.localPrimaryError.set(null);
-    this.cropTargetExistingId.set(null);
     this.originalPrimaryImage.set(file);
     this.pendingCropSource.set(file);
     this.tempCroppedBlob.set(null);
@@ -293,35 +303,13 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
     const blob = this.tempCroppedBlob();
     if (!blob) return;
 
-    const targetId = this.cropTargetExistingId();
     const croppedFile = new File([blob], `primary_image_${Date.now()}.jpg`, {
       type: 'image/jpeg',
     });
 
-    if (targetId !== null) {
-      // Editing an existing photo: treat it as "delete old + upload edited version"
-      const wasPrimary = this.primaryPhotoId() === targetId;
-
-      this.deletedPhotoIds.update((ids) => [...ids, targetId]);
-      this.localExistingPhotos.update((list) => list.filter((p) => p.id !== targetId));
-
-      if (wasPrimary) {
-        this.newPrimaryImage.set(croppedFile);
-        this.newPrimaryPreview.set(this.objectUrls.replace('primary', croppedFile));
-        this.primaryImageSource.set(this.originalPrimaryImage() ?? this.pendingCropSource() ?? croppedFile);
-        this.primaryPhotoId.set(null);
-      } else {
-        this.newPhotos.update((p) => [...p, croppedFile]);
-        this.newPhotoPreviews.set(this.objectUrls.replaceMany('additional', this.newPhotos()) || []);
-      }
-      this.cropTargetExistingId.set(null);
-    } else {
-      // Brand new primary
-      this.newPrimaryImage.set(croppedFile);
-      this.newPrimaryPreview.set(this.objectUrls.replace('primary', croppedFile));
-      this.primaryImageSource.set(this.originalPrimaryImage() ?? this.pendingCropSource() ?? croppedFile);
-      this.primaryPhotoId.set(null);
-    }
+    this.newPrimaryImage.set(croppedFile);
+    this.newPrimaryPreview.set(this.objectUrls.replace('primary', croppedFile));
+    this.primaryImageSource.set(this.originalPrimaryImage() ?? this.pendingCropSource() ?? croppedFile);
 
     this.cropImageEvent.set(null);
     this.pendingCropSource.set(null);
@@ -330,7 +318,6 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
 
   cancelCrop(): void {
     this.cropImageEvent.set(null);
-    this.cropTargetExistingId.set(null);
     this.pendingCropSource.set(null);
     this.tempCroppedBlob.set(null);
   }
@@ -338,7 +325,6 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
   reCropPrimary(): void {
     const source = this.originalPrimaryImage() ?? this.primaryImageSource() ?? this.newPrimaryImage();
     if (!source) return;
-    this.cropTargetExistingId.set(null);
     this.pendingCropSource.set(source);
     this.tempCroppedBlob.set(null);
 
@@ -369,6 +355,8 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
       input.value = '';
       return;
     }
+    
+    this.clearFieldError('additional');
 
     for (const f of files) {
       const validation = this.imageService.validate(f, 5);
@@ -415,6 +403,8 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
       return;
     }
 
+    this.clearFieldError('video');
+
     const validation = validateVideoFile(file, 50);
 
     if (!validation.valid) {
@@ -428,13 +418,18 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
     this.localVideoError.set(null);
     this.videoFile.set(file);
     this.videoPreview.set(this.objectUrls.replace('video', file));
+    this.isExistingVideoDeleted.set(false);
     this.emitChange();
   }
 
   removeVideo(): void {
+    const isCancellingNewUpload = this.videoFile() !== null;
     this.videoFile.set(null);
     this.videoPreview.set(null);
     this.objectUrls.revoke('video');
+    this.isExistingVideoDeleted.set(
+      this.mode() === 'update' && !!this.existingVideoUrl() && !isCancellingNewUpload
+    );
     this.emitChange();
   }
 

@@ -33,7 +33,7 @@ describe('LongTermCreate', () => {
 
   beforeEach(async () => {
     mockService = {
-      createCaseResult: of({ isSuccess: true, data: { isCreated: true } }),
+      createCaseResult: of({ success: true, data: { isCreated: true } }),
       createCaseCalled: false,
       createCaseArgs: [] as any[],
       createCase: function (req: any, force: any) {
@@ -251,7 +251,7 @@ describe('LongTermCreate', () => {
     });
 
     it('should submit successfully', () => {
-      mockService.createCaseResult = of({ isSuccess: true, data: { isCreated: true } });
+      mockService.createCaseResult = of({ success: true, data: { isCreated: true } });
       component.onSubmit();
 
       expect(mockService.createCaseCalled).toBe(true);
@@ -275,7 +275,7 @@ describe('LongTermCreate', () => {
 
     const testDuplicate = (decision: DuplicateDecision) => {
       mockService.createCaseResult = of({
-        isSuccess: true,
+        success: true,
         data: { isCreated: false, duplicateDecision: decision, isBlocked: false, matchedCases: [] }
       });
       component.onSubmit();

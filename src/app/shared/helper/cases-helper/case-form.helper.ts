@@ -193,6 +193,8 @@ export interface UpdateDraft<T = unknown> {
   newAdditionalImages?: File[];
   deletedPhotoIds?: number[];
   newVideo?: File | null;
+  isExistingVideoDeleted?: boolean;
+  /** @deprecated Kept only so drafts written by older frontend versions can be restored. */
   removedVideo?: boolean;
   primaryPhotoId?: number | null;
   originalPrimaryImage?: File | null;

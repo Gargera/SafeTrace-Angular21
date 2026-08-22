@@ -63,7 +63,6 @@ type Step = CaseFormStep;
 export const URGENT_UPDATE_DRAFT_KEY_PREFIX = 'UrgentUpdate_Draft_';
 
 interface UrgentUpdateCustomData {
-  primaryPhotoId: number | null;
   selectedLat: number | null;
   selectedLng: number | null;
   selectedAddress: string;
@@ -104,9 +103,19 @@ export class UrgentUpdate implements OnInit {
   initialOriginalPrimary = this.mediaState.initialOriginalPrimary;
   initialAdditional = this.mediaState.initialAdditional;
   initialVideo = this.mediaState.initialVideo;
+  initialDeletedPhotoIds = this.mediaState.initialDeletedPhotoIds;
+  initialPrimaryPhotoId = this.mediaState.initialPrimaryPhotoId;
+  initialExistingVideoDeleted = this.mediaState.initialExistingVideoDeleted;
   mediaPayload = this.mediaState.mediaPayload;
   mediaErrors = this.mediaState.mediaErrors;
   onMediaChange = this.mediaState.onMediaChange;
+
+  clearMediaError(field: 'primary' | 'additional' | 'video'): void {
+    this.mediaErrors.update((errors: any) => ({
+      ...errors,
+      [field]: null
+    }));
+  }
 
   private fb = inject(FormBuilder);
   private destroyRef = inject(DestroyRef);
@@ -130,9 +139,6 @@ export class UrgentUpdate implements OnInit {
 
   existingPhotos = signal<CaseFileResponse[]>([]);
   existingVideoUrl = signal<string | null>(null);
-
-  initialDeletedPhotoIds = signal<number[]>([]);
-  initialPrimaryPhotoId = signal<number | null>(null);
 
   get draftKey() {
     return `${URGENT_UPDATE_DRAFT_KEY_PREFIX}${this.caseId}`;
@@ -161,7 +167,7 @@ export class UrgentUpdate implements OnInit {
   ];
 
   stepTitle = computed(() => {
-    return ['بيانات الشخص المفقود', 'موقع الحادث على الخريطة', 'صور'][this.currentStep() - 1];
+    return ['بيانات الشخص المفقود', 'موقع الحادث على الخريطة', 'المستندات والصور'][this.currentStep() - 1];
   });
 
   stepHeader = computed(() => {
@@ -181,7 +187,7 @@ export class UrgentUpdate implements OnInit {
       case 3:
         return {
           icon: 'photo_library',
-          title: 'صور وفيديو',
+          title: 'مستندات وصور',
           description: 'ارفع الصور والمستندات ومقاطع الفيديو المتاحة.',
         };
       default:
@@ -257,9 +263,11 @@ export class UrgentUpdate implements OnInit {
         additionalImages: payload.additionalImages,
         deletedImageIds: payload.deletedImageIds,
         video: payload.video,
+        isExistingVideoDeleted: payload.isExistingVideoDeleted,
+        primaryPhotoId: payload.primaryPhotoId,
+        originalPrimaryImage: payload.originalPrimaryImage,
       },
       {
-        primaryPhotoId: payload.primaryPhotoId,
         selectedLat: this.selectedLat(),
         selectedLng: this.selectedLng(),
         selectedAddress: this.selectedAddress(),
@@ -342,9 +350,12 @@ export class UrgentUpdate implements OnInit {
             (s) => this.currentStep.set(s),
             {
               primary: (f) => this.initialPrimary.set(f),
+              originalPrimary: (f) => this.initialOriginalPrimary.set(f),
               additional: (fs) => this.initialAdditional.set(fs),
               deletedPhotoIds: (ids) => this.initialDeletedPhotoIds.set(ids),
-              video: (f) => this.initialVideo.set(f)
+              video: (f) => this.initialVideo.set(f),
+              primaryPhotoId: (id) => this.initialPrimaryPhotoId.set(id),
+              isExistingVideoDeleted: (deleted) => this.initialExistingVideoDeleted.set(deleted),
             }
           );
 
@@ -360,18 +371,29 @@ export class UrgentUpdate implements OnInit {
             }
 
             // Important: we need to set the payload so that we don't have to wait for the uploader to emit it
-            const pId = draft.primaryPhotoId ?? (primary ? primary.id : (files[0]?.id ?? null));
+            const deletedPhotoIds = draft.deletedPhotoIds ?? [];
+            const restoredPrimaryId = draft.primaryPhotoId !== undefined
+              ? draft.primaryPhotoId
+              : (primary?.id ?? null);
+            const pId = restoredPrimaryId !== null && !deletedPhotoIds.includes(restoredPrimaryId)
+              ? restoredPrimaryId
+              : null;
+            const isExistingVideoDeleted =
+              draft.isExistingVideoDeleted ?? draft.removedVideo ?? false;
             this.mediaPayload.set({
               primaryImage: draft.newPrimaryImage ?? null,
               additionalImages: draft.newAdditionalImages ?? [],
-              deletedImageIds: draft.deletedPhotoIds ?? [],
+              deletedImageIds: deletedPhotoIds,
               video: draft.newVideo ?? null,
+              isExistingVideoDeleted,
               primaryPhotoId: pId,
+              originalPrimaryImage: draft.originalPrimaryImage ?? null,
             });
             this.initialPrimaryPhotoId.set(pId);
+            this.initialExistingVideoDeleted.set(isExistingVideoDeleted);
 
           } else {
-            const pId = primary ? primary.id : (files[0]?.id ?? null);
+            const pId = primary?.id ?? null;
             this.mediaPayload.update((p: CaseMediaPayload) => ({
               ...p,
               primaryPhotoId: pId
@@ -394,7 +416,6 @@ export class UrgentUpdate implements OnInit {
     this.selectedLat.set(loc.lat);
     this.selectedLng.set(loc.lng);
     this.selectedAddress.set(loc.address);
-    this.errorMsg.set(null);
     this.saveDraftToCache();
   }
 
@@ -489,11 +510,10 @@ export class UrgentUpdate implements OnInit {
 
     if (current === 2) {
       if (this.selectedLat() === null || this.selectedLng() === null) {
-        this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
+        this.locationError.set('من فضلك حدد موقع الحادث على الخريطة.');
         return;
       }
     }
-    this.errorMsg.set(null);
     this.currentStep.set(nextCaseFormStep(current));
   }
 
@@ -504,19 +524,21 @@ export class UrgentUpdate implements OnInit {
   onSubmit(): void {
     if (this.isSubmitting()) return;
     const media = this.mediaPayload();
-    const currentRemainingPhotos = this.existingPhotos().length - media.deletedImageIds.length;
-    const hasAtLeastOnePhoto =
-      currentRemainingPhotos > 0 || !!media.primaryImage || media.additionalImages.length > 0;
+    const existingPrimaryRemains =
+      media.primaryPhotoId !== null &&
+      !media.deletedImageIds.includes(media.primaryPhotoId) &&
+      this.existingPhotos().some(
+        (photo) => photo.id === media.primaryPhotoId && photo.isPrimary
+      );
+    const hasPrimaryImage = !!media.primaryImage || existingPrimaryRemains;
 
     const uploader = this.mediaUploader();
-    if (uploader) {
-      const validation = validateCaseSubmission(this.form, uploader);
-      if (!validation.valid || !hasAtLeastOnePhoto || this.selectedLat() === null) {
-        if (!hasAtLeastOnePhoto) this.errorMsg.set('لازم يفضل في صورة واحدة على الأقل للحالة.');
-        else if (this.selectedLat() === null) this.errorMsg.set('من فضلك حدد موقع الحادث على الخريطة.');
-        else this.errorMsg.set(validation.message!);
-        return;
-      }
+    const validation = validateCaseSubmission(this.form, uploader);
+    if (!validation.valid || !hasPrimaryImage || this.selectedLat() === null) {
+      if (!hasPrimaryImage) this.mediaErrors.set({ primary: 'الصورة الأساسية مطلوبة.' });
+      else if (this.selectedLat() === null) this.locationError.set('من فضلك حدد موقع الحادث على الخريطة.');
+      else this.errorMsg.set(validation.message!);
+      return;
     }
 
     const request = this.buildUpdateRequest();
@@ -547,10 +569,10 @@ export class UrgentUpdate implements OnInit {
       city: v.city!,
       street: v.street!,
       eventDate: this.originalEventDate(),
-      primaryImage: media.primaryImage ?? undefined,
+      primaryImage: media.primaryImage ?? null,
       newPhotos: media.additionalImages.length ? media.additionalImages : null,
-      deletedPhotosIds: media.deletedImageIds.length ? media.deletedImageIds : null,
-      primaryPhotoId: media.primaryPhotoId,
+      isExistingVideoDeleted: media.isExistingVideoDeleted ?? false,
+      deletedPhotoIds: media.deletedImageIds.length ? media.deletedImageIds : null,
       video: media.video,
       latitude: this.selectedLat()!,
       longitude: this.selectedLng()!,
@@ -567,7 +589,7 @@ export class UrgentUpdate implements OnInit {
       draftKey: this.draftKey,
       snackbar: this.snackbar,
       router: this.router,
-      successRoute: ['/urgent', this.caseId],
+      successRoute: ['/urgent/my', this.caseId],
       successMessage: 'تم تعديل بيانات الحالة بنجاح.',
       onSuccess: () => {
         this.submittedSuccessfully.set(true);

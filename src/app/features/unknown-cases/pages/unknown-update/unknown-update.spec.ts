@@ -38,6 +38,7 @@ class MockCaseMediaUploaderComponent {
   @Input() initialVideoFile: File | null = null;
   @Input() initialDeletedPhotoIds: number[] = [];
   @Input() initialPrimaryPhotoId: number | null = null;
+  @Input() initialExistingVideoDeleted = false;
   @Input() errors: any = {};
   @Output() mediaChange = new EventEmitter<any>();
 }
@@ -46,7 +47,7 @@ class MockUnknownCaseService {
   updateCaseArgs: any[] = [];
   updateCaseResponse: any = of({
     status: 200,
-    isSuccess: true,
+    success: true,
     data: { isCreated: true, caseId: 101 },
   });
   updateCase(id: number, request: any) {
@@ -57,7 +58,7 @@ class MockUnknownCaseService {
   getMyCaseByIdArgs: number[] = [];
   getMyCaseByIdResponse: any = of({
     status: 200,
-    isSuccess: true,
+    success: true,
     data: {
       id: 1,
       fName: 'احمد',
@@ -291,7 +292,7 @@ describe('UnknownUpdate', () => {
     it('should update media payload', () => {
       const file = new File([''], 'test.png');
       component.onMediaChange({
-        primaryImage: file, additionalImages: [], video: null, deletedImageIds: [1], primaryPhotoId: 2
+        primaryImage: file, additionalImages: [], video: null, deletedImageIds: [1], primaryPhotoId: 2, isExistingVideoDeleted: false
       });
       expect(component.mediaPayload().primaryImage).toBe(file);
       expect(component.mediaPayload().deletedImageIds).toEqual([1]);
@@ -300,7 +301,7 @@ describe('UnknownUpdate', () => {
     it('should clear media errors', () => {
       component.mediaErrors.set({ primary: 'error' });
       component.onMediaChange({
-        primaryImage: new File([''], 'a.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null
+        primaryImage: new File([''], 'a.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null, isExistingVideoDeleted: false
       });
       expect(component.mediaErrors()).toEqual({});
     });
@@ -313,14 +314,15 @@ describe('UnknownUpdate', () => {
       fillLocationForm();
       const file = new File([''], 'primary.png');
       component.onMediaChange({
-        primaryImage: file, additionalImages: [], video: null, deletedImageIds: [1], primaryPhotoId: null
+        primaryImage: file, additionalImages: [], video: null, deletedImageIds: [1], primaryPhotoId: null, isExistingVideoDeleted: false
       });
 
       const request = (component as any).buildUpdateRequest();
 
       expect(request.fName).toBe('سالم');
       expect(request.primaryImage).toBe(file);
-      expect(request.deletedPhotosIds).toEqual([1]);
+      expect(request.isExistingVideoDeleted).toBe(false);
+      expect(request.deletedPhotoIds).toEqual([1]);
     });
   });
 
@@ -330,18 +332,36 @@ describe('UnknownUpdate', () => {
       fillPersonData();
       fillLocationForm();
       component.onMediaChange({
-        primaryImage: new File([''], 'test.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null
+        primaryImage: new File([''], 'test.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null, isExistingVideoDeleted: false
       });
     });
 
     it('should submit successfully', () => {
-      mockService.updateCaseResponse = of({ isSuccess: true, data: { isCreated: true } });
+      mockService.updateCaseResponse = of({ success: true, data: { isCreated: true } });
       component.onSubmit();
 
       expect(mockService.updateCaseArgs.length).toBe(1);
       expect(mockCache.removeCalled).toBe(true);
       expect(mockSnackbar.successArgs.length).toBe(1);
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/unknown', '1']);
+    });
+
+    it('should reject deleting the primary when only additional images remain', () => {
+      mockService.updateCaseArgs = [];
+      component.mediaUploader = (() => undefined) as any;
+      component.onMediaChange({
+        primaryImage: null,
+        additionalImages: [new File(['additional'], 'additional.jpg', { type: 'image/jpeg' })],
+        video: null,
+        deletedImageIds: [1],
+        primaryPhotoId: null,
+        isExistingVideoDeleted: false,
+      });
+
+      component.onSubmit();
+
+      expect(mockService.updateCaseArgs).toHaveLength(0);
+      expect(component.errorMsg()).toBe('الصورة الأساسية مطلوبة.');
     });
   });
 
@@ -351,7 +371,7 @@ describe('UnknownUpdate', () => {
       fillPersonData();
       fillLocationForm();
       component.onMediaChange({
-        primaryImage: new File([''], 'test.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null
+        primaryImage: new File([''], 'test.png'), additionalImages: [], video: null, deletedImageIds: [], primaryPhotoId: null, isExistingVideoDeleted: false
       });
     });
 

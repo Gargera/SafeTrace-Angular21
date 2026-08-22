@@ -118,7 +118,7 @@ export class UrgentCaseService extends ApiService {
     ).pipe(
       tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.URGENT_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD])),
       map(response => ({
-        isSuccess: response.success,
+        success: response.success,
         message: response.message,
         data: response.data ?? undefined
       }))
