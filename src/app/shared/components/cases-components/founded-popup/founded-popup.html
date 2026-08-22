@@ -2,7 +2,7 @@
   class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
   (click)="onBackdropClick($event)">
   <div
-    class="w-full max-w-4xl overflow-hidden rounded-3xl border border-outline-variant/20 bg-white shadow-2xl animate-in zoom-in-95 duration-200"
+    class="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border border-outline-variant/20 bg-white shadow-2xl animate-in fade-in zoom-in-[0.95] slide-in-from-bottom-2 duration-200 ease-out [&_.border-error]:!border-error [&_.border-error:focus]:!border-error [&_.border-error:focus]:![box-shadow:0_0_0_4px_rgba(186,26,26,0.15)]"
     role="dialog" aria-modal="true" aria-labelledby="founded-title" (click)="$event.stopPropagation()">
 
     <!-- 1. Header Banner -->

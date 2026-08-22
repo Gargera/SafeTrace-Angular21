@@ -5,8 +5,8 @@ import { Router, RouterModule } from '@angular/router';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 
-import { CaseTypeBadgeDirective } from '../../../../shared/directives/case-type-badge-directive';
-import { CaseStatusBadgeDirective } from '../../../../shared/directives/case-status-badge-directive';
+import { CaseTypeBadgeDirective } from '../../../directives/case-type-badge.directive';
+import { CaseStatusBadgeDirective } from '../../../directives/case-status-badge.directive';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { MyCaseListItemResponse } from '../../../../features/user-profile/model/profile.model';
 import { CardComponent } from '../../card/card';

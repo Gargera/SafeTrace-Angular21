@@ -9,7 +9,7 @@ import {
 import { NotificationType } from '../../shared/enums/Notification-Type';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
-import { ApiResponse } from '../../shared/models/responses/api-response.model';
+import { ApiResponse } from '../../shared/models/api-response.model';
 import { Router, NavigationStart } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';

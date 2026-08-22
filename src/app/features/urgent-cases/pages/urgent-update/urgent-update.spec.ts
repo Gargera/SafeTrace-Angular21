@@ -8,7 +8,7 @@ import { CacheService } from '../../../../core/cache/cache.service';
 import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { CaseMediaUploaderComponent } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader';
+import { CaseMediaUploaderComponent } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader.component';
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';

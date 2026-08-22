@@ -16,8 +16,8 @@ import { debounceTime, Observable } from 'rxjs';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { CaseMediaPayload, CaseMediaUploaderComponent } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader';
-import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container';
+import { CaseMediaPayload, CaseMediaUploaderComponent } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader.component';
+import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container.component';
 import { LongTermCaseService } from '../../services/long-term-case.service';
 import { LongTermCaseCreateRequest } from '../../models/request/LongTermCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
@@ -53,8 +53,8 @@ import { executeCaseSubmissionFlow, CaseSubmissionFlowDeps } from '../../../../s
 import { saveCreateDraft, restoreCreateDraft } from '../../../../shared/helper/cases-helper/case-cache.helper';
 import { DuplicateDecisionPayload } from '../../../../shared/helper/cases-helper/case-duplicate.helper';
 import { useCaseDuplicateHandler } from '../../../../shared/helper/cases-helper/case-duplicate-handler.helper';
-import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data";
-import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data";
+import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data.component";
+import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data.component";
 
 type Step = CaseFormStep;
 

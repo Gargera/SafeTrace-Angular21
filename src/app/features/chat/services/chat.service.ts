@@ -7,8 +7,8 @@ import { AdminChatsDto, ChatDetailsDto, ChatFilterDto, ChatSummaryDto, StartChat
 import { MessageDto } from '../models/message.model';
 import { AdminChatStatisticsDto } from '../models/admin-chat-statistics-dto';
 import { environment } from '../../../../environments/environment';
-import {ApiResponse} from '../../../shared/models/responses/api-response.model';
-import {PaginationResponse} from '../../../shared/models/responses/pagination-response.model';
+import { ApiResponse } from '../../../shared/models/api-response.model';
+import { PaginationResponse } from '../../../shared/models/pagination-response.model';
 
 @Injectable({
   providedIn: 'root',
@@ -17,19 +17,19 @@ export class ChatService {
   private http = inject(HttpClient);
   private cacheService = inject(CacheService);
 
-private baseUrl = `${environment.baseUrl}/api/Chats`;
+  private baseUrl = `${environment.baseUrl}/api/Chats`;
 
-startChat(caseId: number): Observable<ApiResponse<StartChatContextDto>> {
+  startChat(caseId: number): Observable<ApiResponse<StartChatContextDto>> {
     return this.http.get<ApiResponse<StartChatContextDto>>(`${this.baseUrl}/start-context/${caseId}`);
-  } 
+  }
 
-createChat(request: StartChatRequest): Observable<ApiResponse<ChatDetailsDto>> {
+  createChat(request: StartChatRequest): Observable<ApiResponse<ChatDetailsDto>> {
     return this.http.post<ApiResponse<ChatDetailsDto>>(`${this.baseUrl}/create`, request).pipe(
       tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.CHAT]))
     );
   }
 
-getMyChats(): Observable<ApiResponse<ChatSummaryDto[]>> {
+  getMyChats(): Observable<ApiResponse<ChatSummaryDto[]>> {
     return this.cacheService.getOrSet(
       'MyChats_List',
       () => this.http.get<ApiResponse<ChatSummaryDto[]>>(`${this.baseUrl}`),
@@ -38,25 +38,25 @@ getMyChats(): Observable<ApiResponse<ChatSummaryDto[]>> {
     );
   }
 
-getChatDetails(chatId: number): Observable<ApiResponse<ChatDetailsDto>> {
+  getChatDetails(chatId: number): Observable<ApiResponse<ChatDetailsDto>> {
     return this.http.get<ApiResponse<ChatDetailsDto>>(`${this.baseUrl}/${chatId}`);
   }
-getChatDetailsForAdmin(chatId: number): Observable<ApiResponse<ChatDetailsDto>> {
+  getChatDetailsForAdmin(chatId: number): Observable<ApiResponse<ChatDetailsDto>> {
     return this.http.get<ApiResponse<ChatDetailsDto>>(`${this.baseUrl}/admin/${chatId}`);
   }
-deleteChatForMe(chatId: number): Observable<ApiResponse<ChatDetailsDto>> {
+  deleteChatForMe(chatId: number): Observable<ApiResponse<ChatDetailsDto>> {
     return this.http.delete<ApiResponse<ChatDetailsDto>>(`${this.baseUrl}/${chatId}`).pipe(
       tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.CHAT]))
     );
   }
 
-getMessages(chatId: number): Observable<ApiResponse<MessageDto[]>> {
+  getMessages(chatId: number): Observable<ApiResponse<MessageDto[]>> {
     return this.http.get<ApiResponse<MessageDto[]>>(`${this.baseUrl}/${chatId}/messages`);
   }
-getMessagesForAdmin(chatId: number): Observable<ApiResponse<MessageDto[]>> {
+  getMessagesForAdmin(chatId: number): Observable<ApiResponse<MessageDto[]>> {
     return this.http.get<ApiResponse<MessageDto[]>>(`${this.baseUrl}/admin/${chatId}/messages`);
   }
-hardDeleteChat(chatId: number): Observable<ApiResponse<ChatDetailsDto>> {
+  hardDeleteChat(chatId: number): Observable<ApiResponse<ChatDetailsDto>> {
     return this.http.delete<ApiResponse<ChatDetailsDto>>(`${this.baseUrl}/${chatId}/hard-delete`).pipe(
       tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.CHAT]))
     );
@@ -75,11 +75,11 @@ hardDeleteChat(chatId: number): Observable<ApiResponse<ChatDetailsDto>> {
     return `AdminChats_${JSON.stringify(filterState)}`;
   }
 
-getAllChatsForAdmin(
-  page: number,
-  pageSize: number,
-  filter?: ChatFilterDto
-): Observable<ApiResponse<PaginationResponse<AdminChatsDto>>> {
+  getAllChatsForAdmin(
+    page: number,
+    pageSize: number,
+    filter?: ChatFilterDto
+  ): Observable<ApiResponse<PaginationResponse<AdminChatsDto>>> {
     const cacheKey = this.buildAdminChatsCacheKey(page, pageSize, filter);
 
     return this.cacheService.getOrSet(
@@ -91,7 +91,7 @@ getAllChatsForAdmin(
         if (filter?.isDeletedBySender !== undefined) params = params.set('isDeletedBySender', String(filter.isDeletedBySender));
         if (filter?.isDeletedByReceiver !== undefined) params = params.set('isDeletedByReceiver', String(filter.isDeletedByReceiver));
         if (filter?.search) params = params.set('search', filter.search);
-        
+
         return this.http.get<ApiResponse<PaginationResponse<AdminChatsDto>>>(`${this.baseUrl}/admin/chats`, { params });
       },
       CACHE_TTL.LIST,
@@ -121,5 +121,5 @@ getAllChatsForAdmin(
 
     return `${environment.filesBaseUrl}/${path}`;
   }
-  
+
 }

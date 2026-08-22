@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../../shared/models/responses/api-response.model';
+import { ApiResponse } from '../../../shared/models/api-response.model';
 import { ApiService } from '../../../shared/services/api.service';
 import { ComplaintStatisticsDto } from '../models/responses/complaint-statistics-dto';
 import { ComplaintResponseDto, PaginationResponse } from '../models/responses/complaint.model';

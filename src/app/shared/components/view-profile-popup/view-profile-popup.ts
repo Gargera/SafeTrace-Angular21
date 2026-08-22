@@ -15,12 +15,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, finalize, of } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { UserRole } from '../../enums/user-role';
-import { ApiResponse } from '../../models/responses/api-response.model';
-import { GeocodingService } from '../../../core/services/geocoding/geocoding.service';
+import { ApiResponse } from '../../models/api-response.model';
+import { GeocodingService } from '../../../core/services/geocoding.service';
 import { ChatService } from '../../../features/chat/services/chat.service';
 import { ROLE_TRANSLATIONS_AR } from '../../../core/constants/dictionaries/roles.dictionary';
-import { RoleBadgeDirective } from '../../directives/role-badge-directive';
-import { VerificationBadgeDirective } from '../../directives/verification-badge-directive';
+import { RoleBadgeDirective } from '../../directives/role-badge.directive';
+import { VerificationBadgeDirective } from '../../directives/verification-badge.directive';
 import { ButtonComponent } from '../button/button';
 
 export interface VisitUserDTO {

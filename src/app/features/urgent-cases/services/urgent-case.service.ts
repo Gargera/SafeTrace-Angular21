@@ -13,8 +13,8 @@ import { DuplicateDecisionPayload } from '../../../shared/helper/cases-helper/ca
 import { environment } from '../../../../environments/environment';
 import { UrgentCasesFilterRequest } from '../models/request/UrgentCaseFilterRequest';
 import { UrgentCreationStatusResponse } from '../models/response/UrgentCreationStatusResponse';
-import { ApiResponse } from '../../../shared/models/responses/api-response.model';
-import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
+import { ApiResponse } from '../../../shared/models/api-response.model';
+import { PaginationResponse } from '../../../shared/models/pagination-response.model';
 import { CacheService } from '../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../core/cache/cache.constants';
 

@@ -5,7 +5,7 @@ import { CacheService } from '../../../core/cache/cache.service';
 import { CACHE_TAGS } from '../../../core/cache/cache.constants';
 import { MessageDto, SendMessageRequest } from '../models/message.model';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../../shared/models/responses/api-response.model';
+import { ApiResponse } from '../../../shared/models/api-response.model';
 
 @Injectable({
   providedIn: 'root',

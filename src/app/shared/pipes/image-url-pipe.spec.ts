@@ -1,4 +1,4 @@
-import { ImageUrlPipe } from './image-url-pipe';
+import { ImageUrlPipe } from './image-url.pipe';
 
 describe('ImageUrlPipe', () => {
   it('create an instance', () => {

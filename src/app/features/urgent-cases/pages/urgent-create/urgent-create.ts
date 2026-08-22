@@ -15,8 +15,8 @@ import { debounceTime } from 'rxjs';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { CaseMediaUploaderComponent } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader';
-import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container';
+import { CaseMediaUploaderComponent } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader.component';
+import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container.component';
 import { UrgentCaseService } from '../../services/urgent-case.service';
 import { UrgentCaseCreateRequest } from '../../models/request/UrgentCaseCreateRequest';
 import { Gender } from '../../../../shared/enums/gender';
@@ -31,8 +31,7 @@ import { SnackbarService } from '../../../../shared/services/toast.service';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { MatchedCaseResponse } from '../../../../core/models/cases.model';
 import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
-import { DuplicateInfoDialogComponent } from '../../../../shared/components/cases-components/duplicate-info-dialog/duplicate-info-dialog.component';
-import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
+import { GeocodingService } from '../../../../core/services/geocoding.service';
 
 import { useCaseFormErrors } from '../../../../shared/helper/cases-helper/case-form-errors.helper';
 import { bindGovernorateCityValidation } from '../../../../shared/helper/cases-helper/case-location-sync.helper';
@@ -57,8 +56,9 @@ import { DuplicateDecisionPayload } from '../../../../shared/helper/cases-helper
 import { useCaseDuplicateHandler } from '../../../../shared/helper/cases-helper/case-duplicate-handler.helper';
 import { executeCaseSubmissionFlow, CaseSubmissionFlowDeps } from '../../../../shared/helper/cases-helper/case-submission-flow.helper';
 import { saveCreateDraft, restoreCreateDraft, CreateDraft } from '../../../../shared/helper/cases-helper/case-cache.helper';
-import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data";
-import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data";
+import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data.component";
+import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data.component";
+import { DuplicateInfoDialogComponent } from '../../../../shared/components/cases-components/duplicate-info-dialog/duplicate-info-dialog.component';
 
 type Step = CaseFormStep;
 

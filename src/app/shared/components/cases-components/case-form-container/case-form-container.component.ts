@@ -5,9 +5,9 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CardComponent } from '../../../../shared/components/card/card';
-import { HeaderComponent } from '../../../../shared/components/header/header.component';
-import { ButtonComponent } from '../../../../shared/components/button/button';
+import { CardComponent } from '../../card/card';
+import { HeaderComponent } from '../../header/header.component';
+import { ButtonComponent } from '../../button/button';
 
 export interface CaseFormStep {
   num: number;
@@ -33,11 +33,11 @@ export class CaseFormContainerComponent {
   steps = input.required<CaseFormStep[]>();
   currentStep = input.required<number>();
   stepHeader = input<CaseStepHeader | null>(null);
-  
+
   isSubmitting = input<boolean>(false);
   errorMsg = input<string | null>(null);
   endingMessage = input<string | null>(null);
-  
+
   submitLabel = input<string>('إرسال البلاغ');
   submitIcon = input<string>('check_circle');
 

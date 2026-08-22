@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { DonationService } from '../../services/donations.service';
 import { DonationUserListDto } from '../../models/responses/donation-user-list.dto';
 
-import { TruncatePipe } from '../../../../shared/pipes/truncate-pipe';
+import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
 import { PaymentStatusBadgeDirective } from '../../../../shared/directives/payment-status-badge.directive';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { TableSkeletonComponent } from '../../../../shared/components/skeletons/table-skeleton/table-skeleton.component';
@@ -14,7 +14,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
   selector: 'app-my-donations',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     TruncatePipe,
     PaymentStatusBadgeDirective,
     ButtonComponent,

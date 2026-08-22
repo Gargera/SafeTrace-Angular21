@@ -19,10 +19,10 @@ import { UnknownCaseService } from '../../services/unknown-case.service';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { CacheService } from '../../../../core/cache/cache.service';
 
-import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container';
-import { CasePersonDataComponent } from '../../../../shared/components/cases-components/case-person-data/case-person-data';
-import { CaseLocationDataComponent } from '../../../../shared/components/cases-components/case-location-data/case-location-data';
-import { CaseMediaUploaderComponent } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader';
+import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container.component';
+import { CasePersonDataComponent } from '../../../../shared/components/cases-components/case-person-data/case-person-data.component';
+import { CaseLocationDataComponent } from '../../../../shared/components/cases-components/case-location-data/case-location-data.component';
+import { CaseMediaUploaderComponent } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader.component';
 import { ForceCreatePopupComponent } from '../../../../shared/components/cases-components/force-create-popup/force-create-popup.component';
 import { DuplicateInfoDialogComponent } from '../../../../shared/components/cases-components/duplicate-info-dialog/duplicate-info-dialog.component';
 

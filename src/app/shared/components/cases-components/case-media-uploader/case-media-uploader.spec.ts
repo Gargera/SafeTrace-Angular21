@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { CaseMediaUploaderComponent } from './case-media-uploader';
+import { CaseMediaUploaderComponent } from './case-media-uploader.component';
 import { ImageService } from '../../../../shared/services/image.service';
 
 describe('CaseMediaUploaderComponent', () => {
@@ -45,12 +45,12 @@ describe('CaseMediaUploaderComponent', () => {
       const file = new File([''], 'test.png', { type: 'image/png' });
       const mockEvent = { target: { files: [file] } };
       component.onPrimaryPhotoSelected(mockEvent as any);
-      
+
       expect(component.cropImageEvent()).toBeTruthy();
-      
+
       component.tempCroppedBlob.set(new Blob([''], { type: 'image/png' }));
       component.confirmCrop();
-      
+
       expect(component.newPrimaryImage()).toBeTruthy();
       expect(component.localPrimaryError()).toBeNull();
     });
@@ -74,7 +74,7 @@ describe('CaseMediaUploaderComponent', () => {
       const file1 = new File([''], 'test1.png', { type: 'image/png' });
       component.onAdditionalPhotosSelected({ target: { files: [file1] } } as any);
       expect(component.newPhotos().length).toBe(1);
-      
+
       component.removeNewPhoto(0);
       expect(component.newPhotos().length).toBe(0);
     });
@@ -96,7 +96,7 @@ describe('CaseMediaUploaderComponent', () => {
       fixture.componentRef.setInput('mode', 'update');
       fixture.componentRef.setInput('existingPhotos', [existingPhoto1, existingPhoto2]);
       fixture.componentRef.setInput('initialPrimaryPhotoId', 1);
-      
+
       component.ngOnInit();
       fixture.detectChanges();
     });
@@ -176,9 +176,9 @@ describe('CaseMediaUploaderComponent', () => {
     it('validate() should auto-confirm crop if active and blob exists', () => {
       component.cropImageEvent.set({} as any);
       component.tempCroppedBlob.set(new Blob([''], { type: 'image/png' }));
-      
+
       const result = component.validate();
-      
+
       expect(component.cropImageEvent()).toBeNull();
       // Wait, validate might fail if we don't have a newPrimaryImage/primaryPhotoId in tests
       // We are just testing if it closed the crop
@@ -187,9 +187,9 @@ describe('CaseMediaUploaderComponent', () => {
     it('validate() should fail if crop active but no blob (invalid state)', () => {
       component.cropImageEvent.set({} as any);
       component.tempCroppedBlob.set(null);
-      
+
       const isValid = component.validate();
-      
+
       expect(isValid).toBe(false);
       expect(component.localPrimaryError()).toContain('برجاء اعتماد الصورة (تأكيد القص) قبل الإرسال.');
     });

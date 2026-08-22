@@ -1,14 +1,14 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/guards/auth-guard';
+import { authGuard } from './core/guards/auth.guard';
 import { About } from './features/public/pages/about/about';
 import { permissionGuard } from './core/guards/permission.guard';
 import { Permissions } from './core/constants/Permissions';
 import { Home } from './features/public/pages/home/home';
 
 export const routes: Routes = [
-  { 
-    path: 'auth', 
-    loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES) 
+  {
+    path: 'auth',
+    loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES)
   },
   {
     path: 'admin',
@@ -21,7 +21,7 @@ export const routes: Routes = [
     path: 'chat/chat/:chatId',
     title: "المحادثة | لقاء",
     canActivate: [authGuard],
-    data: {mode: 'user'},
+    data: { mode: 'user' },
     loadComponent: () =>
       import('./features/chat/pages/chat-window/chat-window').then((m) => m.ChatWindow),
   },
@@ -100,7 +100,7 @@ export const routes: Routes = [
         path: 'chat',
         title: "المحادثات | لقاء",
         canActivate: [authGuard],
-        loadChildren: () => import('./features/chat/chat.routes').then(m => m.CHAT_ROUTES) 
+        loadChildren: () => import('./features/chat/chat.routes').then(m => m.CHAT_ROUTES)
       }
     ],
   },
