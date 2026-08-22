@@ -30,7 +30,7 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { CaseCardCompactComponent } from '../../../../shared/components/cases-components/case-card-compact/case-card-compact.component';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
-import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup';
+import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup.component';
 
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 
@@ -169,7 +169,7 @@ export class MyCasesTab implements OnInit, OnDestroy {
     this.loadCases();
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void { }
 
   onFilterChange(request: CasesFilterRequest) {
     const myCasesFilter: MyCasesFilterRequest = {
@@ -361,9 +361,9 @@ export class MyCasesTab implements OnInit, OnDestroy {
           items.map((item) =>
             item.id === id
               ? {
-                  ...item,
-                  status: CaseStatus.Found,
-                }
+                ...item,
+                status: CaseStatus.Found,
+              }
               : item,
           ),
         );

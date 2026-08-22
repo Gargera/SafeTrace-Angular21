@@ -5,9 +5,9 @@ import { GetUserDto } from '../../models/User/responses/GetUserDto';
 import { RoleDto } from '../../models/Role/responses/RoleDto';
 import { UserFilterDto } from '../../models/User/requests/UserFilterDto';
 import { VerificationStatus } from '../../../../shared/enums/verification-status';
-import { VerificationBadgeDirective } from '../../../../shared/directives/verification-badge-directive';
-import { RoleBadgeDirective } from '../../../../shared/directives/role-badge-directive';
-import { BlockBadgeDirective } from '../../../../shared/directives/block-badge-directive';
+import { VerificationBadgeDirective } from '../../../../shared/directives/verification-badge.directive';
+import { RoleBadgeDirective } from '../../../../shared/directives/role-badge.directive';
+import { BlockBadgeDirective } from '../../../../shared/directives/block-badge.directive';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
@@ -130,7 +130,7 @@ export class UserList {
     this.loadRoles();
     this.setupFetchPipeline();
     this.loadStatistics();
-    
+
     // Initial fetch
     this.loadUsers();
 

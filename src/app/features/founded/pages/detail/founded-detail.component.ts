@@ -10,7 +10,7 @@ import { SnackbarService } from '../../../../shared/services/toast.service';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
-import { GenderBadgeDirective } from '../../../../shared/directives/gender-badge-directive';
+import { GenderBadgeDirective } from '../../../../shared/directives/gender-badge.directive';
 import { Gender } from '../../../../shared/enums/gender';
 import { CaseDetailsSkeletonComponent } from '../../../../shared/components/skeletons/case-details-skeleton/case-details-skeleton.component';
 

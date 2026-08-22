@@ -10,8 +10,8 @@ import { UnknownCaseUpdateRequest } from '../models/request/UnknownCaseUpdateReq
 import { UnknownCaseCreateRequest } from '../models/request/UnknownCaseCreateRequest';
 import { FoundPersonInfoRequest } from '../../../core/models/cases.model';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../../shared/models/responses/api-response.model';
-import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
+import { ApiResponse } from '../../../shared/models/api-response.model';
+import { PaginationResponse } from '../../../shared/models/pagination-response.model';
 import { CaseSubmissionResponse } from '../../../shared/helper/cases-helper/case-submission-flow.helper';
 import { DuplicateDecisionPayload } from '../../../shared/helper/cases-helper/case-duplicate.helper';
 import { CacheService } from '../../../core/cache/cache.service';

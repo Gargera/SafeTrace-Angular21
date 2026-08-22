@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { Observable } from 'rxjs';
-import { ApiResponse } from '../../../shared/models/responses/api-response.model';
+import { ApiResponse } from '../../../shared/models/api-response.model';
 import { CaseListItemResponse } from '../../../core/models/cases.model';
 import { CacheService } from '../../../core/cache/cache.service';
 import { CACHE_TTL, CACHE_TAGS } from '../../../core/cache/cache.constants';

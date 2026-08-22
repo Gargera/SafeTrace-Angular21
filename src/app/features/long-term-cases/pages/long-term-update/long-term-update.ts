@@ -17,7 +17,7 @@ import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgClass } from '@angular/common';
-import { CaseMediaUploaderComponent, CaseMediaPayload } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader';
+import { CaseMediaUploaderComponent, CaseMediaPayload } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader.component';
 
 import { environment } from '../../../../../environments/environment';
 import { LongTermCaseService } from '../../services/long-term-case.service';
@@ -33,7 +33,7 @@ import { SnackbarService } from '../../../../shared/services/toast.service';
 
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { CardComponent } from '../../../../shared/components/card/card';
-import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container';
+import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container.component';
 
 // Shared validators
 import { useCaseFormErrors } from '../../../../shared/helper/cases-helper/case-form-errors.helper';
@@ -56,8 +56,8 @@ import {
 } from '../../../../shared/helper/cases-helper/case-form.helper';
 import { executeCaseSubmissionFlow, CaseSubmissionResponse, CaseSubmissionFlowDeps } from '../../../../shared/helper/cases-helper/case-submission-flow.helper';
 import { saveUpdateDraft, restoreUpdateDraft } from '../../../../shared/helper/cases-helper/case-cache.helper';
-import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data";
-import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data";
+import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data.component";
+import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data.component";
 
 
 type Step = CaseFormStep;

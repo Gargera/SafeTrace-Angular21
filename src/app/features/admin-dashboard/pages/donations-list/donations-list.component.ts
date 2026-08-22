@@ -16,7 +16,7 @@ import { DonationService } from '../../../donations/services/donations.service';
 import { DonationAdminListDto } from '../../../donations/models/responses/donation-admin-list.dto';
 import { AdminDonationStatisticsDto } from '../../../donations/models/responses/admin-donation-statistics.dto';
 import { PaymentStatus } from '../../../../shared/enums/payment-status.enum';
-import { TruncatePipe } from '../../../../shared/pipes/truncate-pipe';
+import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
 import { CardComponent } from '../../../../shared/components/card/card';
 
 import { HeaderComponent } from '../../../../shared/components/header/header.component';

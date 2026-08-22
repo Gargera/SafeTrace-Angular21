@@ -1,5 +1,5 @@
 export const CACHE_TTL = {
-  LIST: 5 * 60 * 1000,          // 5 minutes
+  LIST: 5 * 60 * 1000,           // 5 minutes
   DETAILS: 15 * 60 * 1000,       // 15 minutes
   STATIC: 24 * 60 * 60 * 1000,   // 24 hours
   UI_STATE: 30 * 60 * 1000       // 30 minutes

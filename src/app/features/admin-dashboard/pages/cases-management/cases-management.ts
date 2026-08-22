@@ -27,8 +27,8 @@ import { SnackbarService } from '../../../../shared/services/toast.service';
 
 import { ReportService } from '../../services/report.service';
 
-import { CaseTypeBadgeDirective } from '../../../../shared/directives/case-type-badge-directive';
-import { CaseStatusBadgeDirective } from '../../../../shared/directives/case-status-badge-directive';
+import { CaseTypeBadgeDirective } from '../../../../shared/directives/case-type-badge.directive';
+import { CaseStatusBadgeDirective } from '../../../../shared/directives/case-status-badge.directive';
 
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 import { DashboardService } from '../../services/dashboard.service';

@@ -13,12 +13,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { ButtonComponent } from '../../../../shared/components/button/button';
-import { FormField } from '../../../../shared/components/form-field/form-field';
+import { ButtonComponent } from '../../button/button';
+import { FormField } from '../../form-field/form-field';
 
 import { FoundPersonInfoRequest } from '../../../../core/models/cases.model';
 import { EGYPT_GOVERNORATES, getCitiesForGovernorate } from '../../../../core/constants/governorates';
-import { getFormFieldError, isFieldInvalid } from '../../../../shared/helper/form-validation.helper';
+import { getFormFieldError, isFieldInvalid } from '../../../helper/form-validation.helper';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
@@ -32,7 +32,6 @@ import { validCity } from '../../../validators/city.validator';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, ButtonComponent, FormField],
   templateUrl: './founded-popup.html',
-  styleUrls: ['./founded-popup.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FoundedPopupComponent implements OnInit {

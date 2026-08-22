@@ -28,7 +28,7 @@ import {
 import { MapLocationPickerComponent } from '../../../../shared/components/map-location-picker/components/map-location-picker';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { CardComponent } from '../../../../shared/components/card/card';
-import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container';
+import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container.component';
 
 // Shared validators
 import { useCaseFormErrors } from '../../../../shared/helper/cases-helper/case-form-errors.helper';
@@ -38,10 +38,10 @@ import { egyptianPhone } from '../../../../shared/validators/egyptian-phone.vali
 import { validEnum } from '../../../../shared/validators/enum.validator';
 import { validCity } from '../../../../shared/validators/city.validator';
 import { validGovernorate } from '../../../../shared/validators/governorate.validator';
-import { CaseMediaUploaderComponent, CaseMediaPayload } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader';
+import { CaseMediaUploaderComponent, CaseMediaPayload } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader.component';
 
 import { CommonModule } from '@angular/common';
-import { GeocodingService } from '../../../../core/services/geocoding/geocoding.service';
+import { GeocodingService } from '../../../../core/services/geocoding.service';
 import { CaseFileResponse } from '../../../../core/models/cases.model';
 import { UpdateFormSkeletonComponent } from '../../../../shared/components/skeletons/update-form-skeleton/update-form-skeleton.component';
 import {
@@ -55,8 +55,8 @@ import {
 import { executeCaseSubmissionFlow, CaseSubmissionResponse, CaseSubmissionFlowDeps } from '../../../../shared/helper/cases-helper/case-submission-flow.helper';
 import { saveUpdateDraft, restoreUpdateDraft } from '../../../../shared/helper/cases-helper/case-cache.helper';
 import { toDatetimeLocalString } from '../../../../shared/validators/urgent-event-date.validator';
-import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data";
-import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data";
+import { CaseLocationDataComponent } from "../../../../shared/components/cases-components/case-location-data/case-location-data.component";
+import { CasePersonDataComponent } from "../../../../shared/components/cases-components/case-person-data/case-person-data.component";
 
 type Step = CaseFormStep;
 

@@ -25,8 +25,8 @@ import { ComplaintFilterDto } from '../../models/requests/complaint-filter.model
 import { ResolveComplaintDto } from '../../models/requests/resolve-complaint.model';
 import { ComplaintStatus } from '../../../../shared/enums/complaint-status';
 import { ComplaintStatisticsDto } from '../../models/responses/complaint-statistics-dto';
-import { ComplaintStatusBadgeDirective } from '../../../../shared/directives/complaint-status-badge-directive';
-import { TruncatePipe } from '../../../../shared/pipes/truncate-pipe';
+import { ComplaintStatusBadgeDirective } from '../../../../shared/directives/complaint-status-badge.directive';
+import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
 import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { CardComponent } from '../../../../shared/components/card/card';

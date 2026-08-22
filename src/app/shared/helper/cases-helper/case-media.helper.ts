@@ -1,5 +1,5 @@
 import { signal } from '@angular/core';
-import { CaseMediaPayload } from '../../components/cases-components/case-media-uploader/case-media-uploader';
+import { CaseMediaPayload } from '../../components/cases-components/case-media-uploader/case-media-uploader.component';
 
 export function useCaseMediaState(options?: { onSaveDraft?: () => void }) {
   const initialPrimary = signal<File | null>(null);

@@ -5,7 +5,7 @@ import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { environment } from '../../../environments/environment';
 import { Observable, tap, firstValueFrom } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
-import { ApiResponse } from '../../shared/models/responses/api-response.model';
+import { ApiResponse } from '../../shared/models/api-response.model';
 import { AuthResponse } from '../../features/auth/models/responses/AuthResponse';
 import { LoginRequest } from '../../features/auth/models/requests/LoginRequest';
 import { RegisterRequest } from '../../features/auth/models/requests/RegisterRequest';
@@ -294,7 +294,7 @@ export class AuthService {
         }),
       );
   }
-  
+
   googleLogin(data: { providerToken: string }): Observable<ApiResponse<AuthResponse>> {
     return this.http
       .post<ApiResponse<AuthResponse>>(`${this.baseUrl}/google-login`, data, {

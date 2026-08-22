@@ -14,12 +14,12 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormControl } from '@angular/forms';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
-import { ImageService } from '../../../../shared/services/image.service';
-import { maxFilesCount } from '../../../../shared/validators/image-validation.validator';
-import { getControlFieldError } from '../../../../shared/helper/form-validation.helper';
+import { ImageService } from '../../../services/image.service';
+import { maxFilesCount } from '../../../validators/image-validation.validator';
+import { getControlFieldError } from '../../../helper/form-validation.helper';
 import { CaseFileResponse } from '../../../../core/models/cases.model';
-import { validateVideoFile } from '../../../../shared/validators/video-validation.validator';
-import { CaseObjectUrlRegistry } from '../../../../shared/helper/cases-helper/case-form.helper';
+import { validateVideoFile } from '../../../validators/video-validation.validator';
+import { CaseObjectUrlRegistry } from '../../../helper/cases-helper/case-form.helper';
 import { ButtonComponent } from '../../button/button';
 
 export interface CaseMediaPayload {
@@ -355,7 +355,7 @@ export class CaseMediaUploaderComponent implements OnInit, OnChanges {
       input.value = '';
       return;
     }
-    
+
     this.clearFieldError('additional');
 
     for (const f of files) {

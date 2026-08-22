@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { MatchedCaseResponse } from '../../../../core/models/cases.model';
 import { environment } from '../../../../../environments/environment';
 import { DuplicateDecision } from '../../../../shared/enums/duplicate-decision';
-import { CaseTypeBadgeDirective } from '../../../directives/case-type-badge-directive';
+import { CaseTypeBadgeDirective } from '../../../directives/case-type-badge.directive';
 
 import { ButtonComponent } from '../../button/button';
 import { CardComponent } from '../../card/card';

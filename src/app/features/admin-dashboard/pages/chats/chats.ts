@@ -14,8 +14,8 @@ import { FormField } from '../../../../shared/components/form-field/form-field';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
-import { CaseTypeBadgeDirective } from '../../../../shared/directives/case-type-badge-directive';
-import { TruncatePipe } from '../../../../shared/pipes/truncate-pipe';
+import { CaseTypeBadgeDirective } from '../../../../shared/directives/case-type-badge.directive';
+import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { Permissions } from '../../../../core/constants/Permissions';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
@@ -73,7 +73,7 @@ export class AdminChats implements OnInit {
 
   showDeleteModal = signal(false);
   selectedChatToDelete = signal<AdminChatsDto | null>(null);
-  
+
   // Date and status filters
   fromDate = signal<string>('');
   toDate = signal<string>('');
@@ -89,7 +89,7 @@ export class AdminChats implements OnInit {
     this.isDeletedBySender() !== undefined ||
     this.isDeletedByReceiver() !== undefined
   );
-  
+
   totalPages = computed(() => Math.ceil(this.totalCount() / PAGE_SIZE));
 
   statistics = signal<AdminChatStatisticsDto | null>(null);
@@ -152,7 +152,7 @@ export class AdminChats implements OnInit {
 
     this.setupFetchPipeline();
     this.loadStatistics();
-    
+
     // Initial fetch
     this.loadChats();
 

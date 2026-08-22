@@ -11,7 +11,7 @@ import { of, throwError, Subject } from 'rxjs';
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Gender } from '../../../../shared/enums/gender';
 import { RelationType } from '../../../../shared/enums/relation-type';
-import { CaseMediaUploaderComponent } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader';
+import { CaseMediaUploaderComponent } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader.component';
 
 @Component({
   selector: 'app-case-media-uploader',

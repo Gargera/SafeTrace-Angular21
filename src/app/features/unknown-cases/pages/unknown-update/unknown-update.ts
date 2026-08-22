@@ -16,9 +16,9 @@ import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
-import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container';
-import { CasePersonDataComponent } from '../../../../shared/components/cases-components/case-person-data/case-person-data';
-import { CaseLocationDataComponent } from '../../../../shared/components/cases-components/case-location-data/case-location-data';
+import { CaseFormContainerComponent } from '../../../../shared/components/cases-components/case-form-container/case-form-container.component';
+import { CasePersonDataComponent } from '../../../../shared/components/cases-components/case-person-data/case-person-data.component';
+import { CaseLocationDataComponent } from '../../../../shared/components/cases-components/case-location-data/case-location-data.component';
 import { UnknownCaseService } from '../../services/unknown-case.service';
 import { UnknownCaseUpdateRequest } from '../../models/request/UnknownCaseUpdateRequest';
 import { Gender } from '../../../../shared/enums/gender';
@@ -42,7 +42,7 @@ import { validGovernorate } from '../../../../shared/validators/governorate.vali
 
 import { CommonModule } from '@angular/common';
 import { UpdateFormSkeletonComponent } from '../../../../shared/components/skeletons/update-form-skeleton/update-form-skeleton.component';
-import { CaseMediaUploaderComponent, CaseMediaPayload } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader';
+import { CaseMediaUploaderComponent, CaseMediaPayload } from '../../../../shared/components/cases-components/case-media-uploader/case-media-uploader.component';
 import {
   CaseFormStep,
   localDateInputValue,
@@ -57,7 +57,7 @@ import { saveUpdateDraft, restoreUpdateDraft } from '../../../../shared/helper/c
 type Step = CaseFormStep;
 export const UNKNOWN_UPDATE_DRAFT_KEY_PREFIX = 'UnknownUpdate_Draft_';
 
-interface UnknownUpdateCustomData {}
+interface UnknownUpdateCustomData { }
 
 @Component({
   selector: 'app-unknown-update',

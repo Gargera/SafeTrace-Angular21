@@ -32,7 +32,7 @@ export class ButtonComponent {
 
   get baseClasses(): string {
     const common =
-      'inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold transition-all duration-200 active:scale-95 disabled:pointer-events-none disabled:opacity-50';
+      'inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold transition-all duration-200 active:scale-95 disabled:pointer-events-none disabled:opacity-50 cursor-pointer';
 
     const variants: Record<string, string> = {
       primary: 'bg-secondary text-on-secondary shadow-sm hover:opacity-90 hover:shadow',

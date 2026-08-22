@@ -9,7 +9,7 @@ import { GetUserInfoDTO } from '../../../../../features/user-profile/model/profi
 import { UserRole } from '../../../../../shared/enums/user-role';
 import { Permissions } from '../../../../constants/Permissions';
 import { HasPermissionDirective } from '../../../../../shared/directives/has-permission.directive';
-import { CaseNotificationModalComponent } from '../../../../../shared/components/cases-components/case-notification-modal/case-notification-modal';
+import { CaseNotificationModalComponent } from '../../../../../shared/components/cases-components/case-notification-modal/case-notification-modal.component';
 
 import { CacheService } from '../../../../cache/cache.service';
 
@@ -48,7 +48,7 @@ export class Navbar implements OnInit {
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   toggleNotificationDropdown(event: Event): void {
     event.stopPropagation();

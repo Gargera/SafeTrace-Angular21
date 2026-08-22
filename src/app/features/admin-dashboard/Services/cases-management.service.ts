@@ -5,8 +5,8 @@ import { CaseListItemResponse, CasesFilterRequest } from '../../../core/models/c
 import { CaseType } from '../../../shared/enums/case-type';
 import { AgeSort } from '../../../shared/enums/age-sort';
 import { DateSort } from '../../../shared/enums/date-sort';
-import { ApiResponse } from '../../../shared/models/responses/api-response.model';
-import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
+import { ApiResponse } from '../../../shared/models/api-response.model';
+import { PaginationResponse } from '../../../shared/models/pagination-response.model';
 
 import { UrgentCaseService } from '../../urgent-cases/services/urgent-case.service';
 import { LongTermCaseService } from '../../long-term-cases/services/long-term-case.service';

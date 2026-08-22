@@ -14,24 +14,24 @@ import { LongTermCaseDetailResponse } from '../../models/response/LongTermCaseDe
 
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 
-import { GenderBadgeDirective } from '../../../../shared/directives/gender-badge-directive';
-import { CaseStatusBadgeDirective } from '../../../../shared/directives/case-status-badge-directive';
-import { CaseTypeBadgeDirective } from '../../../../shared/directives/case-type-badge-directive';
-import { AgeBadgeDirective } from '../../../../shared/directives/age-badge-directive';
+import { GenderBadgeDirective } from '../../../../shared/directives/gender-badge.directive';
+import { CaseStatusBadgeDirective } from '../../../../shared/directives/case-status-badge.directive';
+import { CaseTypeBadgeDirective } from '../../../../shared/directives/case-type-badge.directive';
+import { AgeBadgeDirective } from '../../../../shared/directives/age-badge.directive';
 
 import { AgeCategories } from '../../../../shared/enums/age-categories';
 import { FileType } from '../../../../shared/enums/file-type';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { SnackbarService } from '../../../../shared/services/toast.service';
-import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup';
+import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup.component';
 import { CasePhotoResponse, FoundPersonInfoRequest } from '../../../../core/models/cases.model';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { Permissions } from '../../../../core/constants/Permissions';
 
-import { RejectCasePopupComponent } from '../../../../shared/components/cases-components/reject-case-popup/reject-case-popup';
-import { RejectionReasonCardComponent } from '../../../../shared/components/cases-components/rejection-reason-card/rejection-reason-card';
+import { RejectCasePopupComponent } from '../../../../shared/components/cases-components/reject-case-popup/reject-case-popup.component';
+import { RejectionReasonCardComponent } from '../../../../shared/components/cases-components/rejection-reason-card/rejection-reason-card.component';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
 import { CaseDetailsSkeletonComponent } from '../../../../shared/components/skeletons/case-details-skeleton/case-details-skeleton.component';
@@ -162,7 +162,7 @@ export class LongTermDetails implements OnInit {
   isAdminPage = signal(false);
   isMyCasePage = signal(false);
 
-  constructor() {}
+  constructor() { }
 
   ngOnInit(): void {
     this.isAdminPage.set(this.route.snapshot.data['mode'] === 'dashboard');
