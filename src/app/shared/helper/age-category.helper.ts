@@ -8,7 +8,7 @@ export interface AgeRange {
 export function getAgeRange(category: AgeCategories | null): AgeRange {
   switch (category) {
     case AgeCategories.Toddler:
-      return { minAge: 0, maxAge: 2 };
+      return { minAge: 1, maxAge: 2 };
 
     case AgeCategories.Child:
       return { minAge: 3, maxAge: 12 };

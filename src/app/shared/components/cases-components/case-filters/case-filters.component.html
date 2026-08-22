@@ -205,7 +205,7 @@
       [style.grid-template-rows]="showAdvanced ? '1fr' : '0fr'">
       <div class="overflow-hidden">
         <div
-          class="grid grid-cols-1 gap-5 pt-4 transition-all duration-300 ease-out md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          class="grid grid-cols-1 gap-5 pt-4 transition-all duration-300 ease-out md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 border-b border-outline-variant/20 pb-4"
           [class.opacity-100]="showAdvanced" [class.translate-y-0]="showAdvanced" [class.opacity-0]="!showAdvanced"
           [class.-translate-y-2]="!showAdvanced">
           @if (showSearch() && searchInAdvanced()) {
@@ -252,12 +252,12 @@
     }
 
     <!-- Footer -->
-    <div class="flex flex-wrap justify-end gap-3 pt-4 border-t border-outline-variant/30 mt-4">
+    <div class="flex flex-wrap justify-end gap-3 mt-3">
       <ng-content select="[actions]"></ng-content>
-      <app-button variant="text" type="button" (onClick)="resetFilters()"
-        extraClass="group inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant transition-all duration-200 hover:bg-surface-container-high hover:text-primary">
-        <span class="material-symbols-outlined transition-transform duration-200 group-hover:-rotate-90">refresh</span>
-        <span>إعادة تعيين</span>
+      <app-button variant="text" type="button" (onClick)="resetFilters()" icon="refresh"
+        iconClass="transition-transform duration-200 group-hover:-rotate-90"
+        extraClass="rounded-lg px-3 py-2 text-sm font-medium text-on-surface-variant hover:bg-surface-container-high hover:text-primary">
+        إعادة تعيين
       </app-button>
     </div>
   </form>

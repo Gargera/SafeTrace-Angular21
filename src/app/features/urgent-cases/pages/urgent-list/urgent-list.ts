@@ -25,8 +25,6 @@ import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
 
 const UI_STATE_CACHE_KEY = 'UrgentList_UI_State';
 
-import { ButtonComponent } from '../../../../shared/components/button/button';
-
 @Component({
   selector: 'app-urgent-list',
   standalone: true,
