@@ -1,19 +1,18 @@
 // case-card-compact.component.ts
-import { ChangeDetectionStrategy, Component, input, output, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output, signal, computed, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { CaseType } from '../../../../shared/enums/case-type';
 import { CaseStatus } from '../../../../shared/enums/case-status';
-import { GenderBadgeDirective } from '../../../../shared/directives/gender-badge-directive';
-import { AgeBadgeDirective } from '../../../../shared/directives/age-badge-directive';
-import { CaseTypeBadgeDirective } from '../../../../shared/directives/case-type-badge-directive';
-import { CaseStatusBadgeDirective } from '../../../../shared/directives/case-status-badge-directive';
+
+import { CaseTypeBadgeDirective } from '../../../directives/case-type-badge.directive';
+import { CaseStatusBadgeDirective } from '../../../directives/case-status-badge.directive';
 import { ButtonComponent } from '../../../../shared/components/button/button';
 import { MyCaseListItemResponse } from '../../../../features/user-profile/model/profile.model';
 import { CardComponent } from '../../card/card';
 import { environment } from '../../../../../environments/environment';
 import { getAgeCategory } from '../../../helper/age-category.helper';
-import { getCaseActions } from '../../../helper/case-actions.helper';
+import { getCaseActions } from '../../../helper/cases-helper/case-actions.helper';
 
 @Component({
   selector: 'app-case-card-compact',
@@ -21,8 +20,6 @@ import { getCaseActions } from '../../../helper/case-actions.helper';
   imports: [
     DatePipe,
     RouterModule,
-    GenderBadgeDirective,
-    AgeBadgeDirective,
     CaseTypeBadgeDirective,
     CaseStatusBadgeDirective,
     ButtonComponent,
@@ -65,7 +62,7 @@ export class CaseCardCompactComponent {
     if (this.imageHasError() || !item.mainImageUrl) {
       return this.fallbackImage;
     }
-    return `${this.baseUrl}${item.mainImageUrl}`;
+    return `${environment.filesBaseUrl}/${item.mainImageUrl}`;
   });
 
   /** Formatted location (city and government) */
@@ -117,11 +114,21 @@ export class CaseCardCompactComponent {
       case CaseType.LongTerm:
         return ['/long-term/edit', item.id];
       case CaseType.Unknown:
-        return ['/unknown/edit', item.id];
+        return ['/unknown/found-details', item.id];
       default:
-        return ['/cases/edit', item.id];
+        return ['/cases', item.id];
     }
   });
+
+  private router = inject(Router);
+
+  onCardClick(): void {
+    if (this.actions().canView) {
+      this.router.navigate(this.detailRoute());
+    } else if (this.actions().canViewFoundDetails) {
+      this.router.navigate(this.foundDetailRoute());
+    }
+  }
 
   // ----- Event Handlers -----
 

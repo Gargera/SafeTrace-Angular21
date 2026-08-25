@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, map } from 'rxjs/operators';
 import { ApiService } from '../../../shared/services/api.service';
 import { UrgentCaseListItemResponse } from '../models/response/UrgentCaseListItemResponse';
 import { UrgentCaseDetailResponse } from '../models/response/UrgentCaseDetailResponse';
@@ -8,11 +8,13 @@ import { UrgentCreateCaseResponse } from '../models/response/UrgentCreateCaseRes
 import { UrgentCaseCreateRequest } from '../models/request/UrgentCaseCreateRequest';
 import { UrgentCaseUpdateRequest } from '../models/request/UrgentCaseUpdateRequest';
 import { FoundPersonInfoRequest } from '../../../core/models/cases.model';
+import { CaseSubmissionResponse } from '../../../shared/helper/cases-helper/case-submission-flow.helper';
+import { DuplicateDecisionPayload } from '../../../shared/helper/cases-helper/case-duplicate.helper';
 import { environment } from '../../../../environments/environment';
 import { UrgentCasesFilterRequest } from '../models/request/UrgentCaseFilterRequest';
 import { UrgentCreationStatusResponse } from '../models/response/UrgentCreationStatusResponse';
-import { ApiResponse } from '../../../shared/models/responses/api-response.model';
-import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
+import { ApiResponse } from '../../../shared/models/api-response.model';
+import { PaginationResponse } from '../../../shared/models/pagination-response.model';
 import { CacheService } from '../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../core/cache/cache.constants';
 
@@ -107,14 +109,19 @@ export class UrgentCaseService extends ApiService {
   createCase(
     request: UrgentCaseCreateRequest,
     forceCreate = false,
-  ): Observable<ApiResponse<UrgentCreateCaseResponse>> {
+  ): Observable<CaseSubmissionResponse<DuplicateDecisionPayload>> {
     const formData = this.buildFormData(request);
     return this.postFormData<ApiResponse<UrgentCreateCaseResponse>>(
       `${this.baseUrl}/CreateCase`,
       formData,
       { forceCreate },
     ).pipe(
-      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.URGENT_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD]))
+      tap(() => this.cacheService.invalidateByTags([CACHE_TAGS.URGENT_CASES, CACHE_TAGS.PROFILE, CACHE_TAGS.DASHBOARD])),
+      map(response => ({
+        success: response.success,
+        message: response.message,
+        data: response.data ?? undefined
+      }))
     );
   }
 

@@ -1,5 +1,5 @@
 import { Component, effect, inject, input, output, signal, OnInit, DestroyRef } from '@angular/core';
-import { CacheService } from '../../../../../../core/cache/cache.service';
+
 import { ImageService } from '../../../../../../shared/services/image.service';
 import { GetUserInfoDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
@@ -8,6 +8,8 @@ import { CardComponent } from '../../../../../../shared/components/card/card';
 import { SnackbarService } from '../../../../../../shared/services/toast.service';
 import { ConfirmationModalComponent } from '../../../../../../shared/components/confirmation-modal/confirmation-modal';
 import { extractErrorMessage } from '../../../../../../shared/helper/error.helper';
+import { CacheService } from '../../../../../../core/cache/cache.service';
+import { PROFILE_CACHE_KEYS, CACHE_TTL, CACHE_TAGS } from '../../../../../../core/cache/cache.constants';
 
 @Component({
   selector: 'app-profile-image',
@@ -30,6 +32,7 @@ export class ProfileImage implements OnInit {
   readonly #imageService = inject(ImageService);
   readonly #snackbar = inject(SnackbarService);
   readonly #cacheService = inject(CacheService);
+
   readonly #destroyRef = inject(DestroyRef);
 
   // ── Section Editing Flags ─────────────────────────────────────────────────
@@ -45,11 +48,6 @@ export class ProfileImage implements OnInit {
   readonly profileImagePreview = signal<string | null>(null);
 
   constructor() {
-    this.#destroyRef.onDestroy(() => {
-      this.#cacheService.set('ProfileImage_State', {
-        showRemoveConfirm: this.showRemoveConfirm()
-      }, 300000);
-    });
     // Sync the profile photo preview from server data, unless we're
     // mid-upload/mid-removal/mid-edit — those flows manage the preview
     // themselves (optimistic clear/preview) and would otherwise get
@@ -78,12 +76,22 @@ export class ProfileImage implements OnInit {
         });
       }
     });
+
+    this.#destroyRef.onDestroy(() => {
+      if (this.#selectedProfileImage) {
+        this.#cacheService.set(PROFILE_CACHE_KEYS.DRAFT_PROFILE_IMAGE, { file: this.#selectedProfileImage }, CACHE_TTL.UI_STATE, [CACHE_TAGS.PROFILE, CACHE_TAGS.UI_STATE]);
+      } else {
+        this.#cacheService.remove(PROFILE_CACHE_KEYS.DRAFT_PROFILE_IMAGE);
+      }
+    });
   }
 
   ngOnInit(): void {
-    const state = this.#cacheService.get<any>('ProfileImage_State');
-    if (state && state.showRemoveConfirm) {
-      this.showRemoveConfirm.set(true);
+    const draft = this.#cacheService.get<{ file: File }>(PROFILE_CACHE_KEYS.DRAFT_PROFILE_IMAGE);
+    if (draft && draft.file) {
+      this.#selectedProfileImage = draft.file;
+      this.profileImagePreview.set(URL.createObjectURL(draft.file));
+      this.toggleProfileImageEdit(true);
     }
   }
 
@@ -169,10 +177,6 @@ export class ProfileImage implements OnInit {
         this.isRemovingProfileImage.set(false);
         this.showRemoveConfirm.set(false);
         this.profileImagePreview.set(null);
-        
-        const cachedState = this.#cacheService.get<any>('ProfileImage_State') || {};
-        cachedState.showRemoveConfirm = false;
-        this.#cacheService.set('ProfileImage_State', cachedState, 300000);
 
         this.#snackbar.success('تم حذف الصورة الشخصية بنجاح');
         this.profileUpdated.emit();

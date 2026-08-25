@@ -19,13 +19,15 @@
     </div>
 
     <div class="flex flex-col gap-xs">
-      <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">بحث بالجدول</label>
       <app-form-field
-        type="text"
+        type="select"
         [ngModel]="filter().searchTable"
         (ngModelChange)="updateFilter({ searchTable: $event })"
-        placeholder="ابحث باسم الجدول..."
+        label="الجدول"
       >
+        @for(item of auditTables; track item.value) {
+          <option [value]="item.value">{{ item.label }}</option>
+        }
       </app-form-field>
     </div>
 
@@ -62,77 +64,78 @@
 <section
   class="bg-white rounded-2xl shadow-sm border border-outline-variant overflow-hidden relative min-h-75"
 >
-  @if (isLoading()) {
-    <app-loading-spinner
-      title="جارِ تحميل السجلات..."
-      [fullscreen]="false"
-      containerClass="absolute inset-0 bg-white/60 flex items-center justify-center z-10"
-    ></app-loading-spinner>
-  }
-
-  <div class="overflow-x-auto">
-    <table class="w-full text-right border-collapse whitespace-nowrap">
-      <thead>
-        <tr class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant">
-          <th class="px-lg py-md text-center">#</th>
-          <th class="px-lg py-md">المستخدم</th>
-          <th class="px-lg py-md">الجدول</th>
-          <th class="px-lg py-md text-center">العملية</th>
-          <th class="px-lg py-md">التاريخ</th>
-          <th class="px-lg py-md text-center">الإجراءات</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
-        @for (log of logs(); track log.id; let i = $index) {
-          <tr class="hover:bg-surface-container-low transition-colors group">
-            <td class="px-lg py-md text-center font-bold text-on-surface-variant">
-              {{ (filter().pageNumber - 1) * filter().pageSize + i + 1 }}
-            </td>
-            <td class="px-lg py-md">
-              <span class="font-semibold text-primary" dir="ltr">{{ log.userEmail || 'نظام' }}</span>
-            </td>
-            <td class="px-lg py-md font-sans opacity-70">{{ log.tableName }}</td>
-            <td class="px-lg py-md text-center">
-              <span [appAuditOperationBadge]="log.type"></span>
-            </td>
-            <td class="px-lg py-md font-sans opacity-70" dir="ltr">{{ log.dateTime | date:'yyyy/MM/dd HH:mm' }}</td>
-            <td class="px-lg py-md text-center">
-              <app-button
-                (onClick)="viewDetails(log)"
-                variant="primary"
-                extraClass="flex items-center justify-center gap-1.5 px-6 py-2 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
-              >
-                <span class="material-symbols-outlined text-[18px]">visibility</span>
-                عرض
-              </app-button>
-            </td>
+  @defer (on viewport) {
+    @if (isLoading() && logs().length === 0) {
+    <app-table-skeleton [rows]="10"></app-table-skeleton>
+  } @else {
+    <div
+      class="w-full max-w-full overflow-x-auto"
+      [class.opacity-50]="isLoading()"
+      [class.pointer-events-none]="isLoading()"
+    >
+      <table class="w-full text-right border-collapse whitespace-nowrap">
+        <thead>
+          <tr
+            class="bg-surface-container text-primary font-bold text-label-md border-b border-outline-variant"
+          >
+            <th class="px-lg py-md text-center">#</th>
+            <th class="px-lg py-md">المستخدم</th>
+            <th class="px-lg py-md">الجدول</th>
+            <th class="px-lg py-md text-center">العملية</th>
+            <th class="px-lg py-md">التاريخ</th>
+            <th class="px-lg py-md text-center">الإجراءات</th>
           </tr>
-        } @empty {
-          @if (!isLoading()) {
-            <tr>
-              <td colspan="6" class="py-xl">
-                <app-empty-state
-                  [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد سجلات'"
-                  [message]="hasActiveFilters() ? 'لم نتمكن من العثور على سجلات تطابق خيارات البحث الحالية.' : 'لم يتم تسجيل أي عمليات بعد.'"
+        </thead>
+        <tbody class="divide-y divide-outline-variant text-body-sm text-on-surface">
+          @for (log of logs(); track log.id; let i = $index) {
+            <tr class="hover:bg-surface-container-low transition-colors group">
+              <td class="px-lg py-md text-center font-bold text-on-surface-variant">
+                {{ (filter().pageNumber - 1) * filter().pageSize + i + 1 }}
+              </td>
+              <td class="px-lg py-md">
+                <span class="font-semibold text-primary" dir="ltr">{{
+                  log.userEmail || 'نظام'
+                }}</span>
+              </td>
+              <td class="px-lg py-md font-sans opacity-70">{{ getTableLabel(log.tableName) }}</td>
+              <td class="px-lg py-md text-center">
+                <span [appAuditOperationBadge]="log.type"></span>
+              </td>
+              <td class="px-lg py-md font-sans opacity-70" dir="ltr">
+                {{ log.dateTime | date: 'yyyy/MM/dd HH:mm' }}
+              </td>
+              <td class="px-lg py-md text-center">
+                <app-button
+                  (onClick)="viewDetails(log)"
+                  variant="primary"
+                  extraClass="flex items-center justify-center gap-1.5 px-6 py-2 rounded-full text-label-sm font-bold shadow-sm hover:bg-secondary-container transition-all duration-200"
                 >
-                  @if (hasActiveFilters()) {
-                    <app-button
-                      emptyActions
-                      variant="outline"
-                      size="md"
-                      (click)="resetFilters()"
-                    >
-                      إلغاء تصفية البحث
-                    </app-button>
-                  }
-                </app-empty-state>
+                  <span class="material-symbols-outlined">visibility</span>
+                  عرض
+                </app-button>
               </td>
             </tr>
+          } @empty {
+            @if (!isLoading()) {
+              <tr>
+                <td colspan="6" class="py-xl">
+                  <app-empty-state
+                    [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد سجلات'"
+                    [message]="
+                      hasActiveFilters()
+                        ? 'لم نتمكن من العثور على سجلات تطابق خيارات التصفية أو البحث الحالية.'
+                        : 'لم يتم تسجيل أي عمليات بعد.'
+                    "
+                  >
+                  </app-empty-state>
+                </td>
+              </tr>
+            }
           }
-        }
-      </tbody>
-    </table>
-  </div>
+        </tbody>
+      </table>
+    </div>
+  }
 
   @if (totalPages() > 1) {
     <div
@@ -144,80 +147,116 @@
 
       <app-pagination
         [currentPage]="filter().pageNumber"
+        [loading]="isLoading()"
         [totalPages]="totalPages()"
         (pageChange)="changePage($event)"
       />
     </div>
   }
+  } @placeholder {
+    <app-table-skeleton [rows]="10"></app-table-skeleton>
+  }
 </section>
 
 <!-- Details Modal -->
 @if (selectedLog()) {
+  @defer {
   <div class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <!-- Backdrop -->
-    <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" (click)="closeModal()"></div>
+    <div
+      class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+      (click)="closeModal()"
+    ></div>
 
     <!-- Modal Panel -->
     <div class="fixed inset-0 z-10 w-screen overflow-y-auto" (click)="closeModal()">
       <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-        
-        <div (click)="$event.stopPropagation()" class="relative transform overflow-hidden rounded-2xl bg-surface-bright text-right shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl border border-outline-variant">
-          <div class="bg-surface-container px-6 py-4 flex justify-between items-center border-b border-outline-variant">
+        <div
+          (click)="$event.stopPropagation()"
+          class="relative transform overflow-hidden rounded-2xl bg-surface-bright text-right shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl border border-outline-variant"
+        >
+          <div
+            class="bg-surface-container px-6 py-4 flex justify-between items-center border-b border-outline-variant"
+          >
             <h3 class="text-xl font-bold text-on-surface" id="modal-title">
-              تفاصيل التعديل ({{ selectedLog()?.tableName }})
+              تفاصيل التعديل ({{ getTableLabel(selectedLog()?.tableName) }})
             </h3>
-            <button (click)="closeModal()" class="text-on-surface-variant hover:text-error transition-colors p-1 rounded-full hover:bg-surface-container-high">
+            <button
+              type="button"
+              (click)="closeModal()"
+              aria-label="إغلاق"
+              class="text-on-surface-variant hover:text-error transition-colors p-1 rounded-full hover:bg-surface-container-high"
+            >
               <span class="material-symbols-outlined">close</span>
             </button>
           </div>
-          
+
           <div class="bg-surface px-6 py-5">
             <div class="space-y-6">
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-surface-container-low p-4 rounded-xl text-sm border border-outline-variant">
-              <div class="text-right">
-                <span class="block text-on-surface-variant text-xs mb-1">العملية</span>
-                <span [appAuditOperationBadge]="selectedLog()?.type || ''"></span>
+              <div
+                class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-surface-container-low p-4 rounded-xl text-sm border border-outline-variant"
+              >
+                <div class="text-right">
+                  <span class="block text-on-surface-variant text-xs mb-1">العملية</span>
+                  <span [appAuditOperationBadge]="selectedLog()?.type || ''"></span>
+                </div>
+                <div class="text-right">
+                  <span class="block text-on-surface-variant text-xs mb-1">التاريخ</span>
+                  <span class="font-bold text-on-surface" dir="ltr">{{
+                    selectedLog()?.dateTime | date: 'yyyy/MM/dd HH:mm:ss'
+                  }}</span>
+                </div>
+                <div class="text-right">
+                  <span class="block text-on-surface-variant text-xs mb-1">المستخدم</span>
+                  <span class="font-bold text-primary" dir="ltr">{{
+                    selectedLog()?.userEmail || 'نظام'
+                  }}</span>
+                </div>
               </div>
-              <div class="text-right">
-                <span class="block text-on-surface-variant text-xs mb-1">التاريخ</span>
-                <span class="font-bold text-on-surface" dir="ltr">{{ selectedLog()?.dateTime | date:'yyyy/MM/dd HH:mm:ss' }}</span>
-              </div>
-              <div class="text-right">
-                <span class="block text-on-surface-variant text-xs mb-1">المستخدم</span>
-                <span class="font-bold text-primary" dir="ltr">{{ selectedLog()?.userEmail || 'نظام' }}</span>
-              </div>
-            </div>
-              
+
               @if (selectedLog()?.affectedColumns) {
-                <div class="text-sm text-on-surface bg-primary-container/20 p-3 rounded-lg border border-primary/10">
-                  <span class="font-bold text-primary">الأعمدة المتأثرة:</span> {{ selectedLog()?.affectedColumns }}
+                <div
+                  class="text-sm text-on-surface bg-primary-container/20 p-3 rounded-lg border border-primary/10"
+                >
+                  <span class="font-bold text-primary">الأعمدة المتأثرة:</span>
+                  {{ selectedLog()?.affectedColumns }}
                 </div>
               }
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @if (selectedLog()?.oldValues) {
-                  <div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
+                  <div
+                    class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm"
+                  >
                     <h4 class="text-sm font-bold text-error mb-3 flex items-center gap-2">
-                      <span class="material-symbols-outlined text-[18px]">remove_circle</span>
+                      <span class="material-symbols-outlined">remove_circle</span>
                       القيم القديمة
                     </h4>
-                    <pre dir="ltr" class="text-xs text-left overflow-x-auto p-3 bg-surface-container rounded-lg border border-outline-variant font-mono text-on-surface">{{ formatJson(selectedLog()?.oldValues) }}</pre>
+                    <pre
+                      dir="ltr"
+                      class="text-xs text-left overflow-x-auto p-3 bg-surface-container rounded-lg border border-outline-variant font-mono text-on-surface"
+                      >{{ formatJson(selectedLog()?.oldValues) }}</pre>
                   </div>
                 }
-                
+
                 @if (selectedLog()?.newValues) {
-                  <div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
+                  <div
+                    class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm"
+                  >
                     <h4 class="text-sm font-bold text-primary mb-3 flex items-center gap-2">
-                      <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                      <span class="material-symbols-outlined">add_circle</span>
                       القيم الجديدة
                     </h4>
-                    <pre dir="ltr" class="text-xs text-left overflow-x-auto p-3 bg-surface-container rounded-lg border border-outline-variant font-mono text-on-surface">{{ formatJson(selectedLog()?.newValues) }}</pre>
+                    <pre
+                      dir="ltr"
+                      class="text-xs text-left overflow-x-auto p-3 bg-surface-container rounded-lg border border-outline-variant font-mono text-on-surface"
+                      >{{ formatJson(selectedLog()?.newValues) }}</pre>
                   </div>
                 }
               </div>
             </div>
           </div>
-          
+
           <div class="bg-surface-container px-6 py-4 flex flex-row-reverse">
             <app-button
               (onClick)="closeModal()"
@@ -231,4 +270,5 @@
       </div>
     </div>
   </div>
+  }
 }

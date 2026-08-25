@@ -14,8 +14,8 @@ import {
   UpdateNameDTO,
   UpdateProfileImageDTO,
 } from '../model/profile.model';
-import { ApiResponse } from '../../../shared/models/responses/api-response.model';
-import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
+import { ApiResponse } from '../../../shared/models/api-response.model';
+import { PaginationResponse } from '../../../shared/models/pagination-response.model';
 
 import { CaseType } from '../../../shared/enums/case-type';
 import { UrgentCaseService } from '../../urgent-cases/services/urgent-case.service';
@@ -88,7 +88,7 @@ export class ProfileService {
       tap(() => this.#cacheService.invalidateByTags([CACHE_TAGS.PROFILE]))
     );
   }
-  
+
   updatePhoneNumber(phoneNumber: string): Observable<ApiResponse<boolean>> {
     const formData = new FormData();
     formData.append('PhoneNumber', phoneNumber);

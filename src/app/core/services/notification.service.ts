@@ -1,4 +1,4 @@
-import { Injectable, inject, signal, computed, OnDestroy } from '@angular/core';
+import { Injectable, inject, signal, computed, OnDestroy, DestroyRef } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import * as signalR from '@microsoft/signalr';
 import {
@@ -9,9 +9,10 @@ import {
 import { NotificationType } from '../../shared/enums/Notification-Type';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
-import { ApiResponse } from '../../shared/models/responses/api-response.model';
-import { Router } from '@angular/router';
-
+import { ApiResponse } from '../../shared/models/api-response.model';
+import { Router, NavigationStart } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 const DEFAULT_PAGE_SIZE = 10;
 
 @Injectable({ providedIn: 'root' })
@@ -20,6 +21,9 @@ export class NotificationService implements OnDestroy {
   readonly #apiUrl = `${environment.apiBaseUrl}/Notification`;
   readonly #defaultLink = '/profile?tab=notifications';
   readonly #authService = inject(AuthService);
+  readonly #router = inject(Router);
+  readonly #destroyRef = inject(DestroyRef);
+
   // ─── Private state signals ────────────────────────────────────────────────
   readonly #notifications = signal<GetUserNotificationsDTO[]>([]);
   readonly #unreadCount = signal<number>(0);
@@ -50,44 +54,65 @@ export class NotificationService implements OnDestroy {
   readonly hasNextPage = computed(() => this.#currentPage() < this.#totalPages());
 
   #hubConnection: signalR.HubConnection | null = null;
+  #connectionStart: Promise<void> | null = null;
 
   // ─── SignalR Connection ───────────────────────────────────────────────────
 
-  startConnection(): void {
-    if (this.#hubConnection) return;
-
-    this.#hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(environment.signalRHubUrl, {
-        // Cookie-based auth: credentials are sent automatically.
-        // If you switch to bearer token in the future, provide it here:
-        // accessTokenFactory: () => tokenService.getToken()
-        accessTokenFactory: () => this.#authService.getToken() ?? '',
-        // withCredentials: true,
-      })
-      .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
-      .configureLogging(
-        environment.production ? signalR.LogLevel.Error : signalR.LogLevel.Information,
+  constructor() {
+    this.#router.events
+      .pipe(
+        filter((event) => event instanceof NavigationStart),
+        takeUntilDestroyed(this.#destroyRef),
       )
-      .build();
-
-    this.#registerHubEvents();
-    this.#connect();
+      .subscribe(() => {
+        if (this.#activeCaseNotification()) {
+          this.closeCaseNotificationModal();
+        }
+      });
   }
 
-  #connect(): void {
-    this.#hubConnection
-      ?.start()
-      .then(() => {
-        this.#isConnected.set(true);
-        // Load notifications via SignalR after connection
+  startConnection(): void {
+    if (
+      !this.#authService.isLoggedIn() ||
+      this.#hubConnection?.state === signalR.HubConnectionState.Connected ||
+      this.#connectionStart
+    ) {
+      return;
+    }
 
-        this.#hubConnection?.invoke('GetMyNotifications', 1, DEFAULT_PAGE_SIZE);
-      })
-      .catch((err) => {
-        console.error('SignalR connection error:', err);
+    if (!this.#hubConnection) {
+      this.#hubConnection = new signalR.HubConnectionBuilder()
+        .withUrl(environment.signalRHubUrl, {
+          accessTokenFactory: async () => (await this.#authService.ensureValidAccessToken()) ?? '',
+        })
+        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+        .configureLogging(
+          environment.production ? signalR.LogLevel.Error : signalR.LogLevel.Information,
+        )
+        .build();
 
-        this.#isConnected.set(false);
-      });
+      this.#registerHubEvents();
+    }
+
+    this.#connectionStart = this.#connect().finally(() => {
+      this.#connectionStart = null;
+    });
+  }
+
+  async #connect(): Promise<void> {
+    try {
+      await this.#hubConnection?.start();
+      this.#isConnected.set(true);
+      // NOTE: NotificationsHub does not define a "GetMyNotifications" RPC method
+      // (it only overrides OnConnectedAsync/OnDisconnectedAsync), so invoking it
+      // over the hub throws "HubException: Method does not exist.". The unread
+      // count still arrives via the "UnreadCount" push from OnConnectedAsync;
+      // the notification list itself is fetched over REST.
+      this.loadPage(1);
+    } catch (err) {
+      console.error('SignalR connection error:', err);
+      this.#isConnected.set(false);
+    }
   }
 
   #registerHubEvents(): void {
@@ -97,8 +122,11 @@ export class NotificationService implements OnDestroy {
     this.#hubConnection.on('UnreadCount', (response: ApiResponse<number>) => {
       this.#unreadCount.set(response.data ?? 0);
     });
-    // Fired after invoking GetMyNotifications
-
+    // NOTE: currently unused — nothing on the server sends "ReceiveNotifications".
+    // It would only fire if NotificationsHub grows a "GetMyNotifications" method
+    // (see the connect()/onreconnected() comments below). Kept here so the wiring
+    // is ready if that method is added later; the paginated list is loaded via
+    // REST (loadPage) in the meantime.
     this.#hubConnection.on('ReceiveNotifications', (response: ApiResponse<NotificationPage>) => {
       if (response.success && response.data) {
         this.#notifications.set(response.data.items);
@@ -120,102 +148,81 @@ export class NotificationService implements OnDestroy {
     this.#hubConnection.onreconnecting(() => this.#isConnected.set(false));
     this.#hubConnection.onreconnected(() => {
       this.#isConnected.set(true);
-      this.#hubConnection?.invoke('GetMyNotifications', 1, 10).catch(console.error);
+      this.loadPage(1);
     });
     this.#hubConnection.onclose(() => this.#isConnected.set(false));
   }
 
   // ─── Hub Invocations ──────────────────────────────────────────────────────
 
-  markAsRead(notificationId: number): void {
-    // Optimistic update
+  markAsRead(id: number): void {
+    const target = this.#notifications().find((n) => n.id === id);
+    if (!target || target.isRead) return;
+
     this.#notifications.update((list) =>
-      list.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
+      list.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
     );
-    this.#hubConnection?.invoke('MarkAsRead', notificationId).catch((err) => {
-      console.error('MarkAsRead failed:', err);
-      // Rollback on error
-      this.#notifications.update((list) =>
-        list.map((n) => (n.id === notificationId ? { ...n, isRead: false } : n)),
-      );
+    this.#unreadCount.update((c) => Math.max(0, c - 1));
+
+    this.#http.put<ApiResponse<boolean>>(`${this.#apiUrl}/${id}/MarkAsRead`, {}).subscribe({
+      error: (err) => {
+        console.error(err);
+        // rollback
+        this.#notifications.update((list) =>
+          list.map((n) => (n.id === id ? { ...n, isRead: false } : n)),
+        );
+        this.#unreadCount.update((c) => c + 1);
+      },
     });
   }
 
   markAllAsRead(): void {
-    // Optimistic update
+    if (this.#unreadCount() === 0) return;
+
+    const previous = this.#notifications();
+    const previousCount = this.#unreadCount();
+
     this.#notifications.update((list) => list.map((n) => ({ ...n, isRead: true })));
     this.#unreadCount.set(0);
 
-    this.#hubConnection
-      ?.invoke('MarkAllAsRead')
-      .catch((err) => console.error('MarkAllAsRead failed:', err));
-  }
-
-  removeNotification(notificationId: number): void {
-    // Optimistic update
-    const removed = this.#notifications().find((n) => n.id === notificationId);
-    this.#notifications.update((list) => list.filter((n) => n.id !== notificationId));
-    this.#totalCount.update((c) => Math.max(0, c - 1));
-    if (removed && !removed.isRead) {
-      this.#unreadCount.update((c) => Math.max(0, c - 1));
-    }
-
-    this.#hubConnection?.invoke('RemoveNotification', notificationId).catch((err) => {
-      console.error('RemoveNotification failed:', err);
-      // Rollback
-      if (removed) {
-        this.#notifications.update((list) => [removed, ...list]);
-        this.#totalCount.update((c) => c + 1);
-        if (!removed.isRead) {
-          this.#unreadCount.update((c) => c + 1);
-        }
-      }
+    this.#http.put<ApiResponse<boolean>>(`${this.#apiUrl}/MarkAllAsRead`, {}).subscribe({
+      error: (err) => {
+        console.error(err);
+        this.#notifications.set(previous);
+        this.#unreadCount.set(previousCount);
+      },
     });
   }
 
-  // ─── REST API Fallback (used if SignalR is not connected) ─────────────────
-  // loadPage(page: number, append = false): void {
-  //   this.#isLoading.set(true);
+  removeNotification(id: number): void {
+    const previous = this.#notifications();
+    const target = previous.find((n) => n.id === id);
+    if (!target) return;
 
-  //   const params = new HttpParams().set('page', page).set('pageSize', DEFAULT_PAGE_SIZE);
+    this.#notifications.update((list) => list.filter((n) => n.id !== id));
+    this.#totalCount.update((c) => Math.max(0, c - 1));
+    if (!target.isRead) {
+      this.#unreadCount.update((c) => Math.max(0, c - 1));
+    }
 
-  //   this.#http
-  //     .get<ApiResponse<NotificationPage>>(`${this.#apiUrl}/my-Notifications`, { params })
-  //     .subscribe({
-  //       next: (res) => {
-  //         const data = res.data;
+    this.#http.delete<ApiResponse<boolean>>(`${this.#apiUrl}/${id}`).subscribe({
+      error: (err) => {
+        console.error(err);
+        // rollback
+        this.#notifications.set(previous);
+        this.#totalCount.update((c) => c + 1);
+        if (!target.isRead) {
+          this.#unreadCount.update((c) => c + 1);
+        }
+      },
+    });
+  }
 
-  //         if (!data) {
-  //           this.#notifications.set([]);
-  //           this.#currentPage.set(1);
-  //           this.#totalPages.set(0);
-  //           this.#totalCount.set(0);
-  //           this.#isLoading.set(false);
-  //           return;
-  //         }
-
-  //         if (append) {
-  //           this.#notifications.update((old) => {
-  //             const merged = [...old, ...data.items];
-  //             return merged;
-  //           });
-  //         } else {
-  //           this.#notifications.set(data.items);
-  //         }
-
-  //         this.#currentPage.set(data.page);
-  //         this.#totalPages.set(data.totalPages);
-  //         this.#totalCount.set(data.totalCount);
-
-  //         this.#isLoading.set(false);
-  //       },
-  //       error: (err) => {
-  //         console.error(err);
-  //         this.#isLoading.set(false);
-  //       },
-  //     });
-  // }
-
+  // ─── Notification list (REST) ──────────────────────────────────────────────
+  // Backed by NotificationService.GetUserNotificationsAsync in helper.md, exposed
+  // via the controller's "my-Notifications" endpoint. Used both for the initial
+  // load after connecting and for pagination, since the hub itself has no RPC
+  // method for fetching pages.
   loadPage(page: number, append = false): void {
     if (append) {
       this.#isLoadingMore.set(true);
@@ -269,6 +276,7 @@ export class NotificationService implements OnDestroy {
   stopConnection(): void {
     this.#hubConnection?.stop().catch(console.error);
     this.#hubConnection = null;
+    this.#connectionStart = null;
     this.#isConnected.set(false);
   }
 
@@ -515,8 +523,16 @@ export class NotificationService implements OnDestroy {
     return { icon: 'info', bgClass: 'bg-blue-500', title: 'إشعار جديد' };
   }
 
-  formatDate(dateStr: Date): string {
-    const date = new Date(dateStr); // اعتبره UTC
+  formatDate(dateStr: Date | string): string {
+    // CreatedAt يترسل من السيرفر كـ UTC (DateTime.UtcNow)، لكن لو الـ Kind
+    // اتفقد بعد الرجوع من الداتابيز (شائع مع EF Core)، الـ JSON بييجي من غير
+    // "Z" في الآخر، فـ `new Date()` هنا هيفسرها كتوقيت محلي (مصر UTC+3)
+    // بدل UTC، وده اللي بيسبب فرق الساعات الغلط في "منذ ...".
+    // الحل الأصح فعليًا في الباك إند (SpecifyKind(..., DateTimeKind.Utc) قبل
+    // السيريلايز)، لكن نتحوط هنا كمان لو الفرق مكانش اتصلح لسه.
+    const raw = dateStr instanceof Date ? dateStr.toISOString() : dateStr;
+    const hasTimezone = /[zZ]|[+-]\d{2}:\d{2}$/.test(raw);
+    const date = new Date(hasTimezone ? raw : `${raw}Z`);
 
     const diff = Date.now() - date.getTime();
 

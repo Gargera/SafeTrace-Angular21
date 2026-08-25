@@ -9,9 +9,7 @@
 
 <div class="flex flex-col gap-xl">
   @if (isLoading()) {
-    <div class="flex items-center justify-center py-2xl">
-      <app-loading-spinner title="جارِ تحميل الإحصائيات..."></app-loading-spinner>
-    </div>
+    <app-dashboard-statistics-skeleton></app-dashboard-statistics-skeleton>
   }
 
   @if (error() && !isLoading()) {
@@ -485,8 +483,8 @@
       }
     </app-card>
     } @placeholder {
-      <div class="flex items-center justify-center py-2xl">
-        <app-loading-spinner title="جارِ تحميل الإحصائيات..."></app-loading-spinner>
+      <div class="py-2xl w-full">
+        <app-table-skeleton [rows]="4"></app-table-skeleton>
       </div>
     }
   }

@@ -1,9 +1,13 @@
-
-.scroll-wrapper {
-  direction: ltr;
+.notifications-scroll-container {
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
 }
 
-.scrollable {
-  direction: rtl;
-  overflow-y: auto;
+@media (max-width: 640px) {
+  .notifications-scroll-container {
+    max-height: calc(100vh - 320px);
+  }
 }

@@ -24,6 +24,17 @@ export class ConfirmationModalComponent {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
+    if (this.confirmLoading()) return;
+    this.cancel.emit();
+  }
+
+  onBackdropClick(): void {
+    if (this.confirmLoading()) return;
+    this.cancel.emit();
+  }
+
+  onCancelClick(): void {
+    if (this.confirmLoading()) return;
     this.cancel.emit();
   }
 }

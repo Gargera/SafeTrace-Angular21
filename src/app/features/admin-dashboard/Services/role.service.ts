@@ -6,7 +6,7 @@ import { RoleDto } from '../models/Role/responses/RoleDto';
 import { CreateRoleDto } from '../models/Role/requests/CreateRoleDto';
 import { RolePermissionsResponseDto } from '../models/Role/responses/RolePermissionsResponseDto';
 import { UpdateRolePermissionsDto } from '../models/Role/requests/UpdateRolePermissionsDto';
-import { ApiResponse } from '../../../shared/models/responses/api-response.model';
+import { ApiResponse } from '../../../shared/models/api-response.model';
 import { ApiService } from '../../../shared/services/api.service';
 import { CacheService } from '../../../core/cache/cache.service';
 import { CACHE_TAGS, CACHE_TTL } from '../../../core/cache/cache.constants';

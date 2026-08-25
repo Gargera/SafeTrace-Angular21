@@ -12,7 +12,7 @@ import { CommonModule } from '@angular/common';
 import { Subject, of } from 'rxjs';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { GeocodingService } from '../../../../../../core/services/geocoding/geocoding.service';
+import { GeocodingService } from '../../../../../../core/services/geocoding.service';
 import { SnackbarService } from '../../../../../../shared/services/toast.service';
 import { GetUserInfoDTO, UpdateHomeLocationDTO } from '../../../../model/profile.model';
 import { ProfileService } from '../../../../service/profile.service';
@@ -23,7 +23,7 @@ import { FormField } from '../../../../../../shared/components/form-field/form-f
 @Component({
   selector: 'app-location-picker',
   standalone: true,
-  imports: [CommonModule, MapLocationPickerComponent],
+  imports: [CommonModule, MapLocationPickerComponent, ButtonComponent],
   templateUrl: './location-picker.html',
 })
 export class LocationPicker implements OnChanges {
@@ -53,7 +53,14 @@ export class LocationPicker implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['userInfo'] && this.userInfo()) {
       const info = this.userInfo()!;
-      if (info.homeLatitude && info.homeLongitude) {
+      const currentLat = this.selectedLat();
+      const currentLng = this.selectedLng();
+
+      if (
+        info.homeLatitude &&
+        info.homeLongitude &&
+        (info.homeLatitude !== currentLat || info.homeLongitude !== currentLng)
+      ) {
         this.setLocation(info.homeLatitude, info.homeLongitude);
       }
     }

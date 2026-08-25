@@ -1,86 +1,97 @@
-@if (initialLoad()) {
-<!-- Loading Spinner -->
-<app-loading-spinner title="جارٍ تحميل الحالات..." subtitle="يرجى الانتظار قليلاً" size="md"
-  containerClass="flex min-h-[60vh] items-center justify-center" />
-} @else {
 <!-- Header (Always Visible) -->
-<app-header title="حالاتي" subtitle="إدارة ومتابعة جميع الحالات التي قمت بإنشائها" [badge]="totalCases() + ' حالة'"
-  [showBackButton]="false" [showPrimary]="false" [showSecondary]="false" />
+<div class="flex justify-between items-center">
+  <div class="flex items-center gap-sm">
+    <h3 class="text-label-md font-bold text-on-surface">الحالات</h3>
+    @if (totalCases() > 0) {
+      <span class="text-label-sm text-on-surface-variant"> ({{ totalCases() }}) </span>
+    }
+  </div>
+</div>
 
 <!-- Filters Card (Always Visible) -->
 <section class="overflow-hidden rounded-xl border border-outline-variant bg-surface shadow-sm my-6">
-  <app-case-filters [showSearch]="true" [showCaseType]="true" [showCaseStatus]="true" [showGender]="false"
-    [showAgeCategory]="false" [showGovernment]="false" [showCity]="false" [showFromDate]="false" [showToDate]="false"
-    [showAgeSort]="false" [showDateSort]="false" (filterChange)="onFilterChange($event)"
-    (reset)="onFilterReset()"></app-case-filters>
+  <app-case-filters
+    [initialFilter]="filterRequest()"
+    [showSearch]="true"
+    [showCaseType]="true"
+    [showCaseStatus]="true"
+    [showGender]="false"
+    [showAgeCategory]="false"
+    [showGovernment]="false"
+    [showCity]="false"
+    [showFromDate]="false"
+    [showToDate]="false"
+    [showAgeSort]="false"
+    [showDateSort]="false"
+    (filterChange)="onFilterChange($event)"
+    (reset)="onFilterReset()"
+  ></app-case-filters>
 </section>
 
 <!-- Content Area -->
-<div class="relative min-h-[350px]">
-  @if (loading() && !initialLoad()) {
-  <app-loading-spinner title="جارٍ تحديث الحالات..." [fullscreen]="false"
-    containerClass="absolute inset-0 bg-white/70 flex items-center justify-center z-10 rounded-xl backdrop-blur-[2px]" />
-  }
+<div class="relative min-h-87.5">
+  @if (loading()) {
+    <!-- Skeleton always in content area only, header/filters stay visible -->
+    <app-card-skeleton [items]="4" layout="case-card-compact"></app-card-skeleton>
+  } @else {
+    <!-- Content -->
+    @if (hasResults()) {
+      <!-- Scrollable Cases Container -->
+      <div class="cases-scroll-container space-y-3" (scroll)="onScroll($event)">
+        @for (caseItem of sortedCases(); track caseItem.id) {
+          <app-case-card-compact
+            [caseItem]="caseItem"
+            [isMyCase]="true"
+            (onDelete)="requestDelete($event, caseItem.caseType)"
+          >
+          </app-case-card-compact>
+        }
 
-  <!-- Content -->
-  @if (hasResults()) {
-  <!-- Scrollable Cases Container -->
-  <div class="cases-scroll-container space-y-6">
-    @for (group of groupedCases(); track group.type) {
-    <section class="space-y-3">
-      <div
-        class="flex items-center gap-3 sticky top-0 bg-surface/95 backdrop-blur-sm z-10 py-2 border-b border-outline-variant/20">
-        <div class="h-2.5 w-2.5 rounded-full bg-secondary"></div>
-        <h2 class="font-bold text-on-surface text-sm sm:text-base">{{ group.label }}</h2>
-        <span class="rounded-full bg-secondary/10 px-2.5 py-0.5 text-xs font-semibold text-secondary">
-          {{ group.cases.length }}
-        </span>
-        <div class="h-px flex-1 bg-outline-variant/20"></div>
-      </div>
-
-      <div class="grid grid-cols-1 gap-3">
-        @for (caseItem of group.cases; track caseItem.id) {
-        <app-case-card-compact [caseItem]="caseItem" [isMyCase]="true"
-          (onDelete)="requestDelete($event, caseItem.caseType)"
-          (onMarkAsFound)="requestMarkAsFound($event, caseItem.caseType)">
-        </app-case-card-compact>
+        @if (loadingMore()) {
+          <div class="my-4">
+            <app-card-skeleton [items]="2" layout="case-card-compact"></app-card-skeleton>
+          </div>
         }
       </div>
-    </section>
-    }
-
-    @if (hasNextPage()) {
-    <div class="my-6 flex justify-center border-t border-outline-variant/20 pt-4">
-      <app-button variant="secondary" [loading]="loadingMore()" [disabled]="loadingMore()" (onClick)="loadMore()"
-        extraClass="h-10 rounded-xl px-6 gap-2 text-xs">
-        <span class="material-symbols-outlined text-[18px]">expand_more</span>
-        تحميل المزيد
-      </app-button>
-    </div>
-    }
-  </div>
-  } @else {
-  <!-- Empty State: either no cases at all OR no results for the applied filters -->
-  <app-empty-state icon="images/empty.png" [title]="hasAnyCases() ? 'لا توجد نتائج' : 'لا توجد حالات'" [message]="
-          hasAnyCases()
-            ? 'لم يتم العثور على حالات تطابق معايير البحث.'
+    } @else {
+      <!-- Empty State: either no cases at all OR no results for the applied filters -->
+      <app-empty-state
+        icon="images/empty.png"
+        [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات'"
+        [message]="
+          hasActiveFilters()
+            ? 'لم نتمكن من العثور على حالات تطابق خيارات التصفية أو البحث الحالية.'
             : 'لم تقم بإنشاء أي حالات حتى الآن.'
-        " containerClass="py-16">
-  </app-empty-state>
+        "
+        containerClass="py-16"
+      >
+      </app-empty-state>
+    }
   }
 </div>
-}
-
 
 <!-- Confirmation Modal -->
 @if (showConfirmModal() && modalConfig(); as config) {
-<app-confirmation-modal [title]="config.title" [message]="config.message" [confirmText]="config.confirmText"
-  [cancelText]="config.cancelText" [variant]="config.variant ?? 'primary'" [icon]="config.icon ?? 'help_outline'"
-  (confirm)="confirmAction()" (cancel)="closeModal()" />
+  <app-confirmation-modal
+    [title]="config.title"
+    [message]="config.message"
+    [confirmText]="config.confirmText"
+    [cancelText]="config.cancelText"
+    [variant]="config.variant ?? 'primary'"
+    [icon]="config.icon ?? 'help_outline'"
+    [confirmLoading]="isSubmitting()"
+    (confirm)="confirmAction()"
+    (cancel)="closeModal()"
+  />
 }
 
 <!-- Mark as Found Modal -->
 @if (showMarkAsFoundModal()) {
-<app-founded-popup [caseId]="markAsFoundCaseId()!" (confirmed)="handleMarkAsFoundConfirm($event)"
-  (cancel)="closeMarkAsFoundModal()" />
+  <app-founded-popup
+    [caseId]="markAsFoundCaseId()!"
+    [isSubmitting]="isSubmitting()"
+    [contextKey]="PROFILE_CACHE_KEYS.DRAFT_POPUP_MARK_AS_FOUND + '_' + markAsFoundCaseId()"
+    (confirmed)="handleMarkAsFoundConfirm($event)"
+    (cancel)="closeMarkAsFoundModal()"
+  />
 }

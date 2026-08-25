@@ -8,7 +8,7 @@ import { CaseType } from '../../../../shared/enums/case-type';
 import { Gender } from '../../../../shared/enums/gender';
 import { environment } from '../../../../../environments/environment';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
-import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
+import { CaseSkeletonGridComponent } from '../../../../shared/components/skeletons/case-skeleton-grid/case-skeleton-grid.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { PaginationComponent } from '../../../../shared/components/cases-components/case-pagination/case-pagination.component';
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
@@ -17,7 +17,7 @@ import { CaseStatus } from '../../../../shared/enums/case-status';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
 import { FoundedHeaderQueryDTO } from '../../models/requests/founded-header-query-dto';
 import { FoundPersonListItemDto } from '../../models/responses/found-person-list-item-dto';
-import { FoundedFilterState } from '../../../../shared/helper/cases-filter-state';
+import { FoundedFilterState } from '../../../../shared/helper/cases-helper/cases-filter-state';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { CacheService } from '../../../../core/cache/cache.service';
@@ -97,7 +97,7 @@ export class FoundedListComponent implements OnInit {
     if (cachedState) {
       this.filterState.restoreState(cachedState.filter);
     }
-    
+
     this.setupLoadPipeline();
     this.load();
   }

@@ -6,9 +6,8 @@ import { RouterModule, Router } from '@angular/router';
 import { CaseListItemResponse } from '../../../../core/models/cases.model';
 import { getAgeCategory } from '../../../helper/age-category.helper';
 
-import { GenderBadgeDirective } from '../../../directives/gender-badge-directive';
-import { AgeBadgeDirective } from '../../../directives/age-badge-directive';
-import { CaseTypeBadgeDirective } from '../../../directives/case-type-badge-directive';
+import { AgeBadgeDirective } from '../../../directives/age-badge.directive';
+import { CaseTypeBadgeDirective } from '../../../directives/case-type-badge.directive';
 import { CardComponent } from '../../card/card';
 import { ButtonComponent } from '../../button/button';
 
@@ -91,7 +90,7 @@ export class CaseCardComponent {
     if (this.imageError() || !item.mainPhoto) {
       return this.fallbackImage;
     }
-    return `${this.baseUrl}${item.mainPhoto}`;
+    return `${environment.filesBaseUrl}/${item.mainPhoto}`;
   });
 
   readonly fullName = computed(() => {
@@ -160,7 +159,7 @@ export class CaseCardComponent {
   readonly publisherImageSrc = computed(() => {
     const u = this.caseItem().user;
     if (u?.profileImage && !this.publisherImageError()) {
-      return `${this.baseUrl}${u.profileImage}`;
+      return `${environment.filesBaseUrl}/${u.profileImage}`;
     }
     return null;
   });

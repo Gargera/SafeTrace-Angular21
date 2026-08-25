@@ -38,16 +38,6 @@
           [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات طويلة المدى'"
           [message]="hasActiveFilters() ? 'لم نتمكن من العثور على حالات تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم إضافة أي حالات طويلة المدى حتى الآن.'"
         >
-          @if (hasActiveFilters()) {
-            <app-button
-              emptyActions
-              variant="outline"
-              size="md"
-              (click)="resetFilters()"
-            >
-              إلغاء تصفية البحث
-            </app-button>
-          }
         </app-empty-state>
       }
 
@@ -69,6 +59,7 @@
         <!-- Pagination -->
         <app-pagination
           [currentPage]="currentPage()"
+          [loading]="loading()"
           [totalPages]="totalPages()"
           [totalItems]="totalItems()"
           [pageSize]="pageSize()"

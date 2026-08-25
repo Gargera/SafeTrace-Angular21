@@ -14,9 +14,9 @@ import { HeaderComponent } from '../../../../shared/components/header/header.com
 import { CaseFiltersComponent } from '../../../../shared/components/cases-components/case-filters/case-filters.component';
 import { PaginationComponent } from '../../../../shared/components/cases-components/case-pagination/case-pagination.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
-import { CaseSkeletonGridComponent } from '../../../../shared/components/cases-components/case-skeleton-grid/case-skeleton-grid.component';
+import { CaseSkeletonGridComponent } from '../../../../shared/components/skeletons/case-skeleton-grid/case-skeleton-grid.component';
 import { CaseCardComponent } from '../../../../shared/components/cases-components/case-card/case-card.component';
-import { CasesFilterState } from '../../../../shared/helper/cases-filter-state';
+import { CasesFilterState } from '../../../../shared/helper/cases-helper/cases-filter-state';
 import { SnackbarService } from '../../../../shared/services/toast.service';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { CaseType } from '../../../../shared/enums/case-type';
@@ -40,7 +40,6 @@ import { ButtonComponent } from '../../../../shared/components/button/button';
     CaseSkeletonGridComponent,
     EmptyStateComponent,
     CaseCardComponent,
-    ButtonComponent,
   ],
   templateUrl: './long-term-list.html',
   styleUrls: ['./long-term-list.css'],
@@ -108,7 +107,7 @@ export class LongTermList implements OnInit {
     if (cachedState) {
       this.filterState.restoreState(cachedState.filter);
     }
-    
+
     this.setupFetchPipeline();
     this.fetchCases();
   }

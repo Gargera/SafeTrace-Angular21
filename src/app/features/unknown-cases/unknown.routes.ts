@@ -2,11 +2,11 @@ import { Routes } from '@angular/router';
 import { UnknownList } from './pages/unknown-list/unknown-list';
 import { permissionGuard } from '../../core/guards/permission.guard';
 import { Permissions } from '../../core/constants/Permissions';
-import { authGuard } from '../../core/guards/auth-guard';
+import { authGuard } from '../../core/guards/auth.guard';
 
 export const UNKNOWN_ROUTES: Routes = [
-  { 
-    path: '', 
+  {
+    path: '',
     title: 'الأشخاص المجهولين | لقاء',
     component: UnknownList
   },
@@ -26,15 +26,15 @@ export const UNKNOWN_ROUTES: Routes = [
       import('./pages/unknown-update/unknown-update')
         .then(c => c.UnknownUpdate)
   },
-        {
-  path: 'my/:id',
-  title: 'تفاصيل حالتي | لقاء',
-  canActivate: [authGuard],
-  data: { mode: 'my-case' },
-  loadComponent: () =>
-    import('./pages/unknown-details/unknown-details')
-      .then(c => c.UnknownDetails)
-},
+  {
+    path: 'my/:id',
+    title: 'تفاصيل حالتي | لقاء',
+    canActivate: [authGuard],
+    data: { mode: 'my-case' },
+    loadComponent: () =>
+      import('./pages/unknown-details/unknown-details')
+        .then(c => c.UnknownDetails)
+  },
   {
     path: ':id',
     title: 'تفاصيل الحالة | لقاء',

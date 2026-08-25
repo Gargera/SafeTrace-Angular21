@@ -1,21 +1,21 @@
 import { Routes } from '@angular/router';
 import { ProfileView } from './profile-view';
-import { authGuard } from '../../core/guards/auth-guard';
+import { authGuard } from '../../core/guards/auth.guard';
 
 export const PROFILE_ROUTES: Routes = [
-  { 
-    path: '', 
+  {
+    path: '',
     canActivate: [authGuard],
     component: ProfileView
   },
   {
-    path:'chats',
+    path: 'chats',
     canActivate: [authGuard],
-    loadComponent: () => 
+    loadComponent: () =>
       import('../chat/pages/my-chats/my-chats').then((m) => m.MyChats),
   },
   {
-    path:'chat/:chatId',
+    path: 'chat/:chatId',
     canActivate: [authGuard],
     loadComponent: () =>
       import('../chat/pages/chat-window/chat-window').then((m) => m.ChatWindow),

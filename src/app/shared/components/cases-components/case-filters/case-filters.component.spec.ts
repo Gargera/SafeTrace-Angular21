@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { CaseFiltersComponent } from './case-filters.component';
 
@@ -9,6 +9,7 @@ describe('CaseFiltersComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CaseFiltersComponent],
+
     }).compileComponents();
 
     fixture = TestBed.createComponent(CaseFiltersComponent);
@@ -20,7 +21,7 @@ describe('CaseFiltersComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('emits a sanitized filter request once after initialization', fakeAsync(() => {
+  it('emits a sanitized filter request when form changes', async () => {
     const emitted: Array<{
       fullName: string | null;
       ageSort: number | null;
@@ -36,11 +37,12 @@ describe('CaseFiltersComponent', () => {
     });
 
     fixture.detectChanges();
-    tick();
+    component.filterForm.patchValue({ fullName: 'أحمد' });
+    await new Promise(resolve => setTimeout(resolve, 350));
 
     expect(emitted.length).toBe(1);
-    expect(emitted[0].fullName).toBeNull();
+    expect(emitted[0].fullName).toBe('أحمد');
     expect(emitted[0].ageSort).toBeNull();
     expect(emitted[0].dateSort).toBeNull();
-  }));
+  });
 });

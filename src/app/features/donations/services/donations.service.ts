@@ -2,8 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { PaginationResponse } from '../../../shared/models/responses/pagination-response.model';
-import { ApiResponse } from '../../../shared/models/responses/api-response.model';
+import { PaginationResponse } from '../../../shared/models/pagination-response.model';
+import { ApiResponse } from '../../../shared/models/api-response.model';
 import { ApiService } from '../../../shared/services/api.service';
 
 import { CreateDonationDto } from '../models/requests/create-donation.dto';

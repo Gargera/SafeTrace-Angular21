@@ -170,7 +170,7 @@ export interface UpdateCaseBaseRequest extends CaseUpsertBaseRequest {
 
   newPhotos: File[] | null;
   deletedPhotoIds: number[] | null;
-  primaryPhotoId: number | null;
+  isExistingVideoDeleted: boolean;
 }
 
 export interface CasesFilterRequest {

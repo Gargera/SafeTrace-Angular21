@@ -4,21 +4,21 @@ import { CommonModule } from '@angular/common';
 import { DonationService } from '../../services/donations.service';
 import { DonationUserListDto } from '../../models/responses/donation-user-list.dto';
 
-import { TruncatePipe } from '../../../../shared/pipes/truncate-pipe';
+import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
 import { PaymentStatusBadgeDirective } from '../../../../shared/directives/payment-status-badge.directive';
 import { ButtonComponent } from '../../../../shared/components/button/button';
-import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { TableSkeletonComponent } from '../../../../shared/components/skeletons/table-skeleton/table-skeleton.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-my-donations',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     TruncatePipe,
     PaymentStatusBadgeDirective,
     ButtonComponent,
-    LoadingSpinnerComponent,
+    TableSkeletonComponent,
     EmptyStateComponent
   ],
   templateUrl: './my-donations.component.html',
@@ -40,10 +40,10 @@ export class MyDonationsComponent implements OnInit {
     this.load();
   }
 
-  onScroll(event: Event): void {
-    const target = event.target as HTMLElement;
-    const scrollPosition = target.scrollTop + target.clientHeight;
-    const documentHeight = target.scrollHeight;
+  @HostListener('window:scroll')
+  onScroll(): void {
+    const scrollPosition = window.innerHeight + window.scrollY;
+    const documentHeight = document.documentElement.scrollHeight;
     const nearBottom = scrollPosition >= documentHeight - 220;
 
     if (nearBottom && this.hasMore() && !this.loading() && !this.loadingMore()) {

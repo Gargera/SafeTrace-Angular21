@@ -8,17 +8,17 @@ import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/services/auth.service';
 import { HeaderComponent } from '../../../../shared/components/header/header.component';
 
-import { GenderBadgeDirective } from '../../../../shared/directives/gender-badge-directive';
-import { CaseStatusBadgeDirective } from '../../../../shared/directives/case-status-badge-directive';
-import { CaseTypeBadgeDirective } from '../../../../shared/directives/case-type-badge-directive';
-import { AgeBadgeDirective } from '../../../../shared/directives/age-badge-directive';
+import { GenderBadgeDirective } from '../../../../shared/directives/gender-badge.directive';
+import { CaseStatusBadgeDirective } from '../../../../shared/directives/case-status-badge.directive';
+import { CaseTypeBadgeDirective } from '../../../../shared/directives/case-type-badge.directive';
+import { AgeBadgeDirective } from '../../../../shared/directives/age-badge.directive';
 
 import { AgeCategories } from '../../../../shared/enums/age-categories';
 import { FileType } from '../../../../shared/enums/file-type';
 import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { SnackbarService } from '../../../../shared/services/toast.service';
-import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup';
+import { FoundedPopupComponent } from '../../../../shared/components/cases-components/founded-popup/founded-popup.component';
 import { CasePhotoResponse, FoundPersonInfoRequest } from '../../../../core/models/cases.model';
 import { CaseStatus } from '../../../../shared/enums/case-status';
 import { ButtonComponent } from '../../../../shared/components/button/button';
@@ -27,10 +27,22 @@ import { UnknownCaseDetailResponse } from '../../models/response/UnknownCaseDeta
 import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
 import { Permissions } from '../../../../core/constants/Permissions';
 
-import { RejectCasePopupComponent } from '../../../../shared/components/cases-components/reject-case-popup/reject-case-popup';
-import { RejectionReasonCardComponent } from '../../../../shared/components/cases-components/rejection-reason-card/rejection-reason-card';
+import { RejectCasePopupComponent } from '../../../../shared/components/cases-components/reject-case-popup/reject-case-popup.component';
+import { RejectionReasonCardComponent } from '../../../../shared/components/cases-components/rejection-reason-card/rejection-reason-card.component';
 import { extractErrorMessage } from '../../../../shared/helper/error.helper';
 import { ViewProfilePopup } from '../../../../shared/components/view-profile-popup/view-profile-popup';
+import { CaseDetailsSkeletonComponent } from '../../../../shared/components/skeletons/case-details-skeleton/case-details-skeleton.component';
+
+/**
+ * The backend DTO includes a `video` field (a plain path string) that is
+ * separate from `photos`. The generated `UnknownCaseDetailResponse` model
+ * may or may not declare it explicitly, so we widen the type locally
+ * instead of touching the shared model file.
+ */
+type UnknownCaseDetailWithVideo = UnknownCaseDetailResponse & { video?: string | null };
+
+/** Sentinel id used for the synthetic video media item, since the backend doesn't provide one. */
+const VIDEO_MEDIA_ID = -1;
 
 @Component({
   selector: 'app-unknown-details',
@@ -44,6 +56,7 @@ import { ViewProfilePopup } from '../../../../shared/components/view-profile-pop
     AgeBadgeDirective,
     ConfirmationModalComponent,
     FoundedPopupComponent,
+    CaseDetailsSkeletonComponent,
     HasPermissionDirective,
     ButtonComponent,
     RejectCasePopupComponent,
@@ -83,12 +96,14 @@ export class UnknownDetails implements OnInit {
   isFounding = signal(false);
 
   showApproveConfirmation = signal(false);
+  isApproving = signal(false);
   showRejectConfirmation = signal(false);
   isRejecting = signal(false);
   rejectApiError = signal<string | null>(null);
   showPermanentDeleteConfirmation = signal(false);
+  isPermanentDeleting = signal(false);
 
-  caseDetails = signal<UnknownCaseDetailResponse | null>(null);
+  caseDetails = signal<UnknownCaseDetailWithVideo | null>(null);
   loading = signal(true);
 
   readonly isOwner = computed(() => {
@@ -107,6 +122,35 @@ export class UnknownDetails implements OnInit {
     return false;
   });
 
+  /**
+   * Unified media collection combining `photos` (images) with the single
+   * `video` path returned separately by the backend. The video is wrapped
+   * into a `CasePhotoResponse`-shaped object so the rest of the component
+   * (and the existing HTML) can treat all media uniformly.
+   * Order: all photos first, then the video appended at the end
+   * (Image → Image → Video ...).
+   */
+  readonly mediaList = computed<CasePhotoResponse[]>(() => {
+    const details = this.caseDetails();
+    if (!details) return [];
+
+    const photos: CasePhotoResponse[] = details.photos ?? [];
+    const media: CasePhotoResponse[] = [...photos];
+
+    if (details.video) {
+      const videoMedia: CasePhotoResponse = {
+        id: VIDEO_MEDIA_ID,
+        imagePath: details.video,
+        isPrimary: false,
+        type: FileType.Video,
+      } as CasePhotoResponse;
+
+      media.push(videoMedia);
+    }
+
+    return media;
+  });
+
   selectedMedia = signal<CasePhotoResponse | null>(null);
 
   // Lightbox
@@ -115,24 +159,7 @@ export class UnknownDetails implements OnInit {
   isAdminPage = signal(false);
   isMyCasePage = signal(false);
 
-  constructor() {
-    this.destroyRef.onDestroy(() => {
-      const id = this.caseDetails()?.id;
-      if (id) {
-        this.cacheService.set(
-          `UnknownDetails_Modals_${id}`,
-          {
-            showDelete: this.showDeleteConfirmation(),
-            showFounded: this.showFoundedPopup(),
-            showApprove: this.showApproveConfirmation(),
-            showReject: this.showRejectConfirmation(),
-            showPermanentDelete: this.showPermanentDeleteConfirmation()
-          },
-          300000 // 5 minutes
-        );
-      }
-    });
-  }
+  constructor() { }
 
   ngOnInit(): void {
     this.isAdminPage.set(this.route.snapshot.data['mode'] === 'dashboard');
@@ -170,22 +197,19 @@ export class UnknownDetails implements OnInit {
           if (apiRes.success && apiRes.data) {
             this.caseDetails.set(apiRes.data);
 
-            const cachedModals = this.cacheService.get<any>(`UnknownDetails_Modals_${apiRes.data.id}`);
-            if (cachedModals) {
-              this.showDeleteConfirmation.set(cachedModals.showDelete || false);
-              this.showFoundedPopup.set(cachedModals.showFounded || false);
-              this.showApproveConfirmation.set(cachedModals.showApprove || false);
-              this.showRejectConfirmation.set(cachedModals.showReject || false);
-              this.showPermanentDeleteConfirmation.set(cachedModals.showPermanentDelete || false);
-            }
+            const hasReject = this.cacheService.has(`RejectPopup_Unknown_${apiRes.data.id}`);
+            const hasFounded = this.cacheService.has(`FoundedPopup_Unknown_${apiRes.data.id}`);
 
-            if (apiRes.data.photos?.length) {
-              const primary =
-                apiRes.data.photos.find((x) => x.isPrimary) ?? apiRes.data.photos[0];
+            if (hasReject) this.showRejectConfirmation.set(true);
+            if (hasFounded) this.showFoundedPopup.set(true);
+
+            const media = this.mediaList();
+            if (media.length) {
+              const primary = media.find((x) => x.isPrimary) ?? media[0];
 
               this.selectedMedia.set(primary);
               this.currentIndex.set(
-                apiRes.data.photos.findIndex((x) => x.id === primary.id),
+                media.findIndex((x) => x.id === primary.id && x.type === primary.type),
               );
             }
           }
@@ -203,19 +227,18 @@ export class UnknownDetails implements OnInit {
       return path;
     }
 
-    return `${this.apiUrl}${path}`;
+    return `${environment.filesBaseUrl}/${path}`;
   }
 
   changeMedia(media: CasePhotoResponse): void {
     this.selectedMedia.set(media);
-    const index =
-      this.caseDetails()?.photos.findIndex((x) => x.id === media.id) ?? 0;
-    this.currentIndex.set(index);
+    const index = this.mediaList().findIndex((x) => x.id === media.id && x.type === media.type);
+    this.currentIndex.set(index >= 0 ? index : 0);
   }
 
   openLightbox(index: number): void {
     this.currentIndex.set(index);
-    const media = this.caseDetails()?.photos[index];
+    const media = this.mediaList()[index];
 
     if (media) {
       this.selectedMedia.set(media);
@@ -228,29 +251,29 @@ export class UnknownDetails implements OnInit {
   }
 
   previousMedia(): void {
-    const photos = this.caseDetails()?.photos;
-    if (!photos?.length) return;
+    const media = this.mediaList();
+    if (!media.length) return;
 
     let index = this.currentIndex() - 1;
     if (index < 0) {
-      index = photos.length - 1;
+      index = media.length - 1;
     }
 
     this.currentIndex.set(index);
-    this.selectedMedia.set(photos[index]);
+    this.selectedMedia.set(media[index]);
   }
 
   nextMedia(): void {
-    const photos = this.caseDetails()?.photos;
-    if (!photos?.length) return;
+    const media = this.mediaList();
+    if (!media.length) return;
 
     let index = this.currentIndex() + 1;
-    if (index >= photos.length) {
+    if (index >= media.length) {
       index = 0;
     }
 
     this.currentIndex.set(index);
-    this.selectedMedia.set(photos[index]);
+    this.selectedMedia.set(media[index]);
   }
 
   openFoundedPopup(): void {
@@ -269,8 +292,7 @@ export class UnknownDetails implements OnInit {
 
     this.isFounding.set(true);
 
-    this.UnknownCaseService
-      .markAsFound(id, data)
+    this.UnknownCaseService.markAsFound(id, data)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
@@ -309,6 +331,11 @@ export class UnknownDetails implements OnInit {
   }
 
   deleteCase(): void {
+    if (this.caseDetails()?.status === CaseStatus.Found) {
+      this.snackbar.error('لا يمكن حذف حالة تم العثور عليها');
+      return;
+    }
+
     this.showDeleteConfirmation.set(true);
   }
 
@@ -321,25 +348,31 @@ export class UnknownDetails implements OnInit {
     const id = this.caseDetails()?.id;
     if (!id) return;
 
+    if (this.caseDetails()?.status === CaseStatus.Found) {
+      this.snackbar.error('لا يمكن حذف حالة تم العثور عليها');
+      this.showDeleteConfirmation.set(false);
+      return;
+    }
+
     this.deleting.set(true);
 
-    this.UnknownCaseService
-      .deleteCase(id)
+    this.UnknownCaseService.deleteCase(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
           this.deleting.set(false);
-          this.showDeleteConfirmation.set(false);
 
           if (res.success) {
+            this.showDeleteConfirmation.set(false);
             this.snackbar.success('تم حذف الحالة بنجاح');
             this.router.navigate(['/unknown']);
+          } else {
+            this.snackbar.error(res.message || 'حدث خطأ أثناء حذف الحالة');
           }
         },
 
         error: (err: unknown) => {
           this.deleting.set(false);
-          this.showDeleteConfirmation.set(false);
           const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء حذف الحالة');
           this.snackbar.error(errorMessage);
         },
@@ -383,22 +416,26 @@ export class UnknownDetails implements OnInit {
   }
 
   confirmApprove(): void {
+    if (this.isApproving()) return;
     const id = this.caseDetails()?.id;
     if (!id) return;
 
-    this.UnknownCaseService
-      .approveCase(id)
+    this.isApproving.set(true);
+    this.UnknownCaseService.approveCase(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          this.showApproveConfirmation.set(false);
+          this.isApproving.set(false);
           if (res.success) {
+            this.showApproveConfirmation.set(false);
             this.snackbar.success('تم قبول الحالة بنجاح');
             this.refreshCaseDetails(id);
+          } else {
+            this.snackbar.error(res.message || 'حدث خطأ أثناء قبول الحالة');
           }
         },
         error: (err: unknown) => {
-          this.showApproveConfirmation.set(false);
+          this.isApproving.set(false);
           const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء قبول الحالة');
           this.snackbar.error(errorMessage);
         },
@@ -423,8 +460,7 @@ export class UnknownDetails implements OnInit {
     this.isRejecting.set(true);
     this.rejectApiError.set(null);
 
-    this.UnknownCaseService
-      .rejectCase(id, reason)
+    this.UnknownCaseService.rejectCase(id, reason)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
@@ -448,6 +484,11 @@ export class UnknownDetails implements OnInit {
   }
 
   openPermanentDeleteConfirmation(): void {
+    if (this.caseDetails()?.status === CaseStatus.Found) {
+      this.snackbar.error('لا يمكن حذف حالة تم العثور عليها');
+      return;
+    }
+
     this.showPermanentDeleteConfirmation.set(true);
   }
 
@@ -456,22 +497,26 @@ export class UnknownDetails implements OnInit {
   }
 
   confirmPermanentDelete(): void {
+    if (this.isPermanentDeleting()) return;
     const id = this.caseDetails()?.id;
     if (!id) return;
 
-    this.UnknownCaseService
-      .permanentDelete(id)
+    this.isPermanentDeleting.set(true);
+    this.UnknownCaseService.permanentDelete(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          this.showPermanentDeleteConfirmation.set(false);
+          this.isPermanentDeleting.set(false);
           if (res.success) {
+            this.showPermanentDeleteConfirmation.set(false);
             this.snackbar.success('تم حذف الحالة نهائياً');
             this.router.navigate(['/admin/cases-management']);
+          } else {
+            this.snackbar.error(res.message || 'حدث خطأ أثناء الحذف النهائي');
           }
         },
         error: (err: unknown) => {
-          this.showPermanentDeleteConfirmation.set(false);
+          this.isPermanentDeleting.set(false);
           const errorMessage = extractErrorMessage(err, 'حدث خطأ أثناء الحذف النهائي');
           this.snackbar.error(errorMessage);
         },
@@ -491,7 +536,7 @@ export class UnknownDetails implements OnInit {
       },
     });
   }
-  
+
   startChat(id: number): void {
     if (!this.authService.isLoggedIn()) {
       this.router.navigate(['/auth/login'], { queryParams: { returnUrl: this.router.url } });

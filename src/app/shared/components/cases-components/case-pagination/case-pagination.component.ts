@@ -1,16 +1,18 @@
 import {
   Component,
   computed,
+  effect,
   input,
   output,
+  signal,
 } from '@angular/core';
 
+import { ButtonComponent } from '../../button/button';
 @Component({
   selector: 'app-pagination',
   standalone: true,
-  imports: [],
+  imports: [ButtonComponent],
   templateUrl: './case-pagination.component.html',
-  styleUrls: ['./case-pagination.component.css'],
 })
 
 export class PaginationComponent {
@@ -19,8 +21,16 @@ export class PaginationComponent {
 
   totalItems = input<number | null>(null);
   pageSize = input<number | null>(null);
+  loading = input(false);
+  pendingPage = signal<number | null>(null);
 
   pageChange = output<number>();
+
+  constructor() {
+    effect(() => {
+      if (!this.loading()) this.pendingPage.set(null);
+    });
+  }
 
   readonly pageNumbers = computed(() => {
     const current = this.currentPage();
@@ -69,32 +79,28 @@ export class PaginationComponent {
   });
 
   firstPage(): void {
-    if (this.currentPage() !== 1) {
-      this.pageChange.emit(1);
-    }
+    this.requestPage(1);
   }
 
   lastPage(): void {
-    if (this.currentPage() !== this.totalPages()) {
-      this.pageChange.emit(this.totalPages());
-    }
+    this.requestPage(this.totalPages());
   }
 
   nextPage(): void {
-    if (this.currentPage() < this.totalPages()) {
-      this.pageChange.emit(this.currentPage() + 1);
-    }
+    this.requestPage(this.currentPage() + 1);
   }
 
   prevPage(): void {
-    if (this.currentPage() > 1) {
-      this.pageChange.emit(this.currentPage() - 1);
-    }
+    this.requestPage(this.currentPage() - 1);
   }
 
   goToPage(page: number | string): void {
-    if (typeof page === 'number' && page !== this.currentPage()) {
-      this.pageChange.emit(page);
-    }
+    if (typeof page === 'number') this.requestPage(page);
+  }
+
+  private requestPage(page: number): void {
+    if (this.loading() || page < 1 || page > this.totalPages() || page === this.currentPage()) return;
+    this.pendingPage.set(page);
+    this.pageChange.emit(page);
   }
 }

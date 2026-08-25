@@ -1,0 +1,133 @@
+<div dir="rtl" class="mx-auto max-w-190 px-4 pb-16 pt-6">
+  <!-- Single app-card containing the entire page -->
+  <app-card extraClass="overflow-hidden rounded-2xl border border-outline-variant/30 bg-white shadow-sm">
+    <!-- 1. Header -->
+    <div class="px-6 md:px-8 pt-6 md:pt-8">
+      <app-header [title]="title()" [subtitle]="subtitle()" [showBackButton]="true" (backAction)="backAction.emit()">
+      </app-header>
+    </div>
+
+    <!-- Body Container (Spacing & Padding) -->
+    <div class="space-y-8 p-6 md:p-8">
+      <!-- 2. Refined Modern Stepper -->
+      <div class="flex items-center justify-between">
+        @for (s of steps(); track s.num; let i = $index) {
+        <!-- Step Item -->
+        <div class="flex flex-col items-center">
+          <!-- Outer Step Card (56px x 56px) -->
+          <div
+            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border bg-white shadow-2xs transition-all duration-200"
+            [ngClass]="{
+                'border-secondary bg-secondary/5 shadow-xs': currentStep() === s.num,
+                'border-outline-variant/30': currentStep() !== s.num,
+              }">
+            <!-- Inner Circle (32px x 32px) -->
+            <div
+              class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors duration-200"
+              [ngClass]="{
+                  'bg-secondary text-on-secondary shadow-2xs': currentStep() >= s.num,
+                  'bg-surface-container text-on-surface-variant/70': currentStep() < s.num,
+                }">
+              @if (currentStep() > s.num) {
+              <span class="material-symbols-outlined text-sm">check</span>
+              } @else {
+              {{ s.num }}
+              }
+            </div>
+          </div>
+
+          <!-- Step Label (11px) -->
+          <div class="mt-2 text-center text-[11px] font-medium leading-tight transition-colors duration-200" [ngClass]="{
+                'text-secondary font-semibold': currentStep() === s.num,
+                'text-on-surface-variant/70': currentStep() !== s.num,
+              }">
+            {{ s.label }}
+          </div>
+        </div>
+
+        <!-- Connector Line (2px Thin, 12px Spacing) -->
+        @if (i < steps().length - 1) { <div class="mb-5 mx-3 h-0.5 flex-1 rounded-full transition-colors duration-200"
+          [ngClass]="currentStep() > s.num ? 'bg-secondary' : 'bg-outline-variant/30'">
+      </div>
+      }
+      }
+    </div>
+
+    <!-- Divider between Stepper & Form -->
+    <div class="h-px w-full bg-outline-variant/20 mb-6"></div>
+
+    <!-- 3. Form Content (Projected via ng-content) -->
+    <div>
+      @if(stepHeader()) {
+      <div class="mb-4 rounded-2xl border border-secondary/15 bg-secondary/5 p-5">
+        <div class="flex items-center gap-3">
+          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-on-secondary shadow-sm">
+            <span class="material-symbols-outlined text-2xl">
+              {{ stepHeader()?.icon }}
+            </span>
+          </div>
+          <div class="flex-1">
+            <h2 class="text-lg font-bold text-on-surface">
+              {{ stepHeader()?.title }}
+            </h2>
+            <p class="mt-1 text-sm text-on-surface-variant">
+              {{ stepHeader()?.description }}
+            </p>
+          </div>
+        </div>
+      </div>
+      }
+      <ng-content></ng-content>
+    </div>
+
+    <!-- Admin Review Note / Ending Message -->
+    @if (endingMessage() && currentStep() === steps().length) {
+    <div
+      class="mt-6 flex items-start gap-3 rounded-2xl border border-secondary/20 bg-surface-container-low p-4 text-xs font-medium text-on-secondary-fixed-variant leading-relaxed shadow-2xs">
+      <span class="material-symbols-outlined text-secondary">pending_actions</span>
+      <span>{{ endingMessage() }}</span>
+    </div>
+    }
+
+    <!-- Form Global Error -->
+    @if (errorMsg()) {
+    <div
+      class="mt-4 flex items-center gap-2.5 rounded-2xl border border-error/30 bg-error-container/30 p-4 text-xs font-medium text-on-error-container shadow-2xs">
+      <span class="material-symbols-outlined text-lg">error</span>
+      {{ errorMsg() }}
+    </div>
+    }
+</div>
+
+<!-- Divider before Footer -->
+<div class="h-px w-full bg-outline-variant/20"></div>
+
+<!-- 4. Footer Buttons -->
+<div class="flex items-center justify-between bg-surface-bright/50 px-6 py-4.5 md:px-8">
+  <app-button variant="secondary" type="button" [extraClass]="currentStep() === 1 ? 'invisible' : ''"
+    (onClick)="prevStep.emit()">
+    <span class="material-symbols-outlined text-lg">arrow_forward</span> السابق
+  </app-button>
+
+  <div class="flex gap-2">
+    @for (s of steps(); track s.num) {
+    <div class="h-2.5 w-2.5 rounded-full transition-all duration-300" [ngClass]="
+              currentStep() === s.num
+                ? 'bg-secondary ring-2 ring-secondary/30 scale-110'
+                : 'bg-outline-variant/40'
+            "></div>
+    }
+  </div>
+
+  @if (currentStep() < steps().length) { <app-button variant="primary" type="button" (onClick)="nextStep.emit()">
+    التالي <span class="material-symbols-outlined text-lg">arrow_back</span>
+    </app-button>
+    } @else {
+    <app-button variant="primary" type="button" [icon]="submitIcon()" [disabled]="isSubmitting()"
+      [loading]="isSubmitting()" (onClick)="submitForm.emit()">
+      <span>{{ submitLabel() }}</span>
+    </app-button>
+    }
+</div>
+</app-card>
+</div>
