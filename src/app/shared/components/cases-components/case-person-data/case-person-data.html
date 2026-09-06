@@ -2,39 +2,62 @@
   <!-- Name Fields -->
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
     <div>
-      <app-form-field [label]="isNameRequired() ? 'الاسم الأول *' : 'الاسم الأول'" formControlName="fName" type="text" placeholder="مثال: أحمد"
-        [extraClass]="isInvalid()('fName') ? 'border-error' : ''"></app-form-field>
+      <app-form-field 
+        [label]="isNameRequired() ? 'الاسم الأول *' : 'الاسم الأول'" 
+        formControlName="fName" 
+        type="text" 
+        placeholder="مثال: أحمد"
+        [extraClass]="isInvalid()('fName') ? 'border-error' : ''">
+      </app-form-field>
       @if (isInvalid()('fName')) {
-      <p class="mt-1 flex items-center gap-1 text-xs text-error">
-        {{ getError()('fName') }}
-      </p>
+        <p class="mt-1 flex items-center gap-1 text-xs text-error">
+          {{ getError()('fName') }}
+        </p>
       }
     </div>
+
     <div>
-      <app-form-field label="اسم الأب" formControlName="sName" type="text" placeholder="مثال: محمد"
-        [extraClass]="isInvalid()('sName') ? 'border-error' : ''"></app-form-field>
+      <app-form-field 
+        label="اسم الأب" 
+        formControlName="sName" 
+        type="text" 
+        placeholder="مثال: محمد"
+        [extraClass]="isInvalid()('sName') ? 'border-error' : ''">
+      </app-form-field>
       @if (isInvalid()('sName')) {
-      <p class="mt-1 flex items-center gap-1 text-xs text-error">
-        {{ getError()('sName') }}
-      </p>
+        <p class="mt-1 flex items-center gap-1 text-xs text-error">
+          {{ getError()('sName') }}
+        </p>
       }
     </div>
+
     <div>
-      <app-form-field label="اسم الجد" formControlName="tName" type="text" placeholder="مثال: محمود"
-        [extraClass]="isInvalid()('tName') ? 'border-error' : ''"></app-form-field>
+      <app-form-field 
+        label="اسم الجد" 
+        formControlName="tName" 
+        type="text" 
+        placeholder="مثال: محمود"
+        [extraClass]="isInvalid()('tName') ? 'border-error' : ''">
+      </app-form-field>
       @if (isInvalid()('tName')) {
-      <p class="mt-1 flex items-center gap-1 text-xs text-error">
-        {{ getError()('tName') }}
-      </p>
+        <p class="mt-1 flex items-center gap-1 text-xs text-error">
+          {{ getError()('tName') }}
+        </p>
       }
     </div>
+
     <div>
-      <app-form-field [label]="isNameRequired() ? 'اسم العائلة *' : 'اسم العائلة'" formControlName="lName" type="text" placeholder="مثال: السعيد"
-        [extraClass]="isInvalid()('lName') ? 'border-error' : ''"></app-form-field>
+      <app-form-field 
+        [label]="isNameRequired() ? 'اسم العائلة *' : 'اسم العائلة'" 
+        formControlName="lName" 
+        type="text" 
+        placeholder="مثال: السعيد"
+        [extraClass]="isInvalid()('lName') ? 'border-error' : ''">
+      </app-form-field>
       @if (isInvalid()('lName')) {
-      <p class="mt-1 flex items-center gap-1 text-xs text-error">
-        {{ getError()('lName') }}
-      </p>
+        <p class="mt-1 flex items-center gap-1 text-xs text-error">
+          {{ getError()('lName') }}
+        </p>
       }
     </div>
   </div>
@@ -42,70 +65,92 @@
   <!-- Age & Gender Row -->
   <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
     <div>
-      <app-form-field label="العمر *" formControlName="age" type="number" min="1" max="120"
-        placeholder="أدخل العمر (مثال: 25)" [extraClass]="isInvalid()('age') ? 'border-error' : ''"></app-form-field>
+      <app-form-field 
+        label="العمر *" 
+        formControlName="age" 
+        type="number" 
+        min="1" 
+        max="120"
+        placeholder="أدخل العمر (مثال: 25)" 
+        [extraClass]="isInvalid()('age') ? 'border-error' : ''">
+      </app-form-field>
       @if (isInvalid()('age')) {
-      <p class="mt-1 flex items-center gap-1 text-xs text-error">
-        {{ getError()('age') }}
-      </p>
+        <p class="mt-1 flex items-center gap-1 text-xs text-error">
+          {{ getError()('age') }}
+        </p>
       }
     </div>
+
     <div>
-      <app-form-field label="الجنس *" type="select" formControlName="gender"
+      <app-form-field 
+        label="الجنس *" 
+        type="select" 
+        formControlName="gender"
         [extraClass]="isInvalid()('gender') ? 'border-error' : ''">
         <option value="" disabled>اختر الجنس</option>
         <option [value]="genders.Male">ذكر</option>
         <option [value]="genders.Female">أنثى</option>
       </app-form-field>
       @if (isInvalid()('gender')) {
-      <p class="mt-1 flex items-center gap-1 text-xs text-error">
-        {{ getError()('gender') }}
-      </p>
+        <p class="mt-1 flex items-center gap-1 text-xs text-error">
+          {{ getError()('gender') }}
+        </p>
       }
     </div>
   </div>
 
   <!-- Relation -->
   @if (showRelation()) {
-  <div class="mt-4">
-    <app-form-field label="صلة القرابة بك *" type="select" formControlName="relation"
-      [extraClass]="isInvalid()('relation') ? 'border-error' : ''">
-      <option value="" disabled>اختر صلة القرابة بالشخص المفقود</option>
-      @for (opt of relationOptions; track opt.value) {
-      <option [value]="opt.value">{{ opt.label }}</option>
+    <div class="mt-4">
+      <app-form-field 
+        label="صلة القرابة بك *" 
+        type="select" 
+        formControlName="relation"
+        [extraClass]="isInvalid()('relation') ? 'border-error' : ''">
+        <option value="" disabled>اختر صلة القرابة بالشخص المفقود</option>
+        @for (opt of relationOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </app-form-field>
+      @if (isInvalid()('relation')) {
+        <p class="mt-1 flex items-center gap-1 text-xs text-error">
+          {{ getError()('relation') }}
+        </p>
       }
-    </app-form-field>
-    @if (isInvalid()('relation')) {
-    <p class="mt-1 flex items-center gap-1 text-xs text-error">
-      {{ getError()('relation') }}
-    </p>
-    }
-  </div>
+    </div>
   }
 
   <!-- Communication Phone -->
   <div class="mt-4">
-    <app-form-field label="رقم هاتف للتواصل (اختياري)" formControlName="communicationPhone" type="tel"
+    <app-form-field 
+      label="رقم هاتف للتواصل (اختياري)" 
+      formControlName="communicationPhone" 
+      type="tel"
       placeholder="أدخل رقم هاتف للتواصل (مثال: 01012345678)"
-      [extraClass]="isInvalid()('communicationPhone') ? 'border-error' : ''"></app-form-field>
+      [extraClass]="isInvalid()('communicationPhone') ? 'border-error' : ''">
+    </app-form-field>
     @if (isInvalid()('communicationPhone')) {
-    <p class="mt-1 flex items-center gap-1 text-xs text-error">
-      {{ getError()('communicationPhone') }}
-    </p>
+      <p class="mt-1 flex items-center gap-1 text-xs text-error">
+        {{ getError()('communicationPhone') }}
+      </p>
     }
   </div>
 
   <!-- Description -->
   <div class="mt-4">
-    <app-form-field label="وصف الشخص" type="textarea" formControlName="description"
-      placeholder="أدخل أي تفاصيل تساعد في التعرف عليه (مثل العلامات المميزة، الطول، الملابس، أو الحالة الصحية)"></app-form-field>
+    <app-form-field 
+      label="وصف الشخص" 
+      type="textarea" 
+      formControlName="description"
+      placeholder="أدخل أي تفاصيل تساعد في التعرف عليه (مثل العلامات المميزة، الطول، الملابس، أو الحالة الصحية)">
+    </app-form-field>
     <div class="mt-1 text-left text-[11px] text-on-surface-variant/70">
       {{ form().get('description')?.value?.length ?? 0 }} / 2000
     </div>
     @if (isInvalid()('description')) {
-    <p class="mt-1 flex items-center gap-1 text-xs text-error">
-      {{ getError()('description') }}
-    </p>
+      <p class="mt-1 flex items-center gap-1 text-xs text-error">
+        {{ getError()('description') }}
+      </p>
     }
   </div>
 </div>

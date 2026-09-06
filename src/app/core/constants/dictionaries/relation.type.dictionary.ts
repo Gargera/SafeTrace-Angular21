@@ -5,6 +5,17 @@ export const RELATION_TYPE_TRANSLATIONS_AR: Record<RelationType, string> = {
   [RelationType.Mother]: 'الأم',
   [RelationType.Brother]: 'الأخ',
   [RelationType.Sister]: 'الأخت',
+  [RelationType.Son]: 'الابن',
+  [RelationType.Daughter]: 'الابنة',
+  [RelationType.Husband]: 'الزوج',
+  [RelationType.Wife]: 'الزوجة',
+  [RelationType.Grandfather]: 'الجد',
+  [RelationType.Grandmother]: 'الجدة',
+  [RelationType.Uncle]: 'العم / الخال',
+  [RelationType.Aunt]: 'العمة / الخالة',
+  [RelationType.Cousin]: 'ابن/ابنة العم أو الخال',
+  [RelationType.Nephew]: 'ابن الأخ / ابن الاخت',
+  [RelationType.Niece]: 'ابنة الأخ / ابنة الاخت',
   [RelationType.Friend]: 'صديق / زميل',
   [RelationType.Other]: 'صلة قرابة أخرى',
 };
@@ -14,9 +25,6 @@ export function getRelationTypeTranslationAr(relation?: RelationType | null): st
   return RELATION_TYPE_TRANSLATIONS_AR[relation] ?? '';
 }
 
-// FIX: RelationType is now a STRING enum (see relation-type.ts), so Object.values()
-// returns only the string values directly — no reverse-mapping filter needed
-// (that filter was only necessary for numeric enums).
 export const RELATION_TYPE_OPTIONS: { value: RelationType; label: string }[] =
   Object.values(RelationType).map((value) => ({
     value,
