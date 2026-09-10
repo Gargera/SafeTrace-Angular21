@@ -202,16 +202,16 @@ The supplied local settings match the backend HTTPS launch profile at `https://l
 
 ## 👥 Team Members
 
-| Name                 | GitHub                                                           |
-| -------------------- | ---------------------------------------------------------------- |
-| Esraa Taha           | [@Gargera](https://github.com/Gargera)                           |
-| Yousef               | [@yousef721](https://github.com/yousef721)                       |
-| Basma Allaa          | [@basmaallaa](https://github.com/basmaallaa)                     |
-| Mohamed Gamal Elemam | [@Mohamed-Gamal-Elemam](https://github.com/Mohamed-Gamal-Elemam) |
-| Amany Hisham         | [@amanyhisham](https://github.com/amanyhisham)                   |
-| Youssef              | [@ysfrk10](https://github.com/ysfrk10)                           |
-| Toqa Mahmoud         | [@ToqaMahmoud787](https://github.com/ToqaMahmoud787)             |
-| Mohamed Saeed        | [@Mohmaed-Saaed](https://github.com/Mohmaed-Saaed)               |
+| Name                   | GitHub                                                           |
+| ---------------------- | ---------------------------------------------------------------- |
+| Esraa Taha             | [@Gargera](https://github.com/Gargera)                           |
+| Yousef Abdullah        | [@yousef721](https://github.com/yousef721)                       |
+| Basma Allaa            | [@basmaallaa](https://github.com/basmaallaa)                     |
+| Mohamed Gamal Elemam   | [@Mohamed-Gamal-Elemam](https://github.com/Mohamed-Gamal-Elemam) |
+| Amany Hisham           | [@amanyhisham](https://github.com/amanyhisham)                   |
+| Yousef Farouk          | [@ysfrk10](https://github.com/ysfrk10)                           |
+| Toqa Mahmoud           | [@ToqaMahmoud787](https://github.com/ToqaMahmoud787)             |
+| Mohamed Saeed          | [@Mohmaed-Saaed](https://github.com/Mohmaed-Saaed)               |
 
 
 ---
