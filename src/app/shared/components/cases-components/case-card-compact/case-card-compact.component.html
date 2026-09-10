@@ -1,0 +1,99 @@
+<!-- case-card-compact.component.html -->
+<app-card
+  extraClass="flex flex-col sm:flex-row overflow-hidden rounded-xl border border-outline-variant/50 bg-surface-container-lowest shadow-sm hover:shadow-md hover:-translate-y-[2px] transition-all duration-200 cursor-pointer"
+  dir="rtl"
+  (click)="onCardClick()"
+>
+  <!-- Image Container -->
+  <div class="shrink-0 p-3 flex items-center justify-center bg-surface-container-lowest">
+    <div
+      class="relative w-20 h-20 sm:w-24 sm:h-24 overflow-hidden rounded-xl border border-outline-variant/30 shadow-sm bg-surface-container-high"
+    >
+      <img
+        [src]="imageSrc()"
+        [alt]="caseItem().fullName || 'صورة الحالة'"
+        class="h-full w-full object-cover"
+        loading="lazy"
+        decoding="async"
+        (error)="onImageError()"
+      />
+    </div>
+  </div>
+
+  <!-- Content & Information -->
+  <div class="flex-1 min-w-0 flex flex-col justify-between p-3">
+    <div>
+      <div class="flex items-start justify-between gap-2 pb-1.5">
+        <div class="min-w-0">
+          <h4
+            class="text-sm font-bold text-on-surface truncate leading-tight hover:text-primary transition-colors"
+          >
+            {{ caseItem().fullName || 'شخص غير معروف' }}
+          </h4>
+          @if (caseItem().caseCode) {
+            <span class="text-[10px] font-mono text-on-surface-variant opacity-75">
+              كود: {{ caseItem().caseCode }}
+            </span>
+          }
+        </div>
+        <span
+          class="text-[10px] text-on-surface-variant shrink-0 bg-surface-container/60 px-1.5 py-0.5 rounded-md border border-outline-variant/20 whitespace-nowrap"
+        >
+          {{ caseItem().createdAt | date: 'dd/MM/yyyy' : '' : 'ar' }}
+        </span>
+      </div>
+
+      <!-- Divider -->
+      <div class="border-t border-outline-variant/30 mt-2"></div>
+
+      <!-- Bottom Row: Badges on Right, Actions on Left -->
+      <div class="flex items-center justify-between gap-2 mt-2 pt-2">
+        <!-- Badges (Right) -->
+        <div class="flex items-center gap-1.5 text-xs">
+          <span [appCaseTypeBadgeDirective]="caseItem().caseType"></span>
+          <span [appCaseStatusBadgeDirective]="caseItem().status"></span>
+        </div>
+
+        <!-- Actions (Left) -->
+        <div class="flex items-center gap-1.5">
+          @if (actions().canView) {
+            <a [routerLink]="detailRoute()" (click)="$event.stopPropagation()">
+              <app-button
+                variant="primary"
+                extraClass="h-7 min-w-[70px] px-2 text-[11px] gap-1 inline-flex items-center justify-center rounded-lg"
+              >
+                <span class="material-symbols-outlined">visibility</span>
+                التفاصيل
+              </app-button>
+            </a>
+          }
+
+          @if (actions().canViewFoundDetails) {
+            <a [routerLink]="foundDetailRoute()" (click)="$event.stopPropagation()">
+              <app-button
+                variant="primary"
+                extraClass="h-7 min-w-[75px] px-2 text-[11px] gap-1 inline-flex items-center justify-center rounded-lg"
+              >
+                <span class="material-symbols-outlined">visibility</span>
+                تفاصيل العثور
+              </app-button>
+            </a>
+          }
+
+          @if (actions().canDelete) {
+            <div (click)="$event.stopPropagation()">
+              <app-button
+                variant="danger"
+                extraClass="h-7 min-w-[70px] px-2 text-[11px] gap-1 inline-flex items-center justify-center rounded-lg"
+                (onClick)="onDelete.emit(caseItem().id)"
+              >
+                <span class="material-symbols-outlined text-[14px]">delete</span>
+                حذف
+              </app-button>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</app-card>

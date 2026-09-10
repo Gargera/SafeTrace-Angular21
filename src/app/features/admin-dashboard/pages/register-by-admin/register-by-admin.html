@@ -1,0 +1,156 @@
+<header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-xl">
+  <div>
+    <h1 class="text-headline-lg font-bold text-primary">إضافة مستخدم جديد</h1>
+    <p class="text-body-md text-on-surface-variant mt-1">
+      إنشاء حساب جديد وتحديد الصلاحيات الإدارية الخاصة به في النظام.
+    </p>
+  </div>
+  <app-button
+    routerLink="/admin/users"
+    variant="primary"
+    extraClass="gap-sm px-8 h-12 rounded-full font-bold shadow-md hover:bg-secondary-container transition-all duration-200"
+  >
+    <span class="material-symbols-outlined">arrow_forward</span>
+    العودة للقائمة
+  </app-button>
+</header>
+
+<app-card
+  extraClass="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-outline-variant max-w-4xl mx-auto"
+>
+  @if (apiErrorMessage()) {
+    <div
+      class="bg-error-container text-on-error-container p-4 rounded-xl mb-6 flex justify-between items-start gap-3 border border-error/20"
+    >
+      <span class="font-body-sm font-medium">{{ apiErrorMessage() }}</span>
+      <app-button
+        variant="icon"
+        (onClick)="apiErrorMessage.set('')"
+        extraClass="text-on-error-container hover:text-error transition-colors border-none bg-transparent p-0"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </app-button>
+    </div>
+  }
+
+  <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div class="flex flex-col gap-1.5">
+        <app-form-field
+          formControlName="fName"
+          label="الاسم الأول *"
+          placeholder="أحمد"
+        ></app-form-field>
+        @if (registerForm.get('fName')?.touched && registerForm.get('fName')?.invalid) {
+          <span class="text-error text-xs font-medium">
+            @if (registerForm.get('fName')?.errors?.['serverError']) {
+              {{ registerForm.get('fName')?.errors?.['serverError'] }}
+            } @else if (registerForm.get('fName')?.errors?.['pattern']) {
+              الاسم الأول يجب أن يكون كلمة واحدة باللغة العربية فقط.
+            } @else if (registerForm.get('fName')?.errors?.['minlength']) {
+              الاسم الأول لا يجب أن يقل عن حرفين.
+            } @else {
+              الاسم الأول مطلوب ويجب ألا يزيد عن 100 حرف.
+            }
+          </span>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <app-form-field
+          formControlName="lName"
+          label="اسم العائلة *"
+          placeholder="محمد"
+        ></app-form-field>
+        @if (registerForm.get('lName')?.touched && registerForm.get('lName')?.invalid) {
+          <span class="text-error text-xs font-medium">
+            @if (registerForm.get('lName')?.errors?.['serverError']) {
+              {{ registerForm.get('lName')?.errors?.['serverError'] }}
+            } @else if (registerForm.get('lName')?.errors?.['pattern']) {
+              اسم العائلة يجب أن يحتوي على حروف عربية فقط ومسافة واحدة بين الكلمات.
+            } @else if (registerForm.get('lName')?.errors?.['minlength']) {
+              اسم العائلة لا يجب أن يقل عن حرفين.
+            } @else {
+              اسم العائلة مطلوب ويجب ألا يزيد عن 100 حرف.
+            }
+          </span>
+        }
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <app-form-field
+        type="email"
+        formControlName="email"
+        label="البريد الإلكتروني *"
+        placeholder="example@email.com"
+      ></app-form-field>
+      @if (registerForm.get('email')?.touched && registerForm.get('email')?.invalid) {
+        <span class="text-error text-xs font-medium">
+          @if (registerForm.get('email')?.errors?.['serverError']) {
+            {{ registerForm.get('email')?.errors?.['serverError'] }}
+          } @else {
+            صيغة البريد الإلكتروني غير صحيحة.
+          }
+        </span>
+      }
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div class="flex flex-col gap-1.5">
+        <app-form-field
+          type="tel"
+          formControlName="phoneNumber"
+          label="رقم الهاتف (اختياري)"
+          placeholder="01234567890"
+        ></app-form-field>
+        @if (registerForm.get('phoneNumber')?.touched && registerForm.get('phoneNumber')?.invalid) {
+          <span class="text-error text-xs font-medium">
+            @if (registerForm.get('phoneNumber')?.errors?.['serverError']) {
+              {{ registerForm.get('phoneNumber')?.errors?.['serverError'] }}
+            } @else {
+              يرجى إدخال رقم هاتف مصري صحيح.
+            }
+          </span>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <app-form-field type="select" formControlName="role" label="الدور الإداري (Role) *">
+          <option value="" disabled selected>اختر الدور المناسب</option>
+          @for (role of roles(); track role.id) {
+            <option [value]="role.name">{{ getRoleName(role.name) }}</option>
+          }
+        </app-form-field>
+        @if (registerForm.get('role')?.touched && registerForm.get('role')?.invalid) {
+          <span class="text-error text-xs font-medium">يرجى تحديد دور للمستخدم.</span>
+        }
+      </div>
+    </div>
+
+    <div class="flex justify-end mt-4 pt-4 border-t border-outline-variant">
+      <app-button
+        type="submit"
+        [loading]="isLoading()"
+        icon="save"
+        variant="primary"
+        extraClass="gap-sm px-10 h-14 rounded-full font-bold shadow-md hover:bg-secondary-container transition-all duration-200"
+      >
+        <span>إنشاء الحساب</span>
+      </app-button>
+    </div>
+  </form>
+</app-card>
+
+@if (showConfirmModal()) {
+  <app-confirmation-modal
+    [title]="modalConfig().title"
+    [message]="modalConfig().message"
+    [confirmText]="modalConfig().confirmText"
+    [icon]="modalConfig().icon"
+    [variant]="modalConfig().variant"
+    [confirmLoading]="isLoading()"
+    (confirm)="onConfirmModal()"
+    (cancel)="onCancelModal()"
+  ></app-confirmation-modal>
+}

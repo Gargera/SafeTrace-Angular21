@@ -1,0 +1,73 @@
+<div
+  role="dialog"
+  aria-modal="true"
+  aria-label="نافذة منبثقة"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 sm:p-6 animate-fade-in"
+  (click)="onBackdropClick()"
+>
+  <div
+    class="relative w-full max-w-120 rounded-[28px] border border-outline-variant/30 bg-surface-container-lowest shadow-2xl animate-scale-in flex flex-col overflow-hidden"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Close Button -->
+    <button
+      type="button"
+      (click)="onCancelClick()"
+      [disabled]="confirmLoading()"
+      aria-label="إغلاق"
+      class="absolute top-5 right-5 flex h-8 w-8 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors disabled:pointer-events-none disabled:opacity-50"
+    >
+      <span class="material-symbols-outlined text-[20px]">close</span>
+    </button>
+
+    <div class="px-8 pt-12 pb-2 flex flex-col items-center text-center">
+      <!-- Icon with soft ring -->
+      <div
+        class="relative mb-6 flex h-20 w-20 items-center justify-center rounded-full"
+        [ngClass]="
+          variant() === 'danger'
+            ? 'bg-error/10 text-error ring-10 ring-error/5'
+            : 'bg-primary/10 text-primary ring-10 ring-primary/5'
+        "
+      >
+        <span class="material-symbols-outlined text-[40px]">{{ icon() }}</span>
+      </div>
+
+      <!-- Title -->
+      <h2 class="text-2xl font-extrabold text-on-surface mb-3 tracking-tight">
+        {{ title() }}
+      </h2>
+
+      <!-- Message -->
+      <p class="text-base leading-relaxed text-on-surface-variant">
+        {{ message() }}
+      </p>
+
+      <div class="w-full mt-5 empty:hidden text-right">
+        <ng-content></ng-content>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex flex-row justify-end gap-3 px-6 sm:px-8 pb-6 sm:pb-8 pt-4 sm:pt-6">
+      <app-button
+        variant="secondary"
+        [disabled]="confirmLoading()"
+        extraClass="w-auto min-w-[110px] sm:min-w-[130px] h-[52px] rounded-xl flex items-center justify-center font-bold text-[15px] transition-colors"
+        (onClick)="cancel.emit()"
+      >
+        {{ cancelText() }}
+      </app-button>
+
+      <app-button
+        [variant]="variant()"
+        [disabled]="confirmDisabled()"
+        [loading]="confirmLoading()"
+        extraClass="w-auto min-w-[110px] sm:min-w-[130px] h-[52px] rounded-xl flex items-center justify-center font-bold text-[15px] shadow-sm hover:shadow-md transition-all"
+        (onClick)="confirm.emit()"
+      >
+        {{ confirmText() }}
+      </app-button>
+    </div>
+  </div>
+</div>

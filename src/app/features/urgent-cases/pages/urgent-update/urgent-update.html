@@ -1,0 +1,62 @@
+@if (isLoading()) {
+<div dir="rtl" class="mx-auto max-w-190 px-4 pb-16 pt-6">
+  <app-card extraClass="overflow-hidden rounded-2xl border border-outline-variant/30 bg-white shadow-sm p-6 md:p-8">
+    <app-update-form-skeleton></app-update-form-skeleton>
+  </app-card>
+</div>
+} @else {
+<app-case-form-container title="تعديل الحالة العاجلة" [subtitle]="stepTitle()" [stepHeader]="stepHeader()"
+  [steps]="steps" [currentStep]="currentStep()" [isSubmitting]="isSubmitting()" [errorMsg]="errorMsg()"
+  submitLabel="حفظ التعديلات" (backAction)="goBack()" (prevStep)="prevStep()" (nextStep)="nextStep()"
+  (submitForm)="onSubmit()">
+  <form [formGroup]="form">
+    @if (currentStep() === 1) {
+    <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+      <!-- Section Header removed as it is now handled by the container -->
+
+      <app-case-person-data [form]="form" [isInvalid]="isInvalidFn" [getError]="getErrorFn"
+        [caseType]="'update'"></app-case-person-data>
+    </div>
+    }
+
+    @if (currentStep() === 2) {
+    <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+      <div>
+        <label class="mb-2 block text-sm font-medium text-on-surface-variant">تاريخ ووقت الحادث</label>
+        <div
+          class="rounded-xl border border-outline-variant/40 bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant">
+          {{ eventDateDisplay() || 'غير متاح' }}
+        </div>
+        <p class="mt-1 text-xs text-on-surface-variant/70">
+          يُحتفَظ بتاريخ الحادث الأصلي عند تعديل البلاغ.
+        </p>
+      </div>
+
+      <app-case-location-data [form]="form" [governorates]="governorates" [cities]="availableCities()"
+        [showEventDate]="false" [isInvalid]="isInvalidFn" [getError]="getErrorFn" [selectedAddress]="selectedAddress()"
+        [locationError]="locationError()" [isLocating]="isLocating()" (openMap)="openMapModal()"
+        (useCurrentLocation)="useCurrentLocation()"></app-case-location-data>
+
+    </div>
+    }
+
+    @if (currentStep() === 3) {
+    <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+      <!-- Section Header removed as it is now handled by the container -->
+
+      <app-case-media-uploader mode="update" [existingPhotos]="existingPhotos()" [existingVideoUrl]="existingVideoUrl()"
+        [initialPrimaryFile]="initialPrimary()" [initialAdditionalFiles]="initialAdditional()"
+        [initialVideoFile]="initialVideo()" [initialDeletedPhotoIds]="initialDeletedPhotoIds()"
+        [initialPrimaryPhotoId]="initialPrimaryPhotoId()"
+        [initialExistingVideoDeleted]="initialExistingVideoDeleted()" [errors]="mediaErrors()"
+        (mediaChange)="onMediaChange($event)" (clearError)="clearMediaError($event)"></app-case-media-uploader>
+    </div>
+    }
+  </form>
+</app-case-form-container>
+}
+
+<!-- Location Picker Map Modal -->
+<app-map-location-picker [isOpen]="isMapModalOpen()" [initialLat]="selectedLat()" [initialLng]="selectedLng()"
+  [initialAddress]="selectedAddress()" (confirmLocation)="onMapLocationConfirmed($event)" (cancel)="closeMapModal()">
+</app-map-location-picker>

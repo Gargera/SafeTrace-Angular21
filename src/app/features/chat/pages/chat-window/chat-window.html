@@ -1,1 +1,409 @@
-<p>chat-window works!</p>
+<!-- Container رئيسي للصفحة يضمن العرض الكامل وبدون مساحات بيضاء علوية -->
+<div class="relative flex flex-col items-center min-h-screen overflow-x-hidden p-4 sm:p-md" [ngClass]="{
+    'w-full bg-surface-dim': !isAdmin,
+    'w-full bg-surface': isAdmin,
+  }">
+  <!-- حاوي المحادثة الرئيسي -->
+  <div class="relative flex flex-col w-full h-[calc(100vh-5rem)] bg-surface overflow-hidden" [ngClass]="
+      isAdmin
+        ? 'max-w-full md:rounded-xl md:border md:border-outline-variant md:shadow-lg'
+        : 'md:max-w-200 md:rounded-xl md:border md:border-outline-variant md:shadow-lg'
+    ">
+    <!-- ===== 1. مؤشر التحميل ===== -->
+    @if (isLoading()) {
+    <div class="absolute inset-0 z-50 bg-surface">
+      <app-chat-skeleton [items]="8"></app-chat-skeleton>
+    </div>
+    }
+
+    <!-- ===== 2. Header ===== -->
+    @if (chat(); as c) {
+    <div
+      class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 bg-surface-container-low border-b border-outline-variant px-2.5 py-2 sm:px-md shrink-0 w-full overflow-hidden"
+      dir="rtl">
+      <!-- السطر الأول -->
+      <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 justify-start">
+        <!-- زر الرجوع -->
+        <app-button variant="icon" ariaLabel="رجوع" icon="arrow_forward" (onClick)="goBack()"
+          extraClass="w-7 h-7 text-on-surface-variant hover:text-on-surface shrink-0 cursor-pointer bg-transparent">
+        </app-button>
+
+        @if (isAdmin) {
+        <!-- معلومات المحادثة للأدمن -->
+        <div
+          class="flex items-center gap-1.5 sm:gap-2 bg-surface-container-high rounded-full px-2.5 py-1 border border-outline-variant min-w-0 flex-1 sm:flex-initial justify-between sm:justify-start">
+          <!-- Sender -->
+          <div class="flex items-center gap-1.5 min-w-0 shrink-0 cursor-pointer" (click)="openProfile(c.senderId)">
+            @if (c.senderImage) {
+            <img [src]="chatService.getImageUrl(c.senderImage)"
+              class="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover ring-2 ring-primary/40 shrink-0" />
+            } @else {
+            <span
+              class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-secondary text-on-secondary-container flex items-center justify-center shrink-0 ring-2 ring-primary/40">
+              <span class="m-auto font-medium text-sm">
+                {{ adminSenderName.charAt(0) }}
+              </span>
+            </span>
+            }
+
+            <div class="leading-tight min-w-0">
+              <p class="text-[8px] text-on-surface-variant hidden sm:block">المرسل</p>
+              <p class="font-semibold whitespace-nowrap text-[clamp(10px,2.8vw,14px)]">
+                {{ adminSenderName }}
+              </p>
+            </div>
+          </div>
+
+          <span class="text-outline text-xs shrink-0">⟵</span>
+
+          <!-- Receiver -->
+          <div class="flex items-center gap-1.5 min-w-0 shrink-0 cursor-pointer" (click)="openProfile(c.receiverId)">
+            @if (c.receiverImage) {
+            <img [src]="chatService.getImageUrl(c.receiverImage)"
+              class="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover ring-2 ring-primary/40 shrink-0" />
+            } @else {
+            <span
+              class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-secondary text-on-secondary-container flex items-center justify-center shrink-0 ring-2 ring-primary/40">
+              <span class="m-auto font-medium text-sm">
+                {{ adminReceiverName.charAt(0) }}
+              </span>
+            </span>
+            }
+
+            <div class="leading-tight min-w-0">
+              <p class="text-[8px] text-on-surface-variant hidden sm:block">المستقبل</p>
+              <p class="font-semibold whitespace-nowrap text-[clamp(10px,2.8vw,14px)]">
+                {{ adminReceiverName }}
+              </p>
+            </div>
+          </div>
+        </div>
+        } @else {
+        <!-- معلومات المستخدم -->
+        <div class="flex items-center gap-2 min-w-0 cursor-pointer" (click)="openProfile()">
+          @if (c.otherUserImage) {
+          <img [src]="chatService.getImageUrl(c.otherUserImage)"
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover ring-2 ring-primary/40 shrink-0" />
+          } @else {
+          <span
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-secondary text-on-secondary-container flex items-center justify-center shrink-0 ring-2 ring-primary/40">
+            <span class="m-auto font-semibold text-sm">
+              {{ c.otherUserName?.charAt(0) }}
+            </span>
+          </span>
+          }
+
+          <div class="leading-tight min-w-0">
+            <h2 class="font-bold text-on-surface text-xs sm:text-sm truncate max-w-35 sm:max-w-60">
+              {{ displayName }}
+            </h2>
+            <p class="text-[10px] sm:text-xs text-on-surface-variant truncate">
+              انقر لعرض الملف الشخصي
+            </p>
+          </div>
+        </div>
+        }
+
+        @if (c.caseStatus) {
+        <span class="px-2 py-1 rounded-full text-xs font-medium" [ngClass]="{
+                'bg-green-100 text-green-700': c.caseStatus === CaseStatus.Active,
+                'bg-red-100 text-red-700': c.caseStatus === CaseStatus.Deleted,
+                'bg-blue-100 text-blue-700': c.caseStatus === CaseStatus.Found,
+                'bg-gray-100 text-gray-700': c.caseStatus === CaseStatus.Expired,
+              }">
+          {{ getCaseStatusTranslationAr(c?.caseStatus) }}
+        </span>
+        }
+      </div>
+
+      <!-- حالة القضية -->
+      <div
+        class="flex items-center gap-1.5 bg-surface-container-high rounded-lg px-2.5 py-1 sm:px-2 sm:py-1 shrink-0 w-full sm:w-auto justify-start sm:justify-center border sm:border-none border-outline-variant/50">
+        @if (c.caseImage) {
+        <img [src]="chatService.getImageUrl(c.caseImage)" (click)="goToCaseDetails(c.caseId, c.caseType)"
+          alt="Case Image" class="w-5 h-5 sm:w-6 sm:h-6 rounded object-cover shrink-0 cursor-pointer" />
+        } @else {
+        <app-button variant="icon" ariaLabel="عرض تفاصيل الحالة" (onClick)="goToCaseDetails(c.caseId, c.caseType)"
+          extraClass="w-5 h-5 sm:w-6 sm:h-6 rounded flex items-center justify-center bg-primary text-on-primary shrink-0 cursor-pointer border-none p-0">
+          <span class="material-symbols-outlined text-xs sm:text-sm"> folder </span>
+        </app-button>
+        }
+
+        <div class="text-[10px] sm:text-xs leading-tight min-w-0 cursor-pointer flex items-center gap-1.5"
+          (click)="goToCaseDetails(c.caseId, c.caseType)">
+          <span class="text-on-surface-variant font-medium"> شأن الحالة: </span>
+          <span class="font-semibold text-on-surface truncate max-w-50 sm:max-w-30">
+            {{ c.caseTitle }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- تنبيه المحادثات المحذوفة -->
+    @if (isAdmin && (c.deletedBySender || c.deletedByReceiver)) {
+    <div class="flex flex-wrap items-center gap-xs px-2 py-1 bg-error-container/40 border-b border-error/20" dir="rtl">
+      @if (c.deletedBySender) {
+      <span
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-error-container text-on-error-container text-[10px] sm:text-xs font-medium">
+        <span class="material-symbols-outlined text-[10px]!"> delete </span>
+        المرسل حذفها
+        <span class="opacity-70"> · {{ getRelativeTime(c.senderDeletedAt) }} </span>
+      </span>
+      }
+
+      @if (c.deletedByReceiver) {
+      <span
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-error-container text-on-error-container text-[10px] sm:text-xs font-medium">
+        <span class="material-symbols-outlined text-[10px]!"> delete </span>
+        المستقبل حذفها
+        <span class="opacity-70"> · {{ getRelativeTime(c.receiverDeletedAt) }} </span>
+      </span>
+      }
+    </div>
+    }
+    }
+
+    <!-- ===== 3. Messages list ===== -->
+    <div #messagesContainer dir="ltr" class="flex-1 overflow-y-auto px-sm py-md sm:px-md">
+      @if (!isLoading()) {
+      @for (message of messages(); track message.id; let i = $index) {
+      @if (isNewDay(i)) {
+      <div class="flex justify-center my-4">
+        <span class="px-3 py-1 rounded-full bg-surface-container-high text-xs text-on-surface-variant shadow-sm">
+          {{ formatDay(message.sendAt) }}
+        </span>
+      </div>
+      }
+
+      <div class="flex w-full mb-4" [class.justify-end]="isMessageOnRightSide(message)"
+        [class.justify-start]="!isMessageOnRightSide(message)">
+        <div class="flex flex-col max-w-[75%] sm:max-w-[70%]" [class.items-end]="isMessageOnRightSide(message)"
+          [class.items-start]="!isMessageOnRightSide(message)">
+          <div class="flex items-end gap-2 w-full" [class.flex-row-reverse]="isMessageOnRightSide(message)">
+            @if (isAdmin) {
+            <div class="shrink-0 mb-0.5">
+              @if (message.senderId === chat()?.senderId) {
+              @if (chat()?.senderImage) {
+              <img [src]="chatService.getImageUrl(chat()!.senderImage!)"
+                class="w-6 h-6 rounded-full object-cover shadow-sm" />
+              } @else {
+              <span
+                class="w-6 h-6 rounded-full bg-secondary text-on-secondary-container flex items-center justify-center shrink-0">
+                <span class="m-auto font-medium text-sm">
+                  {{ adminSenderName.charAt(0) }}
+                </span>
+              </span>
+              }
+              } @else if (message.senderId === chat()?.receiverId) {
+              @if (chat()?.receiverImage) {
+              <img [src]="chatService.getImageUrl(chat()!.receiverImage!)"
+                class="w-6 h-6 rounded-full object-cover shadow-sm" />
+              } @else {
+              <span
+                class="w-6 h-6 rounded-full bg-secondary text-on-secondary-container flex items-center justify-center shrink-0">
+                <span class="m-auto font-medium text-sm">
+                  {{ adminReceiverName.charAt(0) }}
+                </span>
+              </span>
+              }
+              }
+            </div>
+            }
+
+            <div class="flex flex-col min-w-0" [class.items-end]="isMessageOnRightSide(message)"
+              [class.items-start]="!isMessageOnRightSide(message)">
+              @if (isAdmin) {
+              <span class="text-xs font-semibold text-on-surface mb-1 px-1">
+                @if (message.senderId === chat()?.senderId) {
+                {{ adminSenderName }}
+                } @else if (message.senderId === chat()?.receiverId) {
+                {{ adminReceiverName }}
+                }
+              </span>
+              }
+
+              @if (message.content) {
+              <div dir="rtl" class="px-3.5 py-2 rounded-2xl wrap-break-word w-fit text-sm"
+                [class.bg-primary]="isMessageOnRightSide(message)"
+                [class.text-on-primary]="isMessageOnRightSide(message)"
+                [class.bg-surface-container-high]="!isMessageOnRightSide(message)"
+                [class.text-on-surface]="!isMessageOnRightSide(message)" [class.border-2]="
+                        isAdmin &&
+                        (message.isDeletedForEveryone ||
+                          message.deletedBySender ||
+                          message.deletedByReceiver)
+                      " [class.border-error]="
+                        isAdmin &&
+                        (message.isDeletedForEveryone ||
+                          message.deletedBySender ||
+                          message.deletedByReceiver)
+                      " [class.shadow-md]="
+                        isAdmin &&
+                        (message.isDeletedForEveryone ||
+                          message.deletedBySender ||
+                          message.deletedByReceiver)
+                      ">
+                {{ message.content }}
+              </div>
+              }
+
+              @if (!message.isDeletedForEveryone || isAdmin) {
+              @if (message.fileType === FileType.Image && attachmentUrl(message); as url) {
+              <img [src]="url" class="rounded-xl mt-1.5 border border-outline-variant max-w-60 sm:max-w-80 w-fit" />
+              }
+
+              @if (message.fileType === FileType.Video && attachmentUrl(message); as url) {
+              <video controls [src]="url"
+                class="rounded-xl mt-1.5 border border-outline-variant max-w-60 sm:max-w-80 w-fit"></video>
+              }
+              }
+            </div>
+          </div>
+
+          <!-- الوقت + القراءة + الحذف -->
+          <div class="flex items-center gap-1 text-[11px] text-on-surface-variant mt-1 px-1"
+            [class.justify-end]="message.isMine" [class.justify-start]="!message.isMine">
+            @if (!isAdmin) {
+            <app-button variant="icon" ariaLabel="حذف الرسالة" (onClick)="onDeleteMessage(message)" icon="delete"
+              iconClass="!text-sm" [loading]="deletingMessageId() === message.id"
+              [disabled]="deletingMessageId() !== null"
+              extraClass="text-on-surface-variant hover:text-error transition-opacity cursor-pointer border-none bg-transparent p-0">
+            </app-button>
+            }
+
+            @if (message.isMine) {
+            <span class="material-symbols-outlined !text-sm"
+              [ngClass]="message.isRead ? 'text-blue-500' : 'text-on-surface-variant'">
+              {{ message.isRead ? 'done_all' : 'check' }}
+            </span>
+            }
+
+            <span dir="rtl">
+              {{ message.sendAt | date: 'shortTime' : '' : 'ar-EG' }}
+            </span>
+          </div>
+
+          <!-- تفاصيل الحذف للأدمن -->
+          @if (isAdmin) {
+          @if (message.isDeletedForEveryone) {
+          <div class="text-[11px] text-error mt-0.5 px-1 flex items-center gap-1">
+            <span class="material-symbols-outlined"> block </span>
+            تم حذف الرسالة للجميع
+            {{ getRelativeTime(message.forEveryoneDeletedAt) }}
+          </div>
+          } @else if (message.deletedBySender) {
+          <div class="text-[11px] text-error mt-0.5 px-1 flex items-center gap-1">
+            <span class="material-symbols-outlined"> delete </span>
+            حذفها المرسل لنفسه
+            {{ getRelativeTime(message.senderDeletedAt) }}
+          </div>
+          } @else if (message.deletedByReceiver) {
+          <div class="text-[11px] text-error mt-0.5 px-1 flex items-center gap-1">
+            <span class="material-symbols-outlined"> delete </span>
+            حذفها المستقبل لنفسه
+            {{ getRelativeTime(message.receiverDeletedAt) }}
+          </div>
+          }
+          }
+        </div>
+      </div>
+      } @empty {
+      <p class="text-center text-on-surface-variant py-2xl">
+        لا توجد رسائل بعد. ابدأ المحادثة!
+      </p>
+      }
+      }
+    </div>
+
+    <!-- ===== 4. Message input ===== -->
+    @if (!isAdmin) {
+    @if (canSendMessage()) {
+    <div
+      class="flex flex-col bg-surface-container-low border-t border-outline-variant shrink-0 pb-[env(safe-area-inset-bottom)]"
+      dir="rtl">
+      @if (selectedFile(); as file) {
+      <div
+        class="flex items-center justify-between px-sm sm:px-md py-xs text-xs text-on-surface-variant bg-surface-container-high">
+        <span class="truncate flex items-center gap-1">
+          <span class="material-symbols-outlined !text-sm"> attach_file </span>
+          {{ file.name }}
+        </span>
+
+        <app-button variant="icon" ariaLabel="إزالة الملف" (onClick)="clearSelectedFile()"
+          extraClass="text-error shrink-0 cursor-pointer border-none bg-transparent p-0">
+          <span class="material-symbols-outlined"> close </span>
+        </app-button>
+      </div>
+      }
+
+      <div class="flex items-center gap-xs sm:gap-sm px-sm py-sm sm:px-md">
+        <div
+          class="flex-1 flex items-center gap-xs bg-surface-container-lowest rounded-full px-sm sm:px-md py-2xs border border-outline-variant min-w-0">
+          <input type="text"
+            class="flex-1 my-3 min-w-0 bg-transparent outline-none text-sm text-on-surface placeholder:text-on-surface-variant"
+            placeholder="اكتب رسالتك هنا..." [ngModel]="draft()" (ngModelChange)="draft.set($event)"
+            (keyup.enter)="onSend()" />
+
+          <input #fileInput type="file" class="hidden" accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm"
+            (change)="onFileSelected($event)" />
+
+          <!-- Attach File -->
+          <app-button variant="icon" ariaLabel="إرفاق ملف" icon="attach_file" (onClick)="openFilePicker()"
+            iconClass="text-[18px]! opacity-70"
+            extraClass="text-on-surface-variant shrink-0 hover:text-primary bg-transparent">
+          </app-button>
+        </div>
+
+        <!-- Send -->
+        <app-button variant="primary" [disabled]="(!draft().trim() && !selectedFile()) || sending()"
+          [loading]="sending()" icon="send" (onClick)="onSend()" ariaLabel="إرسال"
+          extraClass="w-9 h-9 rounded-full flex items-center justify-center shrink-0 disabled:opacity-50 cursor-pointer p-0">
+        </app-button>
+      </div>
+
+      @if (fileError()) {
+      <span class="text-sm text-error px-md pb-2" dir="rtl">
+        {{ fileError() }}
+      </span>
+      }
+    </div>
+    } @else if (isReadOnly()) {
+    <div class="border-t border-outline-variant bg-surface-container px-6 py-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="font-semibold text-on-surface">هذه المحادثة للقراءة فقط</p>
+
+          <p class="text-sm text-on-surface-variant mt-1">
+            لا يمكن إرسال رسائل لأن الحالة تم حذفها.
+          </p>
+        </div>
+
+        <span
+          class="px-2 py-0.5 text-[10px] sm:px-3 sm:py-1 sm:text-xs rounded-full bg-primary-container text-on-primary-container font-medium whitespace-nowrap">
+          عرض فقط
+        </span>
+      </div>
+    </div>
+    }
+    } @else {
+    <div class="border-t border-outline-variant bg-surface-container px-6 py-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="font-semibold text-on-surface">وضع المشرف</p>
+
+          <p class="text-sm text-on-surface-variant mt-1">
+            يمكنك مراجعة الرسائل ومتابعة تفاصيل المحادثة فقط.
+          </p>
+        </div>
+
+        <span
+          class="px-2 py-0.5 text-[10px] sm:px-3 sm:py-1 sm:text-xs rounded-full bg-primary-container text-on-primary-container font-medium whitespace-nowrap">
+          عرض فقط
+        </span>
+      </div>
+    </div>
+    }
+  </div>
+</div>
+
+<app-view-profile-popup [userId]="selectedUserId()" (closed)="selectedUserId.set(null)"></app-view-profile-popup>

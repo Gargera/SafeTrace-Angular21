@@ -1,0 +1,377 @@
+import {
+  Component,
+  computed,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+  OnInit,
+  DestroyRef,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import {
+  Subject,
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  catchError,
+  EMPTY,
+  tap,
+} from 'rxjs';
+import { ComplaintsService } from '../../services/complaints.service';
+import { ComplaintResponseDto } from '../../models/responses/complaint.model';
+import { ComplaintFilterDto } from '../../models/requests/complaint-filter.model';
+import { ResolveComplaintDto } from '../../models/requests/resolve-complaint.model';
+import { ComplaintStatus } from '../../../../shared/enums/complaint-status';
+import { ComplaintStatisticsDto } from '../../models/responses/complaint-statistics-dto';
+import { ComplaintStatusBadgeDirective } from '../../../../shared/directives/complaint-status-badge.directive';
+import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
+import { FormField } from '../../../../shared/components/form-field/form-field';
+import { ButtonComponent } from '../../../../shared/components/button/button';
+import { CardComponent } from '../../../../shared/components/card/card';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { HeaderComponent } from '../../../../shared/components/header/header.component';
+import { SnackbarService } from '../../../../shared/services/toast.service';
+import { ConfirmationModalComponent } from '../../../../shared/components/confirmation-modal/confirmation-modal';
+import { Permissions } from '../../../../core/constants/Permissions';
+import { HasPermissionDirective } from '../../../../shared/directives/has-permission.directive';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination';
+import { TableSkeletonComponent } from '../../../../shared/components/skeletons/table-skeleton/table-skeleton.component';
+import { ReportService } from '../../../admin-dashboard/services/report.service';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { CACHE_TAGS, CACHE_TTL } from '../../../../core/cache/cache.constants';
+import { extractErrorMessage } from '../../../../shared/helper/error.helper';
+
+const UI_STATE_CACHE_KEY = 'ComplaintsList_UI_State';
+
+@Component({
+  selector: 'app-complaints-list',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ComplaintStatusBadgeDirective,
+    TruncatePipe,
+    FormField,
+    ButtonComponent,
+    CardComponent,
+    EmptyStateComponent,
+    HeaderComponent,
+    ConfirmationModalComponent,
+    HasPermissionDirective,
+    PaginationComponent,
+    TableSkeletonComponent,
+  ],
+  templateUrl: './complaints-list.html',
+  styleUrl: './complaints-list.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ComplaintsList implements OnInit {
+  private svc = inject(ComplaintsService);
+  private readonly cacheService = inject(CacheService);
+  private readonly destroyRef = inject(DestroyRef);
+  Permissions = Permissions;
+  complaintActionPermissions = [Permissions.Complaints.GetById, Permissions.Complaints.HardDelete];
+  private toast = inject(SnackbarService);
+  private reportService = inject(ReportService);
+
+  complaints = signal<ComplaintResponseDto[]>([]);
+  totalCount = signal<number>(0);
+  totalPages = signal<number>(0);
+  isLoading = signal<boolean>(false);
+  loadingStats = signal<boolean>(true);
+  statistics = signal<ComplaintStatisticsDto | null>(null);
+
+  selectedComplaint = signal<ComplaintResponseDto | null>(null);
+  showDetailsModal = signal<boolean>(false);
+  solutionMessage = signal<string>('');
+  isResolving = signal<boolean>(false);
+
+  private activeComplaintDraftId: number | null = null;
+  private activeComplaintDraftMsg: string | null = null;
+
+  showDeleteModal = signal<boolean>(false);
+  complaintToDelete = signal<ComplaintResponseDto | null>(null);
+
+  filter = signal<ComplaintFilterDto>({
+    pageNumber: 1,
+    pageSize: 10,
+    search: '',
+    status: '' as any,
+    contactType: '',
+  });
+
+  readonly hasActiveFilters = computed(() => {
+    const f = this.filter();
+    return !!(f.search || f.status || f.contactType);
+  });
+
+  resetFilters(): void {
+    this.filter.set({
+      pageNumber: 1,
+      pageSize: 10,
+      search: '',
+      status: '' as any,
+      contactType: '',
+    });
+    this.loadComplaints();
+  }
+
+  contactTypeOptions = [
+    'شكوى حالة',
+    'بلاغ عن حالة احتيال أو ابتزاز',
+    'محتوى غير لائق',
+    'مشكلة فنية',
+    'اقتراح لتحسين المنصة',
+    'أخرى',
+  ];
+
+  ComplaintStatusEnum = ComplaintStatus;
+  private searchSubject = new Subject<string>();
+  private readonly fetchTrigger$ = new Subject<void>();
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      const state: any = {
+        filter: this.filter(),
+      };
+
+      const complaint = this.selectedComplaint();
+      const msg = this.solutionMessage();
+      if (this.showDetailsModal() && complaint && msg) {
+        state.activeComplaintId = complaint.id;
+        this.cacheService.set(`ComplaintSolution_Draft_${complaint.id}`, msg, CACHE_TTL.UI_STATE, [
+          CACHE_TAGS.UI_STATE,
+        ]);
+      }
+
+      this.cacheService.set(UI_STATE_CACHE_KEY, state, CACHE_TTL.UI_STATE, [CACHE_TAGS.UI_STATE]);
+    });
+  }
+
+  ngOnInit() {
+    const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY);
+    if (cachedState) {
+      if (cachedState.filter) this.filter.set(cachedState.filter);
+
+      if (cachedState.activeComplaintId) {
+        const msg = this.cacheService.get<string>(
+          `ComplaintSolution_Draft_${cachedState.activeComplaintId}`,
+        );
+        if (msg) {
+          this.activeComplaintDraftId = cachedState.activeComplaintId;
+          this.activeComplaintDraftMsg = msg;
+        }
+      }
+    }
+
+    this.loadStatistics();
+    this.setupFetchPipeline();
+    this.loadComplaints();
+
+    this.searchSubject
+      .pipe(debounceTime(500), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe((term: string) => {
+        this.updateFilter({ search: term, pageNumber: 1 });
+      });
+  }
+
+  loadStatistics() {
+    this.loadingStats.set(true);
+    this.svc.getStatistics().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.statistics.set(res.data);
+        } else {
+          this.toast.error(res.message || 'فشل تحميل الإحصائيات');
+        }
+        this.loadingStats.set(false);
+      },
+      error: (err) => {
+        this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتحميل الإحصائيات'));
+        this.loadingStats.set(false);
+      },
+    });
+  }
+
+  loadComplaints() {
+    this.fetchTrigger$.next();
+  }
+
+  private setupFetchPipeline() {
+    this.fetchTrigger$
+      .pipe(
+        tap(() => this.isLoading.set(true)),
+        switchMap(() =>
+          this.svc.getAll(this.filter()).pipe(
+            catchError((err) => {
+              this.toast.error(extractErrorMessage(err, 'تعذر الاتصال بالخادم لتحميل الشكاوى'));
+              this.isLoading.set(false);
+              this.complaints.set([]);
+              this.totalCount.set(0);
+              return EMPTY;
+            }),
+          ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((res) => {
+        if (res && res.success && res.data) {
+          this.complaints.set(res.data.items);
+          this.totalCount.set(res.data.totalCount);
+          this.totalPages.set(
+            res.data.totalPages ?? Math.ceil(res.data.totalCount / this.filter().pageSize),
+          );
+
+          if (this.activeComplaintDraftId) {
+            const found = res.data.items.find((c: any) => c.id === this.activeComplaintDraftId);
+            if (found) {
+              this.selectedComplaint.set(found);
+              this.solutionMessage.set(this.activeComplaintDraftMsg!);
+              this.showDetailsModal.set(true);
+            }
+            this.activeComplaintDraftId = null;
+            this.activeComplaintDraftMsg = null;
+          }
+        }
+        this.isLoading.set(false);
+      });
+  }
+
+  onSearchChange(value: string) {
+    this.searchSubject.next(value);
+  }
+
+  updateFilter(partialFilter: Partial<ComplaintFilterDto>) {
+    this.filter.update((f) => ({
+      ...f,
+      ...partialFilter,
+      pageNumber: partialFilter.pageNumber ?? 1,
+    }));
+    this.loadComplaints();
+  }
+
+  changePage(page: number) {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.filter.update((f) => ({ ...f, pageNumber: page }));
+      this.loadComplaints();
+    }
+  }
+
+  openDetails(complaint: ComplaintResponseDto) {
+    this.selectedComplaint.set(complaint);
+    this.solutionMessage.set('');
+    this.showDetailsModal.set(true);
+  }
+
+  closeDetailsModal() {
+    const complaint = this.selectedComplaint();
+    if (complaint) {
+      this.cacheService.remove(`ComplaintSolution_Draft_${complaint.id}`);
+    }
+    this.showDetailsModal.set(false);
+    this.selectedComplaint.set(null);
+  }
+
+  resolveComplaint() {
+    if (this.isResolving()) return;
+
+    const complaint = this.selectedComplaint();
+    const msg = this.solutionMessage().trim();
+    if (!complaint || !msg) {
+      this.toast.error('يرجى كتابة رسالة الحل');
+      return;
+    }
+
+    this.isResolving.set(true);
+    const dto: ResolveComplaintDto = { solutionMessage: msg };
+    this.svc.resolve(complaint.id, dto).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.toast.success('تم حل الشكوى وإشعار المستخدم بنجاح');
+          this.cacheService.remove(`ComplaintSolution_Draft_${complaint.id}`);
+
+          const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
+          this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [
+            CACHE_TAGS.UI_STATE,
+          ]);
+
+          this.closeDetailsModal();
+          this.loadComplaints();
+          this.loadStatistics();
+        } else {
+          this.toast.error(res.message || 'حدث خطأ أثناء حل الشكوى');
+        }
+        this.isResolving.set(false);
+      },
+      error: (err) => {
+        this.toast.error(extractErrorMessage(err, 'حدث خطأ أثناء حل الشكوى'));
+        this.isResolving.set(false);
+      },
+    });
+  }
+
+  openDeleteModal(complaint: ComplaintResponseDto) {
+    this.complaintToDelete.set(complaint);
+    this.showDeleteModal.set(true);
+  }
+
+  closeDeleteModal() {
+    this.showDeleteModal.set(false);
+    this.complaintToDelete.set(null);
+  }
+
+  isDeleting = signal<boolean>(false);
+
+  confirmDelete() {
+    const complaint = this.complaintToDelete();
+    if (!complaint || this.isDeleting()) return;
+
+    this.isDeleting.set(true);
+    this.svc.deleteComplaint(complaint.id).subscribe({
+      next: (res) => {
+        this.isDeleting.set(false);
+        if (res.success) {
+          this.toast.success('تم حذف الشكوى بنجاح');
+
+          const cachedState = this.cacheService.get<any>(UI_STATE_CACHE_KEY) || {};
+          this.cacheService.set(UI_STATE_CACHE_KEY, cachedState, CACHE_TTL.UI_STATE, [
+            CACHE_TAGS.UI_STATE,
+          ]);
+
+          this.closeDeleteModal();
+          this.loadComplaints();
+          this.loadStatistics();
+        } else {
+          this.toast.error(res.message || 'حدث خطأ أثناء الحذف');
+        }
+      },
+      error: (err) => {
+        this.isDeleting.set(false);
+        this.toast.error(extractErrorMessage(err, 'حدث خطأ أثناء الحذف'));
+      },
+    });
+  }
+  isDownloading = signal<boolean>(false);
+
+  downloadReport(): void {
+    if (this.isDownloading()) return;
+    this.isDownloading.set(true);
+    const filter = {
+      ...this.filter(),
+      status: this.filter().status || null,
+    };
+    this.reportService.generateComplaintPdfReport(filter).subscribe({
+      next: (response) => {
+        this.isDownloading.set(false);
+        this.reportService.download(response);
+      },
+      error: (err) => {
+        this.isDownloading.set(false);
+        const message = extractErrorMessage(err, 'حدث خطأ أثناء تنزيل التقرير');
+        this.toast.error(message);
+      },
+    });
+  }
+}

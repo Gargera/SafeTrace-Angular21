@@ -1,0 +1,40 @@
+<div class="flex gap-xs" dir="ltr">
+  <!-- Previous Button -->
+  <app-button
+    variant="icon"
+    icon="chevron_left"
+    ariaLabel="الصفحة السابقة"
+    [disabled]="loading() || currentPage() === 1"
+    [loading]="loading() && pendingPage() === currentPage() - 1"
+    (onClick)="changePage(currentPage() - 1)"
+    extraClass="w-8 h-8 rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white disabled:cursor-not-allowed cursor-pointer"
+  />
+
+  <!-- Page Numbers and Ellipsis -->
+  @for (page of pagesArray(); track $index) {
+    @if (page === '...') {
+      <span class="w-8 h-8 flex items-center justify-center font-bold text-label-sm text-on-surface-variant">...</span>
+    } @else {
+      <app-button
+        variant="icon"
+        [icon]="page.toString()"
+        [ariaLabel]="'الصفحة ' + page"
+        [loading]="loading() && pendingPage() === page"
+        [disabled]="loading() || page === currentPage()"
+        (click)="changePage(page)"
+        [extraClass]="'w-8 h-8 rounded-lg border border-outline-variant font-bold text-label-sm hover:bg-secondary-fixed-dim cursor-pointer ' + (page === currentPage() ? 'bg-secondary text-white' : 'bg-white text-primary')"
+      />
+    }
+  }
+
+  <!-- Next Button -->
+  <app-button
+    variant="icon"
+    icon="chevron_right"
+    ariaLabel="الصفحة التالية"
+    [disabled]="loading() || currentPage() === totalPages()"
+    [loading]="loading() && pendingPage() === currentPage() + 1"
+    (onClick)="changePage(currentPage() + 1)"
+    extraClass="w-8 h-8 rounded-lg border border-outline-variant bg-white text-primary hover:bg-secondary hover:text-white disabled:cursor-not-allowed cursor-pointer"
+  />
+</div>

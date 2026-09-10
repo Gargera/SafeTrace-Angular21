@@ -1,0 +1,96 @@
+<div [formGroup]="form()">
+  <!-- Government & City -->
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div>
+      <app-form-field label="المحافظة *" type="select" formControlName="government"
+        [extraClass]="isInvalid()('government') ? 'border-error' : ''">
+        <option value="" disabled>اختر المحافظة</option>
+        @for (g of governorates(); track g) {
+        <option [value]="g">{{ g }}</option>
+        }
+      </app-form-field>
+      @if (isInvalid()('government')) {
+      <p class="mt-1 flex items-center gap-1 text-xs text-error">
+        {{ getError()('government') }}
+      </p>
+      }
+    </div>
+    <div>
+      <app-form-field label="المدينة / المركز *" type="select" formControlName="city"
+        [extraClass]="isInvalid()('city') ? 'border-error' : ''">
+        <option value="" disabled>اختر المدينة / المركز</option>
+        @for (c of cities(); track c) {
+        <option [value]="c">{{ c }}</option>
+        }
+      </app-form-field>
+      @if (isInvalid()('city')) {
+      <p class="mt-1 flex items-center gap-1 text-xs text-error">
+        {{ getError()('city') }}
+      </p>
+      }
+    </div>
+  </div>
+
+  <!-- Street -->
+  <div class="mt-4">
+    <app-form-field label="الشارع / المنطقة *" formControlName="street" type="text"
+      placeholder="أدخل الشارع أو المنطقة وأي معالم قريبة (مثال: شارع التحرير، بجوار مسجد السلام)"
+      [extraClass]="isInvalid()('street') ? 'border-error' : ''"></app-form-field>
+    @if (isInvalid()('street')) {
+    <p class="mt-1 flex items-center gap-1 text-xs text-error">
+      {{ getError()('street') }}
+    </p>
+    }
+  </div>
+
+  <!-- Event Date -->
+  @if (showEventDate()) {
+  <div class="mt-4">
+    <app-form-field [label]="eventDateType() === 'datetime-local' ? 'تاريخ ووقت الحادث *' : 'تاريخ الحادث *'" formControlName="eventDate" [type]="eventDateType()" [min]="minEventDate()"
+      [max]="maxEventDate()" [extraClass]="isInvalid()('eventDate') ? 'border-error' : ''"></app-form-field>
+    @if (isInvalid()('eventDate')) {
+    <p class="mt-1 flex items-center gap-1 text-xs text-error">
+      {{ getError()('eventDate') }}
+    </p>
+    }
+  </div>
+  }
+
+  <!-- Map Location Picker Section -->
+  @if (showMapPicker()) {
+  <div class="mt-4 flex flex-col gap-3 rounded-2xl border border-outline-variant/40 bg-surface-bright p-5 shadow-2xs">
+    <label class="text-sm font-medium text-on-surface-variant">
+      حدد موقع الحادث بالضبط على الخريطة <span class="mr-0.5 text-error">*</span>
+    </label>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <app-button variant="primary" type="button" extraClass="gap-2" (click)="openMap.emit()">
+        <span class="material-symbols-outlined text-lg">map</span>
+        اختر الموقع على الخريطة
+      </app-button>
+      <app-button variant="outline" type="button" (click)="useCurrentLocation.emit()" [disabled]="isLocating()"
+        [loading]="isLocating()" icon="my_location"
+        extraClass="h-11 border-secondary text-secondary hover:bg-secondary/10 font-medium">
+        استخدام موقعي الحالي
+      </app-button>
+    </div>
+
+    @if (locationError()) {
+    <p class="mt-1 flex items-center gap-1 text-xs text-error">{{ locationError() }}</p>
+    }
+
+    <!-- Address Display -->
+    @if (selectedAddress()) {
+    <p class="flex items-center gap-1 text-xs text-on-surface-variant/80">
+      <span class="material-symbols-outlined text-sm">place</span>
+      {{ selectedAddress() }}
+    </p>
+    }
+    @if (isInvalid()('latitude') || isInvalid()('longitude')) {
+    <p class="mt-1 flex items-center gap-1 text-xs text-error">
+      يرجى تحديد الموقع على الخريطة
+    </p>
+    }
+  </div>
+  }
+</div>

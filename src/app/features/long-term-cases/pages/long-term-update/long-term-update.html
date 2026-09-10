@@ -1,0 +1,108 @@
+@if (isLoading()) {
+<div dir="rtl" class="mx-auto max-w-190 px-4 pb-16 pt-6">
+  <app-card extraClass="overflow-hidden rounded-2xl border border-outline-variant/30 bg-white shadow-sm p-6 md:p-8">
+    <app-update-form-skeleton></app-update-form-skeleton>
+  </app-card>
+</div>
+} @else {
+<app-case-form-container title="تعديل حالة طويلة المدى" [subtitle]="stepTitle()" [stepHeader]="stepHeader()"
+  [steps]="steps" [currentStep]="currentStep()" [isSubmitting]="isSubmitting()" [errorMsg]="errorMsg()"
+  submitLabel="حفظ التعديلات" endingMessage="بعد التعديل سيتم مراجعتها من قِبَل الإدارة مرة أخرى."
+  (backAction)="goBack()" (prevStep)="prevStep()" (nextStep)="nextStep()" (submitForm)="onSubmit()">
+  <form [formGroup]="form">
+    @if (currentStep() === 1) {
+    <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+      <!-- Section Header removed as it is now handled by the container -->
+
+      <app-case-person-data [form]="form" [isInvalid]="isInvalidFn" [getError]="getErrorFn"
+        [caseType]="'update'"></app-case-person-data>
+    </div>
+    }
+
+    @if (currentStep() === 2) {
+    <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+      <!-- Section Header removed as it is now handled by the container -->
+
+      <app-case-location-data [form]="form" [governorates]="governorates" [cities]="availableCities()"
+        [showMapPicker]="false" [showEventDate]="false" [isInvalid]="isInvalidFn"
+        [getError]="getErrorFn"></app-case-location-data>
+
+      <!-- Event Date -->
+      <div>
+        <app-form-field label="تاريخ الاختفاء *" formControlName="eventDate" type="date"
+          [extraClass]="isInvalid('eventDate') ? 'border-error' : ''"></app-form-field>
+        @if (isInvalid('eventDate')) {
+        <p class="mt-1 flex items-center gap-1 text-xs text-error">
+          {{ getFieldError('eventDate') }}
+        </p>
+        }
+      </div>
+    </div>
+    }
+
+    @if (currentStep() === 3) {
+    <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+      <!-- Section Header removed as it is now handled by the container -->
+
+      <app-case-media-uploader [mode]="'update'" [existingPhotos]="existingPhotos()"
+        [existingVideoUrl]="existingVideoUrl()" [initialPrimaryFile]="initialPrimary()"
+        [initialAdditionalFiles]="initialAdditional()" [initialVideoFile]="initialVideo()"
+        [initialDeletedPhotoIds]="initialDeletedPhotoIds()" [initialPrimaryPhotoId]="initialPrimaryPhotoId()"
+        [initialExistingVideoDeleted]="initialExistingVideoDeleted()"
+        [errors]="mediaErrors()" (mediaChange)="onMediaChange($event)" (clearError)="clearMediaError($event)"></app-case-media-uploader>
+
+      <div>
+        <label class="mb-2 block text-sm font-medium text-on-surface-variant">
+          بلاغ الشرطة <span class="font-normal text-on-surface-variant/70">(اختياري — JPG/JPEG/PNG/WebP، حتى 10
+            MB)</span>
+        </label>
+
+        @if (existingPoliceReportUrl() && !policeReport()) {
+        <div
+          class="mb-3 flex items-center justify-between rounded-xl border border-outline-variant/40 bg-surface-container-low p-3.5">
+          <span class="text-xs font-medium text-on-surface">مستند البلاغ الحالي مرفوع بالفعل</span>
+          <a [href]="existingPoliceReportUrl()" target="_blank"
+            class="text-xs text-secondary font-semibold underline">عرض المستند</a>
+        </div>
+        }
+
+        <div>
+          <div
+            class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
+            [class.border-secondary]="!!policeReport()" [class.bg-surface-container-low]="!!policeReport()"
+            (click)="policeInput.click()">
+            <input #policeInput type="file" accept="image/jpeg,image/png,image/webp" class="hidden"
+              (change)="onPoliceReportSelected($event)" />
+            <div
+              class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
+              <span class="material-symbols-outlined text-3xl"
+                [ngClass]="policeReport() ? 'text-secondary' : 'text-outline'">description</span>
+            </div>
+            <p class="text-sm font-bold text-on-surface">
+              {{ policeReport()?.name ?? ('استبدال / رفع صورة بلاغ الشرطة') }}
+            </p>
+            <p class="mt-0.5 text-xs text-on-surface-variant/70">JPG / JPEG / PNG / WebP — حتى 10 MB</p>
+          </div>
+          @if (policeReportPreview()) {
+          <div class="mt-3.5 flex flex-wrap gap-3">
+            <div
+              class="relative h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
+              <img [src]="policeReportPreview()" alt="معاينة بلاغ الشرطة" width="80" height="80"
+                class="h-full w-full object-cover" />
+              <button type="button" (click)="removePoliceReport(); $event.stopPropagation()"
+                class="absolute top-1 right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-on-surface/80 text-surface-container-lowest shadow-md transition hover:bg-on-surface hover:scale-110">
+                <span class="material-symbols-outlined text-xs">close</span>
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+        @if (mediaErrors().policeReport) {
+        <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ mediaErrors().policeReport }}</p>
+        }
+      </div>
+    </div>
+    }
+  </form>
+</app-case-form-container>
+}

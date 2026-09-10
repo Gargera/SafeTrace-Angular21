@@ -1,0 +1,491 @@
+<div class="mb-md lg:mb-xl">
+  <app-header 
+    title="لوحة الإحصائيات" 
+    subtitle="نظرة عامة على البيانات وتوزيع الحالات"
+    [showPrimary]="false" 
+    [showSecondary]="false">
+  </app-header>
+</div>
+
+<div class="flex flex-col gap-xl">
+  @if (isLoading()) {
+    <app-dashboard-statistics-skeleton></app-dashboard-statistics-skeleton>
+  }
+
+  @if (error() && !isLoading()) {
+    <div
+      class="glass-card p-xl rounded-2xl border border-error/30 flex flex-col items-center gap-md text-center"
+    >
+      <span class="material-symbols-outlined text-error text-4xl">error</span>
+      <p class="text-body-md text-on-surface">{{ errorDetail() }}</p>
+      <app-button
+        customClass="px-lg py-sm rounded-full bg-secondary text-on-secondary text-label-md"
+        (onClick)="reload()"
+        label="إعادة المحاولة"
+      >
+      </app-button>
+    </div>
+  }
+
+  @if (dashboard(); as data) {
+    <!-- Top-level Stat Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-3 gap-md">
+      @for (card of statCards(); track card.label) {
+        <div
+          class="relative glass-card p-md rounded-xl flex flex-col justify-between shadow-sm overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <!-- Colored top accent -->
+          <div class="absolute top-0 inset-x-0 h-1" [style.background-color]="card.color"></div>
+
+          <div class="relative w-fit p-xs rounded-lg" [style.background-color]="card.bg">
+            <span class="material-symbols-outlined" [style.color]="card.color">{{
+              card.icon
+            }}</span>
+            @if (card.pulse) {
+              <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                  [style.background-color]="card.color"
+                ></span>
+                <span
+                  class="relative inline-flex rounded-full h-2.5 w-2.5"
+                  [style.background-color]="card.color"
+                ></span>
+              </span>
+            }
+          </div>
+
+          <div class="mt-sm">
+            <p class="text-label-sm text-on-surface-variant">{{ card.label }}</p>
+            <h2 class="text-headline-sm font-bold" [style.color]="card.color">{{ card.value }}</h2>
+          </div>
+        </div>
+      }
+    </div>
+
+    @defer (on viewport) {
+    <!-- Charts Row: Case Status, Donations, and Complaints Donuts -->
+    <div class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-lg">
+      <!-- Case Status Donut -->
+      <app-card
+        extraClass="relative glass-card p-xl rounded-2xl shadow-sm flex flex-col h-full"
+      >
+        <h3 class="text-headline-sm font-bold text-primary mb-lg">توزيع حالات الحالات</h3>
+
+        @if (caseStatusDonut().length === 0) {
+          <app-empty-state title="لا توجد بيانات" message="لا توجد بيانات لعرضها." icon="insert_chart"></app-empty-state>
+        } @else {
+          <div class="flex flex-col sm:flex-row items-center gap-xl">
+            <div class="relative w-45 h-45 shrink-0">
+              <svg viewBox="0 0 160 160" class="w-full h-full -rotate-90">
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="60"
+                  fill="none"
+                  stroke="var(--color-surface-variant)"
+                  stroke-width="18"
+                />
+                @for (segment of caseStatusDonut(); track segment.label) {
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="60"
+                    fill="none"
+                    [style.stroke]="segment.color"
+                    stroke-width="18"
+                    stroke-linecap="butt"
+                    [attr.stroke-dasharray]="segment.dashArray"
+                    [attr.stroke-dashoffset]="segment.dashOffset"
+                    class="drop-shadow-sm transition-all duration-200 cursor-pointer origin-center"
+                    (mouseenter)="hoveredCaseStatus.set(segment.label)"
+                    (mouseleave)="hoveredCaseStatus.set(null)"
+                    [ngClass]="{
+                      'scale-105 stroke-[20px] drop-shadow-md': hoveredCaseStatus() === segment.label,
+                      'opacity-30': hoveredCaseStatus() !== null && hoveredCaseStatus() !== segment.label
+                    }"
+                  >
+                    <title>{{ segment.label }}: {{ segment.value }} ({{ segment.percent | number: '1.0-1' }}%)</title>
+                  </circle>
+                }
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span class="text-headline-sm font-bold text-primary">{{ caseStatusTotal() }}</span>
+                <span class="text-label-sm text-on-surface-variant">حالة</span>
+              </div>
+            </div>
+
+            <ul class="flex flex-col gap-sm w-full">
+              @for (segment of caseStatusDonut(); track segment.label) {
+                <li 
+                  class="flex items-center justify-between gap-md text-body-sm transition-opacity duration-200 cursor-default"
+                  (mouseenter)="hoveredCaseStatus.set(segment.label)"
+                  (mouseleave)="hoveredCaseStatus.set(null)"
+                  [class.opacity-30]="hoveredCaseStatus() !== null && hoveredCaseStatus() !== segment.label"
+                >
+                  <span class="flex items-center gap-sm">
+                    <span
+                      class="w-3 h-3 rounded-full shrink-0"
+                      [style.background-color]="segment.color"
+                    ></span>
+                    <span class="text-on-surface">{{ segment.label }}</span>
+                  </span>
+                  <span class="text-on-surface-variant tabular-nums font-bold">
+                    {{ segment.value }}
+                    <span class="font-normal">({{ segment.percent | number: '1.0-1' }}%)</span>
+                  </span>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </app-card>
+
+      <!-- Donations Donut -->
+      <app-card
+        extraClass="relative glass-card p-xl rounded-2xl shadow-sm flex flex-col h-full"
+      >
+        <div class="flex items-center justify-between mb-lg">
+          <h3 class="text-headline-sm font-bold text-primary">حالة التبرعات</h3>
+          <div class="text-left">
+            <p class="text-label-sm text-on-surface-variant">إجمالي التبرعات</p>
+            <p class="text-title-lg font-bold text-primary tabular-nums">
+              EGP {{ data.totalSumDonations | number: '1.2-2' }}
+            </p>
+          </div>
+        </div>
+
+        @if (donationsDonut().length === 0) {
+          <app-empty-state title="لا توجد بيانات" message="لا توجد بيانات لعرضها." icon="insert_chart"></app-empty-state>
+        } @else {
+          <div class="flex flex-col sm:flex-row items-center gap-xl">
+            <div class="relative w-45 h-45 shrink-0">
+              <svg viewBox="0 0 160 160" class="w-full h-full -rotate-90">
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="60"
+                  fill="none"
+                  stroke="var(--color-surface-variant)"
+                  stroke-width="18"
+                />
+                @for (segment of donationsDonut(); track segment.label) {
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="60"
+                    fill="none"
+                    [attr.stroke]="segment.color"
+                    stroke-width="18"
+                    stroke-linecap="butt"
+                    [attr.stroke-dasharray]="segment.dashArray"
+                    [attr.stroke-dashoffset]="segment.dashOffset"
+                    class="drop-shadow-sm transition-all duration-200 cursor-pointer origin-center"
+                    (mouseenter)="hoveredDonations.set(segment.label)"
+                    (mouseleave)="hoveredDonations.set(null)"
+                    [ngClass]="{
+                      'scale-105 stroke-[20px] drop-shadow-md': hoveredDonations() === segment.label,
+                      'opacity-30': hoveredDonations() !== null && hoveredDonations() !== segment.label
+                    }"
+                  >
+                    <title>{{ segment.label }}: {{ segment.value }} ({{ segment.percent | number: '1.0-1' }}%)</title>
+                  </circle>
+                }
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span class="text-headline-sm font-bold text-primary">{{
+                  donationsCountTotal()
+                }}</span>
+                <span class="text-label-sm text-on-surface-variant">معاملة</span>
+              </div>
+            </div>
+
+            <ul class="flex flex-col gap-sm w-full">
+              @for (segment of donationsDonut(); track segment.label) {
+                <li 
+                  class="flex items-center justify-between gap-md text-body-sm transition-opacity duration-200 cursor-default"
+                  (mouseenter)="hoveredDonations.set(segment.label)"
+                  (mouseleave)="hoveredDonations.set(null)"
+                  [class.opacity-30]="hoveredDonations() !== null && hoveredDonations() !== segment.label"
+                >
+                  <span class="flex items-center gap-sm">
+                    <span
+                      class="w-3 h-3 rounded-full shrink-0"
+                      [style.background-color]="segment.color"
+                    ></span>
+                    <span class="text-on-surface">{{ segment.label }}</span>
+                  </span>
+                  <span class="text-on-surface-variant tabular-nums font-bold">
+                    {{ segment.value }}
+                    <span class="font-normal">({{ segment.percent | number: '1.0-1' }}%)</span>
+                  </span>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+        </app-card>
+  
+        <app-card
+          extraClass="relative glass-card p-xl rounded-2xl shadow-sm flex flex-col h-full overflow-hidden"
+        >
+        <h3 class="text-headline-sm font-bold text-primary mb-lg">حالة الشكاوى</h3>
+
+        @if (complaintsDonut().length === 0) {
+          <app-empty-state title="لا توجد بيانات" message="لا توجد بيانات لعرضها." icon="insert_chart"></app-empty-state>
+        } @else {
+          <div class="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center gap-xl">
+            <div class="relative w-45 h-45 shrink-0">
+              <svg viewBox="0 0 160 160" class="w-full h-full -rotate-90">
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="60"
+                  fill="none"
+                  stroke="var(--color-surface-variant)"
+                  stroke-width="18"
+                />
+                @for (segment of complaintsDonut(); track segment.label) {
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="60"
+                    fill="none"
+                    [attr.stroke]="segment.color"
+                    stroke-width="18"
+                    stroke-linecap="butt"
+                    [attr.stroke-dasharray]="segment.dashArray"
+                    [attr.stroke-dashoffset]="segment.dashOffset"
+                    class="drop-shadow-sm transition-all duration-200 cursor-pointer origin-center"
+                    (mouseenter)="hoveredComplaints.set(segment.label)"
+                    (mouseleave)="hoveredComplaints.set(null)"
+                    [ngClass]="{
+                      'scale-105 stroke-[20px] drop-shadow-md': hoveredComplaints() === segment.label,
+                      'opacity-30': hoveredComplaints() !== null && hoveredComplaints() !== segment.label
+                    }"
+                  >
+                    <title>{{ segment.label }}: {{ segment.value }} ({{ segment.percent | number: '1.0-1' }}%)</title>
+                  </circle>
+                }
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span class="text-headline-sm font-bold text-primary">{{
+                  complaintsCountTotal()
+                }}</span>
+                <span class="text-label-sm text-on-surface-variant">شكوى</span>
+              </div>
+            </div>
+
+            <ul class="flex flex-col gap-sm w-full">
+              @for (segment of complaintsDonut(); track segment.label) {
+                <li 
+                  class="flex items-center justify-between gap-md text-body-sm transition-opacity duration-200 cursor-default"
+                  (mouseenter)="hoveredComplaints.set(segment.label)"
+                  (mouseleave)="hoveredComplaints.set(null)"
+                  [class.opacity-30]="hoveredComplaints() !== null && hoveredComplaints() !== segment.label"
+                >
+                  <span class="flex items-center gap-sm">
+                    <span
+                      class="w-3 h-3 rounded-full shrink-0"
+                      [style.background-color]="segment.color"
+                    ></span>
+                    <span class="text-on-surface">{{ segment.label }}</span>
+                  </span>
+                  <span class="text-on-surface-variant tabular-nums font-bold">
+                    {{ segment.value }}
+                    <span class="font-normal">({{ segment.percent | number: '1.0-1' }}%)</span>
+                  </span>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </app-card>
+    </div>
+
+    <!-- Case Type Breakdown: Stacked Bars -->
+    <app-card extraClass="glass-card p-xl rounded-2xl shadow-sm overflow-hidden mb-lg">
+      <div class="flex items-center justify-between mb-xl">
+        <h3 class="text-headline-sm font-bold text-primary">توزيع أنواع الحالات</h3>
+      </div>
+
+      @if (caseTypeBars().length === 0) {
+        <app-empty-state title="لا توجد بيانات" message="لا توجد بيانات لعرضها." icon="insert_chart"></app-empty-state>
+      } @else {
+        <!-- Legend -->
+        <div class="flex flex-wrap gap-md mb-lg text-label-sm">
+          <span class="flex items-center gap-xs">
+            <span
+              class="w-2.5 h-2.5 rounded-full"
+              [style.background-color]="statusColors.active"
+            ></span>
+            نشطة
+          </span>
+          <span class="flex items-center gap-xs">
+            <span
+              class="w-2.5 h-2.5 rounded-full"
+              [style.background-color]="statusColors.found"
+            ></span>
+            تم العثور عليها
+          </span>
+          <span class="flex items-center gap-xs">
+            <span
+              class="w-2.5 h-2.5 rounded-full"
+              [style.background-color]="statusColors.pending"
+            ></span>
+            قيد الانتظار
+          </span>
+          <span class="flex items-center gap-xs">
+            <span
+              class="w-2.5 h-2.5 rounded-full"
+              [style.background-color]="statusColors.rejected"
+            ></span>
+            مرفوضة
+          </span>
+          <span class="flex items-center gap-xs">
+            <span
+              class="w-2.5 h-2.5 rounded-full"
+              [style.background-color]="statusColors.expired"
+            ></span>
+            منتهية
+          </span>
+          <span class="flex items-center gap-xs">
+            <span
+              class="w-2.5 h-2.5 rounded-full"
+              [style.background-color]="statusColors.deleted"
+            ></span>
+            محذوفة
+          </span>
+        </div>
+
+        <div class="flex flex-col gap-lg">
+          @for (bar of caseTypeBars(); track bar.label) {
+            <div class="flex flex-col gap-xs">
+              <div class="flex items-center justify-between text-body-sm">
+                <span class="font-bold text-on-surface">{{ bar.label }}</span>
+                <span class="text-on-surface-variant tabular-nums">{{ bar.total }}</span>
+              </div>
+
+              <div
+                class="w-full h-6 rounded-full bg-surface-variant overflow-hidden flex transition-transform hover:scale-[1.02] cursor-pointer"
+                [style.width.%]="bar.totalHeightPercent"
+              >
+                @if (bar.activePercent > 0) {
+                  <div
+                    class="h-full"
+                    [style.background-color]="statusColors.active"
+                    [style.width.%]="bar.activePercent"
+                    [attr.title]="'نشطة: ' + bar.active"
+                  ></div>
+                }
+                @if (bar.foundPercent > 0) {
+                  <div
+                    class="h-full"
+                    [style.background-color]="statusColors.found"
+                    [style.width.%]="bar.foundPercent"
+                    [attr.title]="'تم العثور عليها: ' + bar.found"
+                  ></div>
+                }
+                @if (bar.pendingPercent > 0) {
+                  <div
+                    class="h-full"
+                    [style.background-color]="statusColors.pending"
+                    [style.width.%]="bar.pendingPercent"
+                    [attr.title]="'قيد الانتظار: ' + bar.pending"
+                  ></div>
+                }
+                @if (bar.rejectedPercent > 0) {
+                  <div
+                    class="h-full"
+                    [style.background-color]="statusColors.rejected"
+                    [style.width.%]="bar.rejectedPercent"
+                    [attr.title]="'مرفوضة: ' + bar.rejected"
+                  ></div>
+                }
+                @if (bar.expiredPercent > 0) {
+                  <div
+                    class="h-full"
+                    [style.background-color]="statusColors.expired"
+                    [style.width.%]="bar.expiredPercent"
+                    [attr.title]="'منتهية: ' + bar.expired"
+                  ></div>
+                }
+                @if (bar.deletedPercent > 0) {
+                  <div
+                    class="h-full"
+                    [style.background-color]="statusColors.deleted"
+                    [style.width.%]="bar.deletedPercent"
+                    [attr.title]="'محذوفة: ' + bar.deleted"
+                  ></div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </app-card>
+
+    <!-- Full Detail Table -->
+    <app-card extraClass="glass-card p-xl rounded-2xl shadow-sm overflow-hidden">
+      <h3 class="text-headline-sm font-bold text-primary mb-lg">تفاصيل أنواع الحالات</h3>
+
+      @if (data.caseTypes.length === 0) {
+        <app-empty-state title="لا توجد بيانات" message="لا توجد بيانات لعرضها." icon="insert_chart"></app-empty-state>
+      } @else {
+        <div class="overflow-x-auto pb-4">
+          <table class="w-full text-right text-body-sm whitespace-nowrap min-w-max">
+            <thead class="text-label-sm text-on-surface-variant border-b border-outline-variant">
+              <tr>
+                <th class="py-sm px-md text-center">نوع الحالة</th>
+                <th class="py-sm px-md text-center">الإجمالي</th>
+                <th class="py-sm px-md text-center">النشطة</th>
+                <th class="py-sm px-md text-center">تم العثور عليها</th>
+                <th class="py-sm px-md text-center">قيد الانتظار</th>
+                <th class="py-sm px-md text-center">مرفوضة</th>
+                <th class="py-sm px-md text-center">منتهية</th>
+                <th class="py-sm px-md text-center">محذوفة</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/10">
+              @for (row of data.caseTypes; track row.caseType) {
+                <tr class="hover:bg-surface-container-low transition-colors text-center">
+                  <td class="py-md font-bold">{{ translateCaseType(row.caseType) }}</td>
+                  <td class="py-md tabular-nums">{{ row.total }}</td>
+                  <td class="py-md">
+                    <span
+                      class="px-sm py-2xs rounded-full text-label-sm font-bold tabular-nums"
+                      [style.color]="statusColors.active"
+                      [style.background-color]="'rgba(239,68,68,0.1)'"
+                      >{{ row.active }}</span
+                    >
+                  </td>
+                  <td class="py-md">
+                    <span
+                      class="px-sm py-2xs rounded-full text-label-sm font-bold tabular-nums"
+                      [style.color]="statusColors.found"
+                      [style.background-color]="'rgba(16,185,129,0.1)'"
+                      >{{ row.found }}</span
+                    >
+                  </td>
+                  <td class="py-md tabular-nums" [style.color]="statusColors.pending">
+                    {{ row.pending }}
+                  </td>
+                  <td class="py-md tabular-nums text-on-surface-variant">{{ row.rejected }}</td>
+                  <td class="py-md tabular-nums" [style.color]="statusColors.expired">
+                    {{ row.expired }}
+                  </td>
+                  <td class="py-md tabular-nums text-on-surface-variant">{{ row.deleted }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </app-card>
+    } @placeholder {
+      <div class="py-2xl w-full">
+        <app-table-skeleton [rows]="4"></app-table-skeleton>
+      </div>
+    }
+  }
+</div>

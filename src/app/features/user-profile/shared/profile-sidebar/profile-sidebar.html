@@ -1,0 +1,117 @@
+<aside class="md:col-span-3 space-y-gutter">
+  <!-- Profile Card -->
+  <div class="rounded-xl p-lg flex flex-col items-center text-center">
+    <!-- Avatar -->
+
+    <div class="relative mb-md group">
+      <div
+        class="w-24 h-24 rounded-full overflow-hidden border-4 border-surface-container shadow-sm"
+      >
+        <img
+          [src]="avatarUrl"
+          [alt]="userInfo()?.fullName ?? 'User'"
+          class="w-full h-full object-cover cursor-pointer"
+          (click)="openImageZoom()"
+        />
+      </div>
+
+      <div
+        class="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all pointer-events-none"
+      >
+        <span class="material-symbols-outlined text-white"> zoom_in </span>
+      </div>
+    </div>
+    @if (selectedZoomImage()) {
+      <div
+        style="
+          position: fixed;
+          inset: 0;
+          z-index: 2147483647;
+          background: rgba(0, 0, 0, 0.7);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        "
+        (click)="closeImageZoom()"
+      >
+        <img
+          [src]="selectedZoomImage()"
+          class="max-w-[90vw] max-h-[90vh] object-contain"
+          (click)="$event.stopPropagation()"
+        />
+      </div>
+    }
+    <!-- Name & Status -->
+    <h2 class="text-headline-sm font-bold text-primary mb-xs">
+      {{ userInfo()?.fullName ?? '—' }}
+    </h2>
+
+    <!-- Verification badge (uses VerificationBadgeDirective) -->
+    @if (userInfo()?.verificationStatus !== undefined && userInfo()?.verificationStatus !== null) {
+      <div class="mb-md">
+        <span [appVerificationBadgeDirective]="userInfo()!.verificationStatus"></span>
+      </div>
+    }
+
+    <!-- Role badge (uses RoleBadgeDirective) -->
+    @if (userInfo()?.role) {
+      <div class="mb-md">
+        <span [appRoleBadgeDirective]="userInfo()!.role"></span>
+      </div>
+    }
+
+    <!-- Contact Info -->
+    <div class="w-full border-t border-outline-variant mt-lg pt-lg space-y-md text-right">
+      <!-- Email -->
+      @if (userInfo()?.email) {
+        <div class="flex items-center gap-sm text-on-surface-variant">
+          <span class="material-symbols-outlined text-secondary shrink-0">mail</span>
+          <span dir="ltr" class="block truncate text-left">
+            {{ userInfo()!.email }}
+          </span>
+        </div>
+      }
+      @if (userInfo()?.phoneNumber) {
+        <div class="flex items-center gap-sm text-on-surface-variant">
+          <span class="material-symbols-outlined text-secondary shrink-0">phone</span>
+          <span dir="ltr" class="block truncate text-left"> {{ userInfo()!.phoneNumber }}</span>
+        </div>
+      }
+      <!-- Address (resolved from lat/lng via Geocoding API) -->
+      @if (userInfo()?.homeLatitude && userInfo()?.homeLongitude) {
+        <div class="flex items-start gap-sm text-on-surface-variant">
+          <span class="material-symbols-outlined text-secondary shrink-0 mt-0.5">location_on</span>
+
+          @if (isResolvingAddress()) {
+            <!-- Skeleton loader while geocoding -->
+            <div class="space-y-xs flex-1">
+              <div class="h-3 bg-outline-variant rounded animate-pulse w-3/4"></div>
+              <div class="h-3 bg-outline-variant rounded animate-pulse w-1/2"></div>
+            </div>
+          } @else {
+            <span class="text-body-sm text-right leading-relaxed">
+              {{ resolvedAddress() }}
+            </span>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Activity Stats (Hidden temporarily due to missing backend data) -->
+  @if (hasCases) {
+    <div class="glass-card rounded-xl p-md">
+      <h3 class="text-label-md text-on-surface-variant uppercase tracking-wider mb-md">
+        إحصائيات النشاط
+      </h3>
+      <div class="grid grid-cols-2 gap-sm">
+        <div class="bg-surface-container-low p-md rounded-lg text-center">
+          <span class="block text-headline-sm font-bold text-primary">{{
+            userInfo()!.cases.length
+          }}</span>
+          <span class="text-label-sm text-on-surface-variant">بلاغ مقدم</span>
+        </div>
+      </div>
+    </div>
+  }
+</aside>

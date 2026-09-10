@@ -1,0 +1,57 @@
+<app-case-form-container title="إضافة حالة عاجلة" [subtitle]="stepTitle()" [stepHeader]="stepHeader()" [steps]="steps"
+  [currentStep]="currentStep()" [isSubmitting]="isSubmitting()" [errorMsg]="errorMsg()"
+  endingMessage="نظرًا لطبيعتها العاجلة، سيتم نشر الحالة فور إرسالها دون الحاجة لمراجعة الإدارة."
+  (backAction)="goBack()" (prevStep)="prevStep()" (nextStep)="nextStep()" (submitForm)="onSubmit()">
+  <form [formGroup]="form">
+    @if (currentStep() === 1) {
+    <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+      <!-- Section Header removed as it is now handled by the container -->
+
+      <app-case-person-data [form]="form" [isInvalid]="isInvalidFn" [getError]="getErrorFn"
+        [caseType]="'urgent'"></app-case-person-data>
+    </div>
+    }
+
+    @if (currentStep() === 2) {
+    <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+      <!-- Section Header removed as it is now handled by the container -->
+
+      <app-case-location-data [form]="form" [governorates]="governorates" [cities]="availableCities()"
+        [selectedAddress]="selectedAddress()" [locationError]="locationError()" [isLocating]="isLocating()"
+        [minEventDate]="minEventDate()" [maxEventDate]="maxEventDate()" (openMap)="openMapModal()"
+        [isInvalid]="isInvalidFn" [getError]="getErrorFn"
+        (useCurrentLocation)="useCurrentLocation()"></app-case-location-data>
+    </div>
+    }
+
+    @if (currentStep() === 3) {
+    <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+      <!-- Section Header removed as it is now handled by the container -->
+
+      <app-case-media-uploader mode="create" [initialPrimaryFile]="initialPrimary()"
+        [initialOriginalPrimaryFile]="initialOriginalPrimary()" [initialAdditionalFiles]="initialAdditional()"
+        [initialVideoFile]="initialVideo()" [errors]="mediaErrors()"
+        (mediaChange)="onMediaChange($event)" (clearError)="clearMediaError($event)"></app-case-media-uploader>
+    </div>
+    }
+  </form>
+</app-case-form-container>
+
+@if (showForceCreatePopup()) {
+<app-force-create-popup [isSubmitting]="isSubmitting()" [matches]="matchedCases()" [isBlocked]="isBlockedDuplicate()"
+  [readOnly]="currentDuplicateDecision() === 'ActiveOwnerCase'" [duplicateDecision]="currentDuplicateDecision()"
+  (cancel)="onForceCreateCancel()" (forceCreate)="onForceCreateConfirm()">
+</app-force-create-popup>
+}
+
+@if (showDuplicateInfoDialog()) {
+<app-duplicate-info-dialog [duplicateDecision]="currentDuplicateDecision()" [existingCaseType]="existingCaseType()!"
+  [currentCaseType]="caseTypes.Urgent" (close)="onPendingDialogClose()"
+  (continueCreate)="onPendingDialogContinueCreate()">
+</app-duplicate-info-dialog>
+}
+
+<!-- Location Picker Map Modal -->
+<app-map-location-picker [isOpen]="isMapModalOpen()" [initialLat]="selectedLat()" [initialLng]="selectedLng()"
+  [initialAddress]="selectedAddress()" (confirmLocation)="onMapLocationConfirmed($event)" (cancel)="closeMapModal()">
+</app-map-location-picker>

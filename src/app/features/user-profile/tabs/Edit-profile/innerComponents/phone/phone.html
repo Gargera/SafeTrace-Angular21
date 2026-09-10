@@ -1,0 +1,72 @@
+<form
+  [formGroup]="phoneForm"
+  (ngSubmit)="savePhoneNumber()"
+  class="bg-surface border my-5 border-outline-variant rounded-2xl p-lg space-y-md shadow-sm transition-all duration-300 hover:shadow-md"
+  aria-labelledby="phone-heading"
+>
+  <div class="flex justify-between items-center border-b border-outline-variant pb-sm">
+    <h3 id="phone-heading" class="text-headline-sm font-bold text-primary flex items-center gap-sm">
+      <span class="material-symbols-outlined" aria-hidden="true">call</span>
+      رقم الهاتف
+    </h3>
+    @if (!isEditingPhone()) {
+      <app-button
+        variant="icon"
+        ariaLabel="تعديل رقم الهاتف"
+        (onClick)="togglePhoneEdit(true)"
+        extraClass="text-on-surface-variant hover:text-primary transition-colors p-1 rounded-lg hover:bg-surface-container-high border-none bg-transparent"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+      </app-button>
+    } @else {
+      <div class="flex items-center gap-sm">
+        <app-button
+          type="button"
+          variant="danger"
+          [disabled]="isSavingPhone()"
+          (click)="togglePhoneEdit(false); cancelPhone()"
+        >
+          إلغاء
+        </app-button>
+        <app-button
+          type="submit"
+          variant="success"
+          [disabled]="isSavingPhone()"
+          [loading]="isSavingPhone()"
+          icon="save"
+        >
+          حفظ
+        </app-button>
+      </div>
+    }
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-lg pt-sm">
+    <!-- Phone Number -->
+    <div class="space-y-xs">
+      <label for="phoneNumber" class="text-label-md text-on-surface font-semibold">
+        رقم الهاتف <span class="text-error" aria-hidden="true">*</span>
+      </label>
+      <app-form-field
+        id="phoneNumber"
+        formControlName="phoneNumber"
+        type="tel"
+        dir="ltr"
+        maxlength="20"
+        [attr.aria-invalid]="isPhoneFieldInvalid('phoneNumber')"
+        [attr.aria-describedby]="isPhoneFieldInvalid('phoneNumber') ? 'phoneNumber-error' : null"
+        [class.border-error]="isPhoneFieldInvalid('phoneNumber')"
+        [class.border-outline-variant]="!isPhoneFieldInvalid('phoneNumber')"
+      />
+      @if (isPhoneFieldInvalid('phoneNumber')) {
+        <p id="phoneNumber-error" class="text-label-sm text-error font-medium mt-xs" role="alert">
+          @if (phoneForm.get('phoneNumber')?.hasError('required')) {
+            رقم الهاتف مطلوب
+          } @else if (phoneForm.get('phoneNumber')?.hasError('egyptianPhone')) {
+            يرجى إدخال رقم هاتف مصري صحيح
+          }
+        </p>
+      }
+    </div>
+  </div>
+</form>

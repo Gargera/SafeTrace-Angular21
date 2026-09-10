@@ -1,0 +1,137 @@
+<form
+  [formGroup]="personalForm"
+  (ngSubmit)="savePersonal()"
+  class="bg-surface border my-5 border-outline-variant rounded-2xl p-lg space-y-md shadow-sm transition-all duration-300 hover:shadow-md"
+  aria-labelledby="personal-heading"
+>
+  <div class="flex justify-between items-center border-b border-outline-variant pb-sm">
+    <h3
+      id="personal-heading"
+      class="text-headline-sm font-bold text-primary flex items-center gap-sm"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">person</span>
+      المعلومات الشخصية
+    </h3>
+    @if (!isEditingPersonal()) {
+      <app-button
+        variant="icon"
+        ariaLabel="تعديل المعلومات الشخصية"
+        (onClick)="togglePersonalEdit(true)"
+        extraClass="text-on-surface-variant hover:text-primary transition-colors p-1 rounded-lg hover:bg-surface-container-high border-none bg-transparent"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+      </app-button>
+    } @else {
+      <div class="flex items-center gap-sm">
+        <app-button
+          type="button"
+          variant="danger"
+          [disabled]="isSavingPersonal()"
+          (click)="togglePersonalEdit(false); cancelPersonal()"
+        >
+          إلغاء
+        </app-button>
+        <app-button
+          type="submit"
+          variant="success"
+          [disabled]="isSavingPersonal()"
+          [loading]="isSavingPersonal()"
+          icon="save"
+        >
+          حفظ
+        </app-button>
+      </div>
+    }
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-lg pt-sm">
+    <!-- First Name -->
+    <div class="space-y-xs">
+      <!-- <app-form-field
+        id="firstName"
+        label="الاسم الأول"
+        formControlName="firstName"
+        type="text"
+        maxlength="100"
+        [attr.aria-invalid]="isFieldInvalid('firstName')"
+        [attr.aria-describedby]="isFieldInvalid('firstName') ? 'firstName-error' : null"
+        [class.border-error]="isFieldInvalid('firstName')"
+        [class.border-outline-variant]="!isFieldInvalid('firstName')"
+        [class.border-error]="
+          personalForm.get('firstName')?.touched && personalForm.get('firstName')?.invalid
+        "
+      />
+      @if (personalForm.get('firstName')?.touched && personalForm.get('firstName')?.invalid) {
+        <span class="text-error text-xs font-medium">
+          @if (personalForm.get('firstName')?.errors?.['serverError']) {
+            {{ personalForm.get('firstName')?.errors?.['serverError'] }}
+          } @else if (personalForm.get('firstName')?.errors?.['pattern']) {
+            الاسم الأول يجب أن يكون كلمة واحدة باللغة العربية فقط.
+          } @else if (personalForm.get('firstName')?.errors?.['minlength']) {
+            الاسم الأول لا يجب أن يقل عن حرفين.
+          } @else {
+            الاسم الأول مطلوب ويجب ألا يزيد عن 100 حرف.
+          }
+        </span>
+      } -->
+      <!-- @if (isFieldInvalid('firstName')) {
+        <p id="firstName-error" class="text-label-sm text-error font-medium mt-xs" role="alert">
+          @if (personalForm.get('firstName')?.hasError('required')) {
+            الاسم الأول مطلوب
+          } @else if (personalForm.get('firstName')?.hasError('maxlength')) {
+            لا يتجاوز 100 حرف
+          } @else if (personalForm.get('firstName')?.hasError('pattern')) {
+            الاسم الأول يجب أن يكون كلمة واحدة باللغة العربية فقط
+          }
+        </p>
+      } -->
+
+      <app-form-field
+        formControlName="firstName"
+        label="الاسم الأول *"
+        placeholder="أحمد"
+        [class.border-error]="
+          personalForm.get('firstName')?.touched && personalForm.get('firstName')?.invalid
+        "
+      />
+
+      @if (personalForm.get('firstName')?.touched && personalForm.get('firstName')?.invalid) {
+        <span class="text-error text-xs font-medium">
+          @if (personalForm.get('firstName')?.errors?.['serverError']) {
+            {{ personalForm.get('firstName')?.errors?.['serverError'] }}
+          } @else if (personalForm.get('firstName')?.errors?.['pattern']) {
+            الاسم الأول يجب أن يكون كلمة واحدة باللغة العربية فقط.
+          } @else if (personalForm.get('firstName')?.errors?.['minlength']) {
+            الاسم الأول لا يجب أن يقل عن حرفين.
+          } @else {
+            الاسم الأول مطلوب ويجب ألا يزيد عن 100 حرف.
+          }
+        </span>
+      }
+    </div>
+
+    <!-- Last Name -->
+    <div class="space-y-xs">
+      <app-form-field
+        formControlName="lastName"
+        label="اسم العائلة *"
+        [class.border-error]="
+          personalForm.get('lastName')?.touched && personalForm.get('lastName')?.invalid
+        "
+      />
+      @if (personalForm.get('lastName')?.touched && personalForm.get('lastName')?.invalid) {
+        <span class="text-error text-xs font-medium">
+          @if (personalForm.get('lastName')?.errors?.['serverError']) {
+            {{ personalForm.get('lastName')?.errors?.['serverError'] }}
+          } @else if (personalForm.get('lastName')?.errors?.['pattern']) {
+            اسم العائلة يجب أن يحتوي على حروف عربية فقط ومسافة واحدة بين الكلمات.
+          } @else if (personalForm.get('last Name')?.errors?.['minlength']) {
+            اسم العائلة لا يجب أن يقل عن حرفين.
+          } @else {
+            اسم العائلة مطلوب ويجب ألا يزيد عن 100 حرف.
+          }
+        </span>
+      }
+    </div>
+  </div>
+</form>

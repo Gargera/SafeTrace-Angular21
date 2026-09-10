@@ -1,0 +1,78 @@
+@if (totalPages() > 1) {
+
+<div class="mt-16 flex flex-col items-center justify-center gap-3">
+
+  <!-- Summary -->
+  @if (totalItems() && pageSize()) {
+    <p class="text-sm text-on-surface-variant">
+      عرض
+      <span class="font-semibold text-on-surface">{{ startItem() }}</span>
+      -
+      <span class="font-semibold text-on-surface">{{ endItem() }}</span>
+      من
+      <span class="font-semibold text-on-surface">{{ totalItems() }}</span>
+      نتيجة
+    </p>
+  }
+
+  <div class="flex flex-wrap items-center justify-center gap-2">
+
+    <!-- First Page -->
+    <app-button variant="icon" icon="last_page" ariaLabel="الصفحة الأولى"
+      [disabled]="loading() || currentPage() === 1" [loading]="loading() && pendingPage() === 1"
+      (onClick)="firstPage()"
+      extraClass="hidden h-10 w-10 rounded-full border border-outline-variant text-on-surface-variant hover:border-secondary hover:bg-surface-container hover:text-secondary disabled:cursor-not-allowed disabled:opacity-40 sm:inline-flex" />
+
+    <!-- Previous -->
+    <app-button variant="icon" icon="chevron_right" ariaLabel="الصفحة السابقة"
+      [disabled]="loading() || currentPage() === 1"
+      [loading]="loading() && pendingPage() === currentPage() - 1" (onClick)="prevPage()"
+      extraClass="h-10 w-10 rounded-full border border-outline-variant text-on-surface-variant hover:border-secondary hover:bg-surface-container hover:text-secondary disabled:cursor-not-allowed disabled:opacity-40" />
+
+    <!-- Page Numbers -->
+    <div class="flex items-center gap-1">
+
+      @for (page of pageNumbers(); track page) {
+
+        @if (page === '...') {
+
+          <span
+            class="flex h-10 w-10 select-none items-center justify-center text-on-surface-variant">
+            …
+          </span>
+
+        } @else {
+
+          <app-button
+            variant="icon"
+            [icon]="page.toString()"
+            (click)="goToPage(page)"
+            [ariaLabel]="'الصفحة ' + page"
+            [disabled]="loading() || page === currentPage()"
+            [loading]="loading() && pendingPage() === page"
+            [extraClass]="'h-10 w-10 rounded-full border text-sm font-medium ' + (page === currentPage() ? 'border-secondary bg-secondary text-on-secondary font-bold shadow-sm scale-105' : 'border-outline-variant text-on-surface hover:border-secondary hover:bg-surface-container hover:text-secondary')"
+          />
+
+        }
+
+      }
+
+    </div>
+
+    <!-- Next -->
+    <app-button variant="icon" icon="chevron_left" ariaLabel="الصفحة التالية"
+      [disabled]="loading() || currentPage() === totalPages()"
+      [loading]="loading() && pendingPage() === currentPage() + 1" (onClick)="nextPage()"
+      extraClass="h-10 w-10 rounded-full border border-outline-variant text-on-surface-variant hover:border-secondary hover:bg-surface-container hover:text-secondary disabled:cursor-not-allowed disabled:opacity-40" />
+
+    <!-- Last Page -->
+    <app-button variant="icon" icon="first_page" ariaLabel="الصفحة الأخيرة"
+      [disabled]="loading() || currentPage() === totalPages()"
+      [loading]="loading() && pendingPage() === totalPages()" (onClick)="lastPage()"
+      extraClass="hidden h-10 w-10 rounded-full border border-outline-variant text-on-surface-variant hover:border-secondary hover:bg-surface-container hover:text-secondary disabled:cursor-not-allowed disabled:opacity-40 sm:inline-flex" />
+
+  </div>
+
+</div>
+
+}

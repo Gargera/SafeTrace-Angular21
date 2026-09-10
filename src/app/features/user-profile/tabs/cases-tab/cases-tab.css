@@ -1,0 +1,13 @@
+.cases-scroll-container {
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+@media (max-width: 640px) {
+  .cases-scroll-container {
+    max-height: calc(100vh - 320px);
+  }
+}

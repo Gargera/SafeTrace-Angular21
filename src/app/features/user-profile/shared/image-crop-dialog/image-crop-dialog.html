@@ -1,0 +1,136 @@
+@if (open()) {
+  <div
+    class="fixed inset-0 z-95 flex items-center justify-center p-md bg-black/60 backdrop-blur-sm animate-fade-in"
+    (click)="onBackdropClick()"
+    role="presentation"
+  >
+    <div
+      class="bg-surface w-[80vh] rounded-2xl shadow-xl overflow-hidden border border-outline-variant animate-fade-in flex flex-col max-h-[90vh]"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="crop-dialog-title"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Header -->
+      <div class="flex items-center justify-between p-lg border-b border-outline-variant">
+        <h3
+          id="crop-dialog-title"
+          class="text-headline-sm font-bold text-primary flex items-center gap-sm"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">crop</span>
+          قص الصورة
+        </h3>
+        <button
+          type="button"
+          (click)="onCancel()"
+          aria-label="إغلاق"
+          class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer p-1"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-lg space-y-md overflow-y-auto flex-1">
+        <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-lg items-start">
+          <!-- Cropper -->
+          <div
+            class="rounded-xl overflow-hidden border border-outline-variant bg-surface-container-low"
+            style="height: 320px"
+          >
+            @if (imageFile()) {
+              <image-cropper
+                [imageFile]="imageFile()!"
+                [maintainAspectRatio]="false"
+                [resizeToWidth]="512"
+                [cropperMinWidth]="128"
+                [cropperMinHeight]="128"
+                [roundCropper]="false"
+                [transform]="{ scale: zoom() }"
+                format="png"
+                output="blob"
+                imageAltText="الصورة المراد قصها"
+                (imageCropped)="imageCropped($event)"
+                (imageLoaded)="imageLoaded($event)"
+                (loadImageFailed)="loadImageFailed()"
+                class="h-full w-full block"
+              />
+            }
+          </div>
+
+          <!-- Live preview -->
+          <div class="flex flex-col items-center gap-sm shrink-0 mx-auto">
+            <span class="text-label-sm text-on-surface-variant font-semibold">معاينة</span>
+            <div
+              class="w-24 h-24 rounded-lg overflow-hidden border-2 border-secondary shadow-sm bg-surface-container-low flex items-center justify-center"
+            >
+              @if (previewUrl()) {
+                <img
+                  [src]="previewUrl()"
+                  alt="معاينة الصورة المقصوصة"
+                  class="w-full h-full object-contain"
+                />
+              } @else {
+                <span class="material-symbols-outlined text-on-surface-variant" aria-hidden="true"
+                  >image</span
+                >
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Zoom control -->
+        <div class="space-y-xs">
+          <label
+            for="cropZoomRange"
+            class="text-label-sm text-on-surface-variant font-semibold flex items-center gap-xs"
+          >
+            <span class="material-symbols-outlined" aria-hidden="true">zoom_in</span>
+            التقريب
+          </label>
+          <input
+            id="cropZoomRange"
+            type="range"
+            min="1"
+            max="3"
+            step="0.05"
+            [value]="zoom()"
+            (input)="onZoomChange($any($event.target).valueAsNumber)"
+            class="w-full accent-secondary cursor-pointer"
+          />
+        </div>
+
+        @if (!isImageLoaded()) {
+          <div
+            class="flex items-center justify-center gap-sm text-on-surface-variant text-label-sm py-md"
+            role="status"
+          >
+            <span class="material-symbols-outlined animate-spin" aria-hidden="true"
+              >progress_activity</span
+            >
+            جاري تحميل الصورة...
+          </div>
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="flex items-center justify-end gap-sm p-lg border-t border-outline-variant">
+        <app-button
+          variant="outline"
+          (onClick)="onCancel()"
+          extraClass="px-md py-xs text-secondary border-secondary rounded-lg text-label-sm font-bold"
+        >
+          إلغاء
+        </app-button>
+        <app-button
+          variant="secondary"
+          (onClick)="onSave()"
+          extraClass="px-md py-xs rounded-lg text-label-sm font-bold flex items-center gap-xs"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">check</span>
+          حفظ
+        </app-button>
+      </div>
+    </div>
+  </div>
+}

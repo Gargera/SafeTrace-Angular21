@@ -1,7 +1,8 @@
-export enum CaseStatus 
-{
+export enum CaseStatus {
     Pending = 'Pending',
     Active = 'Active',
-    Closed = 'Closed',
-    Found = 'Found'
+    Deleted = 'Deleted',
+    Found = 'Found',
+    Rejected = 'Rejected',
+    Expired = 'Expired'
 }

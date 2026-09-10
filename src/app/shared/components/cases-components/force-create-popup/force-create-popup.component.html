@@ -1,0 +1,116 @@
+<div role="dialog" aria-modal="true" aria-label="نافذة منبثقة" class="fixed inset-0 z-1100 bg-primary/70 backdrop-blur-md flex items-center justify-center p-4"
+  (click)="onBackdropClick($event)">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-180 max-h-[90vh] overflow-y-auto flex flex-col dir-rtl"
+    (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="px-8 pt-7 pb-5 border-b border-slate-200 sticky top-0 bg-white z-10">
+      <div class="flex items-center gap-3 mb-2.5">
+        <span class="material-symbols-outlined text-[32px] fill-1" [class]="popupIconClass()">
+          {{ popupIcon() }}
+        </span>
+        <h2 class="text-2xl font-extrabold text-[#0b1c30] m-0">
+          {{ popupTitle() }}
+        </h2>
+      </div>
+      <p class="text-sm text-[#56585e] leading-relaxed m-0">
+        {{ popupDescription() }}
+      </p>
+    </div>
+
+    <!-- Matched Cases Body -->
+    <div class="p-6 md:p-8 flex flex-col gap-5 flex-1">
+
+      <!-- Search guidance hint -->
+      <div class="flex items-start gap-2 rounded-xl bg-blue-50 border border-blue-200 px-4 py-2.5 text-xs text-blue-700">
+        <span class="material-symbols-outlined text-[18px] shrink-0 mt-px text-blue-500">info</span>
+        <span>يمكن البحث عن الحالة باستخدام كود الحالة في خانة البحث — انسخ الكود من الكارت أدناه.</span>
+      </div>
+
+      @for (m of matches(); track m.caseCode) {
+      <app-card
+        extraClass="flex flex-col sm:flex-row gap-5 border-[1.5px] border-slate-200 rounded-[18px] p-4 bg-white hover:border-[#0058be] hover:shadow-[0_10px_20px_rgba(0,88,190,0.08)] hover:bg-[#fafcff] transition-all duration-300 overflow-hidden group">
+
+        <!-- Photo -->
+        <div
+          class="relative w-full sm:w-45 h-45 rounded-xl overflow-hidden shrink-0 bg-[#f4f7fa] border border-slate-200">
+          <img [src]="m.mainPhoto ? (filesBaseUrl + '/' + m.mainPhoto) : placeholderImg" width="180" height="180"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            [alt]="'صورة ' + getFullName(m)" />
+          @if (formatSimilarity(m) > 0) {
+          <div
+            class="absolute bottom-0 inset-x-0 bg-[rgba(0,200,81,0.9)] text-white text-center text-xs font-bold py-1.5 backdrop-blur-[2px]">
+            {{ formatSimilarity(m) }}% تطابق
+          </div>
+          }
+        </div>
+
+        <!-- Details -->
+        <div class="flex-1 flex flex-col justify-between gap-3">
+          <div class="flex justify-between items-start gap-2.5">
+            <div class="text-lg font-extrabold text-[#0b1c30] leading-snug">{{ getFullName(m) }}</div>
+            <span [appCaseTypeBadgeDirective]="m.caseType"></span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-[#56585e]">
+            <div class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[18px] text-slate-400">location_on</span>
+              {{ m.government }}
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[18px] text-slate-400">calendar_today</span>
+              العمر: {{ m.age }} سنوات
+            </div>
+
+            <!-- Case Code compact chip with copy button -->
+            <div class="col-span-2 flex flex-col gap-1 mt-1">
+              <span class="text-[10px] text-slate-400 font-medium">كود الحالة</span>
+              <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5 bg-[#f0f4ff] border border-[#c7d7f8] rounded-lg px-2.5 py-1.5 font-mono text-[13px] font-bold text-secondary select-all tracking-wide">
+                  <span class="material-symbols-outlined text-[15px] text-secondary">qr_code</span>
+                  {{ m.caseCode }}
+                </div>
+                <app-button
+                  variant="icon"
+                  (onClick)="copyCode($event, m.caseCode)"
+                  [ariaLabel]="copiedCode() === m.caseCode ? 'تم النسخ!' : 'نسخ الكود'"
+                  extraClass="flex items-center justify-center h-7 w-7 rounded-md border transition-all duration-150 p-0"
+                  [ngClass]="{
+                    'bg-green-50 border-green-400 text-green-600': copiedCode() === m.caseCode,
+                    'border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700': copiedCode() !== m.caseCode
+                  }"
+                >
+                  <span class="material-symbols-outlined text-[15px]">
+                    {{ copiedCode() === m.caseCode ? 'check' : 'content_copy' }}
+                  </span>
+                </app-button>
+              </div>
+            </div>
+          </div>
+
+          <app-button variant="secondary"
+            extraClass="mt-auto w-full cursor-pointer shadow-sm hover:shadow-md transition-all"
+            (onClick)="onContact(m)">
+            <span class="material-symbols-outlined text-[20px]">chat</span>
+            تواصل مع المُبلّغ عن هذه الحالة
+          </app-button>
+        </div>
+      </app-card>
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end gap-3 p-5 md:px-8 border-t border-slate-200 sticky bottom-0 bg-white z-10">
+      <app-button variant="outline" (onClick)="cancel.emit()" [disabled]="isSubmitting()">
+        {{ cancelLabel() }}
+      </app-button>
+
+      @if (canForceCreate()) {
+      <app-button variant="primary" icon="add_circle" (onClick)="forceCreate.emit()" [loading]="isSubmitting()" [disabled]="isSubmitting()">
+        تجاهل وإنشاء البلاغ
+      </app-button>
+      }
+    </div>
+
+  </div>
+</div>

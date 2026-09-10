@@ -1,0 +1,73 @@
+@if (isLoading()) {
+  <div dir="rtl" class="mx-auto max-w-190 px-4 pb-16 pt-6">
+    <app-card extraClass="overflow-hidden rounded-2xl border border-outline-variant/30 bg-white shadow-sm p-6 md:p-8">
+      <app-update-form-skeleton></app-update-form-skeleton>
+    </app-card>
+  </div>
+} @else {
+  <app-case-form-container
+    title="تعديل حالة مجهولة الهوية"
+    [subtitle]="stepTitle()"
+    [stepHeader]="stepHeader()"
+    [steps]="steps"
+    [currentStep]="currentStep()"
+    [isSubmitting]="isSubmitting()"
+    [errorMsg]="errorMsg()"
+    submitLabel="حفظ التعديلات"
+    endingMessage="بعد التعديل سيتم مراجعتها من قِبَل الإدارة مرة أخرى."
+    (backAction)="goBack()"
+    (prevStep)="prevStep()"
+    (nextStep)="nextStep()"
+    (submitForm)="onSubmit()"
+  >
+    <form [formGroup]="form">
+      @if (currentStep() === 1) {
+        <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+          <app-case-person-data
+            [form]="form"
+            [isInvalid]="isInvalidFn"
+            [getError]="getErrorFn"
+            [caseType]="'unknown'"
+            [showRelation]="false"
+            [isNameRequired]="false"
+          ></app-case-person-data>
+        </div>
+      }
+
+      @if (currentStep() === 2) {
+        <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+          <app-case-location-data
+            [form]="form"
+            [governorates]="governorates"
+            [cities]="availableCities()"
+            [showMapPicker]="false"
+            eventDateType="date"
+            [isInvalid]="isInvalidFn"
+            [getError]="getErrorFn"
+          ></app-case-location-data>
+        </div>
+      }
+
+      @if (currentStep() === 3) {
+        <div class="flex flex-col gap-6 animate-in fade-in duration-200">
+          <!-- Section Header removed as it is now handled by the container -->
+
+          <app-case-media-uploader
+            mode="update"
+            [existingPhotos]="existingPhotos()"
+            [existingVideoUrl]="existingVideoUrl()"
+            [initialPrimaryFile]="initialPrimary()"
+            [initialAdditionalFiles]="initialAdditional()"
+            [initialVideoFile]="initialVideo()"
+            [initialDeletedPhotoIds]="initialDeletedPhotoIds()"
+            [initialPrimaryPhotoId]="initialPrimaryPhotoId()"
+            [initialExistingVideoDeleted]="initialExistingVideoDeleted()"
+            [errors]="mediaErrors()"
+            (mediaChange)="onMediaChange($event)"
+            (clearError)="clearMediaError($event)"
+          ></app-case-media-uploader>
+        </div>
+      }
+    </form>
+  </app-case-form-container>
+}

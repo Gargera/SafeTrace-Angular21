@@ -1,0 +1,158 @@
+<div class="bg-background text-on-background min-h-screen flex flex-col">
+  <main class="flex-1 max-w-max-width mx-auto w-full px-margin-mobile md:px-margin-desktop py-lg">
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="grid grid-cols-1 md:grid-cols-14 gap-gutter animate-pulse">
+
+        <!-- Sidebar skeleton (col-4) -->
+        <div class="md:col-span-4">
+          <div class="rounded-xl p-lg flex flex-col items-center text-center space-y-4">
+            <!-- Avatar -->
+            <div class="w-24 h-24 rounded-full bg-surface-container-high border-4 border-surface-container shadow-sm"></div>
+            <!-- Name -->
+            <div class="h-5 bg-surface-container-high rounded w-32"></div>
+            <!-- Verification badge -->
+            <div class="h-6 bg-surface-container-high rounded-full w-24"></div>
+            <!-- Role badge -->
+            <div class="h-6 bg-surface-container-high rounded-full w-20"></div>
+            <!-- Divider + contact info -->
+            <div class="w-full border-t border-outline-variant/30 pt-4 space-y-3">
+              <div class="flex items-center gap-2"><div class="w-5 h-5 bg-surface-container-high rounded shrink-0"></div><div class="h-3 bg-surface-container-high rounded flex-1"></div></div>
+              <div class="flex items-center gap-2"><div class="w-5 h-5 bg-surface-container-high rounded shrink-0"></div><div class="h-3 bg-surface-container-high rounded w-3/4"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main tabs area skeleton (col-10) -->
+        <div class="md:col-span-10">
+          <div class="bg-surface-container-lowest rounded-xl shadow-sm mb-gutter overflow-hidden">
+            <!-- Tabs nav bar -->
+            <div class="border-b border-outline-variant px-4 pt-3 flex gap-2">
+              @for (i of [1,2,3,4,5]; track i) {
+                <div class="h-9 bg-surface-container-high rounded-t-lg flex-1 min-w-15"></div>
+              }
+            </div>
+            <!-- Tab content area -->
+            <div class="p-6 space-y-4">
+              <div class="h-5 bg-surface-container-high rounded w-40"></div>
+              <div class="h-10 bg-surface-container-high rounded-xl w-full"></div>
+              @for (i of [1,2,3]; track i) {
+                <div class="flex flex-col lg:flex-row overflow-hidden rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-sm">
+                  <div class="w-full lg:w-44 aspect-4/3 lg:aspect-auto bg-surface-container-high shrink-0"></div>
+                  <div class="flex-1 p-4 flex flex-col gap-3 justify-between">
+                    <div class="h-4 bg-surface-container-high rounded w-2/3"></div>
+                    <div class="grid grid-cols-4 gap-2"><div class="h-3 bg-surface-container-high rounded"></div><div class="h-3 bg-surface-container-high rounded"></div><div class="h-3 bg-surface-container-high rounded"></div><div class="h-3 bg-surface-container-high rounded"></div></div>
+                    <div class="flex justify-end gap-2 pt-2 border-t border-outline-variant/20"><div class="h-8 w-8 bg-surface-container-high rounded-full"></div><div class="h-8 bg-surface-container-high rounded-lg w-20"></div></div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Error State -->
+    @else if (loadError()) {
+      <div class="p-md bg-error-container text-on-error-container rounded-xl text-center">
+        <p class="text-body-sm font-bold">{{ loadError() }}</p>
+        <app-button
+          variant="danger"
+          [loading]="isLoading()"
+          icon="refresh"
+          (onClick)="ngOnInit()"
+          extraClass="mt-md px-lg py-sm text-label-sm"
+        >
+          إعادة المحاولة
+        </app-button>
+      </div>
+    }
+
+    <!-- Main Content -->
+    @else {
+      <div class="grid grid-cols-1 md:grid-cols-14 gap-gutter">
+        <!-- Sidebar -->
+
+        <div class="md:block md:col-span-4">
+          <app-profile-sidebar
+            [userInfo]="userInfo()"
+            (imageClicked)="selectedZoomImage.set(avatarUrl)"
+          />
+
+          @if (selectedZoomImage()) {
+            <div role="dialog" aria-modal="true" aria-label="نافذة منبثقة"
+              class="fixed inset-0 z-999999 bg-black/70 flex items-center justify-center"
+              (click)="selectedZoomImage.set(null)"
+            >
+              <img
+                [src]="selectedZoomImage()"
+                class="max-w-[90vw] max-h-[90vh]"
+                (click)="$event.stopPropagation()"
+              />
+            </div>
+          }
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="md:col-span-10">
+          <!-- Tabs Navigation -->
+          <div class="bg-surface-container-lowest rounded-xl shadow-sm mb-gutter overflow-hidden">
+            <nav class="border-b border-outline-variant">
+              <div
+                class="flex gap-xs overflow-x-auto snap-x snap-mandatory -mx-md px-md sm:-mx-lg sm:px-lg lg:mx-0 lg:px-0 lg:flex-wrap lg:overflow-visible [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden pb-xs"
+              >
+                @for (tab of tabs; track tab.id) {
+                  <button
+                    type="button"
+                    (click)="switchTab(tab.id)"
+                    class="relative flex-1 text-center px-lg py-sm rounded-t-lg text-body-sm font-medium transition-all duration-200 border-b-2 hover:bg-primary/10 hover:text-primary hover:border-primary/40 cursor-pointer"
+                    [ngClass]="{
+                      'bg-primary/10 border-primary text-primary': activeTab() === tab.id,
+                      'border-transparent text-on-surface-variant': activeTab() !== tab.id
+                    }"
+                  >
+                    {{ tab.label }}
+
+                    @if (tab.id === 'notifications' && notificationService.unreadCount() > 0) {
+                      <span
+                        class="absolute top-0 left-2 bg-error min-w-4.5 h-4.5 px-1 rounded-full text-[10px] text-white flex items-center justify-center font-bold border border-surface shadow-sm"
+                      >
+                        {{ notificationService.unreadCount() }}
+                      </span>
+                    }
+                  </button>
+                }
+              </div>
+            </nav>
+
+            <!-- Tab Content -->
+            @switch (activeTab()) {
+              @case ('edit') {
+                <app-edit-profile
+                  [userInfo]="userInfo()"
+                  (profileUpdated)="onProfileUpdated($event)"
+                />
+              }
+
+              @case ('cases') {
+                <div class="p-lg">
+                  <app-my-cases-tab />
+                </div>
+              }
+
+              @case ('chat') {
+                <app-my-chats />
+              }
+              @case ('notifications') {
+                <app-notifications-tab />
+              }
+              @case ('donations') {
+                <app-my-donations />
+              }
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </main>
+</div>

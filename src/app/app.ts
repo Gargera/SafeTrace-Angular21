@@ -1,12 +1,27 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { Toast } from './shared/components/toast/toast';
+import { AuthService } from './core/services/auth.service';
+import { LocationTrackingService } from './core/services/LocationTracking.service';
+import { CaseCreationFlowComponent } from './shared/components/cases-components/case-creation-flow/case-creation-flow.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, Toast, CaseCreationFlowComponent],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
 })
-export class App {
-  protected readonly title = signal('SafeTrace');
+export class App implements OnInit {
+  protected readonly title = signal('لقاء');
+  
+  constructor(
+    private locationTrackingService: LocationTrackingService,
+    private authService: AuthService,
+  ) {}
+
+  ngOnInit() {
+    if (this.authService.isLoggedIn()) {
+      this.locationTrackingService.startTrackingLocation();
+    }
+  }
 }

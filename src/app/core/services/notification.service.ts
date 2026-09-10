@@ -1,0 +1,551 @@
+import { Injectable, inject, signal, computed, OnDestroy, DestroyRef } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import * as signalR from '@microsoft/signalr';
+import {
+  GetUserNotificationsDTO,
+  NotificationPage,
+  ParsedCaseNotification,
+} from '../models/notification.model';
+import { NotificationType } from '../../shared/enums/Notification-Type';
+import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
+import { ApiResponse } from '../../shared/models/api-response.model';
+import { Router, NavigationStart } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+const DEFAULT_PAGE_SIZE = 10;
+
+@Injectable({ providedIn: 'root' })
+export class NotificationService implements OnDestroy {
+  readonly #http = inject(HttpClient);
+  readonly #apiUrl = `${environment.apiBaseUrl}/Notification`;
+  readonly #defaultLink = '/profile?tab=notifications';
+  readonly #authService = inject(AuthService);
+  readonly #router = inject(Router);
+  readonly #destroyRef = inject(DestroyRef);
+
+  // ─── Private state signals ────────────────────────────────────────────────
+  readonly #notifications = signal<GetUserNotificationsDTO[]>([]);
+  readonly #unreadCount = signal<number>(0);
+  readonly #isConnected = signal<boolean>(false);
+  readonly #isLoading = signal<boolean>(false);
+  readonly #isLoadingMore = signal(false);
+
+  readonly #activeCaseNotification = signal<ParsedCaseNotification | null>(null);
+
+  // ─── Pagination signals ───────────────────────────────────────────────────
+  readonly #currentPage = signal<number>(1);
+  readonly #totalPages = signal<number>(1);
+  readonly #totalCount = signal<number>(0);
+
+  // ─── Public readonly signals ──────────────────────────────────────────────
+  readonly notifications = this.#notifications.asReadonly();
+  readonly unreadCount = this.#unreadCount.asReadonly();
+  readonly isConnected = this.#isConnected.asReadonly();
+  readonly isLoading = this.#isLoading.asReadonly();
+  readonly isLoadingMore = this.#isLoadingMore.asReadonly();
+  readonly currentPage = this.#currentPage.asReadonly();
+  readonly totalPages = this.#totalPages.asReadonly();
+  readonly totalCount = this.#totalCount.asReadonly();
+  readonly activeCaseNotification = this.#activeCaseNotification.asReadonly();
+
+  readonly hasUnread = computed(() => this.#unreadCount() > 0);
+  readonly hasPrevPage = computed(() => this.#currentPage() > 1);
+  readonly hasNextPage = computed(() => this.#currentPage() < this.#totalPages());
+
+  #hubConnection: signalR.HubConnection | null = null;
+  #connectionStart: Promise<void> | null = null;
+
+  // ─── SignalR Connection ───────────────────────────────────────────────────
+
+  constructor() {
+    this.#router.events
+      .pipe(
+        filter((event) => event instanceof NavigationStart),
+        takeUntilDestroyed(this.#destroyRef),
+      )
+      .subscribe(() => {
+        if (this.#activeCaseNotification()) {
+          this.closeCaseNotificationModal();
+        }
+      });
+  }
+
+  startConnection(): void {
+    if (
+      !this.#authService.isLoggedIn() ||
+      this.#hubConnection?.state === signalR.HubConnectionState.Connected ||
+      this.#connectionStart
+    ) {
+      return;
+    }
+
+    if (!this.#hubConnection) {
+      this.#hubConnection = new signalR.HubConnectionBuilder()
+        .withUrl(environment.signalRHubUrl, {
+          accessTokenFactory: async () => (await this.#authService.ensureValidAccessToken()) ?? '',
+        })
+        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+        .configureLogging(
+          environment.production ? signalR.LogLevel.Error : signalR.LogLevel.Information,
+        )
+        .build();
+
+      this.#registerHubEvents();
+    }
+
+    this.#connectionStart = this.#connect().finally(() => {
+      this.#connectionStart = null;
+    });
+  }
+
+  async #connect(): Promise<void> {
+    try {
+      await this.#hubConnection?.start();
+      this.#isConnected.set(true);
+      // NOTE: NotificationsHub does not define a "GetMyNotifications" RPC method
+      // (it only overrides OnConnectedAsync/OnDisconnectedAsync), so invoking it
+      // over the hub throws "HubException: Method does not exist.". The unread
+      // count still arrives via the "UnreadCount" push from OnConnectedAsync;
+      // the notification list itself is fetched over REST.
+      this.loadPage(1);
+    } catch (err) {
+      console.error('SignalR connection error:', err);
+      this.#isConnected.set(false);
+    }
+  }
+
+  #registerHubEvents(): void {
+    if (!this.#hubConnection) return;
+
+    // Fired on connect with current unread count
+    this.#hubConnection.on('UnreadCount', (response: ApiResponse<number>) => {
+      this.#unreadCount.set(response.data ?? 0);
+    });
+    // NOTE: currently unused — nothing on the server sends "ReceiveNotifications".
+    // It would only fire if NotificationsHub grows a "GetMyNotifications" method
+    // (see the connect()/onreconnected() comments below). Kept here so the wiring
+    // is ready if that method is added later; the paginated list is loaded via
+    // REST (loadPage) in the meantime.
+    this.#hubConnection.on('ReceiveNotifications', (response: ApiResponse<NotificationPage>) => {
+      if (response.success && response.data) {
+        this.#notifications.set(response.data.items);
+        this.#currentPage.set(response.data.page);
+        this.#totalPages.set(response.data.totalPages);
+        this.#totalCount.set(response.data.totalCount);
+      }
+    });
+
+    // Fired when a new notification is pushed from server
+    this.#hubConnection.on('ReceiveNotification', (notification: GetUserNotificationsDTO) => {
+      this.#notifications.update((prev) => [notification, ...prev]);
+      this.#totalCount.update((c) => c + 1);
+      this.#unreadCount.update((c) => c + 1);
+      this.#totalPages.set(Math.ceil(this.#totalCount() / DEFAULT_PAGE_SIZE));
+    });
+
+    // Reconnection lifecycle hooks
+    this.#hubConnection.onreconnecting(() => this.#isConnected.set(false));
+    this.#hubConnection.onreconnected(() => {
+      this.#isConnected.set(true);
+      this.loadPage(1);
+    });
+    this.#hubConnection.onclose(() => this.#isConnected.set(false));
+  }
+
+  // ─── Hub Invocations ──────────────────────────────────────────────────────
+
+  markAsRead(id: number): void {
+    const target = this.#notifications().find((n) => n.id === id);
+    if (!target || target.isRead) return;
+
+    this.#notifications.update((list) =>
+      list.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+    );
+    this.#unreadCount.update((c) => Math.max(0, c - 1));
+
+    this.#http.put<ApiResponse<boolean>>(`${this.#apiUrl}/${id}/MarkAsRead`, {}).subscribe({
+      error: (err) => {
+        console.error(err);
+        // rollback
+        this.#notifications.update((list) =>
+          list.map((n) => (n.id === id ? { ...n, isRead: false } : n)),
+        );
+        this.#unreadCount.update((c) => c + 1);
+      },
+    });
+  }
+
+  markAllAsRead(): void {
+    if (this.#unreadCount() === 0) return;
+
+    const previous = this.#notifications();
+    const previousCount = this.#unreadCount();
+
+    this.#notifications.update((list) => list.map((n) => ({ ...n, isRead: true })));
+    this.#unreadCount.set(0);
+
+    this.#http.put<ApiResponse<boolean>>(`${this.#apiUrl}/MarkAllAsRead`, {}).subscribe({
+      error: (err) => {
+        console.error(err);
+        this.#notifications.set(previous);
+        this.#unreadCount.set(previousCount);
+      },
+    });
+  }
+
+  removeNotification(id: number): void {
+    const previous = this.#notifications();
+    const target = previous.find((n) => n.id === id);
+    if (!target) return;
+
+    this.#notifications.update((list) => list.filter((n) => n.id !== id));
+    this.#totalCount.update((c) => Math.max(0, c - 1));
+    if (!target.isRead) {
+      this.#unreadCount.update((c) => Math.max(0, c - 1));
+    }
+
+    this.#http.delete<ApiResponse<boolean>>(`${this.#apiUrl}/${id}`).subscribe({
+      error: (err) => {
+        console.error(err);
+        // rollback
+        this.#notifications.set(previous);
+        this.#totalCount.update((c) => c + 1);
+        if (!target.isRead) {
+          this.#unreadCount.update((c) => c + 1);
+        }
+      },
+    });
+  }
+
+  // ─── Notification list (REST) ──────────────────────────────────────────────
+  // Backed by NotificationService.GetUserNotificationsAsync in helper.md, exposed
+  // via the controller's "my-Notifications" endpoint. Used both for the initial
+  // load after connecting and for pagination, since the hub itself has no RPC
+  // method for fetching pages.
+  loadPage(page: number, append = false): void {
+    if (append) {
+      this.#isLoadingMore.set(true);
+    } else {
+      this.#isLoading.set(true);
+    }
+
+    const params = new HttpParams().set('page', page).set('pageSize', DEFAULT_PAGE_SIZE);
+
+    this.#http
+      .get<ApiResponse<NotificationPage>>(`${this.#apiUrl}/my-Notifications`, { params })
+      .subscribe({
+        next: (res) => {
+          const data = res.data;
+
+          if (!data) {
+            this.#notifications.set([]);
+            this.#currentPage.set(1);
+            this.#totalPages.set(0);
+            this.#totalCount.set(0);
+          } else {
+            if (append) {
+              this.#notifications.update((old) => [...old, ...data.items]);
+            } else {
+              this.#notifications.set(data.items);
+            }
+
+            this.#currentPage.set(data.page);
+            this.#totalPages.set(data.totalPages);
+            this.#totalCount.set(data.totalCount);
+          }
+
+          this.#isLoading.set(false);
+          this.#isLoadingMore.set(false);
+        },
+        error: (err) => {
+          console.error(err);
+          this.#isLoading.set(false);
+          this.#isLoadingMore.set(false);
+        },
+      });
+  }
+
+  loadMore(): void {
+    if (this.#isLoading() || this.#isLoadingMore()) return;
+    if (!this.hasNextPage()) return;
+
+    this.loadPage(this.#currentPage() + 1, true);
+  }
+
+  stopConnection(): void {
+    this.#hubConnection?.stop().catch(console.error);
+    this.#hubConnection = null;
+    this.#connectionStart = null;
+    this.#isConnected.set(false);
+  }
+
+  ngOnDestroy(): void {
+    this.stopConnection();
+  }
+
+  closeCaseNotificationModal(): void {
+    this.#activeCaseNotification.set(null);
+  }
+
+  parseCaseNotification(n: GetUserNotificationsDTO): ParsedCaseNotification | null {
+    if (n.type !== NotificationType.Message) {
+      return null;
+    }
+
+    const directLink = n.notificationDirectLink || '';
+    const content = n.content || '';
+
+    let isApproved = false;
+    let isRejected = false;
+
+    let urlObj: URL | null = null;
+    try {
+      if (directLink) {
+        urlObj = new URL(directLink, 'http://localhost');
+      }
+    } catch {
+      urlObj = null;
+    }
+
+    const actionParam = urlObj?.searchParams.get('action');
+    if (actionParam === 'approved') {
+      isApproved = true;
+    } else if (actionParam === 'rejected') {
+      isRejected = true;
+    } else {
+      if (
+        content.includes('تمت الموافقة') ||
+        content.includes('✅ تمت الموافقة') ||
+        content.includes('تم موافقة')
+      ) {
+        isApproved = true;
+      } else if (
+        content.includes('تم رفض') ||
+        content.includes('❌ تم رفض') ||
+        content.includes('سبب الرفض')
+      ) {
+        isRejected = true;
+      }
+    }
+
+    if (!isApproved && !isRejected) {
+      return null;
+    }
+
+    let caseId = urlObj?.searchParams.get('caseId') || '';
+    const cleanPath = (directLink.split('?')[0] || '').trim();
+    if (!caseId && cleanPath) {
+      const match = cleanPath.match(/\/(\d+)$/);
+      if (match) {
+        caseId = match[1];
+      }
+    }
+
+    let caseCode = urlObj?.searchParams.get('caseCode') || '';
+    if (!caseCode) {
+      const codeMatch =
+        content.match(/كود الحالة:\s*([^\n\r]+)/) || content.match(/\b([A-Z0-9-]{4,15})\b/i);
+      if (codeMatch) {
+        caseCode = codeMatch[1].trim();
+      }
+    }
+
+    let rejectionReason = urlObj?.searchParams.get('rejectionReason') || '';
+    if (!rejectionReason && isRejected) {
+      const reasonMatch = content.match(/سبب الرفض:\s*([\s\S]+)/);
+      if (reasonMatch) {
+        rejectionReason = reasonMatch[1].trim();
+      } else {
+        rejectionReason = content;
+      }
+    }
+
+    let detailsUrl = cleanPath;
+    if (!detailsUrl && caseId) {
+      detailsUrl = `/urgent/${caseId}`;
+    }
+
+    let updateUrl = detailsUrl;
+    if (cleanPath.includes('/edit/')) {
+      updateUrl = cleanPath;
+      detailsUrl = cleanPath.replace('/edit/', '/');
+    } else if (detailsUrl) {
+      const lastSlashIndex = detailsUrl.lastIndexOf('/');
+      if (lastSlashIndex !== -1) {
+        const prefix = detailsUrl.substring(0, lastSlashIndex);
+        const idPart = detailsUrl.substring(lastSlashIndex + 1);
+        updateUrl = `${prefix}/edit/${idPart}`;
+      }
+    }
+
+    return {
+      kind: isApproved ? 'approved' : 'rejected',
+      caseId,
+      caseCode: caseCode || 'غير متوفر',
+      rejectionReason: rejectionReason || '',
+      detailsUrl,
+      updateUrl,
+      fullMessage: content,
+      raw: n,
+    };
+  }
+
+  handleNotificationClick(n: GetUserNotificationsDTO, router: Router): boolean {
+    if (!n.isRead) {
+      this.markAsRead(n.id);
+    }
+
+    const parsed = this.parseCaseNotification(n);
+    if (parsed) {
+      this.#activeCaseNotification.set(parsed);
+      return true;
+    }
+
+    if (n.notificationDirectLink) {
+      if (
+        n.notificationDirectLink.startsWith('http://') ||
+        n.notificationDirectLink.startsWith('https://')
+      ) {
+        window.open(n.notificationDirectLink, '_blank');
+      } else {
+        router.navigateByUrl(n.notificationDirectLink);
+      }
+    } else {
+      router.navigateByUrl(this.#defaultLink);
+    }
+    return false;
+  }
+
+  getNotificationDetails(n: GetUserNotificationsDTO): {
+    icon: string;
+    bgClass: string;
+    title: string;
+  } {
+    const text = (n.content || '').toLowerCase();
+    const type = n.type;
+
+    const parsed = this.parseCaseNotification(n);
+    if (parsed?.kind === 'approved') {
+      return { icon: 'check_circle', bgClass: 'bg-emerald-500', title: 'تمت الموافقة على الحالة' };
+    }
+    if (parsed?.kind === 'rejected') {
+      return { icon: 'cancel', bgClass: 'bg-red-500', title: 'تم رفض الحالة' };
+    }
+
+    // 1. Verification
+    if (
+      text.includes('توثيق') ||
+      text.includes('وثائق') ||
+      text.includes('الهوية') ||
+      text.includes('verification') ||
+      text.includes('identity')
+    ) {
+      return { icon: 'verified', bgClass: 'bg-cyan-500', title: 'توثيق الحساب' };
+    }
+
+    // 2. Security
+    if (
+      text.includes('أمان') ||
+      text.includes('كلمة المرور') ||
+      text.includes('رمز الدخول') ||
+      text.includes('security') ||
+      text.includes('password')
+    ) {
+      return { icon: 'security', bgClass: 'bg-rose-500', title: 'الأمان والحماية' };
+    }
+
+    // 3. Order
+    if (text.includes('طلب') || text.includes('ترتيب') || text.includes('order')) {
+      return { icon: 'assignment', bgClass: 'bg-orange-500', title: 'تفاصيل الطلب' };
+    }
+
+    // 4. Profile
+    if (text.includes('الملف الشخصي') || text.includes('بياناتك') || text.includes('profile')) {
+      return { icon: 'person', bgClass: 'bg-indigo-500', title: 'الملف الشخصي' };
+    }
+
+    // 5. Success
+    if (
+      text.includes('نجاح') ||
+      text.includes('تم بنجاح') ||
+      text.includes('تم قبول') ||
+      text.includes('تم تفعيل') ||
+      text.includes('success') ||
+      text.includes('accepted')
+    ) {
+      return { icon: 'check_circle', bgClass: 'bg-emerald-500', title: 'عملية ناجحة' };
+    }
+
+    // 6. Error / Complaint
+    if (
+      type === NotificationType.Complaint ||
+      text.includes('خطأ') ||
+      text.includes('فشل') ||
+      text.includes('شكوى') ||
+      text.includes('error') ||
+      text.includes('failed')
+    ) {
+      return { icon: 'error', bgClass: 'bg-red-500', title: 'تنبيه خطأ / شكوى' };
+    }
+
+    // 7. Warning
+    if (text.includes('تحذير') || text.includes('تنبيه') || text.includes('warning')) {
+      return { icon: 'warning', bgClass: 'bg-amber-500', title: 'تحذير هام' };
+    }
+
+    // 8. Message
+    if (
+      type === NotificationType.Message ||
+      text.includes('رسالة') ||
+      text.includes('محادثة') ||
+      text.includes('chat') ||
+      text.includes('message')
+    ) {
+      return { icon: 'chat', bgClass: 'bg-teal-500', title: 'رسالة جديدة' };
+    }
+
+    // 9. System
+    if (
+      type === NotificationType.System ||
+      text.includes('نظام') ||
+      text.includes('system') ||
+      text.includes('تحديث')
+    ) {
+      return { icon: 'settings', bgClass: 'bg-slate-500', title: 'تحديث النظام' };
+    }
+
+    // 10. Default Information or MatchFound
+    if (type === NotificationType.MatchFound) {
+      return { icon: 'person_search', bgClass: 'bg-indigo-500', title: 'تم العثور على تطابق' };
+    }
+
+    return { icon: 'info', bgClass: 'bg-blue-500', title: 'إشعار جديد' };
+  }
+
+  formatDate(dateStr: Date | string): string {
+    // CreatedAt يترسل من السيرفر كـ UTC (DateTime.UtcNow)، لكن لو الـ Kind
+    // اتفقد بعد الرجوع من الداتابيز (شائع مع EF Core)، الـ JSON بييجي من غير
+    // "Z" في الآخر، فـ `new Date()` هنا هيفسرها كتوقيت محلي (مصر UTC+3)
+    // بدل UTC، وده اللي بيسبب فرق الساعات الغلط في "منذ ...".
+    // الحل الأصح فعليًا في الباك إند (SpecifyKind(..., DateTimeKind.Utc) قبل
+    // السيريلايز)، لكن نتحوط هنا كمان لو الفرق مكانش اتصلح لسه.
+    const raw = dateStr instanceof Date ? dateStr.toISOString() : dateStr;
+    const hasTimezone = /[zZ]|[+-]\d{2}:\d{2}$/.test(raw);
+    const date = new Date(hasTimezone ? raw : `${raw}Z`);
+
+    const diff = Date.now() - date.getTime();
+
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (seconds < 60) return 'منذ لحظات';
+    if (minutes < 60) return `منذ ${minutes} دقيقة`;
+    if (hours < 24) return `منذ ${hours} ساعة`;
+    if (days < 30) return `منذ ${days} يوم`;
+
+    return date.toLocaleDateString('ar-EG');
+  }
+}

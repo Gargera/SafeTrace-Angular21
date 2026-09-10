@@ -1,1 +1,75 @@
-<p>urgent-list works!</p>
+<div class="min-h-screen bg-background">
+  <div class="mx-auto max-w-7xl space-y-6 px-4 py-6">
+    <!-- Page Header -->
+    <section class="space-y-3 pb-2">
+      <app-header
+        title="الحالات العاجلة"
+        subtitle="إدارة وعرض جميع الحالات العاجلة"
+        [badge]="!loading() ? totalItems() + ' حالة' : ''"
+        [loading]="loading()"
+        primaryActionLabel="إنشاء حالة عاجلة"
+        primaryActionIcon="add"
+        primaryButtonClass="bg-error hover:opacity-90 text-on-error shadow-sm"
+        (primaryAction)="navigateToCreate()"
+      >
+      </app-header>
+    </section>
+
+    <!-- Filters Card -->
+    <section
+      class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm"
+    >
+      <app-case-filters
+        [initialFilter]="filter()"
+        [showRadius]="true"
+        (filterChange)="onFilterChange($event)"
+        (reset)="onFilterReset()"
+      ></app-case-filters>
+    </section>
+
+    <!-- Main Content -->
+    <div class="space-y-4">
+      <!-- Loading Skeleton -->
+      @if (loading()) {
+        <app-case-skeleton-grid></app-case-skeleton-grid>
+      }
+
+      <!-- Empty State -->
+      @if (!loading() && cases().length === 0) {
+        <app-empty-state
+          [title]="hasActiveFilters() ? 'لا توجد نتائج مطابقة' : 'لا توجد حالات طارئة'"
+          [message]="hasActiveFilters() ? 'لم نتمكن من العثور على حالات تطابق خيارات التصفية أو البحث الحالية.' : 'لم يتم إضافة أي حالات طارئة حتى الآن.'"
+        >
+        </app-empty-state>
+      }
+
+      @if (!loading() && cases().length > 0) {
+        <!-- Cases Grid -->
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          @for (case of cases(); track trackByCaseId($index, case)) {
+            <app-case-card
+              [caseItem]="case"
+              [showUrgentTag]="true"
+              [showCaseType]="false"
+              [detailRoute]="['/urgent', case.id]"
+              (onContact)="onContactReporter($event)"
+              class="block"
+            >
+            </app-case-card>
+          }
+        </div>
+
+        <!-- Pagination (shows its own "showing X-Y of Z" summary since totalItems/pageSize are passed) -->
+        <app-pagination
+          [currentPage]="currentPage()"
+          [loading]="loading()"
+          [totalPages]="totalPages()"
+          [totalItems]="totalItems()"
+          [pageSize]="pageSize()"
+          (pageChange)="onPageChange($event)"
+        >
+        </app-pagination>
+      }
+    </div>
+  </div>
+</div>

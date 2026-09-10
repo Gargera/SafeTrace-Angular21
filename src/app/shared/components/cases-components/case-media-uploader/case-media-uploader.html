@@ -1,0 +1,210 @@
+<div class="flex flex-col gap-4">
+  <!-- Primary Photo Section with Cropper -->
+  <div>
+    <label class="mb-2 block text-sm font-medium text-on-surface-variant">
+      {{ mode() === 'update' ? 'استبدال الصورة الأساسية وتعديل الوجه' : 'الصورة الأساسية (يرجى تحديد الوجه بدقة)'
+      }}
+      <span class="font-normal text-on-surface-variant/70 text-error">
+        *
+      </span>
+    </label>
+
+    <!-- 1. Upload Dropzone -->
+    @if (!cropImageEvent() && !newPrimaryPreview() && !existingPrimaryPhoto()) {
+    <div
+      class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-7 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
+      (click)="newPrimaryInput.click()">
+      <input #newPrimaryInput type="file" accept="image/jpeg,image/png,image/webp" class="hidden"
+        (change)="onPrimaryPhotoSelected($event)" />
+      <div
+        class="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
+        <span class="material-symbols-outlined text-3xl">{{ mode() === 'update' ? 'crop_original' :
+          'add_photo_alternate'
+          }}</span>
+      </div>
+      <p class="text-sm font-bold text-on-surface">
+        {{ mode() === 'update'
+        ? 'اضغط لاختيار صورة أساسية جديدة وتحديد الوجه' : 'اضغط لإضافة الصورة الأساسية وتحديد الوجه'}}
+      </p>
+      <p class="mt-1 text-xs text-on-surface-variant/70">JPG / JPEG / PNG / WebP — حتى 5 MB</p>
+    </div>
+    @if (errors().primary || localPrimaryError()) {
+    <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ errors().primary || localPrimaryError() }}</p>
+    }
+    }
+
+    <!-- 2. Inline Image Cropper Container -->
+    @if (cropImageEvent()) {
+    <div class="rounded-2xl bg-inverse-surface p-5 text-center text-inverse-on-surface shadow-md">
+      <p class="mb-3 text-sm font-medium">حرك المربع لتحديد الوجه بالكامل داخل الإطار:</p>
+
+      <image-cropper [imageChangedEvent]="cropImageEvent()" [maintainAspectRatio]="true" [aspectRatio]="4 / 3"
+        format="jpeg" (imageCropped)="onImageCropped($event)">
+      </image-cropper>
+
+      <div class="mt-4 flex justify-center gap-3">
+        <app-button variant="primary" icon="check" (onClick)="confirmCrop()">
+          اعتماد الصورة
+        </app-button>
+        <app-button variant="secondary" (onClick)="cancelCrop()">
+          إلغاء
+        </app-button>
+      </div>
+    </div>
+    }
+
+    <!-- 3. Cropped Preview Box -->
+    @if (newPrimaryPreview() && !cropImageEvent()) {
+    <div
+      class="flex items-center gap-4 rounded-2xl border border-outline-variant/50 bg-surface-container-low p-4 shadow-xs">
+      <img [src]="newPrimaryPreview()" width="105" height="80"
+        class="h-20 w-26.25 rounded-xl border border-outline-variant/60 object-cover shadow-xs transition-transform duration-200 hover:scale-105" />
+      <div class="flex-1">
+        <p class="mb-1 text-sm font-semibold text-on-tertiary-container">✓ تم تحديد الصورة وتأطيرها بنجاح</p>
+        <app-button variant="text"
+          extraClass="ml-3 p-0 text-xs text-secondary font-medium underline hover:opacity-80 transition"
+          (onClick)="reCropPrimary()">
+          إعادة ضبط وتعديل المربع
+        </app-button>
+        <app-button variant="text" extraClass="p-0 text-xs text-error font-medium underline hover:opacity-80 transition"
+          (onClick)="clearPrimary()">
+          حذف واختيار صورة أخرى
+        </app-button>
+      </div>
+    </div>
+    } @else if (existingPrimaryPhoto() && !cropImageEvent()) {
+    <div
+      class="flex items-center gap-4 rounded-2xl border border-outline-variant/50 bg-surface-container-low p-4 shadow-xs">
+      <img [src]="existingPrimaryPhoto()!.imagePath" width="105" height="80"
+        class="h-20 w-26.25 rounded-xl border border-outline-variant/60 object-cover shadow-xs transition-transform duration-200 hover:scale-105" />
+      <div class="flex-1">
+        <p class="mb-1 text-sm font-semibold text-on-tertiary-container">✓ هذه هي الصورة الأساسية الحالية</p>
+        <app-button variant="text" extraClass="p-0 text-xs text-error font-medium underline hover:opacity-80 transition"
+          (onClick)="removeExistingPhoto(existingPrimaryPhoto()!)">
+          حذف واختيار صورة أخرى
+        </app-button>
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Additional Photos -->
+  <div>
+    <label class="mb-2 block text-sm font-medium text-on-surface-variant">
+      صور إضافية (حتى 4 صور)
+    </label>
+    <div
+      class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
+      (click)="newPhotosInput.click()">
+      <input #newPhotosInput type="file" accept="image/jpeg,image/png,image/webp" multiple class="hidden"
+        (change)="onAdditionalPhotosSelected($event)" />
+      <div
+        class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
+        <span class="material-symbols-outlined text-2xl">add_photo_alternate</span>
+      </div>
+      <p class="text-xs text-on-surface-variant/70">JPG / PNG / WebP — حتى 5MB لكل صورة</p>
+    </div>
+
+    @if (errors().additional || localAdditionalError()) {
+    <p class="mt-1.5 flex items-center gap-1 text-xs text-error">{{ errors().additional || localAdditionalError() }}</p>
+    }
+
+    @if (newPhotoPreviews().length > 0 || (mode() === 'update' && existingAdditionalPhotos().length > 0)) {
+    <div class="mt-3.5 flex flex-wrap gap-3">
+      @if (mode() === 'update') {
+      @for (photo of existingAdditionalPhotos(); track photo.id) {
+      <div
+        class="relative h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
+        <img [src]="photo.imagePath" alt="صورة إضافية حالية" width="80" height="80"
+          class="h-full w-full object-cover" />
+        <app-button variant="icon" icon="close" iconClass="text-xs"
+          extraClass="absolute top-1 right-1 h-5.5 w-5.5 bg-on-surface/80 text-surface-container-lowest shadow-md hover:bg-on-surface hover:scale-110"
+          (onClick)="removeExistingPhoto(photo)"></app-button>
+      </div>
+      }
+      }
+      @for (preview of newPhotoPreviews(); track preview; let i = $index) {
+      <div
+        class="relative h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105">
+        <img [src]="preview" alt="صورة جديدة" width="80" height="80" class="h-full w-full object-cover" />
+        <app-button variant="icon" icon="close" iconClass="text-xs"
+          extraClass="absolute top-1 right-1 h-5.5 w-5.5 bg-on-surface/80 text-surface-container-lowest shadow-md hover:bg-on-surface hover:scale-110"
+          (onClick)="removeNewPhoto(i)"></app-button>
+      </div>
+      }
+    </div>
+    }
+  </div>
+
+  <!-- Video -->
+  <div>
+    <label class="mb-2 block text-sm font-medium text-on-surface-variant">
+      فيديو توضيحي <span class="font-normal text-on-surface-variant/70">(اختياري)</span>
+    </label>
+
+    <div class="flex flex-col gap-4">
+      <div
+        class="group cursor-pointer rounded-2xl border-2 border-dashed border-outline-variant/60 bg-surface-bright p-6 text-center shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary hover:bg-surface-container-low hover:shadow-xs"
+        [class.border-secondary]="!!videoFile()" [class.bg-surface-container-low]="!!videoFile()"
+        (click)="videoInput.click()">
+        <input #videoInput type="file" accept=".mp4,.mov,.webm,video/mp4,video/quicktime,video/webm" class="hidden"
+          (change)="onVideoSelected($event)" />
+        <div
+          class="mx-auto mb-1.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary transition-transform duration-200 group-hover:scale-110">
+          <span class="material-symbols-outlined text-3xl"
+            [ngClass]="videoFile() ? 'text-secondary' : 'text-outline'">videocam</span>
+        </div>
+        <p class="text-sm font-bold text-on-surface">
+          {{ videoFile()?.name ?? (mode() === 'update' ? 'استبدال / رفع فيديو' : 'رفع فيديو') }}
+        </p>
+        <p class="mt-1 text-xs text-on-surface-variant/70">MP4 / MOV / WebM — حتى 50 MB</p>
+      </div>
+
+      @if (videoPreview() || (mode() === 'update' && existingVideoUrl() && !isExistingVideoDeleted())) {
+      <div class="mt-3.5 flex flex-wrap gap-3">
+        <div
+          class="relative h-20 w-20 overflow-hidden rounded-xl border border-outline-variant/60 shadow-sm transition-transform duration-200 hover:scale-105 cursor-pointer group bg-black"
+          (click)="openVideoModal()">
+          <video [src]="videoPreview() || existingVideoUrl()" preload="metadata"
+            class="h-full w-full object-cover opacity-80 group-hover:opacity-100"></video>
+
+          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span class="material-symbols-outlined text-white text-2xl drop-shadow-md">play_circle</span>
+          </div>
+
+          <app-button variant="icon" icon="close" iconClass="text-xs"
+            extraClass="absolute top-1 right-1 h-5.5 w-5.5 bg-on-surface/80 text-surface-container-lowest shadow-md hover:bg-on-surface hover:scale-110 z-10"
+            (onClick)="removeVideo(); $event.stopPropagation()"></app-button>
+        </div>
+      </div>
+
+      @if (isVideoModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+        (click)="closeVideoModal()">
+        <div class="relative w-[90vw] max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl bg-surface shadow-2xl"
+          (click)="$event.stopPropagation()">
+          <div
+            class="flex items-center justify-between border-b border-outline-variant/30 px-4 py-3 bg-surface-container-low">
+            <h3 class="text-sm font-bold text-on-surface">معاينة الفيديو</h3>
+            <app-button variant="icon" icon="close" iconClass="text-[20px]"
+              extraClass="h-8 w-8 bg-surface-container-highest text-on-surface hover:bg-error hover:text-white"
+              (onClick)="closeVideoModal()"></app-button>
+          </div>
+          <div class="flex items-center justify-center bg-black w-full h-[60vh] max-h-[800px]">
+            <video [src]="videoPreview() || existingVideoUrl()" controls autoplay
+              class="h-full w-full object-contain"></video>
+          </div>
+        </div>
+      </div>
+      }
+      }
+    </div>
+
+    @if (errors().video || localVideoError()) {
+    <p class="mt-1.5 flex items-center gap-1 text-xs text-error">
+      <span class="material-symbols-outlined text-sm"> error </span>
+      {{ errors().video || localVideoError() }}
+    </p>
+    }
+  </div>
+</div>

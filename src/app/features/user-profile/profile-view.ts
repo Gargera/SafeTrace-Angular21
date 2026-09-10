@@ -1,0 +1,134 @@
+import { Component, effect, inject, OnDestroy, OnInit, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { ProfileSidebar } from './shared/profile-sidebar/profile-sidebar';
+
+import { NotificationsTab } from './tabs/notifications-tab/notifications-tab';
+import { MyChats } from '../chat/pages/my-chats/my-chats';
+import { GetUserInfoDTO } from './model/profile.model';
+import { NotificationService } from '../../core/services/notification.service';
+import { ProfileService } from './service/profile.service';
+import { MyCasesTab } from './tabs/cases-tab/cases-tab';
+import { EditProfile } from './tabs/Edit-profile/edit-profile';
+import { MyDonationsComponent } from '../donations/pages/my-donations/my-donations.component';
+import { CommonModule } from '@angular/common';
+export type ProfileTab = 'edit' | 'cases' | 'chat' | 'notifications' | 'donations'; // ADDED 'donations'
+
+import { ButtonComponent } from '../../shared/components/button/button';
+
+@Component({
+  selector: 'app-profile-view',
+  imports: [
+    RouterModule,
+    CommonModule,
+    ProfileSidebar,
+    EditProfile,
+    NotificationsTab,
+    MyCasesTab,
+    MyChats,
+    MyDonationsComponent,
+    ButtonComponent,
+  ], // ADDED MyCasesTab and MyDonationsComponent
+  templateUrl: './profile-view.html',
+  styleUrl: './profile-view.css',
+})
+export class ProfileView implements OnInit, OnDestroy {
+  readonly #profileService = inject(ProfileService);
+  readonly notificationService = inject(NotificationService);
+  readonly #route = inject(ActivatedRoute);
+  readonly #router = inject(Router);
+
+  readonly userInfo = signal<GetUserInfoDTO | null>(null);
+  readonly isLoading = signal(true);
+  readonly loadError = signal<string | null>(null);
+  readonly activeTab = signal<ProfileTab>('edit');
+
+  readonly tabs: { id: ProfileTab; label: string }[] = [
+    { id: 'edit', label: 'تعديل بياناتي' },
+    { id: 'cases', label: 'حالاتي' }, // RENAMED from 'بلاغاتي' / uncommented
+    { id: 'chat', label: 'محادثاتي' },
+    { id: 'notifications', label: 'اشعاراتي' },
+    { id: 'donations', label: 'تبرعاتي' }, // ADDED ' },
+  ];
+  
+  readonly #destroyRef = inject(DestroyRef);
+
+  ngOnInit(): void {
+    // Read tab from query param
+    this.#route.queryParamMap
+      .pipe(takeUntilDestroyed(this.#destroyRef))
+      .subscribe((params) => {
+        const tab = params.get('tab') as ProfileTab | null;
+        if (tab && this.tabs.some((t) => t.id === tab)) {
+          this.activeTab.set(tab);
+          this.closeImageZoom();
+        } else {
+          // Default to 'edit' and update URL
+          this.activeTab.set('edit');
+          this.closeImageZoom();
+          this.#router.navigate([], {
+            relativeTo: this.#route,
+            queryParams: { tab: 'edit' },
+            replaceUrl: true
+          });
+        }
+      });
+
+    this.#loadUserInfo();
+    this.notificationService.startConnection();
+  }
+
+  ngOnDestroy(): void {
+    this.notificationService.stopConnection();
+  }
+
+  switchTab(tab: ProfileTab): void {
+    this.activeTab.set(tab);
+    this.#router.navigate([], {
+      relativeTo: this.#route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  onProfileUpdated(updated: GetUserInfoDTO): void {
+    this.userInfo.set(updated);
+  }
+
+  #loadUserInfo(): void {
+    this.isLoading.set(true);
+    this.loadError.set(null);
+
+    this.#profileService.getUserInfo().subscribe({
+      next: (data) => {
+        this.userInfo.set(data.data);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.loadError.set('تعذّر تحميل بيانات الملف الشخصي. يرجى إعادة المحاولة.');
+        this.isLoading.set(false);
+        console.error('Load user info error:', err);
+      },
+    });
+  }
+  selectedZoomImage = signal<string | null>(null);
+  get avatarUrl(): string {
+    const img = this.userInfo()?.profileImage;
+    if (img) return img;
+    const name = this.userInfo()?.fullName ?? 'User';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0058be&color=fff`;
+  }
+  openImageZoom() {
+    this.selectedZoomImage.set(this.avatarUrl);
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeImageZoom() {
+    this.selectedZoomImage.set(null);
+    document.body.style.overflow = '';
+  }
+
+  get notificationUnreadCount() {
+    return this.notificationService.unreadCount;
+  }
+}
