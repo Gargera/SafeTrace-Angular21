@@ -18,6 +18,7 @@ This is the **frontend repository**. It contains the Angular SPA only; the REST 
 - [Local setup](#local-setup)
 - [Backend integration](#backend-integration)
 - [Scripts and security](#scripts-and-security)
+- [Future work](#future-work)
 
 ## Features
 
@@ -191,6 +192,13 @@ The supplied local settings match the backend HTTPS launch profile at `https://l
 - Frontend guards are UX controls, not security boundaries: the API must authorize every action.
 - Never commit AWS credentials, payment or SMTP secrets, OAuth secrets, or unrestricted Google Maps keys.
 - Restrict browser-facing Maps keys by allowed referrer and use HTTPS for authentication, cookies, uploads, and SignalR.
+
+## Future work
+
+| Feature | Priority | Notes |
+| --- | --- | --- |
+| Governmental integration | High | Surface cross-checks against local police missing-persons databases in the case UI. |
+| Progressive Web App (PWA) | Medium | Installable app experience with push notifications. |
 
 ## Team
 
