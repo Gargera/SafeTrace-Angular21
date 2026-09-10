@@ -200,9 +200,19 @@ The supplied local settings match the backend HTTPS launch profile at `https://l
 | Governmental integration | High | Surface cross-checks against local police missing-persons databases in the case UI. |
 | Progressive Web App (PWA) | Medium | Installable app experience with push notifications. |
 
-## Team
+## 👥 Team Members
 
-إسراء طه · يوسف عبدالله · بسمة علاء · يوسف فاروق · محمد جمال · محمد سعيد · تقى محمود · أماني هشام
+| Name                 | GitHub                                                           |
+| -------------------- | ---------------------------------------------------------------- |
+| Esraa Taha           | [@Gargera](https://github.com/Gargera)                           |
+| Yousef               | [@yousef721](https://github.com/yousef721)                       |
+| Basma Allaa          | [@basmaallaa](https://github.com/basmaallaa)                     |
+| Mohamed Gamal Elemam | [@Mohamed-Gamal-Elemam](https://github.com/Mohamed-Gamal-Elemam) |
+| Amany Hisham         | [@amanyhisham](https://github.com/amanyhisham)                   |
+| Youssef              | [@ysfrk10](https://github.com/ysfrk10)                           |
+| Toqa Mahmoud         | [@ToqaMahmoud787](https://github.com/ToqaMahmoud787)             |
+| Mohamed Saeed        | [@Mohmaed-Saaed](https://github.com/Mohmaed-Saaed)               |
+
 
 ---
 
